@@ -1,5 +1,6 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
 import { getQueryClient } from "./utils/getQueryClient";
+import toast, { Toaster } from "react-hot-toast";
 
 import LandingPage from "./landingPage";
 
@@ -9,7 +10,8 @@ export default function Home() {
   return (
     <main>
       <HydrationBoundary state={dehydrate(queryClient)}>
-          <LandingPage />
+        <Toaster /> 
+        <LandingPage />
       </HydrationBoundary>
     </main>
   );
