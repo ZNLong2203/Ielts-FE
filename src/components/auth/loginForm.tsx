@@ -14,7 +14,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -25,6 +24,7 @@ import { Login } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema } from "@/interface/auth";
+import ROUTES from "@/constants/route";
 
 const LoginForm = ({
   className,
@@ -231,7 +231,7 @@ const LoginForm = ({
           >
             Don&apos;t have an account?{" "}
             <a
-              href="#"
+              href={ROUTES.REGISTER}
               className="text-blue-700 hover:text-blue-800 transition-colors font-medium"
             >
               Create account

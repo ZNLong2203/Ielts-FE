@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { GalleryVerticalEnd } from "lucide-react";
-import LoginForm from "@/components/login/loginForm";
+import LoginForm from "@/components/auth/loginForm";
 
 const LoginPage = () => {
   return (
