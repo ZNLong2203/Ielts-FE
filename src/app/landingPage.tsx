@@ -1,6 +1,7 @@
 import LandingNavbar from "@/components/landing/navbar";
 import HeroSection from "@/components/landing/hero";
 import IntroductionSection from "@/components/landing/introduction";
+import CourseSection from "@/components/landing/course";
 
 
 const LandingPage = () => {
@@ -11,6 +12,7 @@ const LandingPage = () => {
             <LandingNavbar/>
             <HeroSection/>
             <IntroductionSection/>
+            <CourseSection/>
         </div>
     )
 }
