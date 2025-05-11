@@ -21,10 +21,10 @@ const HeroSection = () => {
             transition={{ duration: 1, delay: 0.2 }}
             className="w-full lg:w-1/2 relative"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-900/20 backdrop-blur-sm z-10"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-900/20 z-10"></div>
             <div className="h-full min-h-[300px] lg:min-h-[500px]">
               <Image
-                src="/placeholder.svg?height=600&width=800"
+                src="/images/hero.jpeg"
                 width={800}
                 height={600}
                 alt="Students learning IELTS"
@@ -35,7 +35,7 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.8 }}
-              className="absolute bottom-8 left-8 z-20 bg-white/10 backdrop-blur-md p-6 rounded-2xl max-w-xs border border-white/20 shadow-xl"
+              className="absolute bottom-8 left-8 z-20 bg-white/10 p-6 rounded-2xl max-w-xs border border-white/20 shadow-xl"
             >
               <h3 className="text-xl font-bold text-white mb-2">AI-Powered Learning</h3>
               <p className="text-white/80 text-sm">

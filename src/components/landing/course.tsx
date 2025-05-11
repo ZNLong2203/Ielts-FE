@@ -1,22 +1,44 @@
-import Image from "next/image"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+"use client";
+import { useState, useEffect } from "react";
+
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export default function CourseSection() {
+  const [selectedLevel, setSelectedLevel] = useState<number>(0);
+  const [selectedTarget, setSelectedTarget] = useState<number>(0);
+
+  const handleLevelChange = (level: number) => {
+    setSelectedLevel(level);
+    // console.log("Selected Level:", level);
+  };
+
+  const handleTargetChange = (target: number) => {
+    setSelectedTarget(target);
+    // console.log("Selected Target:", target);
+  };
+
+  useEffect(() => {
+    if (selectedLevel >= selectedTarget) {
+      setSelectedTarget(selectedLevel + 1);
+    }
+  }, [selectedLevel, selectedTarget]);
+
   return (
-    <section className="w-full bg-blue-500 text-white py-16 px-4">
+    <section className="w-full bg-[radial-gradient(99.48%_132.1%_at_2.5%_100%,#002EA6_0%,#0047FF_100%)] text-white py-16 px-4">
       <div className="container mx-auto max-w-6xl">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12">
           <div className="md:w-1/2">
-            <p className="text-lg mb-2">Xin chào bạn!</p>
+            <p className="text-lg mb-2">Hello!</p>
             <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
-              Thiết kế lộ trình học
+              Design a learning roadmap
               <br />
-              dành riêng cho
+              exclusively for you,
               <br />
-              bạn, ngay tại đây!
+              right
             </h1>
           </div>
           <div className="md:w-1/3 flex justify-center">
@@ -35,18 +57,52 @@ export default function CourseSection() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* Current Level */}
             <div>
-              <h2 className="text-xl font-semibold text-center mb-4">Trình độ của tôi</h2>
+              <h2 className="text-xl font-semibold text-center mb-4">
+                Your proficiency level
+              </h2>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full bg-white text-blue-600 hover:bg-blue-50">
-                  Mới học - IELTS 3.5
+                <Button
+                  onClick={() => handleLevelChange(3.5)}
+                  variant="outline"
+                  className={`w-full ${
+                    selectedLevel === 3.5
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  } hover:bg-blue-50 h-14 rounded-xl`}
+                >
+                  Just starting - IELTS 3.5
                 </Button>
-                <Button variant="outline" className="w-full bg-blue-600 text-white border-white hover:bg-blue-700">
+                <Button
+                  onClick={() => handleLevelChange(4.0)}
+                  variant="outline"
+                  className={`w-full ${
+                    selectedLevel === 4.0
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  } hover:bg-blue-50 h-14 rounded-xl`}
+                >
                   IELTS 4.0-4.5
                 </Button>
-                <Button variant="outline" className="w-full bg-blue-600 text-white border-white hover:bg-blue-700">
+                <Button
+                  onClick={() => handleLevelChange(5.0)}
+                  variant="outline"
+                  className={`w-full ${
+                    selectedLevel === 5.0
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  } hover:bg-blue-50 h-14 rounded-xl`}
+                >
                   IELTS 5.0-5.5
                 </Button>
-                <Button variant="outline" className="w-full bg-blue-600 text-white border-white hover:bg-blue-700">
+                <Button
+                  onClick={() => handleLevelChange(6.0)}
+                  variant="outline"
+                  className={`w-full ${
+                    selectedLevel === 6.0
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  } hover:bg-blue-50 h-14 rounded-xl`}
+                >
                   IELTS 6.0-6.5
                 </Button>
               </div>
@@ -54,15 +110,46 @@ export default function CourseSection() {
 
             {/* Target Level */}
             <div>
-              <h2 className="text-xl font-semibold text-center mb-4">Mục tiêu của tôi</h2>
+              <h2 className="text-xl font-semibold text-center mb-4">
+                Your target
+              </h2>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full bg-white text-blue-600 hover:bg-blue-50">
+                <Button
+                  onClick={() => handleTargetChange(5.0)}
+                  disabled={selectedLevel >= 5.0}
+                  variant="outline"
+                  className={`w-full ${
+                    selectedTarget === 5.0
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  } hover:bg-white h-14 rounded-xl`}
+                >
                   IELTS 5.0+
                 </Button>
-                <Button variant="outline" className="w-full bg-blue-600 text-white border-white hover:bg-blue-700">
+                <Button
+                  onClick={() => handleTargetChange(6.0)}
+                  variant="outline"
+                  disabled={selectedLevel >= 6.0}
+                  className={`w-full ${
+                    selectedTarget === 6.0
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }
+                   hover:bg-blue-50 h-14 rounded-xl`}
+                >
                   IELTS 6.0+
                 </Button>
-                <Button variant="outline" className="w-full bg-blue-600 text-white border-white hover:bg-blue-700">
+                <Button
+                  onClick={() => handleTargetChange(7.0)}
+                  variant="outline"
+                  disabled={selectedLevel >= 7.0}
+                  className={`w-full ${
+                    selectedTarget === 7.0
+                      ? "bg-white text-blue-600"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  }
+                   hover:bg-blue-50 h-14 rounded-xl`}
+                >
                   IELTS 6.5-7.0+
                 </Button>
               </div>
@@ -71,9 +158,9 @@ export default function CourseSection() {
 
           <div className="text-center mt-6 text-sm">
             <p>
-              Bạn chưa rõ trình độ bản thân?{" "}
+              You are not clear about your own level?{" "}
               <Link href="#" className="underline">
-                Kiểm tra điểm số
+                Take the test.
               </Link>
             </p>
           </div>
@@ -180,7 +267,10 @@ export default function CourseSection() {
         <div>
           <h2 className="text-2xl font-bold mb-2">Chọn gói phù hợp</h2>
           <p className="text-xl mb-8">
-            Chinh phục lộ trình <span className="text-yellow-300 font-bold">IELTS mới gốc đến 5.0</span>
+            Chinh phục lộ trình{" "}
+            <span className="text-yellow-300 font-bold">
+              IELTS mới gốc đến 5.0
+            </span>
           </p>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -212,14 +302,23 @@ export default function CourseSection() {
                     3.400.000 <span className="text-gray-400 text-sm">VNĐ</span>
                   </p>
                   <div className="flex items-center">
-                    <p className="text-gray-400 text-sm line-through mr-2">4.000.000 VNĐ</p>
-                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">-15%</span>
+                    <p className="text-gray-400 text-sm line-through mr-2">
+                      4.000.000 VNĐ
+                    </p>
+                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">
+                      -15%
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex space-x-2 mb-4">
-                  <Button className="flex-1 bg-blue-100 text-blue-600 hover:bg-blue-200">Đăng ký học ngay</Button>
-                  <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50">
+                  <Button className="flex-1 bg-blue-100 text-blue-600 hover:bg-blue-200">
+                    Đăng ký học ngay
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
                     Nhập mã Coupon
                   </Button>
                 </div>
@@ -260,7 +359,9 @@ export default function CourseSection() {
                         <path d="m9 12 2 2 4-4"></path>
                       </svg>
                     </div>
-                    <p>Luyện đề Listening & Reading có giải thích đáp án chi tiết</p>
+                    <p>
+                      Luyện đề Listening & Reading có giải thích đáp án chi tiết
+                    </p>
                   </div>
                 </div>
               </div>
@@ -297,14 +398,23 @@ export default function CourseSection() {
                     5.100.000 <span className="text-gray-400 text-sm">VNĐ</span>
                   </p>
                   <div className="flex items-center">
-                    <p className="text-gray-400 text-sm line-through mr-2">6.000.000 VNĐ</p>
-                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">-15%</span>
+                    <p className="text-gray-400 text-sm line-through mr-2">
+                      6.000.000 VNĐ
+                    </p>
+                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">
+                      -15%
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex space-x-2 mb-4">
-                  <Button className="flex-1 bg-blue-500 text-white hover:bg-blue-600">Đăng ký học ngay</Button>
-                  <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50">
+                  <Button className="flex-1 bg-blue-500 text-white hover:bg-blue-600">
+                    Đăng ký học ngay
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                  >
                     Nhập mã Coupon
                   </Button>
                 </div>
@@ -345,7 +455,9 @@ export default function CourseSection() {
                         <path d="m9 12 2 2 4-4"></path>
                       </svg>
                     </div>
-                    <p>Luyện đề Listening & Reading có giải thích đáp án chi tiết</p>
+                    <p>
+                      Luyện đề Listening & Reading có giải thích đáp án chi tiết
+                    </p>
                   </div>
                 </div>
               </div>
@@ -354,5 +466,5 @@ export default function CourseSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
