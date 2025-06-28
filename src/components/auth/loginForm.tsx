@@ -23,7 +23,7 @@ import { useForm } from "react-hook-form";
 import { Login } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/interface/auth";
+import { LoginSchema } from "@/validation/auth";
 import ROUTES from "@/constants/route";
 
 const LoginForm = ({

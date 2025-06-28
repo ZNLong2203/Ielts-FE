@@ -23,7 +23,7 @@ import { useForm } from "react-hook-form";
 import { Register } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RegisterSchema } from "@/interface/auth";
+import { RegisterSchema } from "@/validation/auth";
 import ROUTES from "@/constants/route";
 
 const RegisterForm = ({
