@@ -1,5 +1,5 @@
 import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
-import { getQueryClient } from "./utils/getQueryClient";
+import { getQueryClient } from "../utils/getQueryClient";
 import toast, { Toaster } from "react-hot-toast";
 
 import LandingPage from "./landingPage";
