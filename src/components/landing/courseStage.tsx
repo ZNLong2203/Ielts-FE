@@ -1,3 +1,6 @@
+import { motion } from "framer-motion";
+import { BookOpen, CheckCircle, ChevronRight, Layers } from "lucide-react";
+
 interface CourseStageProps {
   stageQuantity: number;
 }
@@ -8,83 +11,137 @@ const stageContent = [
     description: "IELTS Fundamentals",
     lessons: 18,
     lessonsDescription: "Mastery through communication",
+    color: "from-blue-600 to-blue-400",
+    icon: BookOpen,
+    skills: ["Listening basics", "Reading comprehension", "Basic grammar"]
   },
   {
     title: "Chapter 2",
     description: "Basic IELTS",
     lessons: 20,
     lessonsDescription: "Skill development",
+    color: "from-indigo-600 to-indigo-400",
+    icon: Layers,
+    skills: ["Vocabulary building", "Writing practice", "Speaking fluency"]
   },
   {
     title: "Chapter 3",
     description: "Intermediate IELTS",
     lessons: 15,
     lessonsDescription: "Review and enhancement",
+    color: "from-purple-600 to-purple-400",
+    icon: CheckCircle,
+    skills: ["Task 1 & 2 strategies", "Advanced reading", "Complex grammar"]
   },
   {
     title: "Chapter 4",
     description: "Advanced IELTS",
     lessons: 25,
     lessonsDescription: "Test-taking strategies",
+    color: "from-teal-600 to-teal-400",
+    icon: BookOpen,
+    skills: ["Mock test analysis", "Scoring techniques", "Advanced vocabulary"]
   },
 ];
 
-
 const CourseStage: React.FC<CourseStageProps> = ({ stageQuantity }) => {
+  // Animation variants
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <motion.div 
+      className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {stageContent.map((stage, index) => {
         if (index < stageQuantity) {
+          const Icon = stage.icon;
+          
           return (
-            <div className="text-center" key={index}>
-              <div className="inline-block bg-blue-700 p-3 rounded-lg mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-white"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                  <path d="M2 17l10 5 10-5"></path>
-                  <path d="M2 12l10 5 10-5"></path>
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold mb-1">{stage.title}</h3>
-              <p className="mb-4">{stage.description}</p>
-
-              <div className="bg-blue-700 rounded-lg p-4 flex items-center justify-center mb-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-2"
-                >
-                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect>
-                  <line x1="3" x2="21" y1="9" y2="9"></line>
-                  <line x1="9" x2="9" y1="21" y2="9"></line>
-                </svg>
-                <div className="text-left">
-                  <p className="font-semibold">{stage.lessons} lessons</p>
-                  <p className="text-xs">{stage.lessonsDescription}</p>
+            <motion.div
+              key={index}
+              variants={cardVariants}
+              className="bg-white rounded-2xl overflow-hidden shadow-lg transition-transform duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100"
+            >
+              {/* Card Header */}
+              <div className={`bg-gradient-to-r ${stage.color} p-6 text-white relative`}>
+                {/* Chapter number badge */}
+                <div className="absolute top-3 right-3 bg-white/20 rounded-full h-8 w-8 flex items-center justify-center text-sm font-bold">
+                  {index + 1}
+                </div>
+                
+                <div className="flex items-center mb-4">
+                  <div className="bg-white/20 p-2 rounded-full">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="ml-3 text-lg font-bold">{stage.title}</h3>
+                </div>
+                
+                <p className="text-white/90 text-sm mb-3">{stage.description}</p>
+                
+                {/* Lesson count with rounded container */}
+                <div className="inline-flex items-center bg-white/20 rounded-full px-3 py-1 text-sm">
+                  <BookOpen className="h-4 w-4 mr-1" />
+                  <span>{stage.lessons} lessons</span>
                 </div>
               </div>
-            </div>
+              
+              {/* Card Content */}
+              <div className="p-6">
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-2">You'll Learn</h4>
+                  <ul className="space-y-2">
+                    {stage.skills.map((skill, idx) => (
+                      <li key={idx} className="flex items-center text-gray-700">
+                        <div className={`bg-gradient-to-r ${stage.color} p-1 rounded-full mr-2 flex-shrink-0`}>
+                          <CheckCircle className="h-3 w-3 text-white" />
+                        </div>
+                        <span className="text-sm">{skill}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div className="border-t border-gray-100 pt-4 mt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase font-medium">Focus</p>
+                      <p className="text-sm text-gray-700">{stage.lessonsDescription}</p>
+                    </div>
+                    <motion.button 
+                      whileHover={{ scale: 1.1, x: 5 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`bg-gradient-to-r ${stage.color} text-white p-2 rounded-full shadow-md`}
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           );
         }
+        return null;
       })}
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { useRouter } from "next/navigation"
-import NavbarTitle from "./navbarTitle"
-import NavbarLink from "./navbarLink"
-import ROUTES from "@/constants/route"
-import { Menu, X } from "lucide-react"
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import NavbarTitle from "./navbarTitle";
+import NavbarLink from "./navbarLink";
+import ROUTES from "@/constants/route";
+import { Menu, X } from "lucide-react";
 
 const LandingNavbar = () => {
-  const router = useRouter()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <motion.div
@@ -29,9 +29,14 @@ const LandingNavbar = () => {
             <div className="flex items-center">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                suppressHydrationWarning={true}
                 className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[rgba(5,6,15,0.3)] md:max-lg:order-2 lg:hidden"
               >
-                {mobileMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5 text-white" />
+                ) : (
+                  <Menu className="h-5 w-5 text-white" />
+                )}
               </button>
 
               <a href="" className="md:max-lg:order-1">
@@ -135,15 +140,15 @@ const LandingNavbar = () => {
             <div className="gap-x flex h-full items-center gap-x-3 md:gap-x-4">
               <button
                 onClick={() => router.push(ROUTES.LOGIN)}
+                suppressHydrationWarning={true}
                 className="tracking-[0.08px] cursor-pointer items-center justify-center gap-2 text-white disabled:cursor-not-allowed rounded-[32px] disabled:bg-gray-400 py-3 text-md font-semibold hover:bg-[#0071F9] hover:text-white focus:ring-2 focus:ring-blue-300 w-fit hidden px-5 2xl:flex"
-               
               >
                 Login
               </button>
               <button
                 onClick={() => router.push(ROUTES.LOGIN)}
+                suppressHydrationWarning={true}
                 className="inline-flex tracking-[0.08px] cursor-pointer items-center justify-center gap-2 text-white disabled:cursor-not-allowed rounded-[32px] disabled:bg-gray-400 px-4 py-2.5 text-sm font-semibold hover:bg-[#0071F9] hover:text-white focus:ring-2 focus:ring-blue-300 w-fit 2xl:hidden"
-                
               >
                 Login
               </button>
@@ -177,7 +182,7 @@ const LandingNavbar = () => {
         </motion.div>
       )}
     </motion.div>
-  )
-}
+  );
+};
 
-export default LandingNavbar
+export default LandingNavbar;

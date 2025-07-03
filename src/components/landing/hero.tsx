@@ -1,121 +1,211 @@
-"use client"
-import Image from "next/image"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+"use client";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Check, ChevronRight, Star } from "lucide-react";
 
 const HeroSection = () => {
   return (
-    <div className="w-full overflow-hidden pt-20 md:pt-24 lg:pt-28 2xl:pb-36 xl:pb-36 lg:pb-36 md:pb-36 sm:pb-32 max-sm:pb-32">
-      <div className="container mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="flex flex-col lg:flex-row rounded-3xl overflow-hidden shadow-2xl"
-        >
-          {/* Left Content - Image */}
+    <div className="w-full overflow-hidden bg-gradient-to-b from-blue-50/50 to-white pt-36 md:pt-40 lg:pt-48 pb-16 md:pb-20 lg:pb-24">
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Content - Text */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="w-full lg:w-1/2 relative"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="order-2 lg:order-1"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-900/20 z-10"></div>
-            <div className="h-full min-h-[300px] lg:min-h-[500px]">
+            <div className="inline-flex items-center mb-6 bg-blue-100/80 rounded-full pl-2 pr-4 py-1">
+              <span className="bg-blue-600 text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center mr-2">
+                <Star className="w-3 h-3" />
+              </span>
+              <span className="text-blue-700 text-sm font-medium">
+                #1 Rated IELTS Preparation Platform
+              </span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r text-blue-800 bg-clip-text">
+              Master IELTS with <br />
+              AI-Powered Learning
+            </h1>
+
+            <p className="text-lg text-gray-700 mb-8 max-w-lg">
+              Join over 10,000 successful students who achieved their target
+              scores with our comprehensive study and practice platform.
+            </p>
+
+            <div className="space-y-4 mb-10">
+              {[
+                "Personalized learning with advanced AI technology",
+                "Realistic test simulations for all IELTS modules",
+                "Expert guidance and proven strategies",
+              ].map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                  className="flex items-center"
+                >
+                  <div className="mr-3 bg-blue-100 text-blue-600 rounded-full p-1.5">
+                    <Check className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-gray-700">{feature}</span>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-base px-6 py-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
+              >
+                Start Free Assessment
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+
+              <Button
+                variant="outline"
+                className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl text-base px-6 py-6"
+              >
+                Explore Courses
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+
+            <div className="mt-10 flex items-center">
+              <div>
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                    />
+                  ))}
+                  <span className="text-blue-600 font-bold ml-1">4.9</span>
+                </div>
+                <p className="text-gray-600 text-sm">
+                  From 10,000+ student reviews
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right Content - Image */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="order-1 lg:order-2 relative"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <Image
                 src="/images/hero.jpeg"
-                width={800}
-                height={600}
-                alt="Students learning IELTS"
-                className="h-full w-full object-cover"
+                width={600}
+                height={720}
+                alt="Students preparing for IELTS"
+                className="w-full h-[500px] object-cover"
               />
-            </div>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="absolute bottom-8 left-8 z-20 bg-white/10 p-6 rounded-2xl max-w-xs border border-white/20 shadow-xl"
-            >
-              <h3 className="text-xl font-bold text-white mb-2">AI-Powered Learning</h3>
-              <p className="text-white/80 text-sm">
-                Our platform uses advanced AI to personalize your IELTS preparation journey
-              </p>
-            </motion.div>
-          </motion.div>
 
-          {/* Right Content - Text */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.4 }}
-            className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16"
-            style={{
-              background:
-                "radial-gradient(226.73% 114.93% at 50% 105.95%, #FFFFFF 0%, #0172FA 15.17%, #0172FA 37.47%, #0144A9 69.75%, #011657 93.95%)",
-            }}
-          >
-            <div className="max-w-md">
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/70 to-transparent"></div>
+
+              {/* Floating UI Elements */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-white font-medium mb-4 flex items-center"
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="absolute top-6 left-6 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-lg flex items-center"
               >
-                <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm">IELTS COURSES</span>
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6"
-              >
-                Comprehensive
-                <br />
-                <span className="text-white">IELTS</span> Study &
-                <br />
-                Practice Plan
-              </motion.h1>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="text-sm text-white/80 space-y-1 mb-8"
-              >
-                <p>• AI-powered virtual classroom</p>
-                <p>• Realistic test simulations</p>
-                <p>• Guaranteed score improvement</p>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-                <Button className="bg-white hover:bg-blue-100 text-blue-900 font-medium rounded-full px-8 py-6 flex items-center gap-2 transition-all duration-300 hover:shadow-lg">
-                  Create a Study Plan
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                  <svg
+                    className="w-5 h-5 text-blue-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 16V12L14 10"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Average time to</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Improve 1.0 Band Score
+                  </p>
+                </div>
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.9 }}
-                className="flex items-center mt-8"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.5 }}
+                className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-[220px]"
               >
-                <div className="flex -space-x-2">
-                  
+                <div className="flex items-center mb-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center mr-2">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M21 7L13 15L9 11L3 17"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M21 13V7H15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">
+                    Progress Tracking
+                  </h4>
                 </div>
-                <div className="ml-3 text-xs text-white/80">
-                  <p className="font-semibold text-white">10,000+ Students</p>
-                  <p>Achieved their target IELTS score</p>
-                </div>
+                <p className="text-xs text-gray-600">
+                  AI-powered analytics to monitor your improvements in real-time
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, duration: 0.5 }}
+                className="absolute bottom-24 left-6 bg-blue-600/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-[180px]"
+              >
+                <h4 className="font-semibold text-white mb-1">AI Feedback</h4>
+                <p className="text-xs text-blue-100">
+                  Get instant evaluations for speaking and writing tasks
+                </p>
               </motion.div>
             </div>
+
+            {/* Background decoration */}
+            <div className="absolute -z-10 -top-10 -right-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-60"></div>
+            <div className="absolute -z-10 -bottom-10 -left-10 w-64 h-64 bg-indigo-100 rounded-full blur-3xl opacity-60"></div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default HeroSection
+export default HeroSection;

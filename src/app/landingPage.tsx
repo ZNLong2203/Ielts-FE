@@ -4,6 +4,8 @@ import IntroductionSection from "@/components/landing/introduction";
 import CourseSection from "@/components/landing/course";
 import Footer from "@/components/footer";
 import { Testimonials } from "@/components/landing/testimonials";
+import Sponser from "@/components/landing/sponsor";
+import Prize from "@/components/landing/prize";
 
 const LandingPage = () => {
     return (
@@ -15,6 +17,8 @@ const LandingPage = () => {
             <IntroductionSection/>
             <CourseSection/>
             <Testimonials/>
+            <Sponser/>
+            <Prize/>
             <Footer/>
         </div>
     )

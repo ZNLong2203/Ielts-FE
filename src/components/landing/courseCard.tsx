@@ -1,5 +1,7 @@
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
+import { CheckCircle, Star, Clock, Users, Award, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Course {
   id: number;
@@ -9,6 +11,7 @@ interface Course {
   difficulty_level: string;
   price: number;
   discountPrice?: number;
+  features?: string[];
 }
 
 interface CourseCardProps {
@@ -17,6 +20,21 @@ interface CourseCardProps {
   courseData: Course[];
 }
 
+// Animation variants
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.5 }
+  },
+  hover: { 
+    scale: 1.02,
+    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
+    transition: { duration: 0.3 }
+  }
+};
+
 const CourseCard: React.FC<CourseCardProps> = ({
   selectedLevel,
   selectedTarget,
@@ -24,7 +42,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
 }) => {
   const filteredCourses = courseData.filter((course) => {
     const [minLevel, maxLevel] = course.difficulty_level.split(" - ").map(Number);
-    return minLevel == selectedLevel && maxLevel == selectedTarget;
+    return minLevel === selectedLevel && maxLevel === selectedTarget;
   });
 
   // Function to format numbers with commas as thousand separators
@@ -32,104 +50,100 @@ const CourseCard: React.FC<CourseCardProps> = ({
     return new Intl.NumberFormat("en-US").format(amount);
   };
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {filteredCourses.map((course, index) => {
-        return (
-          <Card key={index} className="bg-white text-blue-900 rounded-xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 bg-yellow-400 text-xs font-bold px-3 py-1 rounded-bl-lg">
-              Featured
-            </div>
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-blue-500 p-2 rounded-full mr-3">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
-                    <path d="m9 12 2 2 4-4"></path>
-                  </svg>
-                </div>
-                <h3 className="font-bold">{course.title}</h3>
-              </div>
+  // Calculate discount percentage
+  const getDiscountPercentage = (originalPrice: number, discountPrice: number) => {
+    return Math.round(((originalPrice - discountPrice) / originalPrice) * 100);
+  };
 
-              <div className="mb-4">
-                <p className="text-2xl font-bold">
-                  {course.discountPrice ? formatCurrency(course.discountPrice) : "N/A"} <span className="text-gray-400 text-sm">VND</span>
-                </p>
-                <div className="flex items-center">
-                  <p className="text-gray-400 text-sm line-through mr-2">
-                    {formatCurrency(course.price)} VND
-                  </p>
-                  <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded">
-                    -15%
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {filteredCourses.map((course, index) => {
+        const discountPercentage = course.discountPrice ? 
+          getDiscountPercentage(course.price, course.discountPrice) : 0;
+          
+        return (
+          <motion.div
+            key={`course-${course.id}-${index}`}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            whileHover="hover"
+            className="h-full"
+          >
+            <Card className="bg-white text-blue-900 rounded-2xl overflow-hidden shadow-lg h-full border-0 flex flex-col">
+              {/* Course Header with Gradient Background */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-400 p-6 text-white relative">
+                {course.discountPrice && (
+                  <div className="absolute -right-1 -top-1 bg-yellow-400 text-blue-900 text-xs font-bold px-3 py-2 rounded-lg shadow-md transform rotate-6 z-10">
+                    Save {discountPercentage}%
+                  </div>
+                )}
+                
+                <div className="flex items-center mb-3">
+                  <Award className="h-5 w-5 mr-2" />
+                  <span className="text-sm font-medium bg-white/20 rounded-full px-3 py-0.5">
+                    IELTS {course.difficulty_level} Course
                   </span>
                 </div>
+                
+                <h3 className="text-xl font-bold mb-1">{course.title}</h3>
+                <p className="text-blue-100 text-sm mb-4">{course.description}</p>
+                
               </div>
-
-              <div className="flex space-x-2 mb-4">
-                <Button className="flex-1 bg-blue-500 text-white hover:bg-blue-600">
-                  Register Now
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                >
-                  Apply Coupon Code
-                </Button>
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <h4 className="font-semibold">BENEFITS</h4>
-                <div className="flex items-start">
-                  <div className="bg-yellow-400 p-1 rounded-full mr-2 mt-0.5">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m9 12 2 2 4-4"></path>
-                    </svg>
+              
+              {/* Course Content */}
+              <div className="p-6 flex-grow">
+                {/* Price section */}
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-3xl font-bold text-blue-900">
+                      {course.discountPrice ? formatCurrency(course.discountPrice) : formatCurrency(course.price)}
+                      <span className="text-gray-400 text-sm ml-1">VND</span>
+                    </p>
+                    
+                    {course.discountPrice && (
+                      <p className="text-gray-500 text-sm line-through">
+                        {formatCurrency(course.price)} VND
+                      </p>
+                    )}
                   </div>
-                  <p>Own a specialized study curriculum</p>
+                  <p className="text-gray-500 text-xs">*Price includes all learning materials</p>
                 </div>
-                <div className="flex items-start">
-                  <div className="bg-yellow-400 p-1 rounded-full mr-2 mt-0.5">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="m9 12 2 2 4-4"></path>
-                    </svg>
-                  </div>
-                  <p>
-                    Practice Listening & Reading tests with detailed answer explanations
-                  </p>
+                
+                {/* Benefits section */}
+                <div className="space-y-3 mb-8">
+                  <h4 className="font-semibold text-blue-900 border-b border-gray-100 pb-2">WHAT YOU'LL GET</h4>
+                  
+                  {(course.features || [
+                    "Own a specialized study curriculum",
+                    "Practice Listening & Reading tests with detailed explanations",
+                    "Mock tests to prepare for the real exam",
+                    "One-on-one tutoring sessions"
+                  ]).map((feature, idx) => (
+                    <div key={idx} className="flex items-start">
+                      <div className="bg-blue-500 p-1 rounded-full mr-2 mt-0.5 flex-shrink-0">
+                        <CheckCircle className="h-3 w-3 text-white" />
+                      </div>
+                      <p className="text-sm text-gray-700">{feature}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Action buttons */}
+                <div className="space-y-3 mt-auto">
+                  <Button className="w-full bg-blue-500 text-white hover:bg-blue-600 py-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg">
+                    Register Now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full border-blue-200 text-blue-600 hover:bg-blue-50 rounded-xl"
+                  >
+                    Learn More
+                  </Button>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </motion.div>
         );
       })}
     </div>
