@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+
 import QueryClientProviderWarpper from "@/provider/queryClientProvider";
+import ReduxProviderWrapper from "@/provider/reduxProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,7 +17,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Ielts",
+  title: "IELTS",
   description: "Ielts Website",
 };
 
@@ -29,7 +31,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryClientProviderWarpper>{children}</QueryClientProviderWarpper>
+        <QueryClientProviderWarpper>
+          <ReduxProviderWrapper>
+            {children}
+          </ReduxProviderWrapper>
+        </QueryClientProviderWarpper>
       </body>
     </html>
   );
