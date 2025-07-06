@@ -1,8 +1,9 @@
 const ROUTES = {
   HOME: "/",
-  LOGIN: "/auth/login",
-  REGISTER: "/auth/register",
-  
+  STUDENT_LOGIN: "/auth/student/login",
+  STUDENT_REGISTER: "/auth/student/register",
+  TEACHER_LOGIN: "/auth/teacher/login",
+  TEACHER_REGISTER: "/auth/teacher/register",
 };
 
 export default ROUTES;

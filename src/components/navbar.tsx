@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import NavbarTitle from "./navbarTitle";
-import NavbarLink from "./navbarLink";
+import NavbarTitle from "@/components/navbarTitle";
+import NavbarLink from "@/components/navbarLink";
 import ROUTES from "@/constants/route";
 import { Menu, X } from "lucide-react";
 
@@ -39,7 +39,7 @@ const LandingNavbar = () => {
                 )}
               </button>
 
-              <a href="" className="md:max-lg:order-1">
+              <a href="/" className="md:max-lg:order-1">
                 <div className="mr-0 rounded-[140px] px-3 py-2.5 max-md:bg-[rgba(5,6,15,0.17)] md:mr-5 md:px-0 md:py-2.5 lg:mr-1 lg:px-5 lg:py-3">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +90,7 @@ const LandingNavbar = () => {
 
               <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
                 <a
-                  href=""
+                  href="/"
                   className="rounded-[32px] px-5 py-3 text-xs tracking-[0.06px] hover:text-white lg:max-2xl:px-3 2xl:text-sm 2xl:tracking-[0.07px] pointer-events-none bg-black bg-opacity-[0.24] text-white hover:cursor-default"
                 >
                   Home
@@ -101,9 +101,9 @@ const LandingNavbar = () => {
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
-                        <NavbarLink text="IELTS" href="" />
-                        <NavbarLink text="TOEIC" href="" />
-                        <NavbarLink text="TOEFL" href="" />
+                        <NavbarLink text="IELTS" href="/courses/ielts" />
+                        <NavbarLink text="TOEIC" href="/courses/toeic" />
+                        <NavbarLink text="TOEFL" href="/courses/toefl" />
                       </div>
                     </div>
                   </div>
@@ -114,9 +114,18 @@ const LandingNavbar = () => {
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
-                        <NavbarLink text="IELTS" href="" />
-                        <NavbarLink text="TOEIC" href="" />
-                        <NavbarLink text="TOEFL" href="" />
+                        <NavbarLink
+                          text="IELTS Placement"
+                          href="/placement/ielts"
+                        />
+                        <NavbarLink
+                          text="TOEIC Placement"
+                          href="/placement/toeic"
+                        />
+                        <NavbarLink
+                          text="TOEFL Placement"
+                          href="/placement/toefl"
+                        />
                       </div>
                     </div>
                   </div>
@@ -127,9 +136,18 @@ const LandingNavbar = () => {
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
-                        <NavbarLink text="Practice IELTS" href="" />
-                        <NavbarLink text="Practice TOEIC" href="" />
-                        <NavbarLink text="Practice TOEFL" href="" />
+                        <NavbarLink
+                          text="Practice IELTS"
+                          href="/practice/ielts"
+                        />
+                        <NavbarLink
+                          text="Practice TOEIC"
+                          href="/practice/toeic"
+                        />
+                        <NavbarLink
+                          text="Practice TOEFL"
+                          href="/practice/toefl"
+                        />
                       </div>
                     </div>
                   </div>
@@ -137,21 +155,50 @@ const LandingNavbar = () => {
               </div>
             </div>
 
-            <div className="gap-x flex h-full items-center gap-x-3 md:gap-x-4">
-              <button
-                onClick={() => router.push(ROUTES.LOGIN)}
-                suppressHydrationWarning={true}
-                className="tracking-[0.08px] cursor-pointer items-center justify-center gap-2 text-white disabled:cursor-not-allowed rounded-[32px] disabled:bg-gray-400 py-3 text-md font-semibold hover:bg-[#0071F9] hover:text-white focus:ring-2 focus:ring-blue-300 w-fit hidden px-5 2xl:flex"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => router.push(ROUTES.LOGIN)}
-                suppressHydrationWarning={true}
-                className="inline-flex tracking-[0.08px] cursor-pointer items-center justify-center gap-2 text-white disabled:cursor-not-allowed rounded-[32px] disabled:bg-gray-400 px-4 py-2.5 text-sm font-semibold hover:bg-[#0071F9] hover:text-white focus:ring-2 focus:ring-blue-300 w-fit 2xl:hidden"
-              >
-                Login
-              </button>
+            {/* Right side - Login & Register */}
+            <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
+              {/* Login Dropdown */}
+              <NavbarTitle text="Login">
+                <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
+                  <div className="h-3 w-full"></div>
+                  <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
+                    <div className="flex flex-col">
+                      <NavbarLink
+                        text="Login as Student"
+                        href={ROUTES.STUDENT_LOGIN}
+                      />
+                      <NavbarLink
+                        text="Login as Teacher"
+                        href={ROUTES.TEACHER_LOGIN}
+                      />
+                      <div className="border-t border-white/20 my-1"></div>
+                      <NavbarLink
+                        text="Admin Portal"
+                        href="/auth/admin/login"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </NavbarTitle>
+
+              {/* Register Dropdown */}
+              <NavbarTitle text="Register">
+                <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
+                  <div className="h-3 w-full"></div>
+                  <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
+                    <div className="flex flex-col">
+                      <NavbarLink
+                        text="Join as Student"
+                        href={ROUTES.STUDENT_REGISTER}
+                      />
+                      <NavbarLink
+                        text="Join as Teacher"
+                        href={ROUTES.TEACHER_REGISTER}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </NavbarTitle>
             </div>
           </div>
         </div>
@@ -166,18 +213,64 @@ const LandingNavbar = () => {
           className="lg:hidden bg-[#011657]/95 backdrop-blur-md"
         >
           <div className="px-4 py-6 space-y-4">
-            <a href="" className="block py-2 text-white font-medium">
+            <a href="/" className="block py-2 text-white font-medium">
               Home
             </a>
-            <a href="" className="block py-2 text-white/70 hover:text-white">
+            <a
+              href="/courses"
+              className="block py-2 text-white/70 hover:text-white"
+            >
               Courses
             </a>
-            <a href="" className="block py-2 text-white/70 hover:text-white">
+            <a
+              href="/placement"
+              className="block py-2 text-white/70 hover:text-white"
+            >
               Placement Test
             </a>
-            <a href="" className="block py-2 text-white/70 hover:text-white">
+            <a
+              href="/practice"
+              className="block py-2 text-white/70 hover:text-white"
+            >
               Test Practice
             </a>
+
+            {/* Mobile Login/Register */}
+            <div className="border-t border-white/20 pt-4 mt-4">
+              <div className="space-y-2">
+                <div className="text-white/50 text-sm font-medium">Login</div>
+                <a
+                  href="/auth/student/login"
+                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                >
+                  Student Login
+                </a>
+                <a
+                  href="/auth/teacher/login"
+                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                >
+                  Teacher Login
+                </a>
+              </div>
+
+              <div className="space-y-2 mt-4">
+                <div className="text-white/50 text-sm font-medium">
+                  Register
+                </div>
+                <a
+                  href="/auth/student/register"
+                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                >
+                  Join as Student
+                </a>
+                <a
+                  href="/auth/teacher/register"
+                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                >
+                  Join as Teacher
+                </a>
+              </div>
+            </div>
           </div>
         </motion.div>
       )}

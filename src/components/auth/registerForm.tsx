@@ -1,7 +1,4 @@
 "use client";
-
-import type React from "react";
-
 import toast from "react-hot-toast";
 import {
   Form,
@@ -11,7 +8,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/tailwindMerge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
@@ -27,6 +24,7 @@ import { RegisterSchema } from "@/validation/auth";
 import ROUTES from "@/constants/route";
 
 const RegisterForm = ({
+  role,
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
@@ -64,7 +62,7 @@ const RegisterForm = ({
   const form = useForm({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
-      name: "",
+      fullname: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -97,7 +95,7 @@ const RegisterForm = ({
               transition={{ delay: 0.2 }}
               className="text-3xl font-bold bg-clip-text text-transparent bg-blue-700"
             >
-              Create Account
+              {role === "teacher" ? "Create a Teacher Account" : "Create a Student Account"}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -118,17 +116,17 @@ const RegisterForm = ({
             >
               <FormField
                 control={form.control}
-                name="name"
+                name="fullname"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Name</FormLabel>
+                    <FormLabel className="text-sm font-medium">Full Name</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        id="name"
+                        id="fullname"
                         type="text"
                         placeholder="John Doe"
-                        autoComplete="name"
+                        autoComplete="fullname"
                         required
                         suppressHydrationWarning={true} 
                         className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
@@ -341,7 +339,7 @@ const RegisterForm = ({
                   </div>
                 ) : (
                   <>
-                    Create Account
+                    {role === "teacher" ? "Create Teacher Account" : "Create Student Account"}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -370,20 +368,6 @@ const RegisterForm = ({
             </motion.div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.0 }}
-            className="text-center text-sm"
-          >
-            Already have an account?{" "}
-            <a
-              href={ROUTES.LOGIN}
-              className="text-blue-600 hover:text-blue-700 transition-colors font-medium"
-            >
-              Sign in
-            </a>
-          </motion.div>
         </form>
       </Form>
     </motion.div>

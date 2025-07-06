@@ -21,7 +21,7 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-    name: z.string().min(2, { message: "Name is required" }),
+    fullname: z.string().min(2, { message: "Full name is required" }),
     email: z.string().email({ message: "Invalid email address" }),
     password: PasswordSchema,
     confirmPassword: z.string().min(8, { message: "Confirm Password is required" }),

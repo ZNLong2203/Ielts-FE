@@ -4,7 +4,7 @@ export interface ILoginParams {
 }
 
 export interface IRegisterParams {
-    name: String,
+    fullname: String,
     email: String,
     password: String,
 }

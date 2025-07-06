@@ -11,7 +11,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/tailwindMerge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
@@ -27,6 +27,7 @@ import { LoginSchema } from "@/validation/auth";
 import ROUTES from "@/constants/route";
 
 const LoginForm = ({
+  role,
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
@@ -82,7 +83,7 @@ const LoginForm = ({
               transition={{ delay: 0.2 }}
               className="text-3xl font-bold bg-clip-text text-blue-600"
             >
-              Welcome Back
+              Welcome Back 
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -194,7 +195,7 @@ const LoginForm = ({
                   </div>
                 ) : (
                   <>
-                    Sign in
+                    Sign in as {role === "teacher" ? "Teacher" : "Student"}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -231,10 +232,10 @@ const LoginForm = ({
           >
             Don&apos;t have an account?{" "}
             <a
-              href={ROUTES.REGISTER}
+              // href={ROUTES.REGISTER}
               className="text-blue-700 hover:text-blue-800 transition-colors font-medium"
             >
-              Create account
+              Create an {role === "teacher" ? "Teacher" : "Student" } account
             </a>
           </motion.div>
         </form>
