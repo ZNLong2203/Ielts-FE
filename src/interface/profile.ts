@@ -1,21 +1,20 @@
-import { IUser } from "./user";
 
 export interface IProfile {
-    id: String;
-    user_id: String;
-    full_name?: String;
-    avatar?: String
-    phone?: String;
+    id: string;
+    user_id: string;
+    full_name?: string;
+    avatar?: string
+    phone?: string;
     date_of_birth?: Date;
-    gender?: String;
-    bio?: String;
-    country?: String;
-    city?: String;
-    target_ielts_score?: Number;
-    current_level?: String;
-    timezone?: String;
-    language_preferences?: String;
-    learning_goals?: String[];
+    gender?: string;
+    bio?: string;
+    country?: string;
+    city?: string;
+    target_ielts_score?: number;
+    current_level?: string;
+    timezone?: string;
+    language_preferences?: string;
+    learning_goals?: string[];
     privacy_settings?: JSON;
     created_at?: Date;
     updated_at?: Date;

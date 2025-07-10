@@ -31,7 +31,6 @@ import { loginSuccess, loginFailure } from "@/redux/features/user/userSlice";
 import ROUTES from "@/constants/route";
 
 const LoginForm = ({
-  role,
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
@@ -204,7 +203,7 @@ const LoginForm = ({
                   </div>
                 ) : (
                   <>
-                    Sign in as {role === "TEACHER" ? "Teacher" : "Student"}
+                    Sign in
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -244,7 +243,7 @@ const LoginForm = ({
               // href={ROUTES.REGISTER}
               className="text-blue-700 hover:text-blue-800 transition-colors font-medium"
             >
-              Create an {role === "TEACHER" ? "Teacher" : "Student"} account
+              Create an account
             </a>
           </motion.div>
         </form>

@@ -3,14 +3,45 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectIsAuthenticated,
+  selectUser,
+  logout,
+} from "@/redux/features/user/userSlice";
 import NavbarTitle from "@/components/navbarTitle";
 import NavbarLink from "@/components/navbarLink";
 import ROUTES from "@/constants/route";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
+import toast from "react-hot-toast";
+import { Logout } from "@/api/auth";
 
 const LandingNavbar = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Redux selectors
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const user = useSelector(selectUser);
+
+  const handleLogout = async () => {
+    // Logout()
+    //   .then(() => {
+    //     console.log("Logout successful");
+    //     toast.success("Logged out successfully");
+    //     router.push(ROUTES.HOME);
+
+    //     dispatch(logout());
+    //   })
+    //   .catch((error) => {
+    //     console.error("Logout failed:", error);
+    //     toast.error("Logout failed. Please try again.");
+    //   });
+
+      dispatch(logout());
+    setMobileMenuOpen(false);
+  };
 
   return (
     <motion.div
@@ -41,6 +72,7 @@ const LandingNavbar = () => {
 
               <a href="/" className="md:max-lg:order-1">
                 <div className="mr-0 rounded-[140px] px-3 py-2.5 max-md:bg-[rgba(5,6,15,0.17)] md:mr-5 md:px-0 md:py-2.5 lg:mr-1 lg:px-5 lg:py-3">
+                  {/* SVG logo giữ nguyên */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="85"
@@ -49,6 +81,7 @@ const LandingNavbar = () => {
                     fill="none"
                     className="h-6 w-[85px]"
                   >
+                    {/* SVG content giữ nguyên */}
                     <g clipPath="url(#clip0_30428_22879)">
                       <path
                         d="M29.3774 19.0263C29.282 18.9321 29.2344 18.8143 29.2344 18.6769V5.35796C29.2344 5.20879 29.2781 5.08318 29.3694 4.98897C29.4608 4.89476 29.58 4.84766 29.7309 4.84766H35.28C36.9483 4.84766 38.2631 5.23627 39.2124 6.0135C40.1657 6.79074 40.6424 7.92126 40.6424 9.40899C40.6424 10.8967 40.1657 11.9958 39.2124 12.7534C38.2591 13.5111 36.9483 13.8879 35.28 13.8879H32.2373V18.6769C32.2373 18.8261 32.1897 18.9478 32.0943 19.0341C31.999 19.1244 31.8719 19.1676 31.7209 19.1676H29.7349C29.5958 19.1676 29.4806 19.1205 29.3813 19.0223M35.1807 11.5954C35.9831 11.5954 36.5908 11.407 37.0118 11.0341C37.4329 10.6612 37.6434 10.1116 37.6434 9.38544C37.6434 8.65924 37.4408 8.12538 37.0317 7.72891C36.6226 7.33245 36.0069 7.13617 35.1767 7.13617H32.1936V11.5954H35.1767H35.1807Z"
@@ -88,6 +121,7 @@ const LandingNavbar = () => {
                 </div>
               </a>
 
+              {/* Navigation Menu - giữ nguyên */}
               <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
                 <a
                   href="/"
@@ -155,50 +189,86 @@ const LandingNavbar = () => {
               </div>
             </div>
 
-            {/* Right side - Login & Register */}
+            {/* Right side - Login & Register HOẶC User Menu */}
             <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
-              {/* Login Dropdown */}
-              <NavbarTitle text="Login">
-                <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
-                  <div className="h-3 w-full"></div>
-                  <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
-                    <div className="flex flex-col">
-                      <NavbarLink
-                        text="Login as Student"
-                        href={ROUTES.STUDENT_LOGIN}
-                      />
-                      <NavbarLink
-                        text="Login as Teacher"
-                        href={ROUTES.TEACHER_LOGIN}
-                      />
-                      <div className="border-t border-white/20 my-1"></div>
-                      <NavbarLink
-                        text="Admin Portal"
-                        href="/auth/admin/login"
-                      />
+              {!isAuthenticated ? (
+                <>
+                  {/* Login Dropdown */}
+                  <NavbarTitle text="Login">
+                    <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
+                      <div className="h-3 w-full"></div>
+                      <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
+                        <div className="flex flex-col">
+                          <NavbarLink
+                            text="Login"
+                            href={ROUTES.LOGIN}
+                          />
+                        
+                          <div className="border-t border-white/20 my-1"></div>
+                          <NavbarLink
+                            text="Admin Portal"
+                            href="/auth/admin/login"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </NavbarTitle>
+                  </NavbarTitle>
 
-              {/* Register Dropdown */}
-              <NavbarTitle text="Register">
-                <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
-                  <div className="h-3 w-full"></div>
-                  <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
-                    <div className="flex flex-col">
-                      <NavbarLink
-                        text="Join as Student"
-                        href={ROUTES.STUDENT_REGISTER}
-                      />
-                      <NavbarLink
-                        text="Join as Teacher"
-                        href={ROUTES.TEACHER_REGISTER}
-                      />
+                  {/* Register Dropdown */}
+                  <NavbarTitle text="Register">
+                    <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
+                      <div className="h-3 w-full"></div>
+                      <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
+                        <div className="flex flex-col">
+                          <NavbarLink
+                            text="Join as Student"
+                            href={ROUTES.STUDENT_REGISTER}
+                          />
+                          <NavbarLink
+                            text="Join as Teacher"
+                            href={ROUTES.TEACHER_REGISTER}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </NavbarTitle>
+                </>
+              ) : (
+                /* User Menu khi đã đăng nhập */
+                <NavbarTitle
+                  text={
+                    user?.profiles?.full_name ||
+                    `${user?.email}`.split("@")[0] ||
+                    "User"
+                  }
+                >
+                  <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
+                    <div className="h-3 w-full"></div>
+                    <div className="min-w-[200px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
+                      <div className="flex flex-col">
+                        <div className="px-3 py-2 text-xs text-white/50 border-b border-white/20">
+                          {user?.email}
+                        </div>
+                        <a
+                          href="/profile/student"
+                          className="flex items-center px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          My Profile
+                        </a>
+                        <div className="border-t border-white/20 my-1"></div>
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center w-full px-3 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-900/20 rounded-lg transition-colors text-left"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Logout
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </NavbarTitle>
+                </NavbarTitle>
+              )}
             </div>
           </div>
         </div>
@@ -235,41 +305,73 @@ const LandingNavbar = () => {
               Test Practice
             </a>
 
-            {/* Mobile Login/Register */}
+            {/* Mobile Login/Register hoặc User Menu */}
             <div className="border-t border-white/20 pt-4 mt-4">
-              <div className="space-y-2">
-                <div className="text-white/50 text-sm font-medium">Login</div>
-                <a
-                  href="/auth/student/login"
-                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
-                >
-                  Student Login
-                </a>
-                <a
-                  href="/auth/teacher/login"
-                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
-                >
-                  Teacher Login
-                </a>
-              </div>
+              {!isAuthenticated ? (
+                <>
+                  <div className="space-y-2">
+                    <div className="text-white/50 text-sm font-medium">
+                      Login
+                    </div>
+                    <a
+                      href="/auth/student/login"
+                      className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                    >
+                      Student Login
+                    </a>
+                    <a
+                      href="/auth/teacher/login"
+                      className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                    >
+                      Teacher Login
+                    </a>
+                  </div>
 
-              <div className="space-y-2 mt-4">
-                <div className="text-white/50 text-sm font-medium">
-                  Register
-                </div>
-                <a
-                  href="/auth/student/register"
-                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
-                >
-                  Join as Student
-                </a>
-                <a
-                  href="/auth/teacher/register"
-                  className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
-                >
-                  Join as Teacher
-                </a>
-              </div>
+                  <div className="space-y-2 mt-4">
+                    <div className="text-white/50 text-sm font-medium">
+                      Register
+                    </div>
+                    <a
+                      href="/auth/student/register"
+                      className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                    >
+                      Join as Student
+                    </a>
+                    <a
+                      href="/auth/teacher/register"
+                      className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
+                    >
+                      Join as Teacher
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="border-b border-white/20 pb-4 mb-4">
+                    <div className="text-white font-medium">
+                      {user?.profiles?.full_name ||
+                        `${user?.email}`.split("@")[0]}
+                    </div>
+                    <div className="text-white/50 text-sm">{user?.email}</div>
+                  </div>
+
+                  <a
+                    href="/profile/student"
+                    className="flex items-center py-2 text-white/70 hover:text-white"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    My Profile
+                  </a>
+
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full py-2 text-red-300 hover:text-red-100"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

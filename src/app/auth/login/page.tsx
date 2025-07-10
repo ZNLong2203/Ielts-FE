@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import { GalleryVerticalEnd } from "lucide-react";
 import LoginForm from "@/components/auth/loginForm";
 
-
-const LoginTeacherPage = () => {
+const LoginStudentPage = () => {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10 relative z-10">
@@ -24,7 +23,7 @@ const LoginTeacherPage = () => {
         </motion.div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
-            <LoginForm role="TEACHER"/>
+            <LoginForm/>
           </div>
         </div>
       </div>
@@ -43,9 +42,9 @@ const LoginTeacherPage = () => {
           transition={{ duration: 1 }}
           className="absolute inset-0 z-0"
         >
-           <img
-            src="https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=2070&auto=format&fit=crop"
-            alt="Teacher at work"
+          <img
+            src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop"
+            alt="IELTS Study"
             className="h-full w-full object-cover"
           />
         </motion.div>
@@ -70,4 +69,4 @@ const LoginTeacherPage = () => {
   );
 };
 
-export default LoginTeacherPage;
+export default LoginStudentPage;

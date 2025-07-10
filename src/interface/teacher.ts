@@ -1,22 +1,22 @@
 import { IUser } from './user';
 
 export interface ITeacher {
-    id: String;
-    user_id: String;
-    qualification?: String;
-    experience_years?: Number;
-    specializations: String[];
-    ielts_band_score?: Number;
-    certification_urls: String[];
-    teaching_style?: String;
-    hourly_rate?: Number;
+    id: string;
+    user_id: string;
+    qualification?: string;
+    experience_years?: number;
+    specializations: string[];
+    ielts_band_score?: number;
+    certification_urls: string[];
+    teaching_style?: string;
+    hourly_rate?: number;
     availability?: {
-        days: String[];
-        timeSlots: String[];
+        days: string[];
+        timeSlots: string[];
     };
-    ratings?: Number;
-    total_students?: Number;
-    total_courses?: Number;
-    is_verified?: Boolean;
+    ratings?: number;
+    total_students?: number;
+    total_courses?: number;
+    is_verified?: boolean;
 }
 
