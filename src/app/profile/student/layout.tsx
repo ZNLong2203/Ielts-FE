@@ -1,13 +1,14 @@
+
 import ProtectedRoute from "@/components/auth/protectedRoute";
 
-const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
+const StudentPageLayout = ({ children }: { children: React.ReactNode }) => {
     return (
-       <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+        <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
             <div className="min-h-screen bg-gray-50">
                 {children}
             </div>
         </ProtectedRoute>
-    )
-}
+    );
+};
 
-export default ProfileLayout;
+export default StudentPageLayout;

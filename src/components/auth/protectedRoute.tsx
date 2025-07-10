@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectUser } from '@/redux/features/user/userSlice';
 import { useRouter } from 'next/navigation';
 import { useEffect, ReactNode } from 'react';
+
+import { Button } from '@/components/ui/button';
 import ROUTES from '@/constants/route';
 
 interface ProtectedRouteProps {
@@ -35,20 +37,20 @@ const ProtectedRoute = ({
             return;
         }
 
-        // Kiểm tra role nếu có yêu cầu
-        if (allowedRoles && allowedRoles.length > 0 && !hasPermission()) {
-            // Redirect based on user role
-            if (user?.role === 'STUDENT') {
-                router.push(ROUTES.HOME);
-            } else if (user?.role === 'TEACHER') {
-                router.push(ROUTES.HOME);
-            } else if (user?.role === 'ADMIN') {
-                router.push('/admin/dashboard');
-            } else {
-                router.push('/unauthorized');
-            }
-            return;
-        }
+        // // Kiểm tra role nếu có yêu cầu
+        // if (allowedRoles && allowedRoles.length > 0 && !hasPermission()) {
+        //     // Redirect based on user role
+        //     if (user?.role === 'STUDENT') {
+        //         router.push(ROUTES.HOME);
+        //     } else if (user?.role === 'TEACHER') {
+        //         router.push(ROUTES.HOME);
+        //     } else if (user?.role === 'ADMIN') {
+        //         router.push('/admin/dashboard');
+        //     } else {
+        //         router.push('/unauthorized');
+        //     }
+        //     return;
+        // }
     }, [isAuthenticated, user, router, redirectTo, allowedRoles]);
 
     if (!isAuthenticated) {
@@ -70,12 +72,12 @@ const ProtectedRoute = ({
                     <div className="text-red-500 text-6xl">🚫</div>
                     <h1 className="text-2xl font-bold text-gray-900">Access Denied</h1>
                     <p className="text-gray-600">You don't have permission to access this page.</p>
-                    <button 
+                    <Button 
                         onClick={() => router.back()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="px-10 py-6 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
                     >
                         Go Back
-                    </button>
+                    </Button>
                 </div>
             </div>
         );

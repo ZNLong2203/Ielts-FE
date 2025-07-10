@@ -1,6 +1,6 @@
 import StudentProfile from "@/components/profile/studentProfile";
 
-const StudentPage = () => {
+const StudentProfilePage = () => {
   return (
     <div>
       <StudentProfile />
@@ -8,4 +8,4 @@ const StudentPage = () => {
   );
 };
 
-export default StudentPage;
+export default StudentProfilePage;
