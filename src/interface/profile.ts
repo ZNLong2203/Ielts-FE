@@ -15,6 +15,8 @@ export interface IProfile {
     current_level?: String;
     timezone?: String;
     language_preferences?: String;
+    learning_goals?: String[];
+    privacy_settings?: JSON;
     created_at?: Date;
     updated_at?: Date;
 

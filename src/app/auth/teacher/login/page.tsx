@@ -24,7 +24,7 @@ const LoginTeacherPage = () => {
         </motion.div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
-            <LoginForm role="teacher"/>
+            <LoginForm role="TEACHER"/>
           </div>
         </div>
       </div>

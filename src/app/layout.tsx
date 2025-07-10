@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
+import toast, { Toaster } from 'react-hot-toast';
 import QueryClientProviderWarpper from "@/provider/queryClientProvider";
 import ReduxProviderWrapper from "@/provider/reduxProvider";
+import PersistProvider from "@/provider/persistProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,7 +35,8 @@ export default function RootLayout({
       >
         <QueryClientProviderWarpper>
           <ReduxProviderWrapper>
-            {children}
+            <Toaster/>
+            <PersistProvider>{children}</PersistProvider>
           </ReduxProviderWrapper>
         </QueryClientProviderWarpper>
       </body>

@@ -16,7 +16,7 @@ export interface IUser {
     last_login?: Date;
     login_count?: Number;
 
-    teacher?: ITeacher;
-    profile?: IProfile
+    teachers?: ITeacher;
+    profiles?: IProfile
 }
 

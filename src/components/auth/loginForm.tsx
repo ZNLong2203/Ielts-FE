@@ -11,7 +11,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/tailwindMerge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
@@ -20,10 +20,14 @@ import { motion } from "framer-motion";
 import { z } from "zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { Login } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema } from "@/validation/auth";
+
+import { useDispatch } from "react-redux";
+import { loginSuccess, loginFailure } from "@/redux/features/user/userSlice";
 import ROUTES from "@/constants/route";
 
 const LoginForm = ({
@@ -31,8 +35,9 @@ const LoginForm = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
+  const dispatch = useDispatch();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const {
     mutate: loginHandler,
@@ -40,12 +45,17 @@ const LoginForm = ({
     isPending,
   } = useMutation({
     mutationFn: Login,
-    onError: (error) => {
-      toast.error(error.message);
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.message + " please verify your credentials");
     },
-    onSuccess: (data) => {
-      toast.success("Login successful");
-      // Handle successful login
+    onSuccess: (response) => {
+      console.log("Login successful:", response);
+      const { user, access_token } = response.data.data;
+    
+      // Save to redux store
+      dispatch(loginSuccess({ user, accessToken: access_token }));
+      router.push(ROUTES.HOME)
+      toast.success(response.data.message);
     },
   });
 
@@ -58,8 +68,6 @@ const LoginForm = ({
   });
 
   const onSubmit = (data: z.infer<typeof LoginSchema>) => {
-    setIsLoading(true);
-    console.log(data);
     loginHandler(data);
   };
 
@@ -83,7 +91,7 @@ const LoginForm = ({
               transition={{ delay: 0.2 }}
               className="text-3xl font-bold bg-clip-text text-blue-600"
             >
-              Welcome Back 
+              Welcome Back
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -161,6 +169,7 @@ const LoginForm = ({
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
+                          suppressHydrationWarning={true}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {showPassword ? (
@@ -185,17 +194,17 @@ const LoginForm = ({
               <Button
                 type="submit"
                 className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-900 text-white transition-all duration-300 flex items-center justify-center gap-2"
-                disabled={isLoading}
+                disabled={isPending}
                 suppressHydrationWarning={true}
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
                     <span>Signing in...</span>
                   </div>
                 ) : (
                   <>
-                    Sign in as {role === "teacher" ? "Teacher" : "Student"}
+                    Sign in as {role === "TEACHER" ? "Teacher" : "Student"}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -235,7 +244,7 @@ const LoginForm = ({
               // href={ROUTES.REGISTER}
               className="text-blue-700 hover:text-blue-800 transition-colors font-medium"
             >
-              Create an {role === "teacher" ? "Teacher" : "Student" } account
+              Create an {role === "TEACHER" ? "Teacher" : "Student"} account
             </a>
           </motion.div>
         </form>

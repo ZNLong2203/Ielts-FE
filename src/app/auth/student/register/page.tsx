@@ -26,7 +26,7 @@ const RegisterStudentPage = () => {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
         
-            <RegisterForm role="student"/>
+            <RegisterForm role="STUDENT"/>
 
             <motion.div
               initial={{ opacity: 0 }}

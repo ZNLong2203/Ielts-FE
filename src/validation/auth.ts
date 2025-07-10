@@ -21,9 +21,12 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
-    fullname: z.string().min(2, { message: "Full name is required" }),
+    full_name: z.string().min(2, { message: "Full name is required" }),
     email: z.string().email({ message: "Invalid email address" }),
     password: PasswordSchema,
+    role: z.enum(["STUDENT", "TEACHER"], {
+        message: "Role must be either 'student' or 'teacher'",
+    }),
     confirmPassword: z.string().min(8, { message: "Confirm Password is required" }),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

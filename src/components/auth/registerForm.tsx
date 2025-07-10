@@ -8,7 +8,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/tailwindMerge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
@@ -17,7 +17,8 @@ import { motion } from "framer-motion";
 import { z } from "zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Register } from "@/api/auth";
+import { useRouter } from "next/navigation";
+import { studentRegister, teacherRegister } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterSchema } from "@/validation/auth";
@@ -28,9 +29,9 @@ const RegisterForm = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,29 +50,35 @@ const RegisterForm = ({
     isError,
     isPending,
   } = useMutation({
-    mutationFn: Register,
-    onError: (error) => {
-      toast.error(error.message);
+    mutationFn: role === "TEACHER" ? teacherRegister : studentRegister,
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || error.message);
     },
-    onSuccess: (data) => {
-      toast.success("Registration successful");
-      // Handle successful registration
+    onSuccess: (response) => {
+      toast.success(response.data.message);
+      // Redirect to login page after successful registration;
+      setTimeout(() => {
+        router.push(
+          role === "TEACHER" ? ROUTES.TEACHER_LOGIN : ROUTES.STUDENT_LOGIN
+        );
+      }, 3000);
     },
   });
 
-  const form = useForm({
+  const roleEnum = role === "TEACHER" ? "TEACHER" : "STUDENT";
+
+  const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
-      fullname: "",
+      full_name: "",
       email: "",
       password: "",
       confirmPassword: "",
+      role: roleEnum,
     },
   });
 
   const onSubmit = (data: z.infer<typeof RegisterSchema>) => {
-    setIsLoading(true);
-    console.log(data);
     registerHandler(data);
   };
 
@@ -95,7 +102,9 @@ const RegisterForm = ({
               transition={{ delay: 0.2 }}
               className="text-3xl font-bold bg-clip-text text-transparent bg-blue-700"
             >
-              {role === "teacher" ? "Create a Teacher Account" : "Create a Student Account"}
+              {role === "TEACHER"
+                ? "Create a Teacher Account"
+                : "Create a Student Account"}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -116,19 +125,21 @@ const RegisterForm = ({
             >
               <FormField
                 control={form.control}
-                name="fullname"
+                name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      Full Name
+                    </FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        id="fullname"
+                        id="full_name"
                         type="text"
                         placeholder="John Doe"
                         autoComplete="fullname"
                         required
-                        suppressHydrationWarning={true} 
+                        suppressHydrationWarning={true}
                         className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
                       />
                     </FormControl>
@@ -158,7 +169,7 @@ const RegisterForm = ({
                         autoComplete="email"
                         placeholder="your.email@example.com"
                         required
-                        suppressHydrationWarning={true} 
+                        suppressHydrationWarning={true}
                         className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
                       />
                     </FormControl>
@@ -197,12 +208,13 @@ const RegisterForm = ({
                           autoComplete="current-password"
                           placeholder="********"
                           required
-                          suppressHydrationWarning={true} 
+                          suppressHydrationWarning={true}
                           className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
+                          suppressHydrationWarning={true}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {showPassword ? (
@@ -263,7 +275,7 @@ const RegisterForm = ({
                           autoComplete="new-password"
                           placeholder="********"
                           required
-                          suppressHydrationWarning={true} 
+                          suppressHydrationWarning={true}
                           className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
                         />
                         <button
@@ -271,6 +283,7 @@ const RegisterForm = ({
                           onClick={() =>
                             setShowConfirmPassword(!showConfirmPassword)
                           }
+                          suppressHydrationWarning={true}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {showConfirmPassword ? (
@@ -330,16 +343,18 @@ const RegisterForm = ({
                 type="submit"
                 suppressHydrationWarning={true}
                 className="w-full h-11 rounded-xl bg-blue-700 hover:bg-blue-900 text-white transition-all duration-300 flex items-center justify-center gap-2"
-                disabled={isLoading}
+                disabled={isPending}
               >
-                {isLoading ? (
+                {isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
                     <span>Creating account...</span>
                   </div>
                 ) : (
                   <>
-                    {role === "teacher" ? "Create Teacher Account" : "Create Student Account"}
+                    {role === "TEACHER"
+                      ? "Create Teacher Account"
+                      : "Create Student Account"}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -367,7 +382,6 @@ const RegisterForm = ({
               </Button>
             </motion.div>
           </div>
-
         </form>
       </Form>
     </motion.div>
