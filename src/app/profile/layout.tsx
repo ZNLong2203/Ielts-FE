@@ -1,10 +1,14 @@
 import ProtectedRoute from "@/components/auth/protectedRoute";
+import Footer from "@/components/footer";
+import LandingNavbar from "@/components/navbar";
 
 const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
     return (
        <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
             <div className="min-h-screen bg-gray-50">
+                <LandingNavbar />
                 {children}
+                <Footer />
             </div>
         </ProtectedRoute>
     )

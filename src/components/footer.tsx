@@ -1,23 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { 
-  ChevronDown, 
   Facebook, 
   Instagram, 
   Mail, 
   Twitter, 
-  Youtube, 
   Linkedin, 
   MapPin, 
   Phone, 
   Shield, 
-  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import appstoreIcon from "../../public/icons/appstore.png";
 import googlePlayIcon from "../../public/icons/googlePlay.png";
-import logo from "../../public/images/logo.png"; // Assuming you have a logo image
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -266,47 +262,6 @@ const Footer = () => {
                   Training and Education Certification No. 1309/QD-SGDDT<br />
                   Issued on July 31, 2023
                 </p>
-              </div>
-            </div>
-          </div>
-          
-          {/* Certifications */}
-          <div className="mt-10 pt-6 border-t border-gray-200">
-            <h4 className="font-medium text-gray-800 mb-4 text-sm">
-              CERTIFIED BY
-            </h4>
-            <div className="flex flex-wrap items-center gap-6">
-              {/* Certification badges */}
-              <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-                <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-xs">BTC</span>
-                </div>
-                <div className="text-xs">
-                  <p className="font-semibold text-gray-800">
-                    MINISTRY OF INFORMATION
-                  </p>
-                  <p className="text-gray-500">AND COMMUNICATION</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-                <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-bold text-xs">DMCA</span>
-                </div>
-                <div className="text-xs">
-                  <p className="font-semibold text-gray-800">DMCA</p>
-                  <p className="text-gray-500">PROTECTED</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
-                <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-xs">GMO</span>
-                </div>
-                <div className="text-xs">
-                  <p className="font-semibold text-gray-800">GMO</p>
-                  <p className="text-gray-500">GlobalSign secure</p>
-                </div>
               </div>
             </div>
           </div>
