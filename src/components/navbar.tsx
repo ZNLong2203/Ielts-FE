@@ -26,20 +26,19 @@ const LandingNavbar = () => {
   const user = useSelector(selectUser);
 
   const handleLogout = async () => {
-    // Logout()
-    //   .then(() => {
-    //     console.log("Logout successful");
-    //     toast.success("Logged out successfully");
-    //     router.push(ROUTES.HOME);
+    Logout()
+      .then(() => {
+        console.log("Logout successful");
+        toast.success("Logged out successfully");
+        router.push(ROUTES.HOME);
 
-    //     dispatch(logout());
-    //   })
-    //   .catch((error) => {
-    //     console.error("Logout failed:", error);
-    //     toast.error("Logout failed. Please try again.");
-    //   });
+        dispatch(logout());
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+        toast.error("Logout failed. Please try again.");
+      });
 
-      dispatch(logout());
     setMobileMenuOpen(false);
   };
 

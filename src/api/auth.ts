@@ -1,14 +1,16 @@
 import axios from "axios";
+import api from "@/utils/interceptor";
+
 import { ILoginParams, IRegisterParams } from "@/interface/auth";
 import { API_URL } from "@/constants/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // Cấu hình axios để luôn gửi cookies
-axios.defaults.withCredentials = true;
+
 
 export const Login = async (data: ILoginParams) => {
-  const response = await axios.post(`${BASE_URL}${API_URL.LOGIN}`, data, {
+  const response = await api.post(`${BASE_URL}${API_URL.LOGIN}`, data, {
     withCredentials: true, 
   });
   console.log(response);
@@ -16,7 +18,7 @@ export const Login = async (data: ILoginParams) => {
 };
 
 export const Logout = async () => {
-  const response = await axios.post(`${BASE_URL}${API_URL.LOGOUT}`, {}, {
+  const response = await api.post(`${BASE_URL}${API_URL.LOGOUT}`, {}, {
     withCredentials: true, 
   });
   console.log(response);
@@ -24,7 +26,7 @@ export const Logout = async () => {
 };
 
 export const studentRegister = async (data: IRegisterParams) => {
-  const response = await axios.post(
+  const response = await api.post(
     `${BASE_URL}${API_URL.STUDENT_REGISTER}`,
     data,
     {
@@ -36,7 +38,7 @@ export const studentRegister = async (data: IRegisterParams) => {
 };
 
 export const teacherRegister = async (data: IRegisterParams) => {
-  const response = await axios.post(
+  const response = await api.post(
     `${BASE_URL}${API_URL.TEACHER_REGISTER}`,
     data,
     {

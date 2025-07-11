@@ -27,7 +27,6 @@ const ProtectedRoute = ({
     const hasPermission = (): boolean => {
         // Nếu không có allowedRoles thì cho phép tất cả (chỉ cần authenticated)
         if (!allowedRoles || allowedRoles.length === 0) return true;
-        
         return allowedRoles.includes(user?.role || '');
     };
 
