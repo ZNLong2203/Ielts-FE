@@ -37,7 +37,7 @@ const RegisterStudentPage = () => {
               <p className="text-sm text-gray-600">
                 Already have a student account?{" "}
                 <a
-                  href={ROUTES.STUDENT_LOGIN}
+                  href={ROUTES.LOGIN}
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Sign in here

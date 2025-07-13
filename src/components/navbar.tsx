@@ -198,11 +198,8 @@ const LandingNavbar = () => {
                       <div className="h-3 w-full"></div>
                       <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                         <div className="flex flex-col">
-                          <NavbarLink
-                            text="Login"
-                            href={ROUTES.LOGIN}
-                          />
-                        
+                          <NavbarLink text="Login" href={ROUTES.LOGIN} />
+
                           <div className="border-t border-white/20 my-1"></div>
                           <NavbarLink
                             text="Admin Portal"
@@ -248,13 +245,23 @@ const LandingNavbar = () => {
                         <div className="px-3 py-2 text-xs text-white/50 border-b border-white/20">
                           {user?.email}
                         </div>
-                        <a
-                          href="/profile/student"
-                          className="flex items-center px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                        >
-                          <User className="h-4 w-4 mr-2" />
-                          My Profile
-                        </a>
+                        {user?.role === "TEACHER" ? (
+                          <a
+                            href={ROUTES.TEACHER_PROFILE}
+                            className="flex items-center px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            My Profile
+                          </a>
+                        ) : (
+                          <a
+                            href={ROUTES.STUDENT_PROFILE}
+                            className="flex items-center px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            My Profile
+                          </a>
+                        )}
                         <div className="border-t border-white/20 my-1"></div>
                         <button
                           onClick={handleLogout}
@@ -313,13 +320,13 @@ const LandingNavbar = () => {
                       Login
                     </div>
                     <a
-                      href="/auth/student/login"
+                      href={ROUTES.LOGIN}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
                       Student Login
                     </a>
                     <a
-                      href="/auth/teacher/login"
+                      href={ROUTES.LOGIN}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
                       Teacher Login
@@ -331,13 +338,13 @@ const LandingNavbar = () => {
                       Register
                     </div>
                     <a
-                      href="/auth/student/register"
+                      href={ROUTES.STUDENT_REGISTER}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
                       Join as Student
                     </a>
                     <a
-                      href="/auth/teacher/register"
+                      href={ROUTES.TEACHER_REGISTER}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
                       Join as Teacher
@@ -354,13 +361,23 @@ const LandingNavbar = () => {
                     <div className="text-white/50 text-sm">{user?.email}</div>
                   </div>
 
-                  <a
-                    href="/profile/student"
-                    className="flex items-center py-2 text-white/70 hover:text-white"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    My Profile
-                  </a>
+                  {user?.role === "TEACHER" ? (
+                    <a
+                      href={ROUTES.TEACHER_PROFILE}
+                      className="flex items-center py-2 text-white/70 hover:text-white"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </a>
+                  ) : (
+                    <a
+                      href={ROUTES.STUDENT_PROFILE}
+                      className="flex items-center py-2 text-white/70 hover:text-white"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      My Profile
+                    </a>
+                  )}
 
                   <button
                     onClick={handleLogout}

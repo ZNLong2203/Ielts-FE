@@ -5,6 +5,13 @@ const ROUTES = {
   STUDENT_LOGIN: "/auth/login",
   TEACHER_LOGIN: "/auth/login",
   LOGIN: "/auth/login",
+
+  STUDENT_PROFILE: "/profile/student",
+  TEACHER_PROFILE: "/profile/teacher",
+
+  ADMIN: "/admin",
+  ADMIN_STUDENTS: "/admin/student",
+  ADMIN_TEACHERS: "/admin/teacher",
 };
 
 export default ROUTES;

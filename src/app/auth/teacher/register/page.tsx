@@ -37,7 +37,7 @@ const RegisterTeacherPage = () => {
               <p className="text-sm text-gray-600">
                 Already have an teacher account?{" "}
                 <Link
-                  href={ROUTES.TEACHER_LOGIN}
+                  href={ROUTES.LOGIN}
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Sign in here
