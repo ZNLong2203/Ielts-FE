@@ -1,7 +1,7 @@
 
 export interface IStudent {
     id: string;
-    user_id: string;
+    user_id?: string;
     bio?: string;
     target_ielts_score?: number;
     current_level?: string;

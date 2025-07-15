@@ -1,7 +1,4 @@
 "use client";
-
-import type React from "react";
-
 import toast from "react-hot-toast";
 import {
   Form,
@@ -51,7 +48,6 @@ const LoginForm = ({
       }, 3000);
     },
     onSuccess: (response) => {
-      console.log("Login successful:", response);
       const { user, access_token } = response.data.data;
     
       // Save to redux store

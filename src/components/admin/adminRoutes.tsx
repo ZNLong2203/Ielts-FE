@@ -36,7 +36,7 @@ const AdminRoutes = ({
           key={route.label}
           href={route.href}
           className={cn(
-            "text-sm font-medium transition-colors hover:text-black",
+            "text-md font-medium transition-colors hover:text-black",
             route.active
               ? "text-black dark:text-white"
               : "text-muted-foreground"

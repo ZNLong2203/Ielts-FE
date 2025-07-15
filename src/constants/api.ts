@@ -4,4 +4,7 @@ export const API_URL = {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     REFRESH_TOKEN: '/auth/refresh',
+
+    STUDENT: '/students',
+    TEACHER: '/teachers',
 }

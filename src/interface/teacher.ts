@@ -2,10 +2,10 @@ import { IUser } from './user';
 
 export interface ITeacher {
     id: string;
-    user_id: string;
+    user_id?: string;
     qualification?: string;
     experience_years?: number;
-    specializations: string[];
+    specializations?: string[];
     ielts_band_score?: number;
     certification_urls: string[];
     teaching_style?: string;
@@ -18,9 +18,9 @@ export interface ITeacher {
     total_students?: number;
     total_courses?: number;
     is_verified?: boolean;
-    status: string;
-    deleted: boolean;
-    created_at: Date;
-    updated_at: Date;
+    status?: string;
+    deleted?: boolean;
+    created_at?: Date;
+    updated_at?: Date;
 }
 
