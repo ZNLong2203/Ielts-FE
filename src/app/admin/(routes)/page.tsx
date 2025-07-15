@@ -1,6 +1,6 @@
 const AdminPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       <h1 className="text-2xl font-bold text-center mt-10">Admin Dashboard</h1>
       {/* Add your admin dashboard content here */}
     </div>

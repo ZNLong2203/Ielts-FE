@@ -1,22 +1,28 @@
-import { IProfile } from "./profile";
+import { IStudent } from "./student";
 import { ITeacher } from "./teacher";
 
 export interface IUser {
-    id: string;
-    email: string;
-    password?: string;
-    role: string;
-    status: string;
-    email_verified?: boolean;
-    email_verification_token?: string;
-    password_reset_token?: string;
-    password_reset_expires?: Date;
-    created_at: Date;
-    updated_at: Date;
-    last_login?: Date;
-    login_count?: number;
+  id: string;
+  email: string;
+  password?: string;
+  role: string;
+  full_name?: string;
+  avatar?: string;
+  phone?: string;
+  date_of_birth?: Date;
+  gender?: string;
+  country?: string;
+  city?: string;
+  status: string;
+  email_verified?: boolean;
+  email_verification_token?: string;
+  password_reset_token?: string;
+  password_reset_expires?: Date;
+  last_login?: Date;
+  login_count?: number;
+  created_at: Date;
+  updated_at: Date;
 
-    teachers?: ITeacher;
-    profiles?: IProfile
+  teachers?: ITeacher;
+  students?: IStudent;
 }
-

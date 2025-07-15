@@ -45,7 +45,10 @@ const LoginForm = ({
   } = useMutation({
     mutationFn: Login,
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || error.message + " please verify your credentials");
+      toast.error(error.response?.data?.message || error.message);
+      setTimeout(() => {
+        router.push(ROUTES.LOGIN);
+      }, 3000);
     },
     onSuccess: (response) => {
       console.log("Login successful:", response);

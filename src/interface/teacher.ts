@@ -18,5 +18,9 @@ export interface ITeacher {
     total_students?: number;
     total_courses?: number;
     is_verified?: boolean;
+    status: string;
+    deleted: boolean;
+    created_at: Date;
+    updated_at: Date;
 }
 

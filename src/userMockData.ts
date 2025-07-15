@@ -1,6 +1,6 @@
 import { IUser } from './interface/user';
 import { ITeacher } from './interface/teacher';
-import { IProfile } from './interface/profile';
+import { IProfile } from './interface/student';
 
 // Mock Users Data theo schema
 export const mockUsers: IUser[] = [

@@ -14,16 +14,20 @@ const AdminRoutes = ({
 
   const routes = [
     {
-      href: "/admin",
+      href: ROUTES.ADMIN,
       label: "Overview",
-      active: pathName === "/admin",
+      active: pathName === ROUTES.ADMIN,
     },
     {
-      href: "/admin/billboards",
-      label: "Billboards",
-      active: pathName === "/admin/billboards",
+      href: ROUTES.ADMIN_STUDENTS,
+      label: "Students",
+      active: pathName === ROUTES.ADMIN_STUDENTS,
     },
-    
+     {
+      href: ROUTES.ADMIN_TEACHERS,
+      label: "Teachers",
+      active: pathName === ROUTES.ADMIN_TEACHERS,
+    },
   ];
   return (
     <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)}>

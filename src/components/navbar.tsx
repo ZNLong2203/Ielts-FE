@@ -12,7 +12,17 @@ import {
 import NavbarTitle from "@/components/navbarTitle";
 import NavbarLink from "@/components/navbarLink";
 import ROUTES from "@/constants/route";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { 
+  Menu, 
+  X, 
+  User, 
+  LogOut, 
+  Settings, 
+  BookOpen, 
+  Award, 
+  ShieldCheck,
+  ChevronRight 
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { Logout } from "@/api/auth";
 
@@ -31,7 +41,6 @@ const LandingNavbar = () => {
         console.log("Logout successful");
         toast.success("Logged out successfully");
         router.push(ROUTES.HOME);
-
         dispatch(logout());
       })
       .catch((error) => {
@@ -40,6 +49,19 @@ const LandingNavbar = () => {
       });
 
     setMobileMenuOpen(false);
+  };
+
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (user?.full_name) return user.full_name;
+    if (user?.email) return user.email.split("@")[0];
+    return "User";
+  };
+
+  // Get user avatar initials
+  const getUserInitials = () => {
+    const name = getUserDisplayName();
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
@@ -199,7 +221,6 @@ const LandingNavbar = () => {
                       <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                         <div className="flex flex-col">
                           <NavbarLink text="Login" href={ROUTES.LOGIN} />
-
                           <div className="border-t border-white/20 my-1"></div>
                           <NavbarLink
                             text="Admin Portal"
@@ -230,57 +251,133 @@ const LandingNavbar = () => {
                   </NavbarTitle>
                 </>
               ) : (
-                /* User Menu khi đã đăng nhập */
-                <NavbarTitle
-                  text={
-                    user?.profiles?.full_name ||
-                    `${user?.email}`.split("@")[0] ||
-                    "User"
-                  }
-                >
-                  <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
-                    <div className="h-3 w-full"></div>
-                    <div className="min-w-[200px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
-                      <div className="flex flex-col">
-                        <div className="px-3 py-2 text-xs text-white/50 border-b border-white/20">
-                          {user?.email}
+                /* User Menu khi đã đăng nhập - REDESIGNED */
+                <div className="relative group/parent">
+                  <div className="flex items-center gap-3 rounded-[32px] px-4 py-2 cursor-pointer hover:bg-white/10 transition-all duration-200">
+                    {/* Avatar */}
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                      {getUserInitials()}
+                    </div>
+                    
+                    {/* User Name & Role */}
+                    <div className="flex flex-col items-start">
+                      <span className="text-white text-sm font-medium max-w-[120px] truncate">
+                        {getUserDisplayName()}
+                      </span>
+                    </div>
+                    
+                    <ChevronRight className="h-4 w-4 text-white/60 transform group-hover/parent:rotate-90 transition-transform duration-200" />
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  <div className="absolute right-0 top-[calc(100%+8px)] z-[1050] hidden min-w-[280px] group-hover/parent:block">
+                    <div className="rounded-2xl border-2 border-white/10 bg-black/80 backdrop-blur-[47.5px] p-3 shadow-2xl">
+                      {/* User Info Header */}
+                      <div className="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                          {getUserInitials()}
                         </div>
-                        {user?.role === "TEACHER" ? (
+                        <div className="flex-1">
+                          <div className="text-white font-medium text-sm">
+                            {getUserDisplayName()}
+                          </div>
+                          <div className="text-white/60 text-xs truncate">
+                            {user?.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className="space-y-1">
+                        {/* Profile Link */}
+                        <a
+                          href={user?.role === "TEACHER" ? ROUTES.TEACHER_PROFILE : ROUTES.STUDENT_PROFILE}
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                        >
+                          <User className="h-4 w-4" />
+                          <span>My Profile</span>
+                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </a>
+
+                        {/* My Learning (Student) */}
+                        {user?.role === "STUDENT" && (
                           <a
-                            href={ROUTES.TEACHER_PROFILE}
-                            className="flex items-center px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                            href="/my-learning"
+                            className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                           >
-                            <User className="h-4 w-4 mr-2" />
-                            My Profile
-                          </a>
-                        ) : (
-                          <a
-                            href={ROUTES.STUDENT_PROFILE}
-                            className="flex items-center px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                          >
-                            <User className="h-4 w-4 mr-2" />
-                            My Profile
+                            <BookOpen className="h-4 w-4" />
+                            <span>My Learning</span>
+                            <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
-                        <div className="border-t border-white/20 my-1"></div>
+
+                        {/* My Classes (Teacher) */}
+                        {user?.role === "TEACHER" && (
+                          <a
+                            href="/my-classes"
+                            className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                          >
+                            <BookOpen className="h-4 w-4" />
+                            <span>My Classes</span>
+                            <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        )}
+
+                        {/* Achievements */}
+                        <a
+                          href="/achievements"
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                        >
+                          <Award className="h-4 w-4" />
+                          <span>Achievements</span>
+                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </a>
+
+                        {/* Settings */}
+                        <a
+                          href="/settings"
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span>Settings</span>
+                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </a>
+
+                        {/* Admin Dashboard (Admin only) */}
+                        {user?.role === "ADMIN" && (
+                          <>
+                            <div className="border-t border-white/10 my-2"></div>
+                            <a
+                              href={ROUTES.ADMIN}
+                              className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                              <span>Admin Dashboard</span>
+                              <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </a>
+                          </>
+                        )}
+
+                        {/* Logout */}
+                        <div className="border-t border-white/10 my-2"></div>
                         <button
                           onClick={handleLogout}
-                          className="flex items-center w-full px-3 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-900/20 rounded-lg transition-colors text-left"
+                          className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-900/20 rounded-lg transition-colors group"
                         >
-                          <LogOut className="h-4 w-4 mr-2" />
-                          Logout
+                          <LogOut className="h-4 w-4" />
+                          <span>Sign Out</span>
                         </button>
                       </div>
                     </div>
                   </div>
-                </NavbarTitle>
+                </div>
               )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - REDESIGNED */}
       {mobileMenuOpen && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -311,14 +408,12 @@ const LandingNavbar = () => {
               Test Practice
             </a>
 
-            {/* Mobile Login/Register hoặc User Menu */}
+            {/* Mobile User Menu */}
             <div className="border-t border-white/20 pt-4 mt-4">
               {!isAuthenticated ? (
                 <>
                   <div className="space-y-2">
-                    <div className="text-white/50 text-sm font-medium">
-                      Login
-                    </div>
+                    <div className="text-white/50 text-sm font-medium">Login</div>
                     <a
                       href={ROUTES.LOGIN}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
@@ -334,9 +429,7 @@ const LandingNavbar = () => {
                   </div>
 
                   <div className="space-y-2 mt-4">
-                    <div className="text-white/50 text-sm font-medium">
-                      Register
-                    </div>
+                    <div className="text-white/50 text-sm font-medium">Register</div>
                     <a
                       href={ROUTES.STUDENT_REGISTER}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
@@ -353,39 +446,84 @@ const LandingNavbar = () => {
                 </>
               ) : (
                 <>
-                  <div className="border-b border-white/20 pb-4 mb-4">
-                    <div className="text-white font-medium">
-                      {user?.profiles?.full_name ||
-                        `${user?.email}`.split("@")[0]}
+                  {/* Mobile User Info */}
+                  <div className="flex items-center gap-3 border-b border-white/20 pb-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      {getUserInitials()}
                     </div>
-                    <div className="text-white/50 text-sm">{user?.email}</div>
+                    <div className="flex-1">
+                      <div className="text-white font-medium">
+                        {getUserDisplayName()}
+                      </div>
+                      <div className="text-white/50 text-sm">{user?.email}</div>
+                    </div>
                   </div>
 
-                  {user?.role === "TEACHER" ? (
+                  {/* Mobile Menu Items */}
+                  <div className="space-y-2">
                     <a
-                      href={ROUTES.TEACHER_PROFILE}
-                      className="flex items-center py-2 text-white/70 hover:text-white"
+                      href={user?.role === "TEACHER" ? ROUTES.TEACHER_PROFILE : ROUTES.STUDENT_PROFILE}
+                      className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                     >
-                      <User className="h-4 w-4 mr-2" />
+                      <User className="h-4 w-4" />
                       My Profile
                     </a>
-                  ) : (
-                    <a
-                      href={ROUTES.STUDENT_PROFILE}
-                      className="flex items-center py-2 text-white/70 hover:text-white"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      My Profile
-                    </a>
-                  )}
 
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full py-2 text-red-300 hover:text-red-100"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </button>
+                    {user?.role === "STUDENT" && (
+                      <a
+                        href="/my-learning"
+                        className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        My Learning
+                      </a>
+                    )}
+
+                    {user?.role === "TEACHER" && (
+                      <a
+                        href="/my-classes"
+                        className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        My Classes
+                      </a>
+                    )}
+
+                    <a
+                      href="/achievements"
+                      className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                    >
+                      <Award className="h-4 w-4" />
+                      Achievements
+                    </a>
+
+                    <a
+                      href="/settings"
+                      className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </a>
+
+                    {user?.role === "ADMIN" && (
+                      <a
+                        href={ROUTES.ADMIN}
+                        className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        Admin Dashboard
+                      </a>
+                    )}
+
+                    <div className="border-t border-white/20 my-2"></div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 w-full py-2 text-red-300 hover:text-red-100"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </button>
+                  </div>
                 </>
               )}
             </div>

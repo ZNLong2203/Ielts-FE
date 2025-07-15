@@ -1,5 +1,4 @@
 import api from "@/utils/interceptor";
-
 import { ILoginParams, IRegisterParams } from "@/interface/auth";
 import { API_URL } from "@/constants/api";
 
