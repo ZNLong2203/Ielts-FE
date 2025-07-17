@@ -1,5 +1,5 @@
 "use client";
-import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import { Copy, Edit, Eye, Info, MoreHorizontal, Trash } from "lucide-react";
 import { useState } from "react";
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { IUser } from "@/interface/user";
 import { getQueryClient } from "@/utils/getQueryClient";
 import { deleteStudent } from "@/api/student";
+import ROUTES from "@/constants/route";
 
 interface CellActionProps {
   data: IUser;
@@ -68,8 +69,14 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             <Copy className="mr-1 h-4 w-4" />
             Copy ID
           </DropdownMenuItem>
+           <DropdownMenuItem
+            onClick={() => router.push(ROUTES.ADMIN_STUDENTS + `/${data.id}`)}
+          >
+            <Eye className="mr-1 h-4 w-4" />
+            Detail
+          </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(`/admin/users/${data.id}`)}
+            onClick={() => router.push(ROUTES.ADMIN_STUDENTS + `/${data.id}/update`)}
           >
             <Edit className="mr-1 h-4 w-4" />
             Update
