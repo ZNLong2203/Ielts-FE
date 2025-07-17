@@ -1,10 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import Heading from "@/components/ui/heading";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
   Plus, 
   ChevronLeft, 
@@ -18,9 +15,7 @@ import {
   UserX,
   MoreHorizontal
 } from "lucide-react";
-import { format } from "date-fns";
-import { useState, useEffect } from "react";
-
+ 
 import { columns } from "@/components/admin/student/studentColumn";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -29,10 +24,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { getStudents } from "@/api/student";
 import { IUser } from "@/interface/user";
 
-const StudentClient = () => {
+const StudentTable = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState("");
 
   // Get the current page from search params, default to 1 if not present
   const page = Number(searchParams.get("page")) || 1;
@@ -292,4 +286,4 @@ const StudentClient = () => {
   );
 };
 
-export default StudentClient;
+export default StudentTable;
