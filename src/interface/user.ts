@@ -20,9 +20,19 @@ export interface IUser {
   password_reset_expires?: Date;
   last_login?: Date;
   login_count?: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
 
   teachers?: ITeacher;
   students?: IStudent;
+}
+
+export interface IUserUpdate {
+  full_name?: string;
+  avatar?: string;
+  phone?: string;
+  date_of_birth?: Date;
+  gender?: string;
+  country?: string;
+  city?: string;
 }

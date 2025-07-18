@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 import { getStudent } from "@/api/student";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,20 +33,19 @@ import {
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 
-interface StudentDetailProps {
-  id: string;
-}
 
-const StudentDetail = ({ id }: StudentDetailProps) => {
+const StudentDetail = () => {
+  const userId = useParams().userId as string;
   const router = useRouter();
 
   const { data, isPending, isError } = useQuery({
-    queryKey: ["studentDetail", id],
-    queryFn: () => getStudent(id),
+    queryKey: ["studentDetail", userId],
+    queryFn: () => getStudent(userId),
     retry: false,
   });
 
-  console.log("Student Detail Data:", data);
+  const response = data?.data;
+
 
   // Helper function để lấy badge variant dựa trên status
   const getStatusVariant = (status: string) => {
@@ -95,9 +95,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
     );
   }
 
-  const student = data?.data?.data;
-
-  if (!student) {
+  if (!data) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <User className="h-12 w-12 text-gray-400" />
@@ -134,19 +132,19 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
             {/* Avatar Section */}
             <div className="flex flex-col items-center space-y-2">
               <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-                {student.avatar ? (
-                  <AvatarImage src={student.avatar} alt={student.full_name} />
+                {response?.avatar ? (
+                  <AvatarImage src={response?.avatar} alt={response?.full_name} />
                 ) : (
                   <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                    {getInitials(student.full_name)}
+                    {getInitials(response?.full_name || "")}
                   </AvatarFallback>
                 )}
               </Avatar>
               <div className="text-center">
-                <h3 className="text-lg font-semibold">{student.full_name}</h3>
-                <p className="text-sm text-muted-foreground">{student.email}</p>
+                <h3 className="text-lg font-semibold">{response?.full_name}</h3>
+                <p className="text-sm text-muted-foreground">{response?.email}</p>
                 <div className="flex items-center justify-center mt-1">
-                  {student.email_verified ? (
+                  {response?.email_verified ? (
                     <div className="flex items-center text-green-600">
                       <CheckCircle className="h-4 w-4 mr-1" />
                       <span className="text-xs">Verified</span>
@@ -168,7 +166,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <BookOpen className="h-4 w-4 text-blue-500" />
                 </div>
                 <div className="text-2xl font-bold text-blue-500">
-                  {student.students?.current_level || "N/A"}
+                  {response?.students?.current_level || "N/A"}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Current Level
@@ -179,7 +177,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <Target className="h-4 w-4 text-green-500" />
                 </div>
                 <div className="text-2xl font-bold text-green-500">
-                  {student.students?.target_ielts_score || "N/A"}
+                  {response?.students?.target_ielts_score || "N/A"}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Target Score
@@ -190,7 +188,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <Activity className="h-4 w-4 text-purple-500" />
                 </div>
                 <div className="text-2xl font-bold text-purple-500">
-                  {student.login_count || 0}
+                  {response?.login_count || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Login Count</div>
               </div>
@@ -199,7 +197,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <Clock className="h-4 w-4 text-orange-500" />
                 </div>
                 <div className="text-2xl font-bold text-orange-500">
-                  {student.status === "active" ? "Active" : "Inactive"}
+                  {response?.status === "active" ? "Active" : "Inactive"}
                 </div>
                 <div className="text-xs text-muted-foreground">Status</div>
               </div>
@@ -232,7 +230,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Student ID</p>
                     <p className="text-sm text-muted-foreground font-mono">
-                      {student.id}
+                      {response?.id}
                     </p>
                   </div>
                 </div>
@@ -242,7 +240,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Full Name</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.full_name}
+                      {response?.full_name}
                     </p>
                   </div>
                 </div>
@@ -252,7 +250,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Gender</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.gender || "Not provided"}
+                      {response?.gender || "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -262,7 +260,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Country</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.country || "Not provided"}
+                      {response?.country || "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -272,7 +270,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">City</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.city || "Not provided"}
+                      {response?.city || "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -292,10 +290,10 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Email</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.email}
+                      {response?.email}
                     </p>
                   </div>
-                  {student.email_verified ? (
+                  {response?.email_verified ? (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
                     <XCircle className="h-4 w-4 text-red-500" />
@@ -307,7 +305,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Phone</p>
                     <p className="text-sm text-muted-foreground font-mono">
-                      {student.phone || "Not provided"}
+                      {response?.phone || "Not provided"}
                     </p>
                   </div>
                 </div>
@@ -317,7 +315,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Member Since</p>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(student.created_at), "dd/MM/yyyy HH:mm")}
+                      {new Date(response?.created_at).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -327,11 +325,8 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Last Login</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.last_login
-                        ? format(
-                            new Date(student.last_login),
-                            "dd/MM/yyyy HH:mm"
-                          )
+                      {response?.last_login
+                        ? new Date(response?.last_login).toLocaleString()
                         : "Never"}
                     </p>
                   </div>
@@ -356,13 +351,13 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Current Level</p>
                     <p className="text-2xl font-bold text-blue-500">
-                      {student.students?.current_level || "N/A"}
+                      {response?.students?.current_level || "N/A"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Target Score</p>
                     <p className="text-2xl font-bold text-green-500">
-                      {student.students?.target_ielts_score || "N/A"}
+                      {response?.students?.target_ielts_score || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -372,16 +367,16 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                     Language Preference
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {student.students?.language_preference || "Not set"}
+                    {response?.students?.language_preference || "Not set"}
                   </p>
                 </div>
                 <Separator />
                 <div>
                   <p className="text-sm font-medium mb-2">Learning Goals</p>
                   <div className="text-sm text-muted-foreground">
-                    {student.students?.learning_goals?.length > 0 ? (
+                    {response?.students?.learning_goals && response.students.learning_goals.length > 0 ? (
                       <ul className="list-disc list-inside space-y-1">
-                        {student.students.learning_goals.map(
+                        {response.students.learning_goals.map(
                           (goal: string, index: number) => (
                             <li key={index}>{goal}</li>
                           )
@@ -407,13 +402,13 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Bio</p>
                     <p className="text-sm font-mono text-muted-foreground">
-                      {student.students?.bio || "Not set"}
+                      {response?.students?.bio || "Not set"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">User ID</p>
                     <p className="text-sm font-mono text-muted-foreground">
-                      {student.students?.user_id || "N/A"}
+                      {response?.students?.user_id || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -421,11 +416,8 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                 <div>
                   <p className="text-sm font-medium">Profile Created</p>
                   <p className="text-sm text-muted-foreground">
-                    {student.students?.created_at
-                      ? format(
-                          new Date(student.students.created_at),
-                          "dd/MM/yyyy HH:mm"
-                        )
+                    {response?.students?.created_at
+                      ? new Date(response?.students?.created_at).toLocaleString()
                       : "N/A"}
                   </p>
                 </div>
@@ -433,11 +425,8 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                 <div>
                   <p className="text-sm font-medium">Last Updated</p>
                   <p className="text-sm text-muted-foreground">
-                    {student.students?.updated_at
-                      ? format(
-                          new Date(student.students.updated_at),
-                          "dd/MM/yyyy HH:mm"
-                        )
+                    {response?.students?.updated_at
+                      ? new Date(response?.students?.updated_at).toLocaleString()
                       : "N/A"}
                   </p>
                 </div>
@@ -462,10 +451,10 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Password Status</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.password ? "Password set" : "No password"}
+                      {response?.password ? "Password set" : "No password"}
                     </p>
                   </div>
-                  {student.password ? (
+                  {response?.password ? (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
                     <XCircle className="h-4 w-4 text-red-500" />
@@ -477,12 +466,12 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div className="flex-1">
                     <p className="text-sm font-medium">Email Verification</p>
                     <p className="text-sm text-muted-foreground">
-                      {student.email_verified
+                      {response?.email_verified
                         ? "Verified"
                         : "Pending verification"}
                     </p>
                   </div>
-                  {student.email_verified ? (
+                  {response?.email_verified ? (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
                     <XCircle className="h-4 w-4 text-red-500" />
@@ -494,11 +483,11 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                   <div>
                     <p className="text-sm font-medium">Account Status</p>
                     <Badge
-                      variant={getStatusVariant(student.status)}
+                      variant={getStatusVariant(response?.status)}
                       className="mt-1"
                     >
-                      {student.status?.charAt(0).toUpperCase() +
-                        student.status?.slice(1)}
+                      {response?.status?.charAt(0).toUpperCase() +
+                        response?.status?.slice(1)}
                     </Badge>
                   </div>
                 </div>
@@ -516,15 +505,15 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                 <div>
                   <p className="text-sm font-medium">Total Logins</p>
                   <p className="text-2xl font-bold text-blue-500">
-                    {student.login_count || 0}
+                    {response?.login_count || 0}
                   </p>
                 </div>
                 <Separator />
                 <div>
                   <p className="text-sm font-medium">Last Login</p>
                   <p className="text-sm text-muted-foreground">
-                    {student.last_login
-                      ? format(new Date(student.last_login), "dd/MM/yyyy HH:mm")
+                    {response?.last_login
+                      ? new Date(response?.last_login).toLocaleString()
                       : "Never logged in"}
                   </p>
                 </div>
@@ -532,7 +521,7 @@ const StudentDetail = ({ id }: StudentDetailProps) => {
                 <div>
                   <p className="text-sm font-medium">Account Role</p>
                   <Badge variant="outline" className="mt-1">
-                    {student.role?.toUpperCase() || "STUDENT"}
+                    {response?.role?.toUpperCase() || "STUDENT"}
                   </Badge>
                 </div>
               </CardContent>

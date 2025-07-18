@@ -208,7 +208,7 @@ export const columns: ColumnDef<IUser>[] = [
     },
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
-        {new Date(row.original.created_at).toLocaleDateString()}
+        {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString() : "N/A"}
       </div>
     ),
   },

@@ -36,17 +36,17 @@ const StudentTable = () => {
     queryFn: () => getStudents({ page }), 
   });
 
-  const response = data?.data?.data;
+  console.log("Student data:", data);
 
   // Metadata information
-  const meta = response?.meta || {};
+  const meta = data?.data.meta || {};
   const currentPage = meta?.current || 1;
   const pageSize = meta?.pageSize || 10;
   const totalPages = meta?.pages || 1;
   const totalItems = meta?.total || 0;
 
   // Format student data
-  const formatedStudent: IUser[] = response?.result.map((student: IUser) => ({
+  const formatedStudent: IUser[] = data?.data?.result?.map((student: IUser) => ({
     id: student.id,
     full_name: student.full_name,
     email: student.email,

@@ -5,6 +5,9 @@ export const API_URL = {
     LOGOUT: '/auth/logout',
     REFRESH_TOKEN: '/auth/refresh',
 
+    PROFILE: '/profile',
+    OWN_PROFILE: '/auth/profile',
+
     STUDENT: '/students',
     TEACHER: '/teachers',
 }
