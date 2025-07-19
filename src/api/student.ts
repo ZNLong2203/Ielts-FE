@@ -1,19 +1,20 @@
 import api from "@/utils/interceptor";
 import { API_URL } from "@/constants/api";
 import { IStudent, IStudentUpdate } from "@/interface/student";
+import { IUser, IUsers } from "@/interface/user";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const getStudents = async ({page}: {page: number}) => {
+export const getStudents = async ({page}: {page: number}): Promise<IUsers> => {
     const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/?page=${page}`);
     console.log(response);
-    return response.data;
+    return response.data.data;
 }
 
-export const getStudent = async (id: string) => {
+export const getStudent = async (id: string): Promise<IUser> => {
     const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/${id}`);
     console.log(response);
-    return response.data;
+    return response.data.data;
 }
 
 export const createStudent = async (data: IStudent) => {

@@ -30,8 +30,8 @@ import {
   Key,
   Activity,
 } from "lucide-react";
-import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import Heading from "@/components/ui/heading";
 
 
 const StudentDetail = () => {
@@ -44,8 +44,7 @@ const StudentDetail = () => {
     retry: false,
   });
 
-  const response = data?.data;
-
+  const response = data;
 
   // Helper function để lấy badge variant dựa trên status
   const getStatusVariant = (status: string) => {
@@ -110,12 +109,7 @@ const StudentDetail = () => {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-2xl font-bold">Student Details</h1>
-            <p className="text-muted-foreground">
-              Comprehensive student information
-            </p>
-          </div>
+          <Heading title="Student Details" description="Comprehensive student information" />
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="lg">
@@ -315,7 +309,9 @@ const StudentDetail = () => {
                   <div>
                     <p className="text-sm font-medium">Member Since</p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(response?.created_at).toLocaleString()}
+                      {response?.created_at
+                        ? new Date(response?.created_at).toLocaleString()
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -414,7 +410,7 @@ const StudentDetail = () => {
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm font-medium">Profile Created</p>
+                  <p className="text-sm font-medium">Student Created</p>
                   <p className="text-sm text-muted-foreground">
                     {response?.students?.created_at
                       ? new Date(response?.students?.created_at).toLocaleString()
@@ -483,11 +479,12 @@ const StudentDetail = () => {
                   <div>
                     <p className="text-sm font-medium">Account Status</p>
                     <Badge
-                      variant={getStatusVariant(response?.status)}
+                      variant={getStatusVariant(response?.status || "")}
                       className="mt-1"
                     >
-                      {response?.status?.charAt(0).toUpperCase() +
-                        response?.status?.slice(1)}
+                      {response?.status
+                        ? response.status.charAt(0).toUpperCase() + response.status.slice(1)
+                        : "Unknown"}
                     </Badge>
                   </div>
                 </div>

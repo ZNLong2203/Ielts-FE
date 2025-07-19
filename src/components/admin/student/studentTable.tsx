@@ -36,33 +36,17 @@ const StudentTable = () => {
     queryFn: () => getStudents({ page }), 
   });
 
-  console.log("Student data:", data);
+  console.log("Students data:", data);
 
   // Metadata information
-  const meta = data?.data.meta || {};
-  const currentPage = meta?.current || 1;
-  const pageSize = meta?.pageSize || 10;
-  const totalPages = meta?.pages || 1;
-  const totalItems = meta?.total || 0;
-
-  // Format student data
-  const formatedStudent: IUser[] = data?.data?.result?.map((student: IUser) => ({
-    id: student.id,
-    full_name: student.full_name,
-    email: student.email,
-    phone: student.phone,
-    status: student.status,
-    // country: student.country,
-    // role: student.role,
-    avatar: student.avatar,
-    created_at: student.created_at,
-    current_level: student.students?.current_level,
-    target_score: student.students?.target_ielts_score,
-  })) || [];
+  const currentPage = data?.meta?.current || 1;
+  const pageSize = data?.meta?.pageSize || 10;
+  const totalPages = data?.meta?.pages || 1;
+  const totalItems = data?.meta?.total || 0;
 
   // Calculate stats
-  const activeStudents = formatedStudent.filter(student => student.status === "active").length;
-  const unactiveStudents = formatedStudent.filter(student => student.status !== "active").length;
+  const activeStudents = data?.result?.filter(student => student.status === "active").length;
+  const unactiveStudents = data?.result?.filter(student => student.status !== "active").length;
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
@@ -135,7 +119,7 @@ const StudentTable = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatedStudent.length}</div>
+            <div className="text-2xl font-bold">{data?.result?.length}</div>
             <p className="text-xs text-muted-foreground">
               students displayed
             </p>
@@ -181,7 +165,7 @@ const StudentTable = () => {
             <div className="space-y-4">
               <DataTable 
                 columns={columns} 
-                data={formatedStudent} 
+                data={data?.result || []} 
                 searchKey="full_name"
               />
               

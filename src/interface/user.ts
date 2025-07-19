@@ -27,6 +27,17 @@ export interface IUser {
   students?: IStudent;
 }
 
+export interface IUsers {
+  meta: {
+    current: number;
+    currentSize: number;
+    pageSize: number;
+    pages: number;
+    total: number;
+  },
+  result: IUser[];
+}
+
 export interface IUserUpdate {
   full_name?: string;
   avatar?: string;
