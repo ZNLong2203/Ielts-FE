@@ -8,7 +8,7 @@ const AdminPageLayout = ({ children }: { children: React.ReactNode }) => {
         <AdminNavbar />
         {children}
       </div>
-    // </ProtectedRoute>
+     </ProtectedRoute>
   );
 };
 

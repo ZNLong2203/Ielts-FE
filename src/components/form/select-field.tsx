@@ -42,31 +42,33 @@ const SelectField = ({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className="text-md font-semibold">{label}</FormLabel>
-          <Select
-            disabled={disabled}
-            onValueChange={field.onChange}
-            value={field.value ?? ""}
-            defaultValue={field.value}
-          >
-            <FormControl>
-              <SelectTrigger className={className}>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        return (
+          <FormItem>
+            <FormLabel className="text-md font-semibold">{label}</FormLabel>
+            <Select
+              disabled={disabled}
+              onValueChange={(value) => field.onChange(value)}
+              value={field.value || ""}
+              key={field.value} 
+            >
+              <FormControl>
+                <SelectTrigger className={className}>
+                  <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 };

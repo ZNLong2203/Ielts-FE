@@ -2,11 +2,12 @@
 import { Form, FormField } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 import TagsField from "@/components/form/tags-field";
 import DateField from "@/components/form/date-field";
+import ImageUploadField from "@/components/form/image-field";
+import Loading from "@/components/ui/loading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,6 +41,7 @@ import toast from "react-hot-toast";
 
 import { StudentFormSchema } from "@/validation/student";
 import { ProfileFormSchema } from "@/validation/profile";
+import { uploadAvatar } from "@/api/file";
 import { getStudent, updateStudent } from "@/api/student";
 import { updateProfile } from "@/api/profile";
 
@@ -55,6 +57,21 @@ const StudentForm = () => {
     queryKey: ["studentDetail", userId],
     queryFn: () => getStudent(userId),
     retry: false,
+  });
+  
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return uploadAvatar(file);
+    },
+    onSuccess: (data) => {
+      toast.success(data.data.data.message || "Avatar uploaded successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["studentDetail", userId],
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to upload avatar");
+    },
   });
 
   // Update profile form
@@ -110,13 +127,28 @@ const StudentForm = () => {
   // Student form
   const studentForm = useForm<z.infer<typeof StudentFormSchema>>({
     resolver: zodResolver(StudentFormSchema),
-    defaultValues: data?.students,
+    defaultValues: {
+      bio: "",
+      current_level: "",
+      language_preference: "",
+      learning_goals: [],
+      target_ielts_score: undefined,
+      timezone: "",
+    },
   });
 
   // Profile form
   const profileForm = useForm<z.infer<typeof ProfileFormSchema>>({
     resolver: zodResolver(ProfileFormSchema),
-    defaultValues: data,
+    defaultValues: {
+      full_name: "",
+      avatar: "",
+      phone: "",
+      country: "",
+      city: "",
+      date_of_birth: undefined,
+      gender: "",
+    },
   });
 
   // Handle student form submission
@@ -128,6 +160,10 @@ const StudentForm = () => {
   // handle profile form submission
   const onProfileFormSubmit = (formData: z.infer<typeof ProfileFormSchema>) => {
     console.log("Profile Form Data:", formData);
+
+    if (formData.avatar && formData.avatar instanceof File) {
+      uploadAvatarMutation.mutate(formData.avatar);
+    }
     updateProfileMutation.mutate(formData);
   };
 
@@ -142,28 +178,21 @@ const StudentForm = () => {
         timezone: data.students?.timezone || "",
       });
       profileForm.reset({
-        full_name: data.full_name || "",
-        avatar: data.avatar || "",
-        city: data.city || "",
-        country: data.country || "",
-        phone: data.phone || undefined,
+        full_name: data?.full_name || "",
+        avatar: data?.avatar || "",
+        city: data?.city || "",
+        country: data?.country || "",
+        phone: data?.phone && data.phone.trim() !== "" ? data.phone : undefined,
         date_of_birth: data.date_of_birth
           ? new Date(data.date_of_birth)
           : undefined,
-        gender: data.gender || undefined,
+        gender: data?.gender || "",
       });
     }
   }, [data]);
 
   if (isPending) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="text-sm text-muted-foreground">
-          Loading student details...
-        </p>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (isError) {
@@ -178,16 +207,6 @@ const StudentForm = () => {
     );
   }
 
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <User className="h-12 w-12 text-gray-400" />
-        <p className="text-sm text-muted-foreground">Student not found</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -195,7 +214,10 @@ const StudentForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <Heading title="Edit Student" description="Update student profile and academic information" />
+              <Heading
+                title="Edit Student"
+                description="Update student profile and academic information"
+              />
             </div>
 
             {/* Student Avatar & Basic Info */}
@@ -241,7 +263,10 @@ const StudentForm = () => {
                   <div className="flex items-center space-x-3 text-sm">
                     <UserCircle className="h-4 w-4 text-gray-400" />
                     <span className="text-gray-600">
-                      {data?.gender || "Not specified"}
+                      {data?.gender
+                        ? data.gender.charAt(0).toLocaleUpperCase() +
+                          data.gender.slice(1)
+                        : "Not specified"}
                     </span>
                   </div>
 
@@ -288,7 +313,7 @@ const StudentForm = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-blue-600" />
-                  <span>Personal Information</span>
+                  <span>Profile Information</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -297,6 +322,14 @@ const StudentForm = () => {
                     onSubmit={profileForm.handleSubmit(onProfileFormSubmit)}
                     className="space-y-6"
                   >
+                    <ImageUploadField
+                      control={profileForm.control}
+                      name="avatar"
+                      label="Profile Avatar"
+                      currentImage={data?.avatar}
+                      fallback={data?.full_name?.charAt(0) || "S"}
+                      maxSize={2 * 1024 * 1024} // 2MB
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <TextField
                         control={profileForm.control}
@@ -356,7 +389,7 @@ const StudentForm = () => {
                         <span>
                           {updateProfileMutation.isPending
                             ? "Saving..."
-                            : "Save Personal Info"}
+                            : "Save Profile Info"}
                         </span>
                       </Button>
                     </div>
@@ -370,7 +403,7 @@ const StudentForm = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <GraduationCap className="h-5 w-5 text-green-600" />
-                  <span>Academic Information</span>
+                  <span>Student Information</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -438,7 +471,7 @@ const StudentForm = () => {
                         <span>
                           {updateStudentMutation.isPending
                             ? "Saving..."
-                            : "Save Academic Info"}
+                            : "Save Student Info"}
                         </span>
                       </Button>
                     </div>
@@ -446,7 +479,6 @@ const StudentForm = () => {
                 </Form>
               </CardContent>
             </Card>
-
           </div>
         </div>
       </div>
