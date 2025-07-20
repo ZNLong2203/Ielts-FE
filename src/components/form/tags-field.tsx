@@ -57,7 +57,7 @@ const TagsField = ({
 
         return (
           <FormItem>
-            <FormLabel className="text-lg font-semibold">{label}</FormLabel>
+            <FormLabel className="text-md font-semibold">{label}</FormLabel>
             <FormControl>
               <div className="space-y-2">
                 {/* Display tags */}

@@ -7,14 +7,25 @@ import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 import TagsField from "@/components/form/tags-field";
 import DateField from "@/components/form/date-field";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { User, GraduationCap, Save, XCircle } from "lucide-react";
+  User,
+  GraduationCap,
+  Save,
+  XCircle,
+  ArrowLeft,
+  UserCircle,
+  Phone,
+  MapPin,
+  Globe,
+  Calendar,
+  Target,
+  BookOpen,
+  Clock,
+  Languages,
+} from "lucide-react";
 import { USER_GENDER } from "@/constants/user";
 import { STUDENT_LEVEL, STUDENT_LANGUAGE } from "@/constants/student";
 
@@ -135,11 +146,11 @@ const StudentForm = () => {
         avatar: data.avatar || "",
         city: data.city || "",
         country: data.country || "",
-        phone: data.phone || "",
+        phone: data.phone || undefined,
         date_of_birth: data.date_of_birth
           ? new Date(data.date_of_birth)
           : undefined,
-        gender: data.gender || "",
+        gender: data.gender || undefined,
       });
     }
   }, [data]);
@@ -178,93 +189,174 @@ const StudentForm = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between py-6 px-10">
-        <Heading
-          title="Edit Student"
-          description="Update student profile and academic information"
-        />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center space-x-4">
+              <Heading title="Edit Student" description="Update student profile and academic information" />
+            </div>
+
+            {/* Student Avatar & Basic Info */}
+            {data && (
+              <div className="flex items-center space-x-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={data.avatar} />
+                  <AvatarFallback>
+                    {data.full_name?.charAt(0) || "S"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium text-gray-900">{data.full_name}</p>
+                  <p className="text-sm text-gray-500">{data.email}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Edit Form Tabs */}
-      <Tabs defaultValue="personal" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="personal">Profile Information</TabsTrigger>
-          <TabsTrigger value="academic">Student Information</TabsTrigger>
-        </TabsList>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Sidebar - Profile Summary */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-8">
+              <CardHeader className="text-center pb-4">
+                <Avatar className="h-24 w-24 mx-auto mb-4">
+                  <AvatarImage src={data?.avatar} />
+                  <AvatarFallback className="text-2xl">
+                    {data?.full_name?.charAt(0) || "S"}
+                  </AvatarFallback>
+                </Avatar>
+                <CardTitle className="text-xl">
+                  {data?.full_name || "Student"}
+                </CardTitle>
+                <p className="text-sm text-gray-500">{data?.email}</p>
+              </CardHeader>
 
-        {/* Personal Information Tab */}
-        <TabsContent value="personal" className="space-y-4">
-          <div className="">
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 text-sm">
+                    <UserCircle className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.gender || "Not specified"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3 text-sm">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.phone || "No phone"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3 text-sm">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.city || data?.country || "No location"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3 text-sm">
+                    <Target className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      Target: {data?.students?.target_ielts_score || "Not set"}
+                    </span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h4 className="font-medium text-sm text-gray-900 mb-2">
+                    Current Level
+                  </h4>
+                  <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm text-center">
+                    {data?.students?.current_level || "Not specified"}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Content - Forms */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Personal Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="mr-2 h-5 w-5" />
-                  Basic Information
+                <CardTitle className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-blue-600" />
+                  <span>Personal Information</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Form {...profileForm}>
                   <form
                     onSubmit={profileForm.handleSubmit(onProfileFormSubmit)}
-                    className="space-y-4"
+                    className="space-y-6"
                   >
-                    <TextField
-                      control={profileForm.control}
-                      name="full_name"
-                      label="Full Name"
-                      placeholder="Enter full name"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <TextField
+                        control={profileForm.control}
+                        name="full_name"
+                        label="Full Name"
+                        placeholder="Enter full name"
+                      />
 
-                    <SelectField
-                      control={profileForm.control}
-                      name="gender"
-                      label="Gender"
-                      placeholder="Select gender"
-                      options={USER_GENDER}
-                    />
+                      <SelectField
+                        control={profileForm.control}
+                        name="gender"
+                        label="Gender"
+                        placeholder="Select gender"
+                        options={USER_GENDER}
+                      />
+                    </div>
 
-                     {/* Date of Birth Field */}
-                  <DateField
-                    control={profileForm.control}
-                    name="date_of_birth"
-                    label="Date of Birth"
-                    placeholder="Select date of birth"
-                  />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <DateField
+                        control={profileForm.control}
+                        name="date_of_birth"
+                        label="Date of Birth"
+                        placeholder="Select date of birth"
+                      />
 
-                    <TextField
-                      control={profileForm.control}
-                      name="phone"
-                      label="Phone Number"
-                      placeholder="Enter phone number"
-                    />
+                      <TextField
+                        control={profileForm.control}
+                        name="phone"
+                        label="Phone Number"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
 
-                    <TextField
-                      control={profileForm.control}
-                      name="country"
-                      label="Country"
-                      placeholder="Enter country"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <TextField
+                        control={profileForm.control}
+                        name="country"
+                        label="Country"
+                        placeholder="Enter country"
+                      />
 
-                    <TextField
-                      control={profileForm.control}
-                      name="city"
-                      label="City"
-                      placeholder="Enter city"
-                    />
+                      <TextField
+                        control={profileForm.control}
+                        name="city"
+                        label="City"
+                        placeholder="Enter city"
+                      />
+                    </div>
 
                     <div className="flex justify-end pt-4 border-t">
                       <Button
                         type="submit"
-                        className="flex items-center space-x-2"
+                        className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
                         disabled={updateProfileMutation.isPending}
                       >
                         <Save className="h-4 w-4" />
                         <span>
                           {updateProfileMutation.isPending
                             ? "Saving..."
-                            : "Save Basic Info"}
+                            : "Save Personal Info"}
                         </span>
                       </Button>
                     </div>
@@ -272,81 +364,81 @@ const StudentForm = () => {
                 </Form>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
 
-        {/* Academic Information Tab */}
-        <TabsContent value="academic" className="space-y-4">
-          <div>
+            {/* Academic Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  Student Information
+                <CardTitle className="flex items-center space-x-2">
+                  <GraduationCap className="h-5 w-5 text-green-600" />
+                  <span>Academic Information</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Form {...studentForm}>
                   <form
                     onSubmit={studentForm.handleSubmit(onStudentFormSubmit)}
-                    className="space-y-4"
+                    className="space-y-6"
                   >
-                    <SelectField
-                      control={studentForm.control}
-                      name="current_level"
-                      label="Current IELTS Level"
-                      placeholder="Select current level"
-                      options={STUDENT_LEVEL}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <SelectField
+                        control={studentForm.control}
+                        name="current_level"
+                        label="Current IELTS Level"
+                        placeholder="Select current level"
+                        options={STUDENT_LEVEL}
+                      />
 
-                    <TextField
-                      control={studentForm.control}
-                      name="target_ielts_score"
-                      label="Target IELTS Score"
-                      placeholder="e.g., 7.0, 8.0"
-                      type="number"
-                    />
+                      <TextField
+                        control={studentForm.control}
+                        name="target_ielts_score"
+                        label="Target IELTS Score"
+                        placeholder="e.g., 7.0, 8.0"
+                        type="number"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <SelectField
+                        control={studentForm.control}
+                        name="language_preference"
+                        label="Language Preference"
+                        placeholder="Select language preference"
+                        options={STUDENT_LANGUAGE}
+                      />
+
+                      <TextField
+                        control={studentForm.control}
+                        name="timezone"
+                        label="Timezone"
+                        placeholder="e.g., UTC+7, Asia/Ho_Chi_Minh"
+                      />
+                    </div>
 
                     <TagsField
                       control={studentForm.control}
                       name="learning_goals"
                       label="Learning Goals"
-                      placeholder="Enter a learning goal"
-                    />
-
-                    <SelectField
-                      control={studentForm.control}
-                      name="language_preference"
-                      label="Language Preference"
-                      placeholder="Select language preference"
-                      options={STUDENT_LANGUAGE}
+                      placeholder="Enter a learning goal and press Enter"
                     />
 
                     <TextField
                       control={studentForm.control}
                       name="bio"
-                      label="Student Bio"
-                      placeholder="Enter student biography"
-                    />
-
-                    <TextField
-                      control={studentForm.control}
-                      name="timezone"
-                      label="Timezone"
-                      placeholder="e.g., UTC+7, Asia/Ho_Chi_Minh"
+                      label="Student Biography"
+                      placeholder="Tell us about this student's background and goals..."
                     />
 
                     <div className="flex justify-end pt-4 border-t">
                       <Button
                         type="submit"
-                        className="flex items-center space-x-2"
+                        className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
                         disabled={updateStudentMutation.isPending}
                       >
                         <Save className="h-4 w-4" />
                         <span>
                           {updateStudentMutation.isPending
                             ? "Saving..."
-                            : "Save Student Info"}
+                            : "Save Academic Info"}
                         </span>
                       </Button>
                     </div>
@@ -354,9 +446,10 @@ const StudentForm = () => {
                 </Form>
               </CardContent>
             </Card>
+
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };

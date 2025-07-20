@@ -1,14 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getStudent } from "@/api/student";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User,
   Mail,
@@ -18,7 +17,6 @@ import {
   Shield,
   BookOpen,
   Target,
-  Trophy,
   Clock,
   Edit,
   ArrowLeft,
@@ -29,10 +27,13 @@ import {
   Star,
   Key,
   Activity,
+  UserCircle,
+  Languages,
+  Trophy,
+  Settings,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import ROUTES from "@/constants/route";
 import Heading from "@/components/ui/heading";
-
 
 const StudentDetail = () => {
   const userId = useParams().userId as string;
@@ -44,9 +45,7 @@ const StudentDetail = () => {
     retry: false,
   });
 
-  const response = data;
-
-  // Helper function để lấy badge variant dựa trên status
+  // Helper functions
   const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case "active":
@@ -60,7 +59,6 @@ const StudentDetail = () => {
     }
   };
 
-  // Helper function để lấy initials
   const getInitials = (name: string) => {
     return (
       name
@@ -69,6 +67,14 @@ const StudentDetail = () => {
         .slice(0, 2)
         .join("") || "U"
     );
+  };
+
+  const formatDate = (dateString: string) => {
+    return dateString ? new Date(dateString).toLocaleDateString() : "Not set";
+  };
+
+  const formatDateTime = (dateString: string) => {
+    return dateString ? new Date(dateString).toLocaleString() : "Never";
   };
 
   if (isPending) {
@@ -105,427 +111,426 @@ const StudentDetail = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Heading title="Student Details" description="Comprehensive student information" />
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="lg">
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center space-x-4">
+              <Heading
+                title="Student Details"
+                description="Comprehensive student profile and academic information"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  router.push(`${ROUTES.ADMIN_STUDENTS}/edit/${userId}`)
+                }
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Student
+              </Button>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Actions
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Profile Overview Card */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-6 space-y-4 md:space-y-0">
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center space-y-2">
-              <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-                {response?.avatar ? (
-                  <AvatarImage src={response?.avatar} alt={response?.full_name} />
-                ) : (
-                  <AvatarFallback className="bg-primary/10 text-primary text-2xl">
-                    {getInitials(response?.full_name || "")}
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Sidebar - Profile Summary */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-8">
+              <CardHeader className="text-center pb-4">
+                <Avatar className="h-24 w-24 mx-auto mb-4">
+                  <AvatarImage src={data?.avatar} />
+                  <AvatarFallback className="text-2xl">
+                    {getInitials(data?.full_name || "")}
                   </AvatarFallback>
-                )}
-              </Avatar>
-              <div className="text-center">
-                <h3 className="text-lg font-semibold">{response?.full_name}</h3>
-                <p className="text-sm text-muted-foreground">{response?.email}</p>
-                <div className="flex items-center justify-center mt-1">
-                  {response?.email_verified ? (
+                </Avatar>
+                <CardTitle className="text-xl">
+                  {data?.full_name || "Student"}
+                </CardTitle>
+                <p className="text-sm text-gray-500">{data?.email}</p>
+
+                {/* Email Verification Status */}
+                <div className="flex items-center justify-center mt-2">
+                  {data?.email_verified ? (
                     <div className="flex items-center text-green-600">
                       <CheckCircle className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Verified</span>
+                      <span className="text-xs">Email Verified</span>
                     </div>
                   ) : (
                     <div className="flex items-center text-red-600">
                       <XCircle className="h-4 w-4 mr-1" />
-                      <span className="text-xs">Unverified</span>
+                      <span className="text-xs">Email Unverified</span>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <BookOpen className="h-4 w-4 text-blue-500" />
-                </div>
-                <div className="text-2xl font-bold text-blue-500">
-                  {response?.students?.current_level || "N/A"}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Current Level
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Target className="h-4 w-4 text-green-500" />
-                </div>
-                <div className="text-2xl font-bold text-green-500">
-                  {response?.students?.target_ielts_score || "N/A"}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Target Score
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Activity className="h-4 w-4 text-purple-500" />
-                </div>
-                <div className="text-2xl font-bold text-purple-500">
-                  {response?.login_count || 0}
-                </div>
-                <div className="text-xs text-muted-foreground">Login Count</div>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                </div>
-                <div className="text-2xl font-bold text-orange-500">
-                  {response?.status === "active" ? "Active" : "Inactive"}
-                </div>
-                <div className="text-xs text-muted-foreground">Status</div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Detailed Information Tabs */}
-      <Tabs defaultValue="personal" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="personal">Personal Info</TabsTrigger>
-          <TabsTrigger value="academic">Academic</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-        </TabsList>
-
-        {/* Personal Information Tab */}
-        <TabsContent value="personal" className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="mr-2 h-5 w-5" />
-                  Basic Information
-                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Student ID</p>
-                    <p className="text-sm text-muted-foreground font-mono">
-                      {response?.students?.id}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Full Name</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.full_name}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Gender</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.gender || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Country</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.country || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">City</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.city || "Not provided"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Mail className="mr-2 h-5 w-5" />
-                  Contact Information
-                </CardTitle>
-              </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.email}
-                    </p>
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <BookOpen className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                    <div className="text-sm font-semibold text-blue-600">
+                      {data?.students?.current_level || "N/A"}
+                    </div>
+                    <div className="text-xs text-gray-600">Current Level</div>
                   </div>
-                  {response?.email_verified ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Phone</p>
-                    <p className="text-sm text-muted-foreground font-mono">
-                      {response?.phone || "Not provided"}
-                    </p>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <Target className="h-5 w-5 text-green-600 mx-auto mb-1" />
+                    <div className="text-sm font-semibold text-green-600">
+                      {data?.students?.target_ielts_score || "N/A"}
+                    </div>
+                    <div className="text-xs text-gray-600">Target Score</div>
                   </div>
                 </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Member Since</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.created_at
-                        ? new Date(response?.created_at).toLocaleString()
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Last Login</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.last_login
-                        ? new Date(response?.last_login).toLocaleString()
-                        : "Never"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
-        {/* Academic Information Tab */}
-        <TabsContent value="academic" className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  IELTS Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Current Level</p>
-                    <p className="text-2xl font-bold text-blue-500">
-                      {response?.students?.current_level || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Target Score</p>
-                    <p className="text-2xl font-bold text-green-500">
-                      {response?.students?.target_ielts_score || "N/A"}
-                    </p>
-                  </div>
-                </div>
                 <Separator />
-                <div>
-                  <p className="text-sm font-medium mb-2">
-                    Language Preference
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {response?.students?.language_preference || "Not set"}
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium mb-2">Learning Goals</p>
-                  <div className="text-sm text-muted-foreground">
-                    {response?.students?.learning_goals && response.students.learning_goals.length > 0 ? (
-                      <ul className="list-disc list-inside space-y-1">
-                        {response.students.learning_goals.map(
-                          (goal: string, index: number) => (
-                            <li key={index}>{goal}</li>
-                          )
-                        )}
-                      </ul>
-                    ) : (
-                      "No specific goals set"
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Star className="mr-2 h-5 w-5" />
-                  Student Profile
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Bio</p>
-                    <p className="text-sm font-mono text-muted-foreground">
-                      {response?.students?.bio || "Not set"}
-                    </p>
+                {/* Contact Info */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3 text-sm">
+                    <UserCircle className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.gender || "Not specified"}
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium">User ID</p>
-                    <p className="text-sm font-mono text-muted-foreground">
-                      {response?.students?.user_id || "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium">Student Created</p>
-                  <p className="text-sm text-muted-foreground">
-                    {response?.students?.created_at
-                      ? new Date(response?.students?.created_at).toLocaleString()
-                      : "N/A"}
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium">Last Updated</p>
-                  <p className="text-sm text-muted-foreground">
-                    {response?.students?.updated_at
-                      ? new Date(response?.students?.updated_at).toLocaleString()
-                      : "N/A"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2 h-5 w-5" />
-                  Account Security
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Key className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Password Status</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.password ? "Password set" : "No password"}
-                    </p>
+                  <div className="flex items-center space-x-3 text-sm">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.phone || "No phone"}
+                    </span>
                   </div>
-                  {response?.password ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Email Verification</p>
-                    <p className="text-sm text-muted-foreground">
-                      {response?.email_verified
-                        ? "Verified"
-                        : "Pending verification"}
-                    </p>
-                  </div>
-                  {response?.email_verified ? (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-                <Separator />
-                <div className="flex items-center space-x-3">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Account Status</p>
-                    <Badge
-                      variant={getStatusVariant(response?.status || "")}
-                      className="mt-1"
-                    >
-                      {response?.status
-                        ? response.status.charAt(0).toUpperCase() + response.status.slice(1)
-                        : "Unknown"}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="mr-2 h-5 w-5" />
-                  Login Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium">Total Logins</p>
-                  <p className="text-2xl font-bold text-blue-500">
-                    {response?.login_count || 0}
-                  </p>
+                  <div className="flex items-center space-x-3 text-sm">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.city && data?.country
+                        ? `${data.city}, ${data.country}`
+                        : data?.city || data?.country || "No location"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3 text-sm">
+                    <Activity className="h-4 w-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {data?.login_count || 0} logins
+                    </span>
+                  </div>
                 </div>
+
                 <Separator />
+
+                {/* Account Status */}
                 <div>
-                  <p className="text-sm font-medium">Last Login</p>
-                  <p className="text-sm text-muted-foreground">
-                    {response?.last_login
-                      ? new Date(response?.last_login).toLocaleString()
-                      : "Never logged in"}
-                  </p>
-                </div>
-                <Separator />
-                <div>
-                  <p className="text-sm font-medium">Account Role</p>
-                  <Badge variant="outline" className="mt-1">
-                    {response?.role?.toUpperCase() || "STUDENT"}
+                  <h4 className="font-medium text-sm text-gray-900 mb-2">
+                    Account Status
+                  </h4>
+                  <Badge
+                    variant={getStatusVariant(data?.status || "")}
+                    className="w-full justify-center"
+                  >
+                    {data?.status
+                      ? data.status.charAt(0).toUpperCase() +
+                        data.status.slice(1)
+                      : "Unknown"}
                   </Badge>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
+
+          {/* Right Content - Detailed Information */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Personal Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-blue-600" />
+                  <span>Personal Information</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Full Name
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.full_name || "Not provided"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Gender
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.gender || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Date of Birth
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.date_of_birth
+                          ? new Date(data.date_of_birth).toLocaleDateString()
+                          : "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Email Address
+                      </label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <p className="text-sm text-gray-900">{data?.email}</p>
+                        {data?.email_verified ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Phone Number
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.phone || "Not provided"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Location
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.city && data?.country
+                          ? `${data.city}, ${data.country}`
+                          : data?.city || data?.country || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Academic Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <GraduationCap className="h-5 w-5 text-green-600" />
+                  <span>Academic Information</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Current IELTS Level
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.students?.current_level || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Target IELTS Score
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.students?.target_ielts_score || "Not set"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Language Preference
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.students?.language_preference || "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Timezone
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.students?.timezone || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Student Since
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.students?.created_at
+                          ? new Date(
+                              data.students.created_at
+                            ).toLocaleDateString()
+                          : "Unknown"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Learning Goals */}
+                <div className="mt-6">
+                  <label className="text-sm font-medium text-gray-700">
+                    Learning Goals
+                  </label>
+                  <div className="mt-2">
+                    {data?.students?.learning_goals &&
+                    data.students.learning_goals.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {data.students.learning_goals.map(
+                          (goal: string, index: number) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {goal}
+                            </Badge>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No specific goals set
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bio */}
+                {data?.students?.bio && (
+                  <div className="mt-6">
+                    <label className="text-sm font-medium text-gray-700">
+                      Biography
+                    </label>
+                    <p className="mt-2 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {data.students.bio}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Account & Security Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-purple-600" />
+                  <span>Account & Security</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Account Status
+                      </label>
+                      <div className="mt-1">
+                        <Badge variant={getStatusVariant(data?.status || "")}>
+                          {data?.status
+                            ? data.status.charAt(0).toUpperCase() +
+                              data.status.slice(1)
+                            : "Unknown"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Role
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.role?.toUpperCase() || "STUDENT"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Total Logins
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.login_count || 0}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Member Since
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.created_at
+                          ? new Date(data.created_at).toLocaleDateString()
+                          : "Unknown"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Last Login
+                      </label>
+                      <p className="mt-1 text-sm text-gray-900">
+                        {data?.last_login
+                          ? new Date(data.last_login).toLocaleDateString()
+                          : "Unknown"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Password Status
+                      </label>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <p className="text-sm text-gray-900">
+                          {data?.password ? "Password set" : "No password"}
+                        </p>
+                        {data?.password ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
