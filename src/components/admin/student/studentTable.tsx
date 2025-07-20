@@ -32,11 +32,9 @@ const StudentTable = () => {
   const page = Number(searchParams.get("page")) || 1;
 
   const { data, isPending, refetch } = useQuery({
-    queryKey: ["student", page], 
+    queryKey: ["students", page], 
     queryFn: () => getStudents({ page }), 
   });
-
-  console.log("Students data:", data);
 
   // Metadata information
   const currentPage = data?.meta?.current || 1;

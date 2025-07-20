@@ -4,7 +4,7 @@ import { IUserUpdate } from "@/interface/user";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const updateProfile = async (data: IUserUpdate, id: string) => {
+export const updateProfile = async (id: string, data: IUserUpdate) => {
   const response = await api.patch(`${BASE_URL}${API_URL.PROFILE}/${id}`, data);
   console.log(response);
   return response;

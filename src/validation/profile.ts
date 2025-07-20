@@ -2,11 +2,10 @@ import * as z from "zod";
 
 export const ProfileFormSchema = z.object({
   full_name: z.string().min(2, { message: "Full name is required" }),
-  avatar: z.string().url({ message: "Invalid URL for avatar" }).optional(),
-  phone: z.string().optional(),
-  country: z.string().min(2, { message: "Country must be at least 2 characters long" }).optional(),
-  city: z.string().min(2, { message: "City must be at least 2 characters long" }).optional(),
-  gender: z.enum(["male", "female", "other"]).optional(),
-  date_of_birth: z.string().optional(),
+  avatar: z.string().or(z.undefined()), // string hoặc undefined
+  phone: z.string().or(z.undefined()),
+  country: z.string().or(z.undefined()),
+  city: z.string().or(z.undefined()),
+  gender: z.string().or(z.undefined()),
+  date_of_birth: z.date().or(z.undefined()),
 });
-

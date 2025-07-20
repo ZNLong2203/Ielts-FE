@@ -224,7 +224,7 @@ const StudentDetail = () => {
                   <div>
                     <p className="text-sm font-medium">Student ID</p>
                     <p className="text-sm text-muted-foreground font-mono">
-                      {response?.id}
+                      {response?.students?.id}
                     </p>
                   </div>
                 </div>

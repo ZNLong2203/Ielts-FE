@@ -7,13 +7,13 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const getStudents = async ({page}: {page: number}): Promise<IUsers> => {
     const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/?page=${page}`);
-    console.log(response);
+    console.log("Student list response:", response);
     return response.data.data;
 }
 
 export const getStudent = async (id: string): Promise<IUser> => {
     const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/${id}`);
-    console.log(response);
+    console.log("Student detail response:", response);
     return response.data.data;
 }
 
@@ -25,7 +25,7 @@ export const createStudent = async (data: IStudent) => {
 
 export const updateStudent = async (id: string, data: IStudentUpdate) => {
     const response = await api.patch(`${BASE_URL}${API_URL.STUDENT}/${id}`, data);
-    console.log(response);
+    console.log("Update student response:", response);
     return response;
 }
 
