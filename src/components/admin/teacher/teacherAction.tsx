@@ -16,7 +16,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { IUser } from "@/interface/user";
 import { getQueryClient } from "@/utils/getQueryClient";
-import { deleteStudent } from "@/api/student";
+import { deleteTeacher } from "@/api/teacher";
 import ROUTES from "@/constants/route";
 
 interface CellActionProps {
@@ -37,14 +37,14 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
     isError,
     isPending,
   } = useMutation({
-    mutationFn: deleteStudent,
+    mutationFn: deleteTeacher,
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to delete student");
+      toast.error(error.response?.data?.message || "Failed to delete teacher");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher"] });
       setOpen(false);
-      toast.success("Student deleted successfully");
+      toast.success("Teacher deleted successfully");
     },
   });
 
@@ -70,13 +70,13 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             Copy ID
           </DropdownMenuItem>
            <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_STUDENTS + `/${data.id}`)}
+            onClick={() => router.push(ROUTES.ADMIN_TEACHERS + `/${data.id}`)}
           >
             <Eye className="mr-1 h-4 w-4" />
             Detail
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_STUDENTS + `/${data.id}/update`)}
+            onClick={() => router.push(ROUTES.ADMIN_TEACHERS + `/${data.id}/update`)}
           >
             <Edit className="mr-1 h-4 w-4" />
             Update

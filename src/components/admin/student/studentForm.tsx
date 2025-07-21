@@ -13,19 +13,14 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
+  ArrowRight,
   GraduationCap,
   Save,
   XCircle,
-  ArrowLeft,
   UserCircle,
   Phone,
   MapPin,
-  Globe,
-  Calendar,
   Target,
-  BookOpen,
-  Clock,
-  Languages,
 } from "lucide-react";
 import { USER_GENDER } from "@/constants/user";
 import { STUDENT_LEVEL, STUDENT_LANGUAGE } from "@/constants/student";
@@ -58,7 +53,7 @@ const StudentForm = () => {
     queryFn: () => getStudent(userId),
     retry: false,
   });
-  
+
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
       return uploadAvatar(file);
@@ -129,7 +124,7 @@ const StudentForm = () => {
     resolver: zodResolver(StudentFormSchema),
     defaultValues: {
       bio: "",
-      current_level: "",
+      current_level: undefined,
       language_preference: "",
       learning_goals: [],
       target_ielts_score: undefined,
@@ -171,7 +166,7 @@ const StudentForm = () => {
     if (data) {
       studentForm.reset({
         bio: data.students?.bio || "",
-        current_level: data.students?.current_level || "",
+        current_level: data.students?.current_level || undefined,
         language_preference: data.students?.language_preference || "",
         learning_goals: data.students?.learning_goals || [],
         target_ielts_score: data.students?.target_ielts_score || undefined,
@@ -220,21 +215,14 @@ const StudentForm = () => {
               />
             </div>
 
-            {/* Student Avatar & Basic Info */}
-            {data && (
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={data.avatar} />
-                  <AvatarFallback>
-                    {data.full_name?.charAt(0) || "S"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-gray-900">{data.full_name}</p>
-                  <p className="text-sm text-gray-500">{data.email}</p>
-                </div>
-              </div>
-            )}
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              className="flex items-center space-x-2"
+            >
+              <span>Back to Student lists</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

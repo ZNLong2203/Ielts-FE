@@ -4,7 +4,7 @@ export interface IStudent {
     user_id?: string;
     bio?: string;
     target_ielts_score?: number;
-    current_level?: string;
+    current_level?: number;
     learning_goals?: string[];
     timezone?: string;
     language_preference?: string;
@@ -16,7 +16,7 @@ export interface IStudent {
 export interface IStudentUpdate {
     bio?: string;
     target_ielts_score?: number;
-    current_level?: string;
+    current_level?: number;
     learning_goals?: string[];
     timezone?: string;
     language_preference?: string;

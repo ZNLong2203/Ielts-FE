@@ -10,5 +10,6 @@ export const uploadAvatar = async (file: File) => {
       "Content-Type": "multipart/form-data",
     },
   });
+  console.log("Image upload response:", response);
   return response.data;
 };
