@@ -16,7 +16,7 @@ interface FieldConfigs {
   icon: React.ReactNode;
 }
 
-interface UserFilterProps {
+interface FilterProps {
   filters: FilterState;
   onFilterChange: (field: string, value: string) => void;
   onClearFilters: () => void;
@@ -28,7 +28,7 @@ interface UserFilterProps {
   fieldConfigs?: FieldConfigs[];
 }
 
-const UserFilter = ({
+const AdminFilter = ({
   filters,
   onFilterChange,
   onClearFilters,
@@ -39,7 +39,7 @@ const UserFilter = ({
   label,
   fieldConfigs
 
-}: UserFilterProps) => {
+}: FilterProps) => {
   const hasActiveFilters = Object.values(filters).some(value => value !== "");
 
   if (!isVisible) return null;
@@ -118,4 +118,4 @@ const UserFilter = ({
   );
 };
 
-export default UserFilter;
+export default AdminFilter;

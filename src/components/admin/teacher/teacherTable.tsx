@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   ChevronLeft,
@@ -11,6 +13,8 @@ import {
   Users,
   UserCheck,
   UserX,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 
 import { columns } from "@/components/admin/teacher/teacherColumn";
@@ -18,37 +22,56 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "@/components/ui/data-table";
 import { getTeachers, getPendingTeachers } from "@/api/teacher";
+import { useState } from "react";
 
 const TeacherTable = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("active");
 
   // Get the current page from search params or default to 1
   const page = Number(searchParams.get("page")) || 1;
 
-  const { data, isPending, isError, refetch } = useQuery({
+  const {
+    data: activeTeachersData,
+    isPending: isLoadingActive,
+    refetch: refetchActive,
+  } = useQuery({
     queryKey: ["teachers", page],
     queryFn: () => getTeachers({ page }),
   });
 
-  const {data: pendingTeachers, isPending: isPendingTeachers, isError: isErrorPendingTeachers} = useQuery({
+  const {
+    data: pendingTeachersData,
+    isPending: isLoadingPending,
+    refetch: refetchPending,
+  } = useQuery({
     queryKey: ["pendingTeachers"],
     queryFn: () => getPendingTeachers(),
   });
 
-  // Metadata information
-  const currentPage = data?.meta?.current || 1;
-  const pageSize = data?.meta?.pageSize || 10;
-  const totalPages = data?.meta?.pages || 1;
-  const totalItems = data?.meta?.total || 0;
+  // Determine which data to use based on active tab
+  const currentData =
+    activeTab === "active" ? activeTeachersData : pendingTeachersData;
+  const isPending = activeTab === "active" ? isLoadingActive : isLoadingPending;
 
-  // Calculate stat
-  const activeTeachers = data?.result.filter(
-    (teacher) => teacher.status === "active"
-  ).length;
-  const inactiveTeachers = data?.result.filter(
-    (teacher) => teacher.status === "inactive"
-  ).length;
+  // Metadata information for active teachers
+  const currentPage = activeTeachersData?.meta?.current || 1;
+  const pageSize = activeTeachersData?.meta?.pageSize || 10;
+  const totalPages = activeTeachersData?.meta?.pages || 1;
+
+  const totalActiveItems = activeTeachersData?.meta?.total || 0;
+  const totalPendingItems = pendingTeachersData?.meta?.total || 0;
+
+  // Calculate stats for active teachers
+  const activeTeachers =
+    activeTeachersData?.result?.filter((teacher) => teacher.status === "active")
+      .length || 0;
+
+  const inactiveTeachers =
+    activeTeachersData?.result?.filter(
+      (teacher) => teacher.status === "inactive"
+    ).length || 0;
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
@@ -56,7 +79,18 @@ const TeacherTable = () => {
   };
 
   const handleRefresh = () => {
-    refetch();
+    if (activeTab === "active") {
+      refetchActive();
+    } else {
+      refetchPending();
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "pending") {
+      router.push("?page=1");
+    }
   };
 
   return (
@@ -87,7 +121,7 @@ const TeacherTable = () => {
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => {}}
+            onClick={() => router.push("/admin/teachers/new")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Teacher
@@ -95,17 +129,17 @@ const TeacherTable = () => {
         </div>
       </div>
 
-       {/* Stats Cards */}
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">
-              Total Students
+              Total Active Teachers
             </p>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalItems}</div>
+            <div className="text-2xl font-bold">{totalActiveItems}</div>
             <p className="text-xs text-muted-foreground">{pageSize} per page</p>
           </CardContent>
         </Card>
@@ -113,17 +147,15 @@ const TeacherTable = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">
-              Current Page
+              Pending Applications
             </p>
-            <div className="h-4 w-4 bg-blue-100 rounded flex items-center justify-center">
-              <span className="text-xs font-bold text-blue-600">
-                {currentPage}
-              </span>
-            </div>
+            <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data?.result?.length}</div>
-            <p className="text-xs text-muted-foreground">teachers displayed</p>
+            <div className="text-2xl font-bold text-orange-600">
+              {totalPendingItems}
+            </div>
+            <p className="text-xs text-muted-foreground">awaiting approval</p>
           </CardContent>
         </Card>
 
@@ -145,7 +177,7 @@ const TeacherTable = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">
-              Unactive
+              Inactive
             </p>
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
@@ -160,70 +192,96 @@ const TeacherTable = () => {
         </Card>
       </div>
 
-       {/* Filter and Search Section */}
-            <Card>
-              <CardContent>
-                {isPending ? (
-                  <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <p className="text-sm text-muted-foreground">
-                      Loading students...
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <DataTable
-                      columns={columns}
-                      data={data?.result || []}
-                      searchKey="full_name"
-                    />
-      
-                    {/* Enhanced Pagination */}
-                    <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <span>
-                          Showing{" "}
-                          <span className="font-medium text-foreground">
-                            {(currentPage - 1) * pageSize + 1}
-                          </span>{" "}
-                          to{" "}
-                          <span className="font-medium text-foreground">
-                            {Math.min(currentPage * pageSize, totalItems)}
-                          </span>{" "}
-                          of{" "}
-                          <span className="font-medium text-foreground">
-                            {totalItems}
-                          </span>{" "}
-                          entries
-                        </span>
-                      </div>
-      
-                      <div className="flex items-center space-x-2">
-                        {/* Go to first page */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(1)}
-                          disabled={currentPage <= 1}
-                          className="hidden md:flex"
-                        >
-                          First
-                        </Button>
-      
-                        {/* Previous page */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage <= 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          <span className="ml-1 hidden md:inline">Previous</span>
-                        </Button>
-      
-                        {/* Page numbers */}
-                        <div className="flex items-center space-x-1">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+      {/* Tabs Section */}
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="active" className="flex items-center space-x-2">
+            <Users className="h-4 w-4" />
+            <span>Active Teachers</span>
+            <Badge variant="secondary" className="ml-2">
+              {totalActiveItems}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="flex items-center space-x-2">
+            <Clock className="h-4 w-4" />
+            <span>Pending Applications</span>
+            {totalPendingItems > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {totalPendingItems}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Active Teachers Tab */}
+        <TabsContent value="active" className="space-y-4">
+          <Card>
+            <CardContent>
+              {isLoadingActive ? (
+                <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <p className="text-sm text-muted-foreground">
+                    Loading active teachers...
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <DataTable
+                    columns={columns}
+                    data={activeTeachersData?.result || []}
+                    searchKey={["full_name", "email"]}
+                    searchPlaceholder="Search by name, email..."
+                  />
+
+                  {/* Enhanced Pagination */}
+                  <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <span>
+                        Showing{" "}
+                        <span className="font-medium text-foreground">
+                          {(currentPage - 1) * pageSize + 1}
+                        </span>{" "}
+                        to{" "}
+                        <span className="font-medium text-foreground">
+                          {Math.min(currentPage * pageSize, totalActiveItems)}
+                        </span>{" "}
+                        of{" "}
+                        <span className="font-medium text-foreground">
+                          {totalActiveItems}
+                        </span>{" "}
+                        entries
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage <= 1}
+                        className="hidden md:flex"
+                      >
+                        First
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="ml-1 hidden md:inline">Previous</span>
+                      </Button>
+
+                      <div className="flex items-center space-x-1">
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
                             let pageNum;
                             if (totalPages <= 5) {
                               pageNum = i + 1;
@@ -234,12 +292,14 @@ const TeacherTable = () => {
                             } else {
                               pageNum = currentPage - 2 + i;
                             }
-      
+
                             return (
                               <Button
                                 key={pageNum}
                                 variant={
-                                  pageNum === currentPage ? "default" : "outline"
+                                  pageNum === currentPage
+                                    ? "default"
+                                    : "outline"
                                 }
                                 size="sm"
                                 className="w-8 h-8"
@@ -248,47 +308,116 @@ const TeacherTable = () => {
                                 {pageNum}
                               </Button>
                             );
-                          })}
-                        </div>
-      
-                        {/* Next page */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage >= totalPages}
-                        >
-                          <span className="mr-1 hidden md:inline">Next</span>
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-      
-                        {/* Go to last page */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(totalPages)}
-                          disabled={currentPage >= totalPages}
-                          className="hidden md:flex"
-                        >
-                          Last
-                        </Button>
-      
-                        {/* Page info dropdown */}
-                        <div className="hidden md:flex items-center space-x-2 ml-4">
-                          <span className="text-sm text-muted-foreground">Page</span>
-                          <div className="flex items-center space-x-1">
-                            <span className="text-sm font-medium">{currentPage}</span>
-                            <span className="text-sm text-muted-foreground">
-                              of {totalPages}
-                            </span>
-                          </div>
+                          }
+                        )}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                      >
+                        <span className="mr-1 hidden md:inline">Next</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage >= totalPages}
+                        className="hidden md:flex"
+                      >
+                        Last
+                      </Button>
+
+                      <div className="hidden md:flex items-center space-x-2 ml-4">
+                        <span className="text-sm text-muted-foreground">
+                          Page
+                        </span>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm font-medium">
+                            {currentPage}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            of {totalPages}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Pending Teachers Tab */}
+        <TabsContent value="pending" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-5 w-5 text-orange-500" />
+                <h3 className="text-lg font-medium">
+                  Pending Teacher Applications
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Review and approve teacher applications below
+              </p>
+            </CardHeader>
+            <CardContent>
+              {isLoadingPending ? (
+                <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                  <p className="text-sm text-muted-foreground">
+                    Loading pending applications...
+                  </p>
+                </div>
+              ) : pendingTeachersData?.result?.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                  <Clock className="h-12 w-12 text-gray-400" />
+                  <div className="text-center">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      No Pending Applications
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      All teacher applications have been reviewed.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <DataTable
+                    columns={columns} // Create this column definition
+                    data={pendingTeachersData?.result || []}
+                    searchKey={["full_name", "email", "subject"]}
+                    searchPlaceholder="Search pending applications..."
+                  />
+
+                  {/* Show total pending count */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground">
+                      Total pending applications:{" "}
+                      <span className="font-medium">{totalPendingItems}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant="outline"
+                        className="text-orange-600 border-orange-200"
+                      >
+                        <Clock className="mr-1 h-3 w-3" />
+                        Awaiting Review
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

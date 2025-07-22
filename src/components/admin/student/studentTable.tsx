@@ -23,8 +23,8 @@ import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "@/components/ui/data-table";
 
 import { getStudents } from "@/api/student";
-import UserFilter from "@/components/filter/user-filter";
 import { useFilter } from "@/hook/useFilter";
+import AdminFilter from "@/components/filter/admin-filter";
 
 const StudentTable = () => {
   const router = useRouter();
@@ -237,7 +237,7 @@ const StudentTable = () => {
 
       {/* Filter Section */}
       {isFilterVisible && (
-        <UserFilter
+        <AdminFilter
           filters={filters}
           onFilterChange={handleFilterChange}
           onClearFilters={handleClearFilters}
