@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { GalleryVerticalEnd } from "lucide-react";
-import RegisterForm from "@/components/auth/registerForm";
+import TeacherRegisterForm from "@/components/auth/teacherRegister";
 import Link from "next/link";
 import ROUTES from "@/constants/route";
 
@@ -23,10 +23,10 @@ const RegisterTeacherPage = () => {
             <span className="text-lg font-semibold">PREP</span>
           </Link>
         </motion.div>
+        
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-md">
-          
-            <RegisterForm role="TEACHER"/>
+          <div className="w-full max-w-2xl"> {/* Increased max width for teacher form */}
+            <TeacherRegisterForm />
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -35,7 +35,7 @@ const RegisterTeacherPage = () => {
               className="mt-6 text-center"
             >
               <p className="text-sm text-gray-600">
-                Already have an teacher account?{" "}
+                Already have a teacher account?{" "}
                 <Link
                   href={ROUTES.LOGIN}
                   className="font-medium text-blue-600 hover:text-blue-500"
@@ -47,6 +47,7 @@ const RegisterTeacherPage = () => {
           </div>
         </div>
       </div>
+      
       <div className="relative hidden lg:block">
         <div
           className="absolute inset-0 z-10"
@@ -56,96 +57,44 @@ const RegisterTeacherPage = () => {
             backdropFilter: "blur(8px)",
           }}
         ></div>
-        <motion.div
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1 }}
-          className="absolute inset-0 z-0"
-        >
-          <img
-            src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop"
-            alt="Teacher helping students"
-            className="h-full w-full object-cover"
-          />
-        </motion.div>
-        <div className="absolute inset-0 flex items-center justify-center z-20">
+        
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80')",
+          }}
+        />
+        
+        {/* Content Overlay */}
+        <div className="relative z-20 flex h-full flex-col justify-center p-12 text-white">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="bg-white/10 backdrop-blur-md p-8 rounded-2xl max-w-md border border-white/20 shadow-xl"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Empower Your IELTS Teaching Journey
+            <h2 className="text-4xl font-bold mb-4">
+              Shape the Future of IELTS Learning
             </h2>
-            <p className="text-white/80">
-              Create an account to access advanced tools, curated materials, and
-              AI support tailored for IELTS educators. Enhance your teaching
-              impact and support your students more effectively.
+            <p className="text-xl mb-6 text-white/90">
+              Join our community of expert instructors and help students achieve their academic dreams.
             </p>
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-white"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-                <p className="text-white/90 text-sm">
-                  Ready-to-use teaching resources
-                </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-white"></div>
+                <span>Competitive compensation</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-white"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-                <p className="text-white/90 text-sm">
-                  AI tools to streamline assessment
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-white"></div>
+                <span>Flexible teaching schedule</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-white"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-                <p className="text-white/90 text-sm">
-                  Track and support student progress
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-white"></div>
+                <span>Professional development opportunities</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-white"></div>
+                <span>Access to cutting-edge teaching tools</span>
               </div>
             </div>
           </motion.div>

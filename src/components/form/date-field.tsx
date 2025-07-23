@@ -39,7 +39,7 @@ const DateField = ({
       name={name}
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel className="text-md font-semibold">{label}</FormLabel>
+          <FormLabel className="text-sm font-semibold">{label}</FormLabel>
           <Popover>
             <PopoverTrigger asChild>
               <FormControl>

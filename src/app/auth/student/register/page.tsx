@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { GalleryVerticalEnd } from "lucide-react";
-import RegisterForm from "@/components/auth/registerForm";
+import RegisterForm from "@/components/auth/studentRegister";
 import Link from "next/link";
 import ROUTES from "@/constants/route";
 

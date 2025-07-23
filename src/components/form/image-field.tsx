@@ -148,7 +148,7 @@ const ImageUploadField = ({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-md font-semibold">{label}</FormLabel>
+          <FormLabel className="text-sm font-semibold">{label}</FormLabel>
           <div className="flex items-center space-x-4">
             {/* Avatar Preview */}
             <Avatar className="h-20 w-20">

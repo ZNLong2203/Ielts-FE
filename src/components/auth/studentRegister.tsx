@@ -21,11 +21,11 @@ import { useRouter } from "next/navigation";
 import { studentRegister, teacherRegister } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RegisterSchema } from "@/validation/auth";
+import { StudentRegisterSchema } from "@/validation/auth";
 import ROUTES from "@/constants/route";
+import TextField from "../form/text-field";
 
-const RegisterForm = ({
-  role,
+const StudentRegisterForm = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
@@ -34,23 +34,22 @@ const RegisterForm = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const password = e.target.value;
+  const handlePasswordChange = (value: string) => {
     // Simple password strength calculation
     let strength = 0;
-    if (password.length >= 8) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    if (value.length >= 8) strength += 1;
+    if (/[A-Z]/.test(value)) strength += 1;
+    if (/[0-9]/.test(value)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(value)) strength += 1;
     setPasswordStrength(strength);
   };
 
   const {
-    mutate: registerHandler,
+    mutate: studentRegisterHandler,
     isError,
     isPending,
   } = useMutation({
-    mutationFn: role === "TEACHER" ? teacherRegister : studentRegister,
+    mutationFn: studentRegister,
     onError: (error: any) => {
       toast.error(error.response?.data?.message || error.message);
     },
@@ -58,28 +57,24 @@ const RegisterForm = ({
       toast.success(response.data.message);
       // Redirect to login page after successful registration;
       setTimeout(() => {
-        router.push(
-          role === "TEACHER" ? ROUTES.TEACHER_LOGIN : ROUTES.STUDENT_LOGIN
-        );
+        router.push(ROUTES.LOGIN);
       }, 3000);
     },
   });
 
-  const roleEnum = role === "TEACHER" ? "TEACHER" : "STUDENT";
-
-  const form = useForm<z.infer<typeof RegisterSchema>>({
-    resolver: zodResolver(RegisterSchema),
+  const form = useForm<z.infer<typeof StudentRegisterSchema>>({
+    resolver: zodResolver(StudentRegisterSchema),
     defaultValues: {
       full_name: "",
       email: "",
       password: "",
       confirmPassword: "",
-      role: roleEnum,
+      role: "STUDENT",
     },
   });
 
-  const onSubmit = (data: z.infer<typeof RegisterSchema>) => {
-    registerHandler(data);
+  const onSubmit = (data: z.infer<typeof StudentRegisterSchema>) => {
+    studentRegisterHandler(data);
   };
 
   return (
@@ -102,9 +97,7 @@ const RegisterForm = ({
               transition={{ delay: 0.2 }}
               className="text-3xl font-bold bg-clip-text text-transparent bg-blue-700"
             >
-              {role === "TEACHER"
-                ? "Create a Teacher Account"
-                : "Create a Student Account"}
+              <span>Create a Student Account</span>
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}
@@ -123,30 +116,14 @@ const RegisterForm = ({
               transition={{ delay: 0.3 }}
               className="grid gap-2"
             >
-              <FormField
+              <TextField
                 control={form.control}
                 name="full_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      Full Name
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        id="full_name"
-                        type="text"
-                        placeholder="John Doe"
-                        autoComplete="fullname"
-                        required
-                        suppressHydrationWarning={true}
-                        className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500" />
-                  </FormItem>
-                )}
-              ></FormField>
+                label="Full Name"
+                placeholder="John Doe"
+                required
+                className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
+              />
             </motion.div>
 
             <motion.div
@@ -155,28 +132,15 @@ const RegisterForm = ({
               transition={{ delay: 0.4 }}
               className="grid gap-2"
             >
-              <FormField
+              <TextField
                 control={form.control}
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        id="email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="your.email@example.com"
-                        required
-                        suppressHydrationWarning={true}
-                        className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500" />
-                  </FormItem>
-                )}
-              ></FormField>
+                label="Email"
+                type="email"
+                placeholder="your.email@example.com"
+                required
+                className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
+              />
             </motion.div>
 
             <motion.div
@@ -185,50 +149,17 @@ const RegisterForm = ({
               transition={{ delay: 0.5 }}
               className="grid gap-2"
             >
-              <FormField
+              <TextField
                 control={form.control}
                 name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-sm font-medium">
-                        Password
-                      </FormLabel>
-                    </div>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            handlePasswordChange(e);
-                          }}
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          autoComplete="current-password"
-                          placeholder="********"
-                          required
-                          suppressHydrationWarning={true}
-                          className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          suppressHydrationWarning={true}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showPassword ? (
-                            <EyeOffIcon className="h-5 w-5" />
-                          ) : (
-                            <EyeIcon className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500"></FormMessage>
-                  </FormItem>
-                )}
-              ></FormField>
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                onValueChange={handlePasswordChange}
+                placeholder="********"
+                required
+                className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
+              />
+
               <div className="flex gap-1 mt-1">
                 {[...Array(4)].map((_, i) => (
                   <div
@@ -258,46 +189,15 @@ const RegisterForm = ({
               transition={{ delay: 0.6 }}
               className="grid gap-2"
             >
-              <FormField
+              <TextField
                 control={form.control}
                 name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">
-                      Confirm Password
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          {...field}
-                          id="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          autoComplete="new-password"
-                          placeholder="********"
-                          required
-                          suppressHydrationWarning={true}
-                          className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          suppressHydrationWarning={true}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOffIcon className="h-5 w-5" />
-                          ) : (
-                            <EyeIcon className="h-5 w-5" />
-                          )}
-                        </button>
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-sm text-red-500"></FormMessage>
-                  </FormItem>
-                )}
-              ></FormField>
+                label="Confirm Password"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="********"
+                required
+                className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
+              />
             </motion.div>
 
             <motion.div
@@ -352,9 +252,7 @@ const RegisterForm = ({
                   </div>
                 ) : (
                   <>
-                    {role === "TEACHER"
-                      ? "Create Teacher Account"
-                      : "Create Student Account"}
+                    <span>Create Student Account</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -388,4 +286,4 @@ const RegisterForm = ({
   );
 };
 
-export default RegisterForm;
+export default StudentRegisterForm;

@@ -45,7 +45,7 @@ const SelectField = ({
       render={({ field }) => {
         return (
           <FormItem>
-            <FormLabel className="text-md font-semibold">{label}</FormLabel>
+            <FormLabel className="text-sm font-semibold">{label}</FormLabel>
             <Select
               disabled={disabled}
               onValueChange={(value) => field.onChange(value)}

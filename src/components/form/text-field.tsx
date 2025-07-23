@@ -6,15 +6,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { Control } from "react-hook-form";
+import { useState, ReactNode } from "react";
 
 interface TextFieldProps {
   control: Control<any>;
   name: string;
-  label: string;
+  label: string | ReactNode;
   placeholder?: string;
   className?: string;
   type?: string;
+  required?: boolean;
+  showPasswordToggle?: boolean;
+  onValueChange?: (value: string) => void;
 }
 
 const TextField = ({
@@ -23,26 +29,53 @@ const TextField = ({
   label,
   placeholder,
   className,
+  required,
   type = "text",
+  showPasswordToggle = false,
+  onValueChange,
 }: TextFieldProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const actualType = showPasswordToggle && type === "password" 
+    ? (showPassword ? "text" : "password") 
+    : type;
+
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-md font-semibold">{label}</FormLabel>
+          <FormLabel className="text-sm font-semibold">{label}</FormLabel>
           <FormControl>
-            <Input
-              type={type}
-              placeholder={placeholder || label}
-              className={className}
-              {...field}
-              value={field.value ?? ""}
-              onChange={(e) => {
-                field.onChange(e.target.value);
-              }}
-            />
+            <div className="relative">
+              <Input
+                type={actualType}
+                placeholder={placeholder || (typeof label === 'string' ? label : '')}
+                className={className}
+                {...field}
+                value={field.value ?? ""}
+                required={required}
+                onChange={(e) => {
+                  field.onChange(e.target.value);
+                  onValueChange?.(e.target.value);
+                }}
+              />
+              {showPasswordToggle && type === "password" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              )}
+            </div>
           </FormControl>
           <FormMessage />
         </FormItem>
