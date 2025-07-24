@@ -37,10 +37,9 @@ const AdminFilter = ({
   totalItems,
   filteredCount,
   label,
-  fieldConfigs
-
+  fieldConfigs,
 }: FilterProps) => {
-  const hasActiveFilters = Object.values(filters).some(value => value !== "");
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "");
 
   if (!isVisible) return null;
 
@@ -50,11 +49,6 @@ const AdminFilter = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <h3 className="text-lg font-medium">Filter {label}</h3>
-            {hasActiveFilters && (
-              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                {Object.values(filters).filter(v => v !== "").length} active
-              </span>
-            )}
           </div>
           <div className="flex items-center space-x-2">
             {hasActiveFilters && (
@@ -68,11 +62,7 @@ const AdminFilter = ({
                 Clear All
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-            >
+            <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -82,7 +72,10 @@ const AdminFilter = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {fieldConfigs?.map((field) => (
             <div className="space-y-2" key={field.key}>
-              <Label htmlFor={`${field.key}-filter`} className="text-sm font-medium">
+              <Label
+                htmlFor={`${field.key}-filter`}
+                className="text-sm font-medium"
+              >
                 {field.label}
               </Label>
               <div className="relative">
@@ -98,13 +91,14 @@ const AdminFilter = ({
             </div>
           ))}
         </div>
-        
+
         {/* Filter Results Info */}
         {hasActiveFilters && (
           <div className="mt-4 p-3 bg-blue-50 rounded-md">
             <p className="text-sm text-blue-700">
               Showing <span className="font-semibold">{filteredCount}</span> of{" "}
-              <span className="font-semibold">{totalItems}</span> {label.toLowerCase()}
+              <span className="font-semibold">{totalItems}</span>{" "}
+              {label.toLowerCase()}
               {filteredCount !== totalItems && (
                 <span className="ml-2 text-blue-600">
                   ({totalItems - filteredCount} hidden by filters)

@@ -22,4 +22,5 @@ export interface ITeacherRegister {
     experience_years: number,
     specializations: string[],
     ielts_band_score: number,
+    file: string[],
 }

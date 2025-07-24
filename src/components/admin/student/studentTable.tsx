@@ -264,7 +264,7 @@ const StudentTable = () => {
             <div className="space-y-4">
               <DataTable
                 columns={columns}
-                data={filteredData} // Use filtered data from hook
+                data={filteredData}
                 searchKey={["full_name", "email", "phone"]}
                 searchPlaceholder="Search by name, email, or phone..."
               />

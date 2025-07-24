@@ -28,7 +28,12 @@ export const studentRegister = async (data: IStudentRegister) => {
 export const teacherRegister = async (data: ITeacherRegister) => {
   const response = await api.post(
     `${BASE_URL}${API_URL.TEACHER_REGISTER}`,
-    data
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
   );
   console.log(response);
   return response;

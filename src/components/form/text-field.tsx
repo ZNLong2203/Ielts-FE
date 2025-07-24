@@ -45,7 +45,7 @@ const TextField = ({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-sm font-semibold">{label}</FormLabel>
+          <FormLabel className="text-md font-semibold">{label}</FormLabel>
           <FormControl>
             <div className="relative">
               <Input
@@ -56,7 +56,21 @@ const TextField = ({
                 value={field.value ?? ""}
                 required={required}
                 onChange={(e) => {
-                  field.onChange(e.target.value);
+                  let value: any = e.target.value;
+                  
+                  // Handle number conversion for number fields
+                  if (type === "number") {
+                    // Allow empty string for clearing the field
+                    if (value === "") {
+                      value = 0; // or undefined depending on your schema
+                    } else {
+                      // Convert to number
+                      const numValue = parseFloat(value);
+                      value = isNaN(numValue) ? 0 : numValue;
+                    }
+                  }
+                  
+                  field.onChange(value);
                   onValueChange?.(e.target.value);
                 }}
               />

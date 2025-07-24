@@ -28,6 +28,7 @@ import TextField from "@/components/form/text-field";
 import DateField from "@/components/form/date-field";
 import SelectField from "@/components/form/select-field";
 import TagsField from "@/components/form/tags-field";
+import FileUploadField from "@/components/form/file-field";
 
 const TeacherRegisterForm = ({
   className,
@@ -83,10 +84,12 @@ const TeacherRegisterForm = ({
       specializations: [],
       ielts_band_score: 0,
       confirmPassword: "",
+      file: [],
     },
   });
 
   const onSubmit = (data: z.infer<typeof TeacherRegisterSchema>) => {
+    console.log("Form Data:", data);
     teacherRegisterHandler(data);
   };
 
@@ -280,6 +283,34 @@ const TeacherRegisterForm = ({
                 label="Teaching Specializations"
                 placeholder="Type specialization and press Enter (e.g., Speaking, Writing)"
                 className="h-11 rounded-xl border-muted-foreground/20 bg-background/50 backdrop-blur-sm focus-visible:ring-blue-500"
+              />
+            </motion.div>
+
+             {/* Documents & Media Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.55 }}
+              className="space-y-4"
+            >
+              <div className="flex items-center gap-2 pb-2 border-b">
+                <div className="h-2 w-2 rounded-full bg-purple-600"></div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Documents & Media
+                </h3>
+              </div>
+
+              {/* Certificates */}
+              <FileUploadField
+                control={form.control}
+                name="file"
+                label="Teaching Certificates & Qualifications"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                multiple={true}
+                maxSize={5}
+                placeholder="Upload your certificates (TESOL, CELTA, etc.)"
+                description="You can upload multiple files. Include IELTS certificate, teaching qualifications, etc."
+                className="border-muted-foreground/20 bg-background/50 backdrop-blur-sm"
               />
             </motion.div>
 
