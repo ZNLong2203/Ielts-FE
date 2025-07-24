@@ -10,26 +10,17 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
-  Mail,
   Phone,
   MapPin,
-  Calendar,
   Shield,
   BookOpen,
   Target,
-  Clock,
   Edit,
-  ArrowLeft,
   CheckCircle,
   XCircle,
-  Globe,
   GraduationCap,
-  Star,
-  Key,
   Activity,
   UserCircle,
-  Languages,
-  Trophy,
   Settings,
 } from "lucide-react";
 import ROUTES from "@/constants/route";

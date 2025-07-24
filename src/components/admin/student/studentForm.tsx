@@ -155,10 +155,6 @@ const StudentForm = () => {
   // handle profile form submission
   const onProfileFormSubmit = (formData: z.infer<typeof ProfileFormSchema>) => {
     console.log("Profile Form Data:", formData);
-
-    if (formData.avatar && formData.avatar instanceof File) {
-      uploadAvatarMutation.mutate(formData.avatar);
-    }
     updateProfileMutation.mutate(formData);
   };
 

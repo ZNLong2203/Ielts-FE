@@ -60,7 +60,7 @@ const StudentProfile = () => {
                   <Avatar className="w-32 h-32 mx-auto border-4 border-white shadow-2xl ring-4 ring-blue-300/50">
                     <AvatarImage src="/placeholder.svg?height=128&width=128" />
                     <AvatarFallback className="bg-blue-500 text-white text-3xl font-bold">
-                      {getInitials(user?.students?.full_name || "Student")}
+                      {getInitials(user?.full_name || "Student")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
@@ -70,7 +70,7 @@ const StudentProfile = () => {
                   </div>
                 </div>
 
-                <h1 className="text-2xl font-bold mb-2">{user?.students?.full_name || "IELTS Student"}</h1>
+                <h1 className="text-2xl font-bold mb-2">{user?.full_name || "IELTS Student"}</h1>
                 <p className="text-blue-100 text-lg mb-4">IELTS Preparation Student</p>
 
                 <div className="flex flex-wrap gap-2 justify-center mb-6">
