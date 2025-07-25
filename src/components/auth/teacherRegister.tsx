@@ -84,7 +84,7 @@ const TeacherRegisterForm = ({
       specializations: [],
       ielts_band_score: 0,
       confirmPassword: "",
-      file: [],
+      file: undefined,
     },
   });
 
@@ -142,7 +142,7 @@ const TeacherRegisterForm = ({
               Join our team of expert IELTS instructors and help students
               achieve their dreams
             </motion.p>
-          </div>
+          </div>  
 
           <div className="grid gap-6">
             {/* Personal Information Section */}
@@ -306,7 +306,7 @@ const TeacherRegisterForm = ({
                 name="file"
                 label="Teaching Certificates & Qualifications"
                 accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                multiple={true}
+                multiple={false}
                 maxSize={5}
                 placeholder="Upload your certificates (TESOL, CELTA, etc.)"
                 description="You can upload multiple files. Include IELTS certificate, teaching qualifications, etc."

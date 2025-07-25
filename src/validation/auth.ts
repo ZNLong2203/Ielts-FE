@@ -34,21 +34,25 @@ export const StudentRegisterSchema = z
     path: ["confirmPassword"],
   });
 
-export const TeacherRegisterSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-  phone: z.string().min(1, "Phone number is required"),
-  date_of_birth: z.date(),
-  gender: z.enum(["male", "female", "other"]),
-  country: z.string().min(1, "Country is required"),
-  qualification: z.string().min(1, "Qualification is required"),
-  experience_years: z.number().min(0, "Experience must be 0 or more").max(50),
-  specializations: z.array(z.string()).min(1, "At least one specialization is required"),
-  ielts_band_score: z.number().min(0, "Band score must be 0 or more").max(9),
-  file: z.array(z.string()),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+export const TeacherRegisterSchema = z
+  .object({
+    full_name: z.string().min(1, "Full name is required"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+    phone: z.string().min(1, "Phone number is required"),
+    date_of_birth: z.date(),
+    gender: z.enum(["male", "female", "other"]),
+    country: z.string().min(1, "Country is required"),
+    qualification: z.string().min(1, "Qualification is required"),
+    experience_years: z.number().min(0, "Experience must be 0 or more").max(50),
+    specializations: z
+      .array(z.string())
+      .min(1, "At least one specialization is required"),
+    ielts_band_score: z.number().min(0, "Band score must be 0 or more").max(9),
+    file: z.instanceof(File),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });

@@ -79,17 +79,17 @@ export const DateInfoField = ({
 
 
 
-interface ContactInfoItemProps {
+interface IconTextItemProps {
   icon: LucideIcon;
   value?: string | number | null;
   fallback?: string;
 }
 
-export const ContactInfoItem = ({ 
+export const IconTextItem = ({ 
   icon: Icon, 
   value, 
   fallback = "Not provided" 
-}: ContactInfoItemProps) => {
+}: IconTextItemProps) => {
   return (
     <div className="flex items-center space-x-3 text-sm">
       <Icon className="h-4 w-4 text-gray-400" />

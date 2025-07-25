@@ -30,7 +30,7 @@ import ROUTES from "@/constants/route";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
 import {
-  ContactInfoItem,
+  IconTextItem,
   DateInfoField,
   TextInfoField,
 } from "@/components/ui/info";
@@ -191,17 +191,17 @@ const TeacherDetail = () => {
 
                 {/* Contact Info */}
                 <div className="space-y-3">
-                  <ContactInfoItem icon={UserCircle} value={data?.gender} />
+                  <IconTextItem icon={UserCircle} value={data?.gender} />
 
-                  <ContactInfoItem
+                  <IconTextItem
                     icon={Phone}
                     value={data?.phone || "No phone"}
                   />
-                  <ContactInfoItem
+                  <IconTextItem
                     icon={MapPin}
                     value={data?.country || "No location"}
                   />
-                  <ContactInfoItem
+                  <IconTextItem
                     icon={Activity}
                     value={`${data?.login_count || 0} logins`}
                   />
