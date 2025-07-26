@@ -12,16 +12,16 @@ import {
 import NavbarTitle from "@/components/navbarTitle";
 import NavbarLink from "@/components/navbarLink";
 import ROUTES from "@/constants/route";
-import { 
-  Menu, 
-  X, 
-  User, 
-  LogOut, 
-  Settings, 
-  BookOpen, 
-  Award, 
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  Settings,
+  BookOpen,
+  Award,
   ShieldCheck,
-  ChevronRight 
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Logout } from "@/api/auth";
@@ -61,7 +61,12 @@ const LandingNavbar = () => {
   // Get user avatar initials
   const getUserInitials = () => {
     const name = getUserDisplayName();
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -258,14 +263,14 @@ const LandingNavbar = () => {
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                       {getUserInitials()}
                     </div>
-                    
+
                     {/* User Name & Role */}
                     <div className="flex flex-col items-start">
                       <span className="text-white text-sm font-medium max-w-[120px] truncate">
                         {getUserDisplayName()}
                       </span>
                     </div>
-                    
+
                     <ChevronRight className="h-4 w-4 text-white/60 transform group-hover/parent:rotate-90 transition-transform duration-200" />
                   </div>
 
@@ -291,7 +296,11 @@ const LandingNavbar = () => {
                       <div className="space-y-1">
                         {/* Profile Link */}
                         <a
-                          href={user?.role === "TEACHER" ? ROUTES.TEACHER_PROFILE : ROUTES.STUDENT_PROFILE}
+                          href={
+                            user?.role === "TEACHER"
+                              ? ROUTES.TEACHER_PROFILE
+                              : ROUTES.STUDENT_PROFILE
+                          }
                           className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                         >
                           <User className="h-4 w-4" />
@@ -413,23 +422,22 @@ const LandingNavbar = () => {
               {!isAuthenticated ? (
                 <>
                   <div className="space-y-2">
-                    <div className="text-white/50 text-sm font-medium">Login</div>
+                    <div className="text-white/50 text-sm font-medium">
+                      Login
+                    </div>
+
                     <a
                       href={ROUTES.LOGIN}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
-                      Student Login
-                    </a>
-                    <a
-                      href={ROUTES.LOGIN}
-                      className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
-                    >
-                      Teacher Login
+                      Login
                     </a>
                   </div>
 
                   <div className="space-y-2 mt-4">
-                    <div className="text-white/50 text-sm font-medium">Register</div>
+                    <div className="text-white/50 text-sm font-medium">
+                      Register
+                    </div>
                     <a
                       href={ROUTES.STUDENT_REGISTER}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
@@ -462,7 +470,11 @@ const LandingNavbar = () => {
                   {/* Mobile Menu Items */}
                   <div className="space-y-2">
                     <a
-                      href={user?.role === "TEACHER" ? ROUTES.TEACHER_PROFILE : ROUTES.STUDENT_PROFILE}
+                      href={
+                        user?.role === "TEACHER"
+                          ? ROUTES.TEACHER_PROFILE
+                          : ROUTES.STUDENT_PROFILE
+                      }
                       className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                     >
                       <User className="h-4 w-4" />

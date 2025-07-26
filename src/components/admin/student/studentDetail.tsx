@@ -25,6 +25,13 @@ import {
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import Heading from "@/components/ui/heading";
+import Loading from "@/components/ui/loading";
+import {
+  DateInfoField,
+  TextBadgeInfo,
+  TextIconInfo,
+  TextInfoField,
+} from "@/components/ui/info";
 
 const StudentDetail = () => {
   const userId = useParams().userId as string;
@@ -60,35 +67,8 @@ const StudentDetail = () => {
     );
   };
 
-  const formatDate = (dateString: string) => {
-    return dateString ? new Date(dateString).toLocaleDateString() : "Not set";
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return dateString ? new Date(dateString).toLocaleString() : "Never";
-  };
-
   if (isPending) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="text-sm text-muted-foreground">
-          Loading student details...
-        </p>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <XCircle className="h-12 w-12 text-red-500" />
-        <p className="text-sm text-muted-foreground">
-          Error loading student details
-        </p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (!data) {
@@ -192,54 +172,38 @@ const StudentDetail = () => {
 
                 {/* Contact Info */}
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-3 text-sm">
-                    <UserCircle className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.gender || "Not specified"}
-                    </span>
-                  </div>
+                  <TextIconInfo
+                    icon={UserCircle}
+                    value={data?.gender || "Not provided"}
+                  />
 
-                  <div className="flex items-center space-x-3 text-sm">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.phone || "No phone"}
-                    </span>
-                  </div>
+                  <TextIconInfo
+                    icon={Phone}
+                    value={data?.phone || "Not provided"}
+                  />
 
-                  <div className="flex items-center space-x-3 text-sm">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.city && data?.country
+                  <TextIconInfo
+                    icon={MapPin}
+                    value={
+                      data?.city && data?.country
                         ? `${data.city}, ${data.country}`
-                        : data?.city || data?.country || "No location"}
-                    </span>
-                  </div>
+                        : data?.city || data?.country || "Not provided"
+                    }
+                  />
 
-                  <div className="flex items-center space-x-3 text-sm">
-                    <Activity className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.login_count || 0} logins
-                    </span>
-                  </div>
+                  <TextIconInfo
+                    icon={Activity}
+                    value={`${data?.login_count || 0} logins`}
+                  />
                 </div>
 
                 <Separator />
 
                 {/* Account Status */}
-                <div>
-                  <h4 className="font-medium text-sm text-gray-900 mb-2">
-                    Account Status
-                  </h4>
-                  <Badge
-                    variant={getStatusVariant(data?.status || "")}
-                    className="w-full justify-center"
-                  >
-                    {data?.status
-                      ? data.status.charAt(0).toUpperCase() +
-                        data.status.slice(1)
-                      : "Unknown"}
-                  </Badge>
-                </div>
+                <TextBadgeInfo
+                  status={data?.status || "Unknown"}
+                  label="Account Status"
+                />
               </CardContent>
             </Card>
           </div>
@@ -257,70 +221,48 @@ const StudentDetail = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Full Name
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.full_name || "Not provided"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Full Name"
+                      value={data?.full_name || "Not provided"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Gender
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.gender || "Not specified"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Gender"
+                      value={data?.gender || "Not specified"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Date of Birth
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.date_of_birth
+                    <TextInfoField
+                      label="Date of Birth"
+                      value={
+                        data?.date_of_birth
                           ? new Date(data.date_of_birth).toLocaleDateString()
-                          : "Not provided"}
-                      </p>
-                    </div>
+                          : "Not provided"
+                      }
+                    />
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Email Address
-                      </label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-sm text-gray-900">{data?.email}</p>
-                        {data?.email_verified ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                      </div>
-                    </div>
+                    <TextInfoField
+                      label="Email Address"
+                      value={data?.email || "Not provided"}
+                      verified={data?.email_verified}
+                      IconNeg={XCircle}
+                      IconPos={CheckCircle}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Phone Number
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.phone || "Not provided"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Phone Number"
+                      value={data?.phone || "Not provided"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Location
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.city && data?.country
+                    <TextInfoField
+                      label="Location"
+                      value={
+                        data?.city && data?.country
                           ? `${data.city}, ${data.country}`
-                          : data?.city || data?.country || "Not provided"}
-                      </p>
-                    </div>
+                          : data?.city || data?.country || "Not provided"
+                      }
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -337,61 +279,45 @@ const StudentDetail = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Current IELTS Level
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.students?.current_level || "Not specified"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Current IELTS Level"
+                      value={data?.students?.current_level || "Not specified"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Target IELTS Score
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.students?.target_ielts_score || "Not set"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Target IELTS Score"
+                      value={data?.students?.target_ielts_score || "Not set"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Language Preference
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.students?.language_preference || "Not specified"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Language Preference"
+                      value={
+                        data?.students?.language_preference || "Not specified"
+                      }
+                    />
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Timezone
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.students?.timezone || "Not specified"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Timezone"
+                      value={data?.students?.timezone || "Not specified"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Student Since
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.students?.created_at
+                    <DateInfoField
+                      label="Student Since"
+                      value={
+                        data?.students?.created_at
                           ? new Date(
                               data.students.created_at
                             ).toLocaleDateString()
-                          : "Unknown"}
-                      </p>
-                    </div>
+                          : "Unknown"
+                      }
+                    />
                   </div>
                 </div>
 
                 {/* Learning Goals */}
-                <div className="mt-6">
+                <div className="my-6">
                   <label className="text-sm font-medium text-gray-700">
                     Learning Goals
                   </label>
@@ -419,17 +345,10 @@ const StudentDetail = () => {
                   </div>
                 </div>
 
-                {/* Bio */}
-                {data?.students?.bio && (
-                  <div className="mt-6">
-                    <label className="text-sm font-medium text-gray-700">
-                      Biography
-                    </label>
-                    <p className="mt-2 text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
-                      {data.students.bio}
-                    </p>
-                  </div>
-                )}
+                <TextInfoField
+                  label="Bio"
+                  value={data?.students?.bio || "No biography provided"}
+                />
               </CardContent>
             </Card>
 
@@ -444,77 +363,48 @@ const StudentDetail = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Account Status
-                      </label>
-                      <div className="mt-1">
-                        <Badge variant={getStatusVariant(data?.status || "")}>
-                          {data?.status
-                            ? data.status.charAt(0).toUpperCase() +
-                              data.status.slice(1)
-                            : "Unknown"}
-                        </Badge>
-                      </div>
-                    </div>
+                    <TextBadgeInfo
+                      status={data?.status || "Unknown"}
+                      label="Account Status"
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Role
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.role?.toUpperCase() || "STUDENT"}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Role"
+                      value={data?.role?.toUpperCase() || "STUDENT"}
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Total Logins
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.login_count || 0}
-                      </p>
-                    </div>
+                    <TextInfoField
+                      label="Login Count"
+                      value={data?.login_count?.toString() || "0"}
+                    />
                   </div>
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Member Since
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.created_at
+                    <DateInfoField
+                      label="Member Since"
+                      value={
+                        data?.created_at
                           ? new Date(data.created_at).toLocaleDateString()
-                          : "Unknown"}
-                      </p>
-                    </div>
+                          : "Unknown"
+                      }
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Last Login
-                      </label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {data?.last_login
+                    <DateInfoField
+                      label="Last Login"
+                      value={
+                        data?.last_login
                           ? new Date(data.last_login).toLocaleDateString()
-                          : "Unknown"}
-                      </p>
-                    </div>
+                          : "Unknown"
+                      }
+                    />
 
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Password Status
-                      </label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <p className="text-sm text-gray-900">
-                          {data?.password ? "Password set" : "No password"}
-                        </p>
-                        {data?.password ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <XCircle className="h-4 w-4 text-red-500" />
-                        )}
-                      </div>
-                    </div>
+                    <TextInfoField
+                      label="Password Status"
+                      value={data?.password ? "Password set" : "No password"}
+                      verified={!!data?.password}
+                      IconNeg={XCircle}
+                      IconPos={CheckCircle}
+                    />
                   </div>
                 </div>
               </CardContent>
