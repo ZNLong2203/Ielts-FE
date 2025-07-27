@@ -174,26 +174,24 @@ const StudentDetail = () => {
                 <div className="space-y-3">
                   <TextIconInfo
                     icon={UserCircle}
-                    value={data?.gender || "Not provided"}
+                    value={`Gender: ${
+                      data?.gender
+                        ? data.gender.charAt(0).toLocaleUpperCase() +
+                          data.gender.slice(1)
+                        : "Not provided"
+                    }`}
                   />
 
                   <TextIconInfo
                     icon={Phone}
-                    value={data?.phone || "Not provided"}
+                    value={`Phone: ${data?.phone || "Not provided"}`}
                   />
 
-                  <TextIconInfo
-                    icon={MapPin}
-                    value={
-                      data?.city && data?.country
-                        ? `${data.city}, ${data.country}`
-                        : data?.city || data?.country || "Not provided"
-                    }
-                  />
+                  <TextIconInfo icon={MapPin} value={`Location: ${data?.city}, ${data?.country}`} />
 
                   <TextIconInfo
                     icon={Activity}
-                    value={`${data?.login_count || 0} logins`}
+                    value={`Login count: ${data?.login_count || 0} logins`}
                   />
                 </div>
 

@@ -1,6 +1,7 @@
 import api from "@/utils/interceptor";
 import { API_URL } from "@/constants/api";
 import { IUser, IUsers } from "@/interface/user";
+import { ITeacherUpdate } from "@/interface/teacher";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -28,7 +29,7 @@ export const createTeacher = async (data: IUser) => {
   return response;
 };
 
-export const updateTeacher = async (id: string, data: IUser) => {
+export const updateTeacher = async (id: string, data: ITeacherUpdate) => {
   const response = await api.patch(`${BASE_URL}${API_URL.TEACHER}/${id}`, data);
   console.log("Update teacher response:", response);
   return response;

@@ -10,9 +10,8 @@ export interface ITeacher {
     teaching_style?: string;
     hourly_rate?: number;
     availability?: {
-        days: string[];
-        timeSlots: string[];
-    };
+        [key: string]: string[]; // e.g., { monday: ["9:00-10:00", "10:00-11:00"] }
+    }
     ratings?: number;
     total_students?: number;
     total_courses?: number;
@@ -23,3 +22,11 @@ export interface ITeacher {
     updated_at?: Date;
 }
 
+export interface ITeacherUpdate {
+    qualification?: string;
+    experience_years?: number;
+    specializations?: string[];
+    ielts_band_score?: number;
+    teaching_style?: string;
+    hourly_rate?: number;
+}

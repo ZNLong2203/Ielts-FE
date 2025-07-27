@@ -167,7 +167,7 @@ const TeacherDetail = () => {
                     icon={Phone}
                     value={data?.phone || "No phone"}
                   />
-                   <TextIconInfo
+                  <TextIconInfo
                     icon={MapPin}
                     value={
                       data?.city && data?.country
@@ -303,6 +303,35 @@ const TeacherDetail = () => {
                       label="IELTS Band Score"
                       value={data?.teachers?.ielts_band_score || "Not provided"}
                     />
+
+                    {/* Specializations */}
+                    <div className="mt-6">
+                      <label className="text-sm font-medium text-gray-700">
+                        Teaching Specializations
+                      </label>
+                      <div className="mt-2">
+                        {data?.teachers?.specializations &&
+                        data.teachers.specializations.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {data.teachers.specializations.map(
+                              (spec: string, index: number) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {spec}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">
+                            No specializations specified
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -311,44 +340,56 @@ const TeacherDetail = () => {
                       value={data?.teachers?.created_at}
                     />
 
-                    <TextBadgeInfo
-                      label="Profile Status"
-                      status={data?.status || "unknown"}
+                    <TextInfoField
+                      label="Teaching Style"
+                      value={data?.teachers?.teaching_style || "Not provided"}
                     />
 
-                    <DateInfoField
-                      label="Last Login"
-                      value={data?.last_login}
+                    <TextInfoField
+                      label="Hourly Rate"
+                      value={data?.teachers?.hourly_rate || "Not provided"}
                     />
-                  </div>
-                </div>
 
-                {/* Specializations */}
-                <div className="mt-6">
-                  <label className="text-sm font-medium text-gray-700">
-                    Teaching Specializations
-                  </label>
-                  <div className="mt-2">
-                    {data?.teachers?.specializations &&
-                    data.teachers.specializations.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {data.teachers.specializations.map(
-                          (spec: string, index: number) => (
-                            <Badge
-                              key={index}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {spec}
-                            </Badge>
-                          )
+                    <div className="mt-6">
+                      <label className="text-sm font-medium text-gray-700">
+                        Availability
+                      </label>
+                      <div className="mt-2">
+                        {data?.teachers?.availability &&
+                        Object.keys(data.teachers.availability).length > 0 ? (
+                          <div className="space-y-2">
+                            {Object.entries(data.teachers.availability).map(
+                              ([day, slots]: [string, string[]]) => (
+                                <div
+                                  key={day}
+                                  className="flex items-center gap-2"
+                                >
+                                  <span className="font-semibold text-gray-800 w-24 text-xs">
+                                    {day.charAt(0).toUpperCase() + day.slice(1)}
+                                    :
+                                  </span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {slots.map((slot, idx) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {slot}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">
+                            No availability specified
+                          </p>
                         )}
                       </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No specializations specified
-                      </p>
-                    )}
+                    </div>
                   </div>
                 </div>
               </CardContent>

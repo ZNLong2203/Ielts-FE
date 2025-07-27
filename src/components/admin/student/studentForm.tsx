@@ -39,6 +39,7 @@ import { ProfileFormSchema } from "@/validation/profile";
 import { uploadAvatar } from "@/api/file";
 import { getStudent, updateStudent } from "@/api/student";
 import { updateProfile } from "@/api/profile";
+import { TextIconInfo } from "@/components/ui/info";
 
 const StudentForm = () => {
   const params = useParams();
@@ -137,7 +138,7 @@ const StudentForm = () => {
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
       full_name: "",
-      avatar: "",
+      avatar: undefined,
       phone: "",
       country: "",
       city: "",
@@ -161,23 +162,23 @@ const StudentForm = () => {
   useEffect(() => {
     if (data) {
       studentForm.reset({
-        bio: data.students?.bio || "",
-        current_level: data.students?.current_level || undefined,
-        language_preference: data.students?.language_preference || "",
-        learning_goals: data.students?.learning_goals || [],
-        target_ielts_score: data.students?.target_ielts_score || undefined,
-        timezone: data.students?.timezone || "",
+        bio: data.students?.bio,
+        current_level: data.students?.current_level,
+        language_preference: data.students?.language_preference,
+        learning_goals: data.students?.learning_goals,
+        target_ielts_score: data.students?.target_ielts_score,
+        timezone: data.students?.timezone,
       });
       profileForm.reset({
-        full_name: data?.full_name || "",
-        avatar: data?.avatar || "",
-        city: data?.city || "",
-        country: data?.country || "",
+        full_name: data?.full_name,
+        avatar: data?.avatar,
+        city: data?.city,
+        country: data?.country,
         phone: data?.phone && data.phone.trim() !== "" ? data.phone : undefined,
         date_of_birth: data.date_of_birth
           ? new Date(data.date_of_birth)
           : undefined,
-        gender: data?.gender || "",
+        gender: data?.gender,
       });
     }
   }, [data]);
@@ -244,36 +245,28 @@ const StudentForm = () => {
 
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-3 text-sm">
-                    <UserCircle className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.gender
-                        ? data.gender.charAt(0).toLocaleUpperCase() +
-                          data.gender.slice(1)
-                        : "Not specified"}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center space-x-3 text-sm">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.phone || "No phone"}
-                    </span>
-                  </div>
+                  <TextIconInfo
+                    icon={UserCircle}
+                    value={`Gender: ${data?.gender || "Not specified"}`}
+                  />
 
-                  <div className="flex items-center space-x-3 text-sm">
-                    <MapPin className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {data?.city || data?.country || "No location"}
-                    </span>
-                  </div>
+                  <TextIconInfo
+                    icon={Phone}
+                    value={`Phone: ${data?.phone || "No phone number"}`}
+                  />
 
-                  <div className="flex items-center space-x-3 text-sm">
-                    <Target className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      Target: {data?.students?.target_ielts_score || "Not set"}
-                    </span>
-                  </div>
+                  <TextIconInfo
+                    icon={MapPin}
+                    value={`Location: ${data?.city}, ${data?.country}`}
+                  />
+
+                  <TextIconInfo
+                    icon={Target}
+                    value={`Target IELTS Score: ${
+                      data?.students?.target_ielts_score || "Not set"
+                    }`}
+                  />
                 </div>
 
                 <Separator />
@@ -397,12 +390,12 @@ const StudentForm = () => {
                     className="space-y-6"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <SelectField
+                      <TextField
                         control={studentForm.control}
                         name="current_level"
-                        label="Current IELTS Level"
-                        placeholder="Select current level"
-                        options={STUDENT_LEVEL}
+                        label="Current Level"
+                        placeholder="e.g., 5, 6, 7"
+                        type="number"
                       />
 
                       <TextField
