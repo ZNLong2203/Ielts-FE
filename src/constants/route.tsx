@@ -12,6 +12,8 @@ const ROUTES = {
   ADMIN: "/admin",
   ADMIN_STUDENTS: "/admin/student",
   ADMIN_TEACHERS: "/admin/teacher",
+  ADMIN_BLOG_CATEGORIES: "/admin/blogCategory",
+  ADMIN_BLOGS: "/admin/blog",
 };
 
 export default ROUTES;

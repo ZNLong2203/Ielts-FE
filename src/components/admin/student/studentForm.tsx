@@ -23,7 +23,7 @@ import {
   Target,
 } from "lucide-react";
 import { USER_GENDER } from "@/constants/user";
-import { STUDENT_LEVEL, STUDENT_LANGUAGE } from "@/constants/student";
+import { STUDENT_LANGUAGE } from "@/constants/student";
 
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -36,15 +36,16 @@ import toast from "react-hot-toast";
 
 import { StudentFormSchema } from "@/validation/student";
 import { ProfileFormSchema } from "@/validation/profile";
-import { uploadAvatar } from "@/api/file";
 import { getStudent, updateStudent } from "@/api/student";
 import { updateProfile } from "@/api/profile";
 import { TextIconInfo } from "@/components/ui/info";
+import { uploadAvatar } from "@/api/file";
 
 const StudentForm = () => {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
 
   const userId = params.userId as string;
 
@@ -55,15 +56,17 @@ const StudentForm = () => {
     retry: false,
   });
 
+  // Upload student avatar
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
-      return uploadAvatar(file);
+      return uploadAvatar(file, userId);
     },
     onSuccess: (data) => {
-      toast.success(data.data.data.message || "Avatar uploaded successfully");
+      toast.success(data.data.message || "Avatar uploaded successfully");
       queryClient.invalidateQueries({
         queryKey: ["studentDetail", userId],
       });
+      router.push(ROUTES.ADMIN_STUDENTS);
     },
     onError: (error) => {
       toast.error(error.message || "Failed to upload avatar");
@@ -138,12 +141,12 @@ const StudentForm = () => {
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
       full_name: "",
-      avatar: undefined,
       phone: "",
       country: "",
       city: "",
       date_of_birth: undefined,
       gender: "",
+      avatar: undefined,
     },
   });
 
@@ -157,6 +160,12 @@ const StudentForm = () => {
   const onProfileFormSubmit = (formData: z.infer<typeof ProfileFormSchema>) => {
     console.log("Profile Form Data:", formData);
     updateProfileMutation.mutate(formData);
+  };
+
+  // Handle avatar upload
+  const onAvatarUpload = (file: File) => {
+    console.log("Uploading avatar:", file);
+    uploadAvatarMutation.mutate(file);
   };
 
   useEffect(() => {
@@ -245,7 +254,6 @@ const StudentForm = () => {
 
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-
                   <TextIconInfo
                     icon={UserCircle}
                     value={`Gender: ${data?.gender || "Not specified"}`}
@@ -305,8 +313,22 @@ const StudentForm = () => {
                       label="Profile Avatar"
                       currentImage={data?.avatar}
                       fallback={data?.full_name?.charAt(0) || "S"}
+                      onFileSelected={(file: File) => setSelectedAvatar(file)}
                       maxSize={2 * 1024 * 1024} // 2MB
                     />
+                    {selectedAvatar && (
+                      <Button
+                        type="button"
+                        size={"default"}
+                        variant="outline"
+                        onClick={() => onAvatarUpload(selectedAvatar)}
+                        disabled={uploadAvatarMutation.isPending}
+                      >
+                        {uploadAvatarMutation.isPending
+                          ? "Uploading..."
+                          : "Upload Avatar"}
+                      </Button>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <TextField
                         control={profileForm.control}

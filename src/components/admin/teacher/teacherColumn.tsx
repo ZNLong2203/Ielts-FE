@@ -68,19 +68,9 @@ export const columns: ColumnDef<IUser>[] = [
     },
     cell: ({ row }) => {
       const fullName = row.original.full_name;
-      const avatar = row.original.avatar;
       
       return (
         <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8 border border-muted">
-            {avatar ? (
-              <AvatarImage src={avatar} alt={fullName} />
-            ) : (
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {getInitials(fullName || "Unknown User")}
-              </AvatarFallback>
-            )}
-          </Avatar>
           <div className="font-medium">{fullName}</div>
         </div>
       );

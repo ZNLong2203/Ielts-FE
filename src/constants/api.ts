@@ -10,4 +10,6 @@ export const API_URL = {
 
     STUDENT: '/students',
     TEACHER: '/teachers',
+    BLOG: '/blogs',
+    BLOG_CATEGORY: '/blogs/category',
 }

@@ -35,8 +35,8 @@ import toast from "react-hot-toast";
 import { getTeacher, updateTeacher } from "@/api/teacher";
 import { ProfileFormSchema } from "@/validation/profile";
 import { TeacherFormSchema } from "@/validation/teacher";
-import { ITeacherUpdate } from "@/interface/teacher";
 import { updateProfile } from "@/api/profile";
+import { uploadAvatar } from "@/api/file";
 import { TextIconInfo } from "@/components/ui/info";
 import { USER_GENDER } from "@/constants/user";
 
@@ -44,6 +44,8 @@ const TeacherForm = () => {
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
+  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
+
   const userId = params.userId as string;
 
   // Get teacher details
@@ -51,6 +53,21 @@ const TeacherForm = () => {
     queryKey: ["teacherDetail", userId],
     queryFn: () => getTeacher(userId),
     retry: false,
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return uploadAvatar(file, userId);
+    },
+    onSuccess: (data) => {
+      toast.success(data.data.message || "Avatar uploaded successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["studentDetail", userId],
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to upload avatar");
+    },
   });
 
   // Update profile form
@@ -112,6 +129,12 @@ const TeacherForm = () => {
   const onProfileFormSubmit = (formData: z.infer<typeof ProfileFormSchema>) => {
     console.log("Profile Form Data:", formData);
     updateProfileMutation.mutate(formData);
+  };
+
+  // Handle avatar upload
+  const onAvatarUpload = (file: File) => {
+    console.log("Uploading avatar:", file);
+    uploadAvatarMutation.mutate(file);
   };
 
   useEffect(() => {
@@ -264,8 +287,23 @@ const TeacherForm = () => {
                       label="Profile Avatar"
                       currentImage={data?.avatar}
                       fallback={data?.full_name?.charAt(0) || "S"}
+                      onFileSelected={(file) => setSelectedAvatar(file)}
                       maxSize={2 * 1024 * 1024} // 2MB
                     />
+
+                    {selectedAvatar && (
+                      <Button
+                        type="button"
+                        size={"default"}
+                        variant="outline"
+                        onClick={() => onAvatarUpload(selectedAvatar)}
+                        disabled={uploadAvatarMutation.isPending}
+                      >
+                        {uploadAvatarMutation.isPending
+                          ? "Uploading..."
+                          : "Upload Avatar"}
+                      </Button>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <TextField
                         control={profileForm.control}

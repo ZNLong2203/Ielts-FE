@@ -20,6 +20,7 @@ interface ImageUploadFieldProps {
   label: string;
   disabled?: boolean;
   currentImage?: string;
+  onFileSelected?: (file: File) => void; 
   fallback?: string;
   maxSize?: number; // in MB
 }
@@ -32,9 +33,10 @@ const ImageUploadField = ({
   currentImage,
   fallback = "U",
   maxSize = 2, // Default 2MB
+  onFileSelected,
 }: ImageUploadFieldProps) => {
   const [preview, setPreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);  
 
  const handleFileChange = (
   event: React.ChangeEvent<HTMLInputElement>,
@@ -56,6 +58,11 @@ const ImageUploadField = ({
     toast.error('Please select a valid image file');
     event.target.value = "";
     return;
+  }
+
+  // Call onFileSelected callback if provided
+  if (onFileSelected) {
+    onFileSelected(file);
   }
 
   setIsUploading(true);
@@ -134,14 +141,6 @@ const ImageUploadField = ({
     toast.success('Image removed');
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   return (
     <FormField
       control={control}
@@ -178,10 +177,10 @@ const ImageUploadField = ({
                     disabled={disabled || isUploading}
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    {isUploading ? 'Uploading...' : 'Upload Image'}
+                    {isUploading ? 'Uploading...' : 'Choosing an Image'}
                   </Button>
                   
-                  {(preview || field.value) && !isUploading && (
+                  {(preview || field.value) && !isUploading && currentImage == "" && (
                     <Button
                       type="button"
                       variant="outline"
@@ -196,7 +195,7 @@ const ImageUploadField = ({
                 </div>
               </FormControl>
               <p className="text-xs text-muted-foreground">
-                Recommended: Square image, max {maxSize}MB
+                Recommended: Square image, max 2 MB
                 <br />
                 Supported formats: JPG, PNG, GIF, WebP
               </p>

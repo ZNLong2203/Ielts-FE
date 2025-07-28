@@ -23,10 +23,20 @@ const AdminRoutes = ({
       label: "Students",
       active: pathName === ROUTES.ADMIN_STUDENTS,
     },
-     {
+    {
       href: ROUTES.ADMIN_TEACHERS,
       label: "Teachers",
       active: pathName === ROUTES.ADMIN_TEACHERS,
+    },
+    {
+      href: ROUTES.ADMIN_BLOG_CATEGORIES,
+      label: "Blog Categories",
+      active: pathName === ROUTES.ADMIN_BLOG_CATEGORIES,
+    },
+    {
+      href: ROUTES.ADMIN_BLOGS,
+      label: "Blogs",
+      active: pathName === ROUTES.ADMIN_BLOGS,
     },
   ];
   return (

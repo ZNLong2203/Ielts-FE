@@ -12,15 +12,6 @@ export interface IBlog {
     published_at?: Date;
 }
 
-export interface IBlogCategory {
-    id: string;
-    name: string;
-    slug?: string;
-    description: string;
-    ordering?: number;
-    is_active?: boolean;
-}
-
 export interface IBlogComment {
     id: string;
     blog_id?: string;

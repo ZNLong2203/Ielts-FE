@@ -20,17 +20,17 @@ export const getStudent = async (id: string): Promise<IUser> => {
 export const createStudent = async (data: IStudent) => {
     const response = await api.post(`${BASE_URL}${API_URL.STUDENT}`, data);
     console.log(response);
-    return response;
+    return response.data
 }
 
 export const updateStudent = async (id: string, data: IStudentUpdate) => {
     const response = await api.patch(`${BASE_URL}${API_URL.STUDENT}/${id}`, data);
     console.log("Update student response:", response);
-    return response;
+    return response.data;
 }
 
 export const deleteStudent = async (id: string) => {
     const response = await api.delete(`${BASE_URL}${API_URL.STUDENT}/${id}`);
     console.log(response);
-    return response;
+    return response.data;
 }
