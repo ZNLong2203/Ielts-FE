@@ -14,8 +14,6 @@ import {
   UserX,
   Filter,
   Search,
-  Mail,
-  Phone,
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";

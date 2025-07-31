@@ -62,23 +62,6 @@ const StudentTable = () => {
   const totalPages = data?.meta?.pages || 1;
   const totalItems = data?.meta?.total || 0;
 
-  // Calculate stats for filtered data
-  const activeStudents = filteredData.filter(
-    (student) => student.status === "active"
-  ).length;
-  const inactiveStudents = filteredData.filter(
-    (student) => student.status !== "active"
-  ).length;
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages) return;
-    router.push(`?page=${newPage}`);
-  };
-
-  const handleRefresh = () => {
-    refetch();
-  };
-
   const fieldConfigs = [
     {
       key: "full_name",
@@ -105,6 +88,23 @@ const StudentTable = () => {
       ),
     },
   ];
+
+  // Calculate stats for filtered data
+  const activeStudents = filteredData.filter(
+    (student) => student.status === "active"
+  ).length;
+  const inactiveStudents = filteredData.filter(
+    (student) => student.status !== "active"
+  ).length;
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    router.push(`?page=${newPage}`);
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
 
   return (
     <div className="space-y-6">
