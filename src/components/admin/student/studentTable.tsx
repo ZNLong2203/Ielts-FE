@@ -21,10 +21,10 @@ import { columns } from "@/components/admin/student/studentColumn";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "@/components/ui/data-table";
+import AdminFilter from "@/components/filter/admin-filter";
 
 import { getStudents } from "@/api/student";
 import { useFilter } from "@/hook/useFilter";
-import AdminFilter from "@/components/filter/admin-filter";
 
 const StudentTable = () => {
   const router = useRouter();
@@ -54,19 +54,19 @@ const StudentTable = () => {
   const activeFilterCount = Object.values(filters).filter(
     (v) => v !== ""
   ).length;
+  const filteredCount = filteredData.length;
 
   // Metadata information
   const currentPage = data?.meta?.current || 1;
   const pageSize = data?.meta?.pageSize || 10;
   const totalPages = data?.meta?.pages || 1;
   const totalItems = data?.meta?.total || 0;
-  const filteredCount = filteredData.length;
 
   // Calculate stats for filtered data
   const activeStudents = filteredData.filter(
     (student) => student.status === "active"
   ).length;
-  const unactiveStudents = filteredData.filter(
+  const inactiveStudents = filteredData.filter(
     (student) => student.status !== "active"
   ).length;
 
@@ -78,7 +78,6 @@ const StudentTable = () => {
   const handleRefresh = () => {
     refetch();
   };
-
 
   const fieldConfigs = [
     {
@@ -220,13 +219,13 @@ const StudentTable = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">
-              Unactive
+              Inactive
             </p>
             <UserX className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {unactiveStudents}
+              {inactiveStudents}
             </div>
             <p className="text-xs text-muted-foreground">
               students not verified or inactive

@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { ArrowUpDown, Mail, Phone, Calendar, User, Shield } from "lucide-react";
 import CellAction from "./studentAction";
@@ -19,15 +17,6 @@ const getStatusVariant = (status: string) => {
     case "inactive":
       return "destructive";
   }
-};
-
-// Helper function để lấy initials từ full name
-const getInitials = (name: string) => {
-  return name
-    .split(" ")
-    .map(part => part.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("");
 };
 
 export const columns: ColumnDef<IUser>[] = [

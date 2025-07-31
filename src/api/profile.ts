@@ -8,22 +8,28 @@ export const updateProfile = async (id: string, data: IUserUpdate) => {
   const response = await api.patch(`${BASE_URL}${API_URL.PROFILE}/${id}`, data);
   console.log(response);
   return response;
-}
+};
 
 export const getProfile = async () => {
   const response = await api.get(`${BASE_URL}${API_URL.PROFILE}/me`);
   console.log(response);
   return response;
-}
+};
 
 export const updateOwnStudentProfile = async (data: IUserUpdate) => {
-  const response = await api.patch(`${BASE_URL}${API_URL.OWN_PROFILE}/student/me`, data);
+  const response = await api.patch(
+    `${BASE_URL}${API_URL.OWN_PROFILE}/student/me`,
+    data
+  );
   console.log(response);
   return response;
-}
+};
 
 export const updateOwnTeacherProfile = async (data: IUserUpdate) => {
-    const response = await api.patch(`${BASE_URL}${API_URL.OWN_PROFILE}/teacher/me`, data);
-    console.log(response);
-    return response;
-}
+  const response = await api.patch(
+    `${BASE_URL}${API_URL.OWN_PROFILE}/teacher/me`,
+    data
+  );
+  console.log(response);
+  return response;
+};

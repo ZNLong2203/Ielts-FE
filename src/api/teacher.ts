@@ -5,7 +5,11 @@ import { ITeacherUpdate } from "@/interface/teacher";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const getTeachers = async ({ page }: { page: number }): Promise<IUsers> => {
+export const getTeachers = async ({
+  page,
+}: {
+  page: number;
+}): Promise<IUsers> => {
   const response = await api.get(`${BASE_URL}${API_URL.TEACHER}/?page=${page}`);
   console.log("Teacher list response:", response);
   return response.data.data;
@@ -15,7 +19,7 @@ export const getPendingTeachers = async (): Promise<IUsers> => {
   const response = await api.get(`${BASE_URL}${API_URL.TEACHER}/pending`);
   console.log("Pending teacher list response:", response);
   return response.data.data;
-}
+};
 
 export const getTeacher = async (id: string): Promise<IUser> => {
   const response = await api.get(`${BASE_URL}${API_URL.TEACHER}/${id}`);

@@ -5,6 +5,18 @@ export interface IBlogCategory {
     description: string;
     ordering?: number;
     is_active?: boolean;
+    created_at: Date
+}
+
+export interface IBlogCategories {
+    meta: {
+        current: number;
+        currentSize: number;
+        pageSize: number;
+        pages: number;
+        total: number;
+    }
+    result: IBlogCategory[];
 }
 
 export interface IBlogCategoryCreate {
@@ -20,3 +32,4 @@ export interface IBlogCategoryUpdate {
     ordering?: number;
     is_active?: boolean;
 }
+

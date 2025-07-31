@@ -14,13 +14,13 @@ import { AlertModal } from "@/components/modal/alert-modal";
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { IUser } from "@/interface/user";
 import { getQueryClient } from "@/utils/getQueryClient";
 import { deleteBlogCategory } from "@/api/blogCategory";
 import ROUTES from "@/constants/route";
+import { IBlogCategory } from "@/interface/blogCategory";
 
 interface CellActionProps {
-  data: IUser;
+  data: IBlogCategory;
 }
 
 const CellAction: React.FC<CellActionProps> = ({ data }) => {
