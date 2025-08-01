@@ -2,8 +2,6 @@ import api from "@/utils/interceptor";
 import { API_URL } from "@/constants/api";
 import {
   IBlogCategoryCreate,
-  IBlogCategoryUpdate,
-  IBlogCategory,
   IBlogCategories,
 } from "@/interface/blogCategory";
 

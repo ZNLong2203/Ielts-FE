@@ -1,5 +1,5 @@
 "use client";
-import { Form, FormField } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
@@ -23,7 +23,7 @@ import {
   Target,
 } from "lucide-react";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { useParams, useRouter } from "next/navigation";
@@ -408,6 +408,7 @@ const TeacherForm = () => {
                         name="ielts_band_score"
                         label="IELTS Band Score"
                         type="number"
+                        inputMode="decimal"
                         placeholder="Enter IELTS band score"
                       />
                       <TextField

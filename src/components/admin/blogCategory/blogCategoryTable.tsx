@@ -18,12 +18,11 @@ import {
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/admin/blogCategory/blogCategoryColumn.";
-import { IBlogCategory } from "@/interface/blogCategory";
-
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getBlogCategories } from "@/api/blogCategory";
 import { useFilter } from "@/hook/useFilter";
+import ROUTES from "@/constants/route";
 
 const BlogCategoryTable = () => {
   const router = useRouter();
@@ -154,7 +153,9 @@ const BlogCategoryTable = () => {
 
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => router.push("/admin/students/new")}
+            onClick={() =>
+              router.push(ROUTES.ADMIN_BLOG_CATEGORIES + "/create")
+            }
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Category
@@ -165,7 +166,7 @@ const BlogCategoryTable = () => {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">
               {hasActiveFilters ? "Filtered Categories" : "Total Categories"}
             </p>

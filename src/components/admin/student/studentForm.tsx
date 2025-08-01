@@ -1,5 +1,5 @@
 "use client";
-import { Form, FormField } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
@@ -62,7 +62,7 @@ const StudentForm = () => {
       return uploadAvatar(file, userId);
     },
     onSuccess: (data) => {
-      toast.success(data.data.message || "Avatar uploaded successfully");
+      toast.success(data.data.message);
       queryClient.invalidateQueries({
         queryKey: ["studentDetail", userId],
       });
@@ -85,7 +85,7 @@ const StudentForm = () => {
       return updateProfile(userId, updatedFormData);
     },
     onSuccess: (data) => {
-      toast.success(data.data.data.message || "Profile updated successfully");
+      toast.success(data?.data.message);
       queryClient.invalidateQueries({
         queryKey: ["students"],
       });
@@ -106,9 +106,7 @@ const StudentForm = () => {
       return updateStudent(userId, formData);
     },
     onSuccess: (data) => {
-      toast.success(
-        data.data.data.message || "Student information updated successfully"
-      );
+      toast.success(data?.data.message);
       queryClient.invalidateQueries({
         queryKey: ["students"],
       });

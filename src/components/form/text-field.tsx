@@ -18,6 +18,15 @@ interface TextFieldProps {
   placeholder?: string;
   className?: string;
   type?: string;
+  inputMode?:
+    | "text"
+    | "search"
+    | "email"
+    | "tel"
+    | "url"
+    | "none"
+    | "numeric"
+    | "decimal";
   required?: boolean;
   showPasswordToggle?: boolean;
   onValueChange?: (value: string) => void;
@@ -31,13 +40,17 @@ const TextField = ({
   className,
   required,
   type = "text",
+  inputMode,
   showPasswordToggle = false,
   onValueChange,
 }: TextFieldProps) => {
   const [showPassword, setShowPassword] = useState(false);
-  const actualType = showPasswordToggle && type === "password" 
-    ? (showPassword ? "text" : "password") 
-    : type;
+  const actualType =
+    showPasswordToggle && type === "password"
+      ? showPassword
+        ? "text"
+        : "password"
+      : type;
 
   return (
     <FormField
@@ -50,26 +63,30 @@ const TextField = ({
             <div className="relative">
               <Input
                 type={actualType}
-                placeholder={placeholder || (typeof label === 'string' ? label : '')}
+                inputMode={inputMode}
+                placeholder={
+                  placeholder || (typeof label === "string" ? label : "")
+                }
                 className={className}
                 {...field}
                 value={field.value ?? ""}
                 required={required}
                 onChange={(e) => {
                   let value: any = e.target.value;
-                  
+
                   // Handle number conversion for number fields
                   if (type === "number") {
                     // Allow empty string for clearing the field
                     if (value === "") {
                       value = 0; // or undefined depending on your schema
                     } else {
-                      // Convert to number
-                      const numValue = parseFloat(value);
-                      value = isNaN(numValue) ? 0 : numValue;
+                      value = parseFloat(value);
+                      if (isNaN(value)) {
+                        value = 0; // or handle as needed
+                      }
                     }
                   }
-                  
+
                   field.onChange(value);
                   onValueChange?.(e.target.value);
                 }}

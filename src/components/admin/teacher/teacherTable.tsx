@@ -120,7 +120,7 @@ const TeacherTable = () => {
     ).length || 0;
 
   // Field for filtering
-  const filterFields = ["full_name", "email", "phone"];
+  const filterFields = ["full_name", "email", "phone", "status"];
 
   // Use the filter hook with current tab data
   const {
@@ -163,6 +163,16 @@ const TeacherTable = () => {
       icon: (
         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      placeholder: "Filter by status...",
+      icon: (
+        <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      type: "select",
+      defaultValue: "active",
     },
   ];
 
