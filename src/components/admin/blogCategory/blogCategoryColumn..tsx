@@ -97,27 +97,27 @@ export const columns: ColumnDef<IBlogCategory>[] = [
       </div>
     ),
   },
-  //   {
-  //     accessorKey: "is_active",
-  //     header: ({ column }) => (
-  //       <Button
-  //         variant="ghost"
-  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //         className="hover:bg-secondary/20"
-  //       >
-  //         Status
-  //       </Button>
-  //     ),
-  //     cell: ({ row }) => (
-  //       <Badge
-  //         variant={getStatusVariant(
-  //           row.original.is_active ? "active" : "inactive"
-  //         )}
-  //       >
-  //         {row.original.is_active ? "Active" : "Inactive"}
-  //       </Badge>
-  //     ),
-  //   },
+  {
+    accessorKey: "is_active",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:bg-secondary/20"
+      >
+        Status
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <Badge
+        variant={getStatusVariant(
+          row.original.is_active ? "active" : "inactive"
+        )}
+      >
+        {row.original.is_active ? "Active" : "Inactive"}
+      </Badge>
+    ),
+  },
   {
     accessorKey: "created_at",
     header: ({ column }) => (

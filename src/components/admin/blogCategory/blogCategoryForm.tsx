@@ -18,9 +18,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BlogCategoryCreateSchema } from "@/validation/blogCategory";
-import { createBlogCategory } from "@/api/blogCategory";
+import { createBlogCategory, getBlogCategoryById } from "@/api/blogCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 
@@ -39,6 +39,12 @@ const BlogCategoryForm = () => {
     description = "Update a Blog Category for blog posts";
   }
 
+  const { data, isPending } = useQuery({
+    queryKey: ["blogCategory", param.slug],
+    queryFn: () => getBlogCategoryById(param.slug),
+    enabled: param.slug !== "create"
+  })
+
   const createBlogCategoryMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
       return createBlogCategory(formData);
@@ -54,6 +60,8 @@ const BlogCategoryForm = () => {
       toast.error(error?.message || "Failed to create blog category.");
     },
   });
+
+  const updateBlogCategoryMuta
 
   const blogCategoryForm = useForm<z.infer<typeof BlogCategoryCreateSchema>>({
     resolver: zodResolver(BlogCategoryCreateSchema),
