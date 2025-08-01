@@ -1,11 +1,11 @@
-import BlogCategoryForm from "@/components/admin/blogCategory/blogCategoryForm";
+import BlogCategoryDetail from "@/components/admin/blogCategory/blogCategoryDetail";
 
-const BlogCategoryAdminNewPage = () => {
+const BlogCategoryAdminDetailPage = () => {
   return (
     <div>
-      <BlogCategoryForm />
+      <BlogCategoryDetail />
     </div>
   );
 };
 
-export default BlogCategoryAdminNewPage;
+export default BlogCategoryAdminDetailPage;

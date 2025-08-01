@@ -19,19 +19,30 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BlogCategoryCreateSchema } from "@/validation/blogCategory";
-import { createBlogCategory, getBlogCategoryById } from "@/api/blogCategory";
+import {
+  BlogCategoryCreateSchema,
+  BlogCategoryUpdateSchema,
+} from "@/validation/blogCategory";
+import {
+  createBlogCategory,
+  getBlogCategoryById,
+  updateBlogCategory,
+} from "@/api/blogCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
+import { useEffect } from "react";
+import Loading from "@/components/ui/loading";
 
 const BlogCategoryForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
 
+  const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
+
   let title = "";
   let description = "";
-  if (param.slug === "create") {
+  if (slug === undefined || param.slug === "") {
     title = "Add New Blog Category";
     description = "Create a new category for blog posts";
   } else {
@@ -40,10 +51,10 @@ const BlogCategoryForm = () => {
   }
 
   const { data, isPending } = useQuery({
-    queryKey: ["blogCategory", param.slug],
-    queryFn: () => getBlogCategoryById(param.slug),
-    enabled: param.slug !== "create"
-  })
+    queryKey: ["blogCategory", slug],
+    queryFn: () => getBlogCategoryById(slug),
+    enabled: slug !== undefined && slug !== "",
+  });
 
   const createBlogCategoryMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
@@ -61,7 +72,21 @@ const BlogCategoryForm = () => {
     },
   });
 
-  const updateBlogCategoryMuta
+  const updateBlogCategoryMutation = useMutation({
+    mutationFn: async (formData: z.infer<typeof BlogCategoryUpdateSchema>) => {
+      return updateBlogCategory(slug, formData);
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message);
+      queryClient.invalidateQueries({
+        queryKey: ["blogCategories"],
+      });
+      router.push(ROUTES.ADMIN_BLOG_CATEGORIES);
+    },
+    onError: (error) => {
+      toast.error(error?.message || "Failed to update blog category.");
+    },
+  });
 
   const blogCategoryForm = useForm<z.infer<typeof BlogCategoryCreateSchema>>({
     resolver: zodResolver(BlogCategoryCreateSchema),
@@ -74,10 +99,33 @@ const BlogCategoryForm = () => {
     },
   });
 
+  useEffect(() => {
+    if (data) {
+      blogCategoryForm.reset({
+        name: data.name,
+        description: data.description,
+        ordering: data.ordering,
+        is_active: data.is_active,
+        slug: data.slug,
+      });
+    }
+  }, [data]);
+
   const onSubmit = (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
     console.log("Blog Category Form Data:", formData);
-    createBlogCategoryMutation.mutate(formData);
+    if (slug && slug !== "") {
+      return updateBlogCategoryMutation.mutate(formData)
+    } else {
+      // If slug is not present, create a new blog category
+      return createBlogCategoryMutation.mutate(formData);
+    }
   };
+
+  if (isPending) {
+    return (
+      <Loading />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
