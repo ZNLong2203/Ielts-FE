@@ -97,17 +97,11 @@ const BlogCategoryTable = () => {
       key: "is_active",
       label: "Status",
       placeholder: "Filter by status",
-      options: [
-        { value: "", label: "All" },
-        { value: "active", label: "Active" },
-        { value: "inactive", label: "Inactive" },
-      ],
       icon: (
         <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
     },
   ];
-
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -267,8 +261,8 @@ const BlogCategoryTable = () => {
               <DataTable
                 columns={columns}
                 data={filteredData}
-                searchKey={["full_name", "email", "phone"]}
-                searchPlaceholder="Search by name, email, or phone..."
+                searchKey={["name", "slug"]}
+                searchPlaceholder="Search by name or slug..."
               />
 
               {/* Enhanced Pagination */}

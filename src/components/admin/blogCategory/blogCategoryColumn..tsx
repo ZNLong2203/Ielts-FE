@@ -3,8 +3,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowUpDown, Calendar, User, Shield } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Calendar, Shield } from "lucide-react";
 import CellAction from "./blogCategoryAction";
 import { IBlogCategory } from "@/interface/blogCategory";
 
@@ -19,125 +24,121 @@ const getStatusVariant = (status: string) => {
 };
 
 export const columns: ColumnDef<IBlogCategory>[] = [
-    // ID Column
-    {
-        accessorKey: "id",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    className="hover:bg-secondary/20"
-                >
-                    <Shield className="text-muted-foreground" />
-                    ID
-                </Button>
-            )
-        },
-        cell: ({ row }) => (
-            <div className="text-xs font-mono text-muted-foreground">{row.original.id}</div>
-        ),
+  // ID Column
+  {
+    accessorKey: "id",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-secondary/20"
+        >
+          <Shield className="text-muted-foreground" />
+          ID
+        </Button>
+      );
     },
-    {
-        accessorKey: "name",
-        header: ({ column }) => {
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    className="hover:bg-secondary/20"
-                >
-                    Name
-                </Button>
-            )
-        },
-        cell: ({ row }) => (
-            <div className="text-sm font-medium text-primary">{row.original.name}</div>
-        ),
+    cell: ({ row }) => (
+      <div className="text-xs font-mono text-muted-foreground">
+        {row.original.id}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-secondary/20"
+        >
+          Name
+        </Button>
+      );
     },
-    {
-        accessorKey: "slug",
-        header: "Slug",
-        cell: ({ row }) => (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger className="cursor-pointer">
-                        {row.original.slug || "No slug"}
-                    </TooltipTrigger>
-                    <TooltipContent>{row.original.slug}</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        ),
-    },
-    {
-        accessorKey: "ordering",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="hover:bg-secondary/20"
-            >
-                Ordering
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <div className="text-xs text-muted-foreground">
-                {row.original.ordering !== undefined ? row.original.ordering : "No ordering"}
-            </div>
-        ),  
-    },
-    {
-        accessorKey: "is_active",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="hover:bg-secondary/20"
-            >
-                Status
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <Badge variant={getStatusVariant(row.original.is_active ? "active" : "inactive")}>
-                {row.original.is_active ? "Active" : "Inactive"}
-            </Badge>
-        ),
-    },
-    {
-        accessorKey: "description",
-        header: "Description",
-        cell: ({ row }) => (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger className="cursor-pointer">
-                        {row.original.description || "No description"}
-                    </TooltipTrigger>
-                    <TooltipContent>{row.original.description}</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-        ),
-    },
-    {
-        accessorKey: "created_at",
-        header: ({ column }) => (
-            <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="hover:bg-secondary/20"
-            >
-                <Calendar className="text-muted-foreground" />
-                Created At
-            </Button>
-        ),
-        cell: ({ row }) => (
-            <div className="text-xs text-muted-foreground">
-                {new Date(row.original.created_at).toLocaleDateString()}
-            </div>
-        ),
-    },
-    {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => <CellAction data={row.original} />,
-    }
-]
+    cell: ({ row }) => (
+      <div className="text-sm font-medium text-primary">
+        {row.original.name}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "slug",
+    header: "Slug",
+    cell: ({ row }) => (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger className="cursor-pointer">
+            {row.original.slug || "No slug"}
+          </TooltipTrigger>
+          <TooltipContent>{row.original.slug}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
+  },
+  {
+    accessorKey: "ordering",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:bg-secondary/20"
+      >
+        Ordering
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm text-muted-foreground">
+        {row.original.ordering !== undefined
+          ? row.original.ordering
+          : "No ordering"}
+      </div>
+    ),
+  },
+  //   {
+  //     accessorKey: "is_active",
+  //     header: ({ column }) => (
+  //       <Button
+  //         variant="ghost"
+  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  //         className="hover:bg-secondary/20"
+  //       >
+  //         Status
+  //       </Button>
+  //     ),
+  //     cell: ({ row }) => (
+  //       <Badge
+  //         variant={getStatusVariant(
+  //           row.original.is_active ? "active" : "inactive"
+  //         )}
+  //       >
+  //         {row.original.is_active ? "Active" : "Inactive"}
+  //       </Badge>
+  //     ),
+  //   },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:bg-secondary/20"
+      >
+        <Calendar className="text-muted-foreground" />
+        Created At
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm text-muted-foreground">
+        {new Date(row.original.created_at).toLocaleDateString()}
+      </div>
+    ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <CellAction data={row.original} />,
+  },
+];

@@ -3,6 +3,7 @@ import { API_URL } from "@/constants/api";
 import {
   IBlogCategoryCreate,
   IBlogCategories,
+  IBlogCategoryUpdate,
 } from "@/interface/blogCategory";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -16,7 +17,7 @@ export const getBlogCategories = async ({
     `${BASE_URL}${API_URL.BLOG_CATEGORY}?page=${page}`
   );
   console.log(response);
-  return response.data;
+  return response.data.data;
 };
 
 export const createBlogCategory = async (data: IBlogCategoryCreate) => {
@@ -30,7 +31,7 @@ export const createBlogCategory = async (data: IBlogCategoryCreate) => {
 
 export const updateBlogCategory = async (
   id: string,
-  data: IBlogCategoryCreate
+  data: IBlogCategoryUpdate
 ) => {
   const response = await api.patch(
     `${BASE_URL}${API_URL.BLOG}/admin/category/${id}`,

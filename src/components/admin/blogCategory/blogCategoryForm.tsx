@@ -16,23 +16,34 @@ import { ArrowRight, Save, FileText } from "lucide-react";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BlogCategoryFormSchema } from "@/validation/blogCategory";
+import { BlogCategoryCreateSchema } from "@/validation/blogCategory";
 import { createBlogCategory } from "@/api/blogCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 
 const BlogCategoryForm = () => {
   const router = useRouter();
+  const param = useParams();
   const queryClient = useQueryClient();
 
+  let title = "";
+  let description = "";
+  if (param.slug === "create") {
+    title = "Add New Blog Category";
+    description = "Create a new category for blog posts";
+  } else {
+    title = "Update Blog Category";
+    description = "Update a Blog Category for blog posts";
+  }
+
   const createBlogCategoryMutation = useMutation({
-    mutationFn: async (formData: z.infer<typeof BlogCategoryFormSchema>) => {
+    mutationFn: async (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
       return createBlogCategory(formData);
     },
-    onSuccess: (data) => { 
+    onSuccess: (data) => {
       toast.success(data?.message);
       queryClient.invalidateQueries({
         queryKey: ["blogCategories"],
@@ -44,8 +55,8 @@ const BlogCategoryForm = () => {
     },
   });
 
-  const blogCategoryForm = useForm<z.infer<typeof BlogCategoryFormSchema>>({
-    resolver: zodResolver(BlogCategoryFormSchema),
+  const blogCategoryForm = useForm<z.infer<typeof BlogCategoryCreateSchema>>({
+    resolver: zodResolver(BlogCategoryCreateSchema),
     defaultValues: {
       name: "",
       description: "",
@@ -55,7 +66,7 @@ const BlogCategoryForm = () => {
     },
   });
 
-  const onSubmit = (formData: z.infer<typeof BlogCategoryFormSchema>) => {
+  const onSubmit = (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
     console.log("Blog Category Form Data:", formData);
     createBlogCategoryMutation.mutate(formData);
   };
@@ -67,10 +78,7 @@ const BlogCategoryForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <Heading
-                title="Add New Blog Category"
-                description="Create a new category for blog posts"
-              />
+              <Heading title={title} description={description} />
             </div>
 
             <Button

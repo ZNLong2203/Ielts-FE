@@ -37,25 +37,11 @@ const StudentDetail = () => {
   const userId = useParams().userId as string;
   const router = useRouter();
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: ["studentDetail", userId],
     queryFn: () => getStudent(userId),
     retry: false,
   });
-
-  // Helper functions
-  const getStatusVariant = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return "default";
-      case "inactive":
-        return "destructive";
-      case "pending":
-        return "outline";
-      default:
-        return "secondary";
-    }
-  };
 
   const getInitials = (name: string) => {
     return (
@@ -187,7 +173,10 @@ const StudentDetail = () => {
                     value={`Phone: ${data?.phone || "Not provided"}`}
                   />
 
-                  <TextIconInfo icon={MapPin} value={`Location: ${data?.city}, ${data?.country}`} />
+                  <TextIconInfo
+                    icon={MapPin}
+                    value={`Location: ${data?.city}, ${data?.country}`}
+                  />
 
                   <TextIconInfo
                     icon={Activity}
