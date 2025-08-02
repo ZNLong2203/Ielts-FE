@@ -8,6 +8,7 @@ import TagsField from "@/components/form/tags-field";
 import DateField from "@/components/form/date-field";
 import ImageUploadField from "@/components/form/image-field";
 import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -49,7 +50,7 @@ const TeacherForm = () => {
   const userId = params.userId as string;
 
   // Get teacher details
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["teacherDetail", userId],
     queryFn: () => getTeacher(userId),
     retry: false,
@@ -167,12 +168,14 @@ const TeacherForm = () => {
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <XCircle className="w-6 h-6 text-red-500" />
-        <span className="ml-2 text-red-500">
-          Failed to load teacher details
-        </span>
-      </div>
+      <Error
+        title="Teacher Not Found"
+        description="The requested teacher profile does not exist or has been deleted."
+        dismissible={true}
+        onDismiss={() => router.push(ROUTES.ADMIN_TEACHERS)}
+        onRetry={() => refetch()}
+        onGoBack={() => router.back()}
+      />
     );
   }
 

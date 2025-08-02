@@ -23,13 +23,15 @@ import { useQuery } from "@tanstack/react-query";
 import { getBlogCategories } from "@/api/blogCategory";
 import { useFilter } from "@/hook/useFilter";
 import ROUTES from "@/constants/route";
+import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
 
 const BlogCategoryTable = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
-  const { data, isPending, refetch } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["blogCategories", page],
     queryFn: () => getBlogCategories({ page }),
   });
@@ -75,6 +77,22 @@ const BlogCategoryTable = () => {
   const handleRefresh = () => {
     refetch();
   };
+
+  if (isPending) {
+    return (
+      <Loading />
+    )
+  }
+
+  if (isError) {
+    return (
+      <Error
+        title="Error Loading Blog Categories"
+        description="There was an error loading the blog categories. Please try again later."
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   const fieldConfigs = [
     {

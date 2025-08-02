@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
 import {
   TextInfoField,
   DateInfoField,
@@ -22,7 +23,7 @@ const BlogCategoryDetail = () => {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["blogCategory", slug],
     queryFn: () => getBlogCategoryById(slug),
     enabled: !!slug,
@@ -33,13 +34,16 @@ const BlogCategoryDetail = () => {
     return <Loading />;
   }
 
-  if (isError || !data) {
+  if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <FileText className="h-12 w-12 text-gray-400" />
-        <p className="text-sm text-muted-foreground">Blog category not found</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
+      <Error 
+        title="Blog Category Not Found"
+        description="The requested blog category does not exist or has been deleted."
+        dismissible={true}
+        onDismiss={() => router.push(ROUTES.ADMIN_BLOG_CATEGORIES)}
+        onRetry={() => refetch()}
+        onGoBack={() => router.back()}
+        />
     );
   }
 

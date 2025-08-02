@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import Error from "@/components/ui/error";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
@@ -37,7 +38,7 @@ const StudentDetail = () => {
   const userId = useParams().userId as string;
   const router = useRouter();
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["studentDetail", userId],
     queryFn: () => getStudent(userId),
     retry: false,
@@ -57,13 +58,15 @@ const StudentDetail = () => {
     return <Loading />;
   }
 
-  if (!data) {
+  if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <User className="h-12 w-12 text-gray-400" />
-        <p className="text-sm text-muted-foreground">Student not found</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
+      <Error
+        title="Error Loading Student"
+        description="There was an error loading the student details. Please try again later."
+        dismissible={true}
+        onDismiss={() => router.push(ROUTES.ADMIN_STUDENTS)}
+        onRetry={() => refetch()}
+      />
     );
   }
 

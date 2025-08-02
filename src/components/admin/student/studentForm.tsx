@@ -40,6 +40,7 @@ import { getStudent, updateStudent } from "@/api/student";
 import { updateProfile } from "@/api/profile";
 import { TextIconInfo } from "@/components/ui/info";
 import { uploadAvatar } from "@/api/file";
+import Error from "@/components/ui/error";
 
 const StudentForm = () => {
   const params = useParams();
@@ -50,7 +51,7 @@ const StudentForm = () => {
   const userId = params.userId as string;
 
   // Get student details
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["studentDetail", userId],
     queryFn: () => getStudent(userId),
     retry: false,
@@ -196,13 +197,14 @@ const StudentForm = () => {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <XCircle className="h-12 w-12 text-red-500" />
-        <p className="text-sm text-muted-foreground">
-          Error loading student details
-        </p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
+      <Error
+        title="Student Not Found"
+        description="The requested student profile does not exist or has been deleted."
+        dismissible={true}
+        onDismiss={() => router.push(ROUTES.ADMIN_STUDENTS)}
+        onRetry={() => refetch()}
+        onGoBack={() => router.back()}
+      />
     );
   }
 

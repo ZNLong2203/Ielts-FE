@@ -18,10 +18,11 @@ import {
   Search,
   Mail,
   Phone,
-  Filter,
+  Filter, 
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
-
+import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
 import { columns } from "@/components/admin/teacher/teacherColumn";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +30,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { getTeachers, getPendingTeachers } from "@/api/teacher";
 import { useState, useMemo } from "react";
 import { useFilter } from "@/hook/useFilter";
+import ROUTES from "@/constants/route";
 
 const TeacherTable = () => {
   const router = useRouter();
@@ -42,6 +44,7 @@ const TeacherTable = () => {
     data: activeTeachersData,
     isPending: isLoadingActive,
     refetch: refetchActive,
+    isError: isErrorActive,
   } = useQuery({
     queryKey: ["teachers", page],
     queryFn: () => getTeachers({ page }),
@@ -51,6 +54,7 @@ const TeacherTable = () => {
     data: pendingTeachersData,
     isPending: isLoadingPending,
     refetch: refetchPending,
+    isError: isErrorPending,
   } = useQuery({
     queryKey: ["pendingTeachers"],
     queryFn: () => getPendingTeachers(),
@@ -195,6 +199,25 @@ const TeacherTable = () => {
     }
   };
 
+  // Handle loading 
+  if (isLoadingActive || isLoadingPending) {
+    return (
+      <Loading/>
+    )
+  }
+
+  if (isErrorActive || isErrorPending) {
+    return (
+      <Error
+        title="Error Loading Data"
+        description="There was an issue loading the teacher data. Please try again later."
+        dismissible
+        onDismiss={() => router.push(ROUTES.ADMIN_TEACHERS)}
+        onRetry={currentRefetch}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -237,7 +260,7 @@ const TeacherTable = () => {
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => router.push("/admin/teachers/new")}
+            onClick={() => router.push(ROUTES.ADMIN_TEACHERS + "/create")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Teacher

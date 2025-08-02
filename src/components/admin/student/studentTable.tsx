@@ -16,6 +16,8 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
 
 import { columns } from "@/components/admin/student/studentColumn";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,7 +33,7 @@ const StudentTable = () => {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
-  const { data, isPending, refetch } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["students", page],
     queryFn: () => getStudents({ page }),
   });
@@ -105,6 +107,22 @@ const StudentTable = () => {
   const handleRefresh = () => {
     refetch();
   };
+
+  if (isPending) {
+    return (
+      <Loading />
+    )
+  }
+
+  if (isError) {
+    return (
+      <Error
+        title="Error Loading Students"
+        description="There was an error loading the student data. Please try again later."
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import Error from "@/components/ui/error";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
@@ -40,12 +41,11 @@ const TeacherDetail = () => {
   const teacherId = useParams().userId as string;
   const router = useRouter();
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["teacherDetail", teacherId],
     queryFn: () => getTeacher(teacherId),
     retry: false,
   });
-
   const getInitials = (name: string) => {
     return (
       name
@@ -60,15 +60,20 @@ const TeacherDetail = () => {
     return <Loading />;
   }
 
-  if (!data) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <User className="h-12 w-12 text-gray-400" />
-        <p className="text-sm text-muted-foreground">Teacher not found</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
-      </div>
-    );
-  }
+ if (isError) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Error
+        title="Teacher Not Found"
+        description="The requested teacher profile does not exist."
+        dismissible={true}
+        onDismiss={() => router.push(ROUTES.ADMIN_TEACHERS)}
+        onRetry={() => refetch()}
+        onGoBack={() => router.back()}
+      />
+    </div>
+  )
+ }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -11,6 +11,8 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
+import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
 
 import { ArrowRight, Save, FileText } from "lucide-react";
 
@@ -30,8 +32,7 @@ import {
 } from "@/api/blogCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { useEffect } from "react";
-import Loading from "@/components/ui/loading";
+import { useEffect } from "react";  
 
 const BlogCategoryForm = () => {
   const router = useRouter();
@@ -50,7 +51,7 @@ const BlogCategoryForm = () => {
     description = "Update a Blog Category for blog posts";
   }
 
-  const { data, isPending } = useQuery({
+  const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["blogCategory", slug],
     queryFn: () => getBlogCategoryById(slug),
     enabled: slug !== undefined && slug !== "",
@@ -122,9 +123,20 @@ const BlogCategoryForm = () => {
   };
 
   if (isPending) {
+    return <Loading />;
+  }
+
+  if (isError) {
     return (
-      <Loading />
-    )
+      <Error
+        title="Blog Category Not Found"
+        description="The requested blog category does not exist or has been deleted."
+        dismissible={true}
+        onDismiss={() => router.push(ROUTES.ADMIN_BLOG_CATEGORIES)}
+        onRetry={() => refetch()}
+        onGoBack={() => router.back()}
+      />
+    );
   }
 
   return (
