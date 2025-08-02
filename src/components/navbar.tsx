@@ -161,9 +161,9 @@ const LandingNavbar = () => {
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
-                        <NavbarLink text="IELTS" href="/courses/ielts" />
-                        <NavbarLink text="TOEIC" href="/courses/toeic" />
-                        <NavbarLink text="TOEFL" href="/courses/toefl" />
+                        <NavbarLink text="IELTS" href="/courses" />
+                        <NavbarLink text="TOEIC" href="/courses" />
+                        <NavbarLink text="TOEFL" href="/courses" />
                       </div>
                     </div>
                   </div>
