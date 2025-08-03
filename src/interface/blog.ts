@@ -12,6 +12,13 @@ export interface IBlog {
     published_at?: Date;
 }
 
+export interface IBlogCreate {
+    title: string;
+    content: string;
+    image?: string;
+    tags?: string[];
+}
+
 export interface IBlogComment {
     id: string;
     blog_id?: string;

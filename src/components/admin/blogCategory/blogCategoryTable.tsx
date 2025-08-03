@@ -126,7 +126,7 @@ const BlogCategoryTable = () => {
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between">
         <div>
           <Heading
-            title="Blog Categories"
+            title="Blog Category Management"
             description="Manage your blog categories here."
           />
         </div>
