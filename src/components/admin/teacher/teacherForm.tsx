@@ -92,6 +92,15 @@ const TeacherForm = () => {
     mutationFn: (FormData: z.infer<typeof TeacherFormSchema>) => {
       return updateTeacher(userId, FormData);
     },
+    onSuccess: (data) => {
+      toast.success(data.data.data.message || "Teacher details updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
+      router.push(ROUTES.ADMIN_TEACHERS);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update teacher details");
+    },
   });
 
   const teacherForm = useForm<z.infer<typeof TeacherFormSchema>>({
