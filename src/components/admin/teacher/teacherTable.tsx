@@ -42,7 +42,7 @@ const TeacherTable = () => {
 
   const {
     data: activeTeachersData,
-    isPending: isLoadingActive,
+    isLoading: isLoadingActive,
     refetch: refetchActive,
     isError: isErrorActive,
   } = useQuery({
@@ -52,7 +52,7 @@ const TeacherTable = () => {
 
   const {
     data: pendingTeachersData,
-    isPending: isLoadingPending,
+    isLoading: isLoadingPending,
     refetch: refetchPending,
     isError: isErrorPending,
   } = useQuery({

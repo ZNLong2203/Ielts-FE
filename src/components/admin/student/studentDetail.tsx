@@ -38,10 +38,9 @@ const StudentDetail = () => {
   const userId = useParams().userId as string;
   const router = useRouter();
 
-  const { data, isPending, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["studentDetail", userId],
     queryFn: () => getStudent(userId),
-    retry: false,
   });
 
   const getInitials = (name: string) => {
@@ -54,7 +53,7 @@ const StudentDetail = () => {
     );
   };
 
-  if (isPending) {
+  if (isLoading) {
     return <Loading />;
   }
 

@@ -32,7 +32,7 @@ import {
 } from "@/api/blogCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { useEffect } from "react";  
+import { useEffect } from "react";
 
 const BlogCategoryForm = () => {
   const router = useRouter();
@@ -40,6 +40,8 @@ const BlogCategoryForm = () => {
   const queryClient = useQueryClient();
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
+
+  console.log(slug);
 
   let title = "";
   let description = "";
@@ -51,7 +53,7 @@ const BlogCategoryForm = () => {
     description = "Update a Blog Category for blog posts";
   }
 
-  const { data, isPending, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["blogCategory", slug],
     queryFn: () => getBlogCategoryById(slug),
     enabled: slug !== undefined && slug !== "",
@@ -115,14 +117,14 @@ const BlogCategoryForm = () => {
   const onSubmit = (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
     console.log("Blog Category Form Data:", formData);
     if (slug && slug !== "") {
-      return updateBlogCategoryMutation.mutate(formData)
+      return updateBlogCategoryMutation.mutate(formData);
     } else {
       // If slug is not present, create a new blog category
       return createBlogCategoryMutation.mutate(formData);
     }
   };
 
-  if (isPending) {
+  if (isLoading) {
     return <Loading />;
   }
 

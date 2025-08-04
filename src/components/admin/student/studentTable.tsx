@@ -33,7 +33,7 @@ const StudentTable = () => {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
-  const { data, isPending, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["students", page],
     queryFn: () => getStudents({ page }),
   });
@@ -108,10 +108,8 @@ const StudentTable = () => {
     refetch();
   };
 
-  if (isPending) {
-    return (
-      <Loading />
-    )
+  if (isLoading) {
+    return <Loading />;
   }
 
   if (isError) {
@@ -154,10 +152,10 @@ const StudentTable = () => {
             variant="outline"
             size="sm"
             onClick={handleRefresh}
-            disabled={isPending}
+            disabled={isLoading}
           >
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`}
+              className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
             />
             Refresh
           </Button>
@@ -270,7 +268,7 @@ const StudentTable = () => {
       {/* Data Table Section */}
       <Card>
         <CardContent>
-          {isPending ? (
+          {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               <p className="text-sm text-muted-foreground">

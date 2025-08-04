@@ -16,7 +16,6 @@ import {
   ArrowRight,
   GraduationCap,
   Save,
-  XCircle,
   UserCircle,
   Phone,
   MapPin,
@@ -51,10 +50,9 @@ const StudentForm = () => {
   const userId = params.userId as string;
 
   // Get student details
-  const { data, isPending, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["studentDetail", userId],
     queryFn: () => getStudent(userId),
-    retry: false,
   });
 
   // Upload student avatar
@@ -191,7 +189,7 @@ const StudentForm = () => {
     }
   }, [data]);
 
-  if (isPending) {
+  if (isLoading) {
     return <Loading />;
   }
 

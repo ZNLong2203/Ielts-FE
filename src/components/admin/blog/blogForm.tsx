@@ -1,5 +1,12 @@
 "use client";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
@@ -20,17 +27,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBlog } from "@/api/blog";
 import { BlogCreateSchema } from "@/validation/blog";
 import { useState } from "react";
-import { 
-  Save, 
-  Eye, 
-  ArrowLeft, 
-  FileText, 
-  Image, 
-  Tag, 
+import {
+  Save,
+  Eye,
+  ArrowLeft,
+  FileText,
+  Image,
+  Tag,
   Settings,
   Calendar,
   User,
-  X
+  X,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { getBlogCategories } from "@/api/blogCategory";
@@ -55,7 +62,7 @@ const BlogForm = () => {
     queryFn: () => getBlogCategories({ page: 1 }),
   });
 
-  const categoriesOptions = blogCategories?.result?.map(category => ({
+  const categoriesOptions = blogCategories?.result?.map((category) => ({
     value: category.id,
     label: category.name,
   }));
@@ -63,6 +70,7 @@ const BlogForm = () => {
   const blogForm = useForm<z.infer<typeof BlogCreateSchema>>({
     resolver: zodResolver(BlogCreateSchema),
     defaultValues: {
+      category_id: "",
       title: "",
       content: "",
       tags: [],
@@ -71,6 +79,7 @@ const BlogForm = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof BlogCreateSchema>) => {
+    console.log("Blog data:", data);
     const formData = {
       ...data,
       tags,
@@ -86,7 +95,7 @@ const BlogForm = () => {
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+    setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -112,7 +121,9 @@ const BlogForm = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                onClick={() => {/* Preview logic */}}
+                onClick={() => {
+                  /* Preview logic */
+                }}
                 className="flex items-center space-x-2"
               >
                 <Eye className="h-4 w-4" />
@@ -126,12 +137,13 @@ const BlogForm = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Form {...blogForm}>
-          <form onSubmit={blogForm.handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            onSubmit={blogForm.handleSubmit(onSubmit)}
+            className="space-y-8"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
               {/* Main Content Area */}
               <div className="lg:col-span-2 space-y-8">
-                
                 {/* Basic Information */}
                 <Card>
                   <CardHeader>
@@ -174,7 +186,7 @@ const BlogForm = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Image className="h-5 w-5 text-green-600" />
-                      <span>Featured Image</span>
+                      <span>Featured Image</span>content
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -206,26 +218,26 @@ const BlogForm = () => {
                         onKeyPress={handleKeyPress}
                         className="flex-1"
                       />
-                      <Button 
-                        type="button" 
+                      <Button
+                        type="button"
                         onClick={handleAddTag}
                         disabled={!tagInput.trim()}
                       >
                         Add Tag
                       </Button>
                     </div>
-                    
+
                     {tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {tags.map((tag, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="secondary" 
+                          <Badge
+                            key={index}
+                            variant="secondary"
                             className="flex items-center gap-1"
                           >
                             {tag}
-                            <X 
-                              className="h-3 w-3 cursor-pointer hover:text-red-500" 
+                            <X
+                              className="h-3 w-3 cursor-pointer hover:text-red-500"
                               onClick={() => handleRemoveTag(tag)}
                             />
                           </Badge>
@@ -238,7 +250,6 @@ const BlogForm = () => {
 
               {/* Sidebar */}
               <div className="space-y-6">
-                
                 {/* Publish Settings */}
                 <Card>
                   <CardHeader>
@@ -269,10 +280,9 @@ const BlogForm = () => {
                       >
                         <Save className="h-4 w-4" />
                         <span>
-                          {createBlogMutation.isPending 
+                          {createBlogMutation.isPending
                             ? "Creating..."
-                            : "Create Blog Post" 
-                          }
+                            : "Create Blog Post"}
                         </span>
                       </Button>
 

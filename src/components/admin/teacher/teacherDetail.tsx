@@ -41,7 +41,7 @@ const TeacherDetail = () => {
   const teacherId = useParams().userId as string;
   const router = useRouter();
 
-  const { data, isPending, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["teacherDetail", teacherId],
     queryFn: () => getTeacher(teacherId),
     retry: false,
@@ -56,7 +56,7 @@ const TeacherDetail = () => {
     );
   };
 
-  if (isPending) {
+  if (isLoading) {
     return <Loading />;
   }
 
