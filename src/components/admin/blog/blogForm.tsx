@@ -70,7 +70,6 @@ const BlogForm = () => {
     console.log("Blog data:", data);
     const formData = {
       ...data,
-      tags,
     };
     createBlogMutation.mutate(formData);
   };

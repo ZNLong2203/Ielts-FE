@@ -242,7 +242,7 @@ const BlogTable = () => {
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() =>
-              router.push(ROUTES.ADMIN_BLOG_CATEGORIES + "/create")
+              router.push(ROUTES.ADMIN_BLOGS + "/create")
             }
           >
             <Plus className="mr-2 h-4 w-4" />

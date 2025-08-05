@@ -179,11 +179,6 @@ const StudentDetail = () => {
                     icon={MapPin}
                     value={`Location: ${data?.city}, ${data?.country}`}
                   />
-
-                  <TextIconInfo
-                    icon={Activity}
-                    value={`Login count: ${data?.login_count || 0} logins`}
-                  />
                 </div>
 
                 <Separator />
@@ -362,10 +357,7 @@ const StudentDetail = () => {
                       value={data?.role?.toUpperCase() || "STUDENT"}
                     />
 
-                    <TextInfoField
-                      label="Login Count"
-                      value={data?.login_count?.toString() || "0"}
-                    />
+                    
                   </div>
 
                   <div className="space-y-4">
@@ -374,15 +366,6 @@ const StudentDetail = () => {
                       value={
                         data?.created_at
                           ? new Date(data.created_at).toLocaleDateString()
-                          : "Unknown"
-                      }
-                    />
-
-                    <DateInfoField
-                      label="Last Login"
-                      value={
-                        data?.last_login
-                          ? new Date(data.last_login).toLocaleDateString()
                           : "Unknown"
                       }
                     />

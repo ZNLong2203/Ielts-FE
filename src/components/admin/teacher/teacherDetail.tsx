@@ -60,20 +60,20 @@ const TeacherDetail = () => {
     return <Loading />;
   }
 
- if (isError) {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Error
-        title="Teacher Not Found"
-        description="The requested teacher profile does not exist."
-        dismissible={true}
-        onDismiss={() => router.push(ROUTES.ADMIN_TEACHERS)}
-        onRetry={() => refetch()}
-        onGoBack={() => router.back()}
-      />
-    </div>
-  )
- }
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Error
+          title="Teacher Not Found"
+          description="The requested teacher profile does not exist."
+          dismissible={true}
+          onDismiss={() => router.push(ROUTES.ADMIN_TEACHERS)}
+          onRetry={() => refetch()}
+          onGoBack={() => router.back()}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -179,10 +179,6 @@ const TeacherDetail = () => {
                         ? `${data.city}, ${data.country}`
                         : data?.city || data?.country || "Not provided"
                     }
-                  />
-                  <TextIconInfo
-                    icon={Activity}
-                    value={`${data?.login_count || 0} logins`}
                   />
                 </div>
 
@@ -504,10 +500,6 @@ const TeacherDetail = () => {
                       label="Approval Status"
                       status={data?.teachers?.status || ""}
                     />
-                    <TextInfoField
-                      label="Login Count"
-                      value={data?.login_count || 0}
-                    />
                   </div>
 
                   <div className="space-y-4">
@@ -517,11 +509,6 @@ const TeacherDetail = () => {
                       className="flex-col items-center"
                     />
 
-                    <DateInfoField
-                      label="Last Login"
-                      value={data?.last_login}
-                      className="flex-col items-center"
-                    />
                     <TextInfoField
                       label="Email Verification"
                       value={data?.email_verified ? "Verified" : "Unverified"}
