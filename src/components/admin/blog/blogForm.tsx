@@ -1,11 +1,7 @@
 "use client";
 import {
   Form,
-  FormField,
-  FormItem,
   FormLabel,
-  FormControl,
-  FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
@@ -13,40 +9,32 @@ import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 import FileUploadField from "@/components/form/file-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import RichTextField from "@/components/richTextEditor";
 import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createBlog } from "@/api/blog";
 import { BlogCreateSchema } from "@/validation/blog";
 import { useState } from "react";
 import {
   Save,
   Eye,
-  ArrowLeft,
   FileText,
   Image,
   Tag,
   Settings,
-  Calendar,
-  User,
-  X,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { getBlogCategories } from "@/api/blogCategory";
+import TagsField from "@/components/form/tags-field";
 
 const BlogForm = () => {
   const router = useRouter();
   const param = useParams();
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
 
   const createBlogMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogCreateSchema>) => {
@@ -85,24 +73,6 @@ const BlogForm = () => {
       tags,
     };
     createBlogMutation.mutate(formData);
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
   };
 
   return (
@@ -210,40 +180,12 @@ const BlogForm = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Add a tag..."
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddTag}
-                        disabled={!tagInput.trim()}
-                      >
-                        Add Tag
-                      </Button>
-                    </div>
-
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {tags.map((tag, index) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="flex items-center gap-1"
-                          >
-                            {tag}
-                            <X
-                              className="h-3 w-3 cursor-pointer hover:text-red-500"
-                              onClick={() => handleRemoveTag(tag)}
-                            />
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    <TagsField
+                      control={blogForm.control}
+                      name="tags"
+                      label="Tags"
+                      placeholder="Add a tag..."
+                    />
                   </CardContent>
                 </Card>
               </div>

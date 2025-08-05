@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getBlogCategoryById } from "@/api/blogCategory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
@@ -15,7 +14,7 @@ import {
   DateInfoField,
   TextBadgeInfo,
 } from "@/components/ui/info";
-import { ArrowLeft, Edit, FileText, Hash, Eye, Settings } from "lucide-react";
+import { ArrowLeft, Edit, FileText } from "lucide-react";
 import ROUTES from "@/constants/route";
 
 const BlogCategoryDetail = () => {
@@ -36,14 +35,14 @@ const BlogCategoryDetail = () => {
 
   if (isError) {
     return (
-      <Error 
+      <Error
         title="Blog Category Not Found"
         description="The requested blog category does not exist or has been deleted."
         dismissible={true}
         onDismiss={() => router.push(ROUTES.ADMIN_BLOG_CATEGORIES)}
         onRetry={() => refetch()}
         onGoBack={() => router.back()}
-        />
+      />
     );
   }
 

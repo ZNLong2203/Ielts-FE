@@ -83,7 +83,7 @@ const TagsField = ({
                     ))}
                   </div>
                 )}
-                
+
                 {/* Input field */}
                 <Input
                   type="text"
@@ -99,7 +99,8 @@ const TagsField = ({
                   }}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Press Enter or comma to add a goal
+                  Press Enter or comma to add content, click on the X to remove
+                  a tag.
                 </p>
               </div>
             </FormControl>

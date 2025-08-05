@@ -209,7 +209,7 @@ const BlogCategoryTable = () => {
               {hasActiveFilters ? filteredCount : data?.result?.length || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Blog Categories {hasActiveFilters ? "filtered" : "displayed"}
+              Blog categories {hasActiveFilters ? "filtered" : "displayed"}
             </p>
           </CardContent>
         </Card>

@@ -1,34 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { ArrowUpDown, Mail, Phone, Calendar, User, Shield } from "lucide-react";
 import CellAction from "@/components/admin/teacher/teacherAction";
 import { IUser } from "@/interface/user";
-
-// Helper function để lấy badge variant dựa trên status
-const getStatusVariant = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "default";
-    case "inactive":
-      return "destructive";
-  }
-};
-
-// Helper function để lấy initials từ full name
-const getInitials = (name: string) => {
-  return name
-    .split(" ")
-    .map(part => part.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("");
-};
+import { TextBadgeInfo } from "@/components/ui/info";
 
 export const columns: ColumnDef<IUser>[] = [
   // ID Column
@@ -47,10 +31,12 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-xs font-mono text-muted-foreground">{row.original.id}</div>
+      <div className="text-xs font-mono text-muted-foreground">
+        {row.original.id}
+      </div>
     ),
   },
-  
+
   // Full Name Column with Avatar
   {
     accessorKey: "full_name",
@@ -68,7 +54,7 @@ export const columns: ColumnDef<IUser>[] = [
     },
     cell: ({ row }) => {
       const fullName = row.original.full_name;
-      
+
       return (
         <div className="flex items-center gap-2">
           <div className="font-medium">{fullName}</div>
@@ -76,7 +62,7 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
   },
-  
+
   // Email Column
   {
     accessorKey: "email",
@@ -108,7 +94,7 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
   },
-  
+
   // Phone Column
   {
     accessorKey: "phone",
@@ -138,16 +124,18 @@ export const columns: ColumnDef<IUser>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-secondary/20"
         >
-            Experience
+          Experience
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.teachers?.experience_years || "N/A"} years</div>
+      <div className="text-sm">
+        {row.original.teachers?.experience_years || "N/A"} years
+      </div>
     ),
   },
-  
+
   {
     accessorKey: "ielts_band_score",
     header: ({ column }) => {
@@ -157,13 +145,15 @@ export const columns: ColumnDef<IUser>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-secondary/20"
         >
-            IELTS Band Score
+          IELTS Band Score
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.teachers?.ielts_band_score || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.teachers?.ielts_band_score || "N/A"}
+      </div>
     ),
   },
 
@@ -173,14 +163,10 @@ export const columns: ColumnDef<IUser>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
-      return (
-        <Badge variant={getStatusVariant(status)}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-      );
+      return <TextBadgeInfo status={status} />;
     },
   },
-  
+
   // Creation Date Column
   {
     accessorKey: "created_at",
@@ -199,11 +185,13 @@ export const columns: ColumnDef<IUser>[] = [
     },
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
-        {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString() : "N/A"}
+        {row.original.created_at
+          ? new Date(row.original.created_at).toLocaleDateString()
+          : "N/A"}
       </div>
     ),
   },
-  
+
   // Actions Column
   {
     id: "actions",

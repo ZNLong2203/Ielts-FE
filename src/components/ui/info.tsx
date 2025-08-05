@@ -8,7 +8,11 @@ interface InfoFieldProps {
   className?: string;
 }
 
-export const InfoField = ({ label, children, className = "" }: InfoFieldProps) => {
+export const InfoField = ({
+  label,
+  children,
+  className = "",
+}: InfoFieldProps) => {
   return (
     <div className={className}>
       <label className="text-sm font-medium text-gray-700">{label}</label>
@@ -25,23 +29,22 @@ interface TextInfoFieldProps {
   verified?: boolean;
   className?: string;
   IconPos?: LucideIcon;
-  IconNeg?: LucideIcon; 
+  IconNeg?: LucideIcon;
 }
 
-
-export const TextInfoField = ({ 
-  label, 
-  value, 
+export const TextInfoField = ({
+  label,
+  value,
   fallback = "Not provided",
   verified,
   IconPos,
   IconNeg,
-  className = "" 
+  className = "",
 }: TextInfoFieldProps) => {
   return (
     <InfoField label={label} className={className}>
       <p className="text-sm text-gray-900">
-        { verified === true ? (
+        {verified === true ? (
           <span className="text-green-600 font-semibold flex gap-2 items-center">
             {value || fallback}
             {IconPos && <IconPos className="h-4 w-4 text-green-500" />}
@@ -55,7 +58,6 @@ export const TextInfoField = ({
           value || fallback
         )}
       </p>
-     
     </InfoField>
   );
 };
@@ -69,20 +71,20 @@ interface DateInfoFieldProps {
   className?: string;
 }
 
-export const DateInfoField = ({ 
-  label, 
-  value, 
+export const DateInfoField = ({
+  label,
+  value,
   fallback = "Not provided",
   showTime = false,
-  className = "" 
+  className = "",
 }: DateInfoFieldProps) => {
   const formatDate = () => {
     if (!value) return fallback;
-    
+
     try {
       const date = new Date(value);
       if (isNaN(date.getTime())) return "Invalid date";
-      
+
       return showTime ? date.toLocaleString() : date.toLocaleDateString();
     } catch {
       return "Invalid date";
@@ -91,9 +93,7 @@ export const DateInfoField = ({
 
   return (
     <InfoField label={label} className={className}>
-      <p className="text-sm text-gray-900">
-        {formatDate()}
-      </p>
+      <p className="text-sm text-gray-900">{formatDate()}</p>
     </InfoField>
   );
 };
@@ -104,54 +104,62 @@ interface TextIconInfoProps {
   fallback?: string;
 }
 
-export const TextIconInfo = ({ 
-  icon: Icon, 
-  value, 
-  fallback = "Not provided"
+export const TextIconInfo = ({
+  icon: Icon,
+  value,
+  fallback = "Not provided",
 }: TextIconInfoProps) => {
   return (
     <div className="flex items-center space-x-3 text-sm">
       <Icon className="h-4 w-4 text-gray-400" />
-      <span className="text-gray-600">
-        {value || fallback}
-      </span>
+      <span className="text-gray-600">{value || fallback}</span>
     </div>
   );
 };
 
-interface TextBadgeInforProps {
-  label: string;
+interface TextBadgeInfoProps {
+  label?: string;
   status: string;
 }
 
 const getBadgeColor = (status: string) => {
   switch (status.toLowerCase()) {
     case "active":
-      return "bg-green-100 text-green-800";
+      return "bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900";
     case "inactive":
-      return "bg-gray-100 text-gray-800";
+      return "bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-gray-900";
     case "pending":
-      return "bg-yellow-100 text-yellow-800";
+      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200 hover:text-yellow-900";
     case "error":
-      return "bg-red-100 text-red-800";
+      return "bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900";
     case "approved":
-      return "bg-blue-100 text-blue-800";
+      return "bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900";
     case "rejected":
-      return "bg-red-100 text-red-800";
+      return "bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900";
+    case "draft":
+      return "bg-gray-200 text-gray-800 hover:bg-gray-300 hover:text-gray-900";
+    case "archived":
+      return "bg-purple-100 text-purple-800 hover:bg-purple-200 hover:text-purple-900";
+    case "published":
+      return "bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900";
+    case "True":
+      return "bg-green-100 text-green-800 hover:bg-green-200 hover:text-green-900";
+    case "False":
+      return "bg-red-100 text-red-800 hover:bg-red-200 hover:text-red-900";
     default:
-      return "bg-blue-100 text-blue-800";
+      return "bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900";
   }
-}
+};
 
-export const TextBadgeInfo = ({ label, status }: TextBadgeInforProps) => {
-  return (  
+export const TextBadgeInfo = ({ label, status }: TextBadgeInfoProps) => {
+  return (
     <div>
-      <h4 className="font-medium text-sm text-gray-900 mb-2">
-        {label}
-      </h4>
+      {label && (
+        <h4 className="font-medium text-sm text-gray-900 mb-2">{label}</h4>
+      )}
       <Badge className={`text-xs ${getBadgeColor(status)}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     </div>
-  )
-}
+  );
+};

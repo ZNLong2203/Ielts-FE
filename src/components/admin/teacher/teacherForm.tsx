@@ -17,7 +17,6 @@ import {
   ArrowRight,
   GraduationCap,
   Save,
-  XCircle,
   UserCircle,
   Phone,
   MapPin,

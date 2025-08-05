@@ -2,22 +2,17 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { ArrowUpDown, Mail, Phone, Calendar, User, Shield } from "lucide-react";
 import CellAction from "./studentAction";
 import { IUser } from "@/interface/user";
-
-// Helper function để lấy badge variant dựa trên status
-const getStatusVariant = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "default";
-    case "inactive":
-      return "destructive";
-  }
-};
+import { TextBadgeInfo } from "@/components/ui/info";
 
 export const columns: ColumnDef<IUser>[] = [
   // ID Column
@@ -36,10 +31,12 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-xs font-mono text-muted-foreground">{row.original.id}</div>
+      <div className="text-xs font-mono text-muted-foreground">
+        {row.original.id}
+      </div>
     ),
   },
-  
+
   // Full Name Column with Avatar
   {
     accessorKey: "full_name",
@@ -57,7 +54,7 @@ export const columns: ColumnDef<IUser>[] = [
     },
     cell: ({ row }) => {
       const fullName = row.original.full_name;
-      
+
       return (
         <div className="flex items-center gap-2">
           <div className="font-medium">{fullName}</div>
@@ -65,7 +62,7 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
   },
-  
+
   // Email Column
   {
     accessorKey: "email",
@@ -97,7 +94,7 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
   },
-  
+
   // Phone Column
   {
     accessorKey: "phone",
@@ -133,10 +130,12 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.students?.current_level || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.students?.current_level || "N/A"}
+      </div>
     ),
   },
-  
+
   {
     accessorKey: "target_ielts_score",
     header: ({ column }) => {
@@ -152,7 +151,9 @@ export const columns: ColumnDef<IUser>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.students?.target_ielts_score || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.students?.target_ielts_score || "N/A"}
+      </div>
     ),
   },
 
@@ -162,14 +163,10 @@ export const columns: ColumnDef<IUser>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.original.status;
-      return (
-        <Badge variant={getStatusVariant(status)}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-      );
+      return <TextBadgeInfo status={status} />;
     },
   },
-  
+
   // Creation Date Column
   {
     accessorKey: "created_at",
@@ -188,11 +185,13 @@ export const columns: ColumnDef<IUser>[] = [
     },
     cell: ({ row }) => (
       <div className="text-sm text-muted-foreground">
-        {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString() : "N/A"}
+        {row.original.created_at
+          ? new Date(row.original.created_at).toLocaleDateString()
+          : "N/A"}
       </div>
     ),
   },
-  
+
   // Actions Column
   {
     id: "actions",

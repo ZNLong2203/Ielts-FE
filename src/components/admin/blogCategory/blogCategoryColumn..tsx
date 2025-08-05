@@ -2,26 +2,16 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { TextBadgeInfo } from "@/components/ui/info";
 import { Calendar, Shield } from "lucide-react";
 import CellAction from "./blogCategoryAction";
 import { IBlogCategory } from "@/interface/blogCategory";
-
-// Helper function to get badge variant based on status
-const getStatusVariant = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "default";
-    case "inactive":
-      return "destructive";
-  }
-};
 
 export const columns: ColumnDef<IBlogCategory>[] = [
   // ID Column
@@ -100,22 +90,12 @@ export const columns: ColumnDef<IBlogCategory>[] = [
   {
     accessorKey: "is_active",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="hover:bg-secondary/20"
-      >
+      <Button variant="ghost" className="hover:bg-secondary/20">
         Status
       </Button>
     ),
     cell: ({ row }) => (
-      <Badge
-        variant={getStatusVariant(
-          row.original.is_active ? "active" : "inactive"
-        )}
-      >
-        {row.original.is_active ? "Active" : "Inactive"}
-      </Badge>
+      <TextBadgeInfo status={row.original.is_active ? "active" : "inactive"} />
     ),
   },
   {

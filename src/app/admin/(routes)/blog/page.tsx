@@ -1,10 +1,11 @@
+import BlogTable from "@/components/admin/blog/blogTable";
+
 const BlogAdminPage = () => {
   return (
-    <div>
-      <h1>Blog Admin Page</h1>
-      <p>Manage your blog posts here.</p>
+    <div className="flex-1 space-y-4 p-10 pt-6 h-full bg-white">
+      <BlogTable />
     </div>
   );
-}
+};
 
 export default BlogAdminPage;
