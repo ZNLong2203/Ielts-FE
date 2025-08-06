@@ -6,7 +6,7 @@ export interface IBlog {
   content: string;
   image?: string;
   tags?: string[];
-  status?: "draft" | "published" | "archived";
+  status: "draft" | "published" | "archived";
   is_featured?: boolean;
   like_count?: number;
   published_at?: Date;

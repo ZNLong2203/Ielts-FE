@@ -19,7 +19,6 @@ import {
   CheckCircle,
   XCircle,
   GraduationCap,
-  Activity,
   UserCircle,
   Settings,
   Clock,

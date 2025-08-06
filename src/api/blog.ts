@@ -63,3 +63,16 @@ export const getBlog = async (id: string): Promise<IBlog> => {
   console.log("Get blog response:", response);
   return response.data.data;
 };
+
+export const publishBlog = async (id: string) => {
+  const response = await api.patch(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}/publish`)
+  console.log("Publish blog:", response)
+  return response
+}
+
+export const archiveBlog = async (id: string) => {
+  const response = await api.patch(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}/archive`)
+  console.log("Archive blog:", response)
+  return response
+}
+
