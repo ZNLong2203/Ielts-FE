@@ -1,10 +1,18 @@
 "use client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import Heading from "@/components/ui/heading";
+import Loading from "@/components/ui/loading";
+import Error from "@/components/ui/error";
+import {
+  TextInfoField,
+  DateInfoField,
+  TextBadgeInfo,
+} from "@/components/ui/info";
 import {
   ArrowLeft,
   Edit,
@@ -17,21 +25,23 @@ import {
   Share2,
   Heart,
   MessageCircle,
+  FileText,
+  Image as ImageIcon,
+  Star,
+  BarChart3,
 } from "lucide-react";
 
 import { getBlog } from "@/api/blog";
-import Loading from "@/components/ui/loading";
-import Error from "@/components/ui/error";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const BlogDetail = () => {
   const router = useRouter();
   const params = useParams();
-  const queryClient = useQueryClient();
 
-  const blogId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
   const {
     data: blog,
@@ -39,49 +49,10 @@ const BlogDetail = () => {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["blog", blogId],
-    queryFn: () => getBlog(blogId),
-    enabled: !!blogId,
+    queryKey: ["blog", slug],
+    queryFn: () => getBlog(slug),
+    enabled: !!slug,
   });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "published":
-        return "bg-green-100 text-green-800";
-      case "draft":
-        return "bg-yellow-100 text-yellow-800";
-      case "archived":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusActions = (currentStatus: string) => {
-    const actions = [];
-    if (currentStatus !== "published") {
-      actions.push({
-        label: "Publish",
-        value: "published",
-        icon: Eye,
-      });
-    }
-    if (currentStatus !== "draft") {
-      actions.push({
-        label: "Move to Draft",
-        value: "draft",
-        icon: Edit,
-      });
-    }
-    if (currentStatus !== "archived") {
-      actions.push({
-        label: "Archive",
-        value: "archived",
-        icon: Trash2,
-      });
-    }
-    return actions;
-  };
 
   if (isLoading) {
     return <Loading />;
@@ -107,168 +78,282 @@ const BlogDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.back()}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Blog Details
-                </h1>
-                <p className="text-sm text-gray-500">
-                  View and manage blog post information
-                </p>
-              </div>
+              <Heading
+                title="Blog Details"
+                description="Blog post details and information"
+              />
             </div>
 
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                size="sm"
-                onClick={() =>
-                  router.push(`${ROUTES.ADMIN_BLOGS}/${blogId}/edit`)
-                }
+                onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/edit`)}
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
-                <span>Edit</span>
+                <span>Edit Blog</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+          
+          {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Blog Header */}
+            
+            {/* Basic Information */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Badge className={getStatusColor(blog?.status)}>
-                      {blog.status.charAt(0).toUpperCase() +
-                        blog.status.slice(1)}
-                    </Badge>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  <span>Blog Information</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <TextInfoField
+                      label="Blog Title"
+                      value={blog.title}
+                    />
+
+                    <TextInfoField
+                      label="Author ID"
+                      value={blog.author_id || "Unknown"}
+                    />
+
+                    <TextInfoField
+                      label="Category ID"
+                      value={blog.category_id || "Uncategorized"}
+                    />
                   </div>
 
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    {blog.title}
-                  </h1>
-
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4" />
-                      <span>
-                        Created{" "}
-                        {blog.published_at
-                          ? new Date(blog.published_at).toLocaleDateString()
-                          : "N/A"}
-                        ago
-                      </span>
+                  <div className="space-y-4">
+                    <div>
+                      <TextBadgeInfo
+                        label="Status"
+                        status={blog.status}
+                      />
                     </div>
+
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700">Featured:</label>
+                      <Badge 
+                        variant={blog.is_featured ? "default" : "secondary"}
+                        className={blog.is_featured ? "bg-yellow-100 text-yellow-800" : ""}
+                      >
+                        {blog.is_featured ? (
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-3 w-3" />
+                            <span>Yes</span>
+                          </div>
+                        ) : "No"}
+                      </Badge>
+                    </div>
+
+                    <TextInfoField
+                      label="Like Count"
+                      value={blog.like_count || 0}
+                    />
                   </div>
+
+                  <DateInfoField
+                    label="Published At"
+                    value={blog.published_at}
+                  />
                 </div>
+
+                {/* Tags */}
+                {blog.tags && blog.tags.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Tags
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {blog.tags.map((tag, index) => (
+                          <Badge 
+                            key={index} 
+                            variant="outline" 
+                            className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                          >
+                            <Tag className="h-3 w-3 mr-1" />
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
             {/* Featured Image */}
             {blog.image && (
               <Card>
-                <CardContent className="pt-6">
-                  <img
-                    src={blog.image}
-                    alt={blog.title}
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <ImageIcon className="h-5 w-5 text-green-600" />
+                    <span>Featured Image</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="aspect-video w-full rounded-lg overflow-hidden">
+                    <img
+                      src={blog.image}
+                      alt={blog.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Blog Content */}
+            {/* Content */}
             <Card>
               <CardHeader>
-                <CardTitle>Content</CardTitle>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                  <span>Content</span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div
-                  className="prose prose-lg max-w-none"
+                <div 
+                  className="prose prose-sm sm:prose lg:prose-lg max-w-none"
                   dangerouslySetInnerHTML={{ __html: blog.content }}
                 />
               </CardContent>
             </Card>
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column - Statistics & Actions */}
           <div className="space-y-6">
-            {/* Author Info */}
+            
+            {/* Statistics */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>Author</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent></CardContent>
-            </Card>
-
-            {/* Category & Tags */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Tag className="h-5 w-5" />
-                  <span>Category & Tags</span>
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  <span>Statistics</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* {blog.category && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">
-                      Category
-                    </p>
-                    <Badge variant="outline">{blog.category.name}</Badge>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Status:</span>
+                    <TextBadgeInfo status={blog.status} />
                   </div>
-                )}
 
-                {blog.tags && blog.tags.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">
-                      Tags
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {blog.tags.map((tag) => (
-                        <Badge variant="secondary">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Likes:</span>
+                    <span className="text-sm font-medium">{blog.like_count || 0}</span>
                   </div>
-                )} */}
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Featured:</span>
+                    <span className="text-sm font-medium">
+                      {blog.is_featured ? "Yes" : "No"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Tags:</span>
+                    <span className="text-sm font-medium">{blog.tags?.length || 0}</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="text-xs text-gray-500">
+                  <div>ID: {blog.id}</div>
+                  {blog.published_at && (
+                    <div>Published: {new Date(blog.published_at).toLocaleDateString()}</div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
-            {/* SEO Info */}
-            {blog.title && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>SEO Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {blog.title && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">Title</p>
-                      <p className="text-sm text-gray-600">{blog.title}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Eye className="h-5 w-5 text-gray-600" />
+                  <span>Quick Actions</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/edit`)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Blog
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => window.open(`/blogs/${slug}`, '_blank')}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Public
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link copied to clipboard");
+                  }}
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Copy Link
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Blog Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-green-600" />
+                  <span>Summary</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-sm">
+                  <div className="font-medium text-gray-900 mb-2">{blog.title}</div>
+                  <div className="text-gray-600 line-clamp-3">
+                    {blog.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>
+                      {blog.published_at 
+                        ? new Date(blog.published_at).toLocaleDateString()
+                        : 'Not published'
+                      }
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Heart className="h-3 w-3" />
+                    <span>{blog.like_count || 0}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

@@ -59,7 +59,7 @@ export const getArchivedBlogs = async ({
 };
 
 export const getBlog = async (id: string): Promise<IBlog> => {
-  const response = await api.get(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}`);
+  const response = await api.get(`${BASE_URL}${API_URL.ADMIN_BLOG}/detail/${id}`);
   console.log("Get blog response:", response);
   return response.data.data;
 };
@@ -76,3 +76,8 @@ export const archiveBlog = async (id: string) => {
   return response
 }
 
+export const deleteBlog = async (id: string) => {
+  const response = await api.delete(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}`)
+  console.log("Delete blog:", response)
+  return response
+}

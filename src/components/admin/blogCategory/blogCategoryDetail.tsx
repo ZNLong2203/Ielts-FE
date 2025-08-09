@@ -54,7 +54,7 @@ const BlogCategoryDetail = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <Heading
-                title={data.name}
+                title="Blog Category Details"
                 description="Blog category details and information"
               />
             </div>
