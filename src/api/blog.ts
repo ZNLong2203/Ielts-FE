@@ -1,6 +1,6 @@
 import api from "@/utils/interceptor";
 import { API_URL } from "@/constants/api";
-import { IBlog, IBlogCreate, IBlogs } from "@/interface/blog";
+import { IBlog, IBlogCreate, IBlogs, IBlogUpdate } from "@/interface/blog";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -67,17 +67,23 @@ export const getBlog = async (id: string): Promise<IBlog> => {
 export const publishBlog = async (id: string) => {
   const response = await api.patch(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}/publish`)
   console.log("Publish blog:", response)
-  return response
+  return response.data
 }
 
 export const archiveBlog = async (id: string) => {
   const response = await api.patch(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}/archive`)
   console.log("Archive blog:", response)
-  return response
+  return response.data
 }
 
 export const deleteBlog = async (id: string) => {
   const response = await api.delete(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}`)
   console.log("Delete blog:", response)
-  return response
+  return response.data
+}
+
+export const updateBlog = async (id: string, data: IBlogUpdate) => {
+  const response = await api.patch(`${BASE_URL}${API_URL.ADMIN_BLOG}/${id}`, data);
+  console.log("Update blog:", response);
+  return response.data;
 }

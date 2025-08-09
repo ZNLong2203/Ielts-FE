@@ -41,8 +41,6 @@ const BlogCategoryForm = () => {
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
-  console.log(slug);
-
   let title = "";
   let description = "";
   if (slug === undefined || param.slug === "") {
@@ -243,9 +241,7 @@ const BlogCategoryForm = () => {
                   >
                     <Save className="h-4 w-4" />
                     <span>
-                      {createBlogCategoryMutation.isPending
-                        ? "Creating..."
-                        : "Create Category"}
+                      {slug && slug !== "" ? "Update Category" : "Create Category"}
                     </span>
                   </Button>
                 </div>

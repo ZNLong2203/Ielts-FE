@@ -30,6 +30,13 @@ export interface IBlogCreate {
   tags?: string[];
 }
 
+export interface IBlogUpdate {
+  title?: string;
+  content?: string;
+  image?: string;
+  tags?: string[];
+}
+
 export interface IBlogComment {
   id: string;
   blog_id?: string;
