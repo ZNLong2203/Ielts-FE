@@ -82,6 +82,9 @@ const BlogCategoryForm = () => {
       queryClient.invalidateQueries({
         queryKey: ["blogCategories"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["blogCategory"],
+      });
       router.push(ROUTES.ADMIN_BLOG_CATEGORIES);
     },
     onError: (error) => {
@@ -241,7 +244,9 @@ const BlogCategoryForm = () => {
                   >
                     <Save className="h-4 w-4" />
                     <span>
-                      {slug && slug !== "" ? "Update Category" : "Create Category"}
+                      {slug && slug !== ""
+                        ? "Update Category"
+                        : "Create Category"}
                     </span>
                   </Button>
                 </div>
