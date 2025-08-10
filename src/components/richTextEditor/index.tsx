@@ -1,5 +1,6 @@
 "use client";
 import "./index.css";
+import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
@@ -27,7 +28,6 @@ interface RichTextFieldProps {
   editable?: boolean;
   minHeight?: string;
 }
-
 
 const RichTextField = ({
   content = "",
@@ -113,34 +113,45 @@ const RichTextField = ({
     },
   });
 
+  // Thêm useEffect để cập nhật content
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
+
+
   return (
     <div className="border rounded-lg overflow-hidden bg-white">
       <MenuBar editor={editor} />
       <div className="border-t" style={{ minHeight }}>
-        <EditorContent editor={editor} className="rich-text-editor" />
+        <EditorContent
+          editor={editor}
+          className="rich-text-editor"
+        />
       </div>
-      
+
       {/* CSS tùy chỉnh cho table màu đen */}
       <style jsx>{`
         .rich-text-editor .table-black-border table {
           border-collapse: collapse;
           border: 2px solid #000000;
         }
-        
+
         .rich-text-editor .table-cell-black,
         .rich-text-editor .table-header-black {
           border: 1px solid #000000 !important;
         }
-        
+
         .rich-text-editor .table-header-black {
           background-color: #f8f9fa;
           font-weight: bold;
         }
-        
+
         .rich-text-editor table {
           border: 2px solid #000000 !important;
         }
-        
+
         .rich-text-editor table td,
         .rich-text-editor table th {
           border: 1px solid #000000 !important;

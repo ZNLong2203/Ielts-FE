@@ -14,13 +14,13 @@ import { AlertModal } from "@/components/modal/alert-modal";
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { IBlog } from "@/interface/blog";
+import { ICourseCategory } from "@/interface/courseCategory";
 import { getQueryClient } from "@/utils/getQueryClient";
-import { deleteBlog } from "@/api/blog";
+import { deleteCourseCategory } from "@/api/courseCategory";
 import ROUTES from "@/constants/route";
 
 interface CellActionProps {
-  data: IBlog;
+  data: ICourseCategory;
 }
 
 const CellAction: React.FC<CellActionProps> = ({ data }) => {
@@ -33,14 +33,14 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
   };
 
   const { mutate: deleteId, isPending } = useMutation({
-    mutationFn: deleteBlog,
+    mutationFn: deleteCourseCategory,
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to delete blog");
+      toast.error(error.response?.data?.message || "Failed to delete course category");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      queryClient.invalidateQueries({ queryKey: ["courseCategories"] });
       setOpen(false);
-      toast.success("Blog deleted successfully");
+      toast.success("Course category deleted successfully");
     },
   });
 
@@ -66,14 +66,14 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             Copy ID
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_BLOGS + `/${data.id}`)}
+            onClick={() => router.push(ROUTES.ADMIN_COURSE_CATEGORIES + `/${data.id}`)}
           >
             <Eye className="mr-1 h-4 w-4" />
             Detail
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
-              router.push(ROUTES.ADMIN_BLOGS + `/${data.id}/update`)
+              router.push(ROUTES.ADMIN_COURSE_CATEGORIES + `/${data.id}/update`)
             }
           >
             <Edit className="mr-1 h-4 w-4" />

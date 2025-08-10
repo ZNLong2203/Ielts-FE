@@ -80,6 +80,13 @@ export interface IBlogCategoryUpdate {
   ordering?: number;
 }
 
+export interface IBlogUpdate {
+  title?: string;
+  content?: string;
+  image?: string;
+  tags?: string[];
+}
+
 export interface IBlogComment {
   id: string;
   blog_id?: string;

@@ -36,6 +36,7 @@ interface FileUploadFieldProps {
   className?: string;
   placeholder?: string;
   description?: string;
+  currentImage?: string;
 }
 
 const FileUploadField = ({
@@ -48,6 +49,7 @@ const FileUploadField = ({
   className,
   placeholder = "Click to upload or drag and drop",
   description,
+  currentImage,
 }: FileUploadFieldProps) => {
   const [dragOver, setDragOver] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -118,7 +120,9 @@ const FileUploadField = ({
     onChange: (value: any) => void
   ) => {
     if (multiple && Array.isArray(currentFiles)) {
-      const updatedFiles = currentFiles.filter((_, index) => index !== indexToRemove);
+      const updatedFiles = currentFiles.filter(
+        (_, index) => index !== indexToRemove
+      );
       onChange(updatedFiles.length > 0 ? updatedFiles : null);
     } else {
       onChange(null);
@@ -210,14 +214,87 @@ const FileUploadField = ({
       name={name}
       render={({ field }) => {
         const files = field.value;
-        const fileArray = multiple && Array.isArray(files) ? files : files ? [files] : [];
+        const fileArray =
+          multiple && Array.isArray(files) ? files : files ? [files] : [];
         const hasFiles = fileArray.length > 0;
+        const hasCurrentImage = currentImage && !hasFiles; // Hiển thị current image khi không có file mới
 
         return (
           <FormItem>
             <FormLabel className="text-sm font-semibold">{label}</FormLabel>
             <FormControl>
               <div className="space-y-4">
+                {/* Current Image Display */}
+                {hasCurrentImage && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium text-gray-900">
+                        Current Image:
+                      </h4>
+                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                        Uploaded
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <ImageIcon className="h-8 w-8 text-blue-500" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-gray-900">
+                              Current featured image
+                            </p>
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                              <Check className="h-3 w-3 mr-1" />
+                              Current
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Click to view full size
+                          </p>
+                          <div className="mt-2">
+                            <img
+                              src={currentImage}
+                              alt="Current image"
+                              className="h-12 w-12 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => {
+                                setPreviewUrl(currentImage);
+                                setIsPreviewOpen(true);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 ml-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            setPreviewUrl(currentImage);
+                            setIsPreviewOpen(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            // Remove current image logic nếu cần
+                            field.onChange(null);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Upload Area */}
                 <div
                   className={cn(
@@ -226,6 +303,8 @@ const FileUploadField = ({
                       ? "border-blue-500 bg-blue-50"
                       : hasFiles
                       ? "border-green-500 bg-green-50"
+                      : hasCurrentImage
+                      ? "border-blue-300 bg-blue-25"
                       : "border-gray-300 hover:border-gray-400",
                     className
                   )}
@@ -256,7 +335,11 @@ const FileUploadField = ({
                     <Upload
                       className={cn(
                         "mx-auto h-12 w-12",
-                        hasFiles ? "text-green-500" : "text-gray-400"
+                        hasFiles 
+                          ? "text-green-500" 
+                          : hasCurrentImage 
+                          ? "text-blue-500" 
+                          : "text-gray-400"
                       )}
                     />
                     <div className="mt-4">
@@ -264,7 +347,9 @@ const FileUploadField = ({
                         {hasFiles
                           ? multiple
                             ? `${fileArray.length} file(s) selected`
-                            : "File selected"
+                            : "New file selected"
+                          : hasCurrentImage
+                          ? "Upload new image to replace current"
                           : placeholder}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -276,19 +361,24 @@ const FileUploadField = ({
                           ✓ Ready to upload
                         </p>
                       )}
+                      {hasCurrentImage && !hasFiles && (
+                        <p className="text-xs text-blue-600 mt-1 font-medium">
+                          ℹ Current image will be kept if no new file is uploaded
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* File Preview */}
+                {/* New File Preview */}
                 {hasFiles && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-medium text-gray-900">
-                        Selected Files:
+                        New Files:
                       </h4>
-                      <Badge variant="outline" className="text-xs">
-                        {fileArray.length} {fileArray.length === 1 ? 'file' : 'files'}
+                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+                        {fileArray.length} {fileArray.length === 1 ? 'file' : 'files'} to upload
                       </Badge>
                     </div>
 
@@ -305,6 +395,14 @@ const FileUploadField = ({
                         />
                       ))}
                     </div>
+
+                    {hasCurrentImage && (
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-xs text-yellow-800">
+                          <strong>Note:</strong> Uploading new file(s) will replace the current image.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -327,9 +425,6 @@ const FileUploadField = ({
                       src={previewUrl}
                       alt="Preview"
                       className="max-w-full max-h-96 object-contain rounded-lg"
-                      onLoad={() => {
-                        return () => URL.revokeObjectURL(previewUrl);
-                      }}
                     />
                   </div>
                 )}

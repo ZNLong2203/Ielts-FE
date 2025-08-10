@@ -1,14 +1,14 @@
-import AdminNavbar from "@/components/admin/adminNavbar";
+import AdminLayout from "@/components/admin/adminLayout";
 import ProtectedRoute from "@/components/auth/protectedRoute";
 
 const AdminPageLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <ProtectedRoute allowedRoles={["ADMIN"]}>
       <div>
-        <AdminNavbar />
-        {children}
+        {/* <AdminNavbar /> */}
+        <AdminLayout>{children}</AdminLayout>
       </div>
-     </ProtectedRoute>
+    </ProtectedRoute>
   );
 };
 

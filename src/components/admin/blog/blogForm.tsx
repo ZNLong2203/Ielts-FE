@@ -1,50 +1,92 @@
 "use client";
-import {
-  Form,
-  FormLabel,
-} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 import FileUploadField from "@/components/form/file-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import RichTextField from "@/components/richTextEditor";
 import { Switch } from "@/components/ui/switch";
-
+import RichTextField from "@/components/richTextEditor";
+import { 
+  Form, 
+  FormLabel, 
+  FormField, 
+  FormItem, 
+  FormControl, 
+  FormDescription 
+} from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBlog } from "@/api/blog";
-import { BlogCreateSchema } from "@/validation/blog";
-import { useState } from "react";
-import {
-  Save,
-  Eye,
-  FileText,
-  Image,
-  Tag,
-  Settings,
-} from "lucide-react";
+import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
+import { useEffect, useState } from "react";
+import { Save, Eye, FileText, Image, Tag, Settings } from "lucide-react";
 import ROUTES from "@/constants/route";
+import { getBlog, updateBlog } from "@/api/blog";
 import { getBlogCategories } from "@/api/blogCategory";
 import TagsField from "@/components/form/tags-field";
+import toast from "react-hot-toast";
 
 const BlogForm = () => {
   const router = useRouter();
   const param = useParams();
+  const queryClient = useQueryClient();
+
+  const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
+
+  let title = "";
+  let description = "";
+  if (slug === undefined || param.slug === "") {
+    title = "Create New Blog Post";
+    description = "Write and publish your blog content";
+  } else {
+    title = "Update Blog Post";
+    description = "Update your blog content";
+  }
 
   const createBlogMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogCreateSchema>) => {
       return createBlog(formData);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({
+        queryKey: ["blogs"],
+      });
       router.push(ROUTES.ADMIN_BLOGS);
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
+  const updateBlogMutation = useMutation({
+    mutationFn: async (formData: z.infer<typeof BlogUpdateSchema>) => {
+      return updateBlog(slug, formData);
+    },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      queryClient.invalidateQueries({
+        queryKey: ["blogs"],
+      });
+      router.push(ROUTES.ADMIN_BLOGS);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Get blog detail
+  const { data: blogData, isPending: isBlogPending } = useQuery({
+    queryKey: ["blogs", slug],
+    queryFn: () => getBlog(slug),
+    enabled: slug !== undefined && slug !== "",
+  });
+
+  // Get blog categories
   const { data: blogCategories, isPending: isCategoriesPending } = useQuery({
     queryKey: ["blogCategories"],
     queryFn: () => getBlogCategories({ page: 1 }),
@@ -63,15 +105,32 @@ const BlogForm = () => {
       content: "",
       tags: [],
       file: null,
+      is_featured: false,
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof BlogCreateSchema>) => {
-    console.log("Blog data:", data);
-    const formData = {
-      ...data,
-    };
-    createBlogMutation.mutate(formData);
+  useEffect(() => {
+    if (blogData) {
+      blogForm.reset({
+        category_id: blogData.category_id,
+        title: blogData.title,
+        content: blogData.content,
+        tags: blogData.tags,
+        is_featured: blogData.is_featured,
+      });
+    }
+  }, [blogData]);
+
+  const onSubmit = async (formData: z.infer<typeof BlogCreateSchema>) => {
+    console.log("Blog data:", formData);
+    if (slug && slug !== "") {
+      return updateBlogMutation.mutate({
+        ...formData,
+        is_featured: (formData as any).is_featured ?? false,
+      });
+    } else {
+      return createBlogMutation.mutate(formData);
+    }
   };
 
   return (
@@ -82,8 +141,8 @@ const BlogForm = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <Heading
-                title="Create New Blog Post"
-                description="Write and publish your blog content"
+                title={title}
+                description={description}
               />
             </div>
 
@@ -155,7 +214,7 @@ const BlogForm = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Image className="h-5 w-5 text-green-600" />
-                      <span>Featured Image</span>content
+                      <span>Featured Image Content</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -166,6 +225,7 @@ const BlogForm = () => {
                       accept="image/*"
                       maxSize={5}
                       description="Recommended size: 1200x630px for best social media sharing"
+                      currentImage={blogData?.image}
                     />
                   </CardContent>
                 </Card>
@@ -207,6 +267,30 @@ const BlogForm = () => {
                       placeholder="Select category"
                       options={categoriesOptions ?? []}
                     />
+
+                    {/* Featured Switch */}
+                    <FormField
+                      control={blogForm.control}
+                      name="is_featured"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base font-medium">
+                              Featured Post
+                            </FormLabel>
+                            <FormDescription className="text-sm text-muted-foreground">
+                              Display this post prominently on the homepage
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </CardContent>
                 </Card>
 
@@ -221,9 +305,7 @@ const BlogForm = () => {
                       >
                         <Save className="h-4 w-4" />
                         <span>
-                          {createBlogMutation.isPending
-                            ? "Creating..."
-                            : "Create Blog Post"}
+                          {slug && slug !== "" ? "Update Blog Post" : "Create Blog Post"}
                         </span>
                       </Button>
 

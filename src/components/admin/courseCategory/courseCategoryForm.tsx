@@ -21,20 +21,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  BlogCategoryCreateSchema,
-  BlogCategoryUpdateSchema,
-} from "@/validation/blogCategory";
-import {
-  createBlogCategory,
-  getBlogCategory,
-  updateBlogCategory,
-} from "@/api/blogCategory";
+
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { useEffect } from "react";
+import {
+  CourseCategoryCreateSchema,
+  CourseCategoryUpdateSchema,
+} from "@/validation/courseCategory";
+import {
+  getCourseCategory,
+  createCourseCategory,
+  updateCourseCategory,
+} from "@/api/courseCategory";
 
-const BlogCategoryForm = () => {
+const CourseCategoryForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
@@ -44,81 +45,68 @@ const BlogCategoryForm = () => {
   let title = "";
   let description = "";
   if (slug === undefined || param.slug === "") {
-    title = "Add New Blog Category";
-    description = "Create a new category for blog posts";
+    title = "Add Course Category";
+    description = "Create a new category for courses";
   } else {
-    title = "Update Blog Category";
-    description = "Update a Blog Category for blog posts";
+    title = "Update Course Category";
+    description = "Update a Course Category for courses";
   }
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["blogCategory", slug],
-    queryFn: () => getBlogCategory(slug),
+    queryKey: ["courseCategory", slug],
+    queryFn: () => getCourseCategory(slug),
     enabled: slug !== undefined && slug !== "",
   });
 
-  const createBlogCategoryMutation = useMutation({
-    mutationFn: async (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
-      return createBlogCategory(formData);
-    },
+  const createCourseCategoryMutation = useMutation({
+    mutationFn: async (formData: z.infer<typeof CourseCategoryCreateSchema>) =>
+      createCourseCategory(formData),
     onSuccess: (data) => {
       toast.success(data?.message);
-      queryClient.invalidateQueries({
-        queryKey: ["blogCategories"],
-      });
-      router.push(ROUTES.ADMIN_BLOG_CATEGORIES);
+      queryClient.invalidateQueries({ queryKey: ["courseCategories"] });
+      router.push(ROUTES.ADMIN_COURSE_CATEGORIES);
     },
     onError: (error) => {
-      toast.error(error?.message || "Failed to create blog category.");
+      toast.error(error.message);
     },
   });
 
-  const updateBlogCategoryMutation = useMutation({
-    mutationFn: async (formData: z.infer<typeof BlogCategoryUpdateSchema>) => {
-      return updateBlogCategory(slug, formData);
-    },
-    onSuccess: (data) => {
-      toast.success(data?.message);
-      queryClient.invalidateQueries({
-        queryKey: ["blogCategories"],
-      });
-      router.push(ROUTES.ADMIN_BLOG_CATEGORIES);
+  const updateCourseCategoryMutation = useMutation({
+    mutationFn: async (formData: z.infer<typeof CourseCategoryUpdateSchema>) =>
+      updateCourseCategory(slug, formData),
+    onSuccess: () => {
+      toast.success("Course category updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["courseCategories"] });
+      router.push(ROUTES.ADMIN_COURSE_CATEGORIES);
     },
     onError: (error) => {
-      toast.error(error?.message || "Failed to update blog category.");
+      toast.error(error.message);
     },
   });
 
-  const blogCategoryForm = useForm<z.infer<typeof BlogCategoryCreateSchema>>({
-    resolver: zodResolver(BlogCategoryCreateSchema),
+  const courseCategoryForm = useForm({
+    resolver: zodResolver(CourseCategoryCreateSchema),
     defaultValues: {
       name: "",
       description: "",
       ordering: 0,
+      icon: "",
       is_active: true,
-      slug: "",
     },
   });
 
   useEffect(() => {
     if (data) {
-      blogCategoryForm.reset({
-        name: data.name,
-        description: data.description,
-        ordering: data.ordering,
-        is_active: data.is_active,
-        slug: data.slug,
-      });
+      courseCategoryForm.reset(data);
     }
-  }, [data]);
+  }, [data, courseCategoryForm]);
 
-  const onSubmit = (formData: z.infer<typeof BlogCategoryCreateSchema>) => {
-    console.log("Blog Category Form Data:", formData);
-    if (slug && slug !== "") {
-      return updateBlogCategoryMutation.mutate(formData);
+  const onSubmit = (formData: z.infer<typeof CourseCategoryCreateSchema>) => {
+    console.log("Course category form submitted:", formData);
+    if (slug === undefined || param.slug === "") {
+      return createCourseCategoryMutation.mutate(formData);
     } else {
-      // If slug is not present, create a new blog category
-      return createBlogCategoryMutation.mutate(formData);
+      return updateCourseCategoryMutation.mutate(formData);
     }
   };
 
@@ -129,10 +117,10 @@ const BlogCategoryForm = () => {
   if (isError) {
     return (
       <Error
-        title="Blog Category Not Found"
-        description="The requested blog category does not exist or has been deleted."
+        title="Course Category Not Found"
+        description="The requested course category does not exist or has been deleted."
         dismissible={true}
-        onDismiss={() => router.push(ROUTES.ADMIN_BLOG_CATEGORIES)}
+        onDismiss={() => router.push(ROUTES.ADMIN_COURSE_CATEGORIES)}
         onRetry={() => refetch()}
         onGoBack={() => router.back()}
       />
@@ -154,7 +142,7 @@ const BlogCategoryForm = () => {
               onClick={() => router.back()}
               className="flex items-center space-x-2"
             >
-              <span>Back to Blog Categories</span>
+              <span>Back to Course Categories</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -170,39 +158,39 @@ const BlogCategoryForm = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Form {...blogCategoryForm}>
+            <Form {...courseCategoryForm}>
               <form
-                onSubmit={blogCategoryForm.handleSubmit(onSubmit)}
+                onSubmit={courseCategoryForm.handleSubmit(onSubmit)}
                 className="space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <TextField
-                    control={blogCategoryForm.control}
+                    control={courseCategoryForm.control}
                     name="name"
                     label="Category Name"
-                    placeholder="Enter category name"
+                    placeholder="Enter course category name"
                     required
                   />
 
                   <TextField
-                    control={blogCategoryForm.control}
-                    name="slug"
-                    label="Slug"
-                    placeholder="Enter URL slug"
+                    control={courseCategoryForm.control}
+                    name="icon"
+                    label="Icon"
+                    placeholder="Enter course category icon"
                     required
                   />
                 </div>
 
                 <TextField
-                  control={blogCategoryForm.control}
+                  control={courseCategoryForm.control}
                   name="description"
                   label="Description"
-                  placeholder="Enter category description"
+                  placeholder="Enter course category description"
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <TextField
-                    control={blogCategoryForm.control}
+                    control={courseCategoryForm.control}
                     name="ordering"
                     label="Display Order"
                     type="number"
@@ -210,7 +198,7 @@ const BlogCategoryForm = () => {
                   />
 
                   <FormField
-                    control={blogCategoryForm.control}
+                    control={courseCategoryForm.control}
                     name="is_active"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -237,11 +225,13 @@ const BlogCategoryForm = () => {
                   <Button
                     type="submit"
                     className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                    disabled={createBlogCategoryMutation.isPending}
+                    disabled={createCourseCategoryMutation.isPending}
                   >
                     <Save className="h-4 w-4" />
                     <span>
-                      {slug && slug !== "" ? "Update Category" : "Create Category"}
+                      {slug && slug !== ""
+                        ? "Update Category"
+                        : "Create Category"}
                     </span>
                   </Button>
                 </div>
@@ -254,4 +244,4 @@ const BlogCategoryForm = () => {
   );
 };
 
-export default BlogCategoryForm;
+export default CourseCategoryForm;

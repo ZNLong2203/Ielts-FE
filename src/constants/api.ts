@@ -11,6 +11,8 @@ export const API_URL = {
     STUDENT: '/students',
     TEACHER: '/teachers',
     BLOG: '/blogs',
+    COURSES: '/courses',
+    COURSE_CATEGORIES: '/courses/categories',
     ADMIN_BLOG: '/blogs/admin',
     ADMIN_BLOG_CATEGORY: '/blogs/admin/category',
 }
