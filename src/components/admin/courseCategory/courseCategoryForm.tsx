@@ -77,6 +77,8 @@ const CourseCategoryForm = () => {
     onSuccess: () => {
       toast.success("Course category updated successfully");
       queryClient.invalidateQueries({ queryKey: ["courseCategories"] });
+      queryClient.invalidateQueries({ queryKey: ["courseCategory"] });
+
       router.push(ROUTES.ADMIN_COURSE_CATEGORIES);
     },
     onError: (error) => {

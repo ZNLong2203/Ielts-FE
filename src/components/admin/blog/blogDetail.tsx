@@ -14,17 +14,12 @@ import {
   TextBadgeInfo,
 } from "@/components/ui/info";
 import {
-  ArrowLeft,
   Edit,
-  Trash2,
   Eye,
   Calendar,
-  User,
   Tag,
-  Clock,
   Share2,
   Heart,
-  MessageCircle,
   FileText,
   Image as ImageIcon,
   Star,
@@ -34,8 +29,6 @@ import {
 import { getBlog } from "@/api/blog";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 const BlogDetail = () => {
   const router = useRouter();

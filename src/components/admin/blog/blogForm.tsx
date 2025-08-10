@@ -25,7 +25,7 @@ import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
 import { useEffect, useState } from "react";
 import { Save, Eye, FileText, Image, Tag, Settings } from "lucide-react";
 import ROUTES from "@/constants/route";
-import { getBlog, updateBlog } from "@/api/blog";
+import { getBlog, updateBlogByAdmin } from "@/api/blog";
 import { getBlogCategories } from "@/api/blogCategory";
 import TagsField from "@/components/form/tags-field";
 import toast from "react-hot-toast";
@@ -65,12 +65,15 @@ const BlogForm = () => {
 
   const updateBlogMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogUpdateSchema>) => {
-      return updateBlog(slug, formData);
+      return updateBlogByAdmin(slug, formData);
     },
     onSuccess: (data) => {
       toast.success(data.message);
       queryClient.invalidateQueries({
         queryKey: ["blogs"],
+      });
+       queryClient.invalidateQueries({
+        queryKey: ["blog"],
       });
       router.push(ROUTES.ADMIN_BLOGS);
     },
