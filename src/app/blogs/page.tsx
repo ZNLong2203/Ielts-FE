@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { Heart, BookOpen, TrendingUp, Tag, Eye, MessageCircle, ArrowRight, Filter, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,179 +11,78 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Image from "next/image"
 import Link from "next/link"
 
-const categories = [
-  {
-    id: "1",
-    name: "Writing",
-    slug: "writing",
-    description: "IELTS Writing tips and strategies",
-    count: 24,
-    color: "bg-blue-500",
-  },
-  {
-    id: "2",
-    name: "Speaking",
-    slug: "speaking",
-    description: "Speaking practice and techniques",
-    count: 18,
-    color: "bg-green-500",
-  },
-  {
-    id: "3",
-    name: "Reading",
-    slug: "reading",
-    description: "Reading comprehension skills",
-    count: 32,
-    color: "bg-purple-500",
-  },
-  {
-    id: "4",
-    name: "Listening",
-    slug: "listening",
-    description: "Listening practice materials",
-    count: 21,
-    color: "bg-orange-500",
-  },
-  {
-    id: "5",
-    name: "Vocabulary",
-    slug: "vocabulary",
-    description: "Essential IELTS vocabulary",
-    count: 45,
-    color: "bg-pink-500",
-  },
-  {
-    id: "6",
-    name: "Grammar",
-    slug: "grammar",
-    description: "Grammar rules and exercises",
-    count: 28,
-    color: "bg-indigo-500",
-  },
-]
-
-const blogs = [
-  {
-    id: "1",
-    title: "IELTS Writing Task 2: How to Structure Your Essay for Band 8+",
-    slug: "ielts-writing-task-2-structure-band-8",
-    content:
-      "Master the art of essay writing with proven strategies that have helped thousands of students achieve their target band scores. Learn the essential structure, advanced vocabulary, and time management techniques...",
-    image: "/placeholder.svg?height=300&width=500",
-    category: "Writing",
-    author: { name: "Sarah Johnson", avatar: "/placeholder.svg?height=40&width=40", role: "IELTS Expert" },
-    tags: ["writing", "task2", "structure", "band8", "essay"],
-    is_featured: true,
-    like_count: 245,
-    view_count: 1250,
-    comment_count: 34,
-    published_at: "2024-01-15",
-    status: "published",
-    reading_time: "8 min read",
-  },
-  {
-    id: "2",
-    title: "Top 100 IELTS Vocabulary Words You Must Know",
-    slug: "top-100-ielts-vocabulary-words",
-    content:
-      "Boost your IELTS score across all sections with these essential vocabulary words. Each word comes with examples, synonyms, and practical usage in IELTS contexts...",
-    image: "/placeholder.svg?height=300&width=500",
-    category: "Vocabulary",
-    author: { name: "Michael Chen", avatar: "/placeholder.svg?height=40&width=40", role: "Vocabulary Specialist" },
-    tags: ["vocabulary", "wordlist", "essential", "academic"],
-    is_featured: true,
-    like_count: 189,
-    view_count: 2100,
-    comment_count: 67,
-    published_at: "2024-01-12",
-    status: "published",
-    reading_time: "12 min read",
-  },
-  {
-    id: "3",
-    title: "IELTS Speaking Part 2: Cue Card Strategies That Work",
-    slug: "ielts-speaking-part-2-cue-card-strategies",
-    content:
-      "Effective strategies to tackle any cue card topic with confidence and fluency. Learn how to structure your response, use advanced vocabulary, and manage your time effectively...",
-    image: "/placeholder.svg?height=300&width=500",
-    category: "Speaking",
-    author: { name: "Emma Wilson", avatar: "/placeholder.svg?height=40&width=40", role: "Speaking Coach" },
-    tags: ["speaking", "cuecard", "part2", "strategies", "fluency"],
-    is_featured: false,
-    like_count: 156,
-    view_count: 890,
-    comment_count: 23,
-    published_at: "2024-01-10",
-    status: "published",
-    reading_time: "6 min read",
-  },
-  {
-    id: "4",
-    title: "Reading Comprehension: Skimming and Scanning Techniques",
-    slug: "reading-comprehension-skimming-scanning-techniques",
-    content:
-      "Master the art of quickly finding information in IELTS Reading passages. Learn proven techniques that will help you save time and improve accuracy...",
-    image: "/placeholder.svg?height=300&width=500",
-    category: "Reading",
-    author: { name: "David Brown", avatar: "/placeholder.svg?height=40&width=40", role: "Reading Specialist" },
-    tags: ["reading", "skimming", "scanning", "techniques", "speed"],
-    is_featured: false,
-    like_count: 134,
-    view_count: 756,
-    comment_count: 19,
-    published_at: "2024-01-08",
-    status: "published",
-    reading_time: "7 min read",
-  },
-  {
-    id: "5",
-    title: "Common Grammar Mistakes in IELTS Writing",
-    slug: "common-grammar-mistakes-ielts-writing",
-    content:
-      "Avoid these frequent grammar errors that can lower your IELTS Writing score. Learn how to identify and correct common mistakes with practical examples...",
-    image: "/placeholder.svg?height=300&width=500",
-    category: "Grammar",
-    author: { name: "Lisa Anderson", avatar: "/placeholder.svg?height=40&width=40", role: "Grammar Expert" },
-    tags: ["grammar", "mistakes", "writing", "correction", "accuracy"],
-    is_featured: false,
-    like_count: 98,
-    view_count: 623,
-    comment_count: 15,
-    published_at: "2024-01-05",
-    status: "published",
-    reading_time: "5 min read",
-  },
-  {
-    id: "6",
-    title: "IELTS Listening: Note-Taking Strategies for Success",
-    slug: "ielts-listening-note-taking-strategies",
-    content:
-      "Effective note-taking methods to improve your IELTS Listening performance. Learn symbols, abbreviations, and organizational techniques that work...",
-    image: "/placeholder.svg?height=300&width=500",
-    category: "Listening",
-    author: { name: "James Taylor", avatar: "/placeholder.svg?height=40&width=40", role: "Listening Coach" },
-    tags: ["listening", "notetaking", "strategies", "symbols"],
-    is_featured: false,
-    like_count: 87,
-    view_count: 445,
-    comment_count: 12,
-    published_at: "2024-01-03",
-    status: "published",
-    reading_time: "9 min read",
-  },
-]
+// API imports
+import { getPublicBlogCategories, getPublicPublishedBlogs } from "@/api/blog"
+import { IBlog, IBlogCategory } from "@/interface/blog"
 
 export default function BlogsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const featuredBlogs = blogs.filter((blog) => blog.is_featured)
-  const regularBlogs = blogs.filter((blog) => !blog.is_featured)
-
-  const filteredBlogs = regularBlogs.filter((blog) => {
-    const matchesCategory = selectedCategory === "all" || blog.category === selectedCategory
-    return matchesCategory
+  // Fetch blog categories
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
+    queryKey: ['blog-categories'],
+    queryFn: () => getPublicBlogCategories(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
+
+  // Fetch blogs
+  const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useQuery({
+    queryKey: ['published-blogs', currentPage],
+    queryFn: () => getPublicPublishedBlogs({ 
+      page: currentPage, 
+      limit: 12
+    }),
+    staleTime: 1 * 60 * 1000, // 1 minute
+  })
+
+  const categories = Array.isArray(categoriesData?.result) ? categoriesData.result : []
+  const blogs = Array.isArray(blogsData?.result) ? blogsData.result : []
+  const meta = blogsData?.meta
+
+  // Calculate blog counts for each category
+  const categoriesWithCounts = categories.map((category: IBlogCategory) => ({
+    ...category,
+    count: blogs.filter((blog: IBlog) => blog.category_id === category.id).length
+  }))
+
+  const featuredBlogs = blogs.filter((blog: IBlog) => blog.is_featured) || []
+  const regularBlogs = blogs.filter((blog: IBlog) => !blog.is_featured) || []
+
+  const filteredBlogs = selectedCategory === "all" 
+    ? regularBlogs 
+    : regularBlogs.filter((blog: IBlog) => {
+        return blog.category_id === selectedCategory;
+      })
+
+  // Loading state
+  if (categoriesLoading || blogsLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading blogs...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (categoriesError || blogsError) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading blogs. Please try again.</p>
+            <Button onClick={() => window.location.reload()}>Reload Page</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -205,117 +105,127 @@ export default function BlogsPage() {
     },
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       {/* Featured Posts Section */}
-      <motion.section variants={containerVariants} initial="hidden" animate="visible" className="mb-16">
-        <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">Featured Articles</h2>
-              <p className="text-gray-600">Hand-picked content from our expert team</p>
+      {featuredBlogs.length > 0 && (
+        <motion.section variants={containerVariants} initial="hidden" animate="visible" className="mb-16">
+          <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Featured Articles</h2>
+                <p className="text-gray-600">Hand-picked content from our expert team</p>
+              </div>
             </div>
-          </div>
-          <Button variant="outline" className="hidden md:flex items-center gap-2 bg-transparent">
-            View All <ArrowRight className="h-4 w-4" />
-          </Button>
-        </motion.div>
+            <Button variant="outline" className="hidden md:flex items-center gap-2 bg-transparent">
+              View All <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {featuredBlogs.map((blog, index) => (
-            <motion.div
-              key={blog.id}
-              variants={itemVariants}
-              whileHover={{ y: -8 }}
-              onHoverStart={() => setHoveredCard(blog.id)}
-              onHoverEnd={() => setHoveredCard(null)}
-              className="group cursor-pointer"
-            >
-              <Link href={`/blogs/${blog.slug}`}>
-                <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 bg-white">
-                  <div className="relative overflow-hidden">
-                    <motion.div animate={{ scale: hoveredCard === blog.id ? 1.1 : 1 }} transition={{ duration: 0.6 }}>
-                      <Image
-                        src={blog.image || "/placeholder.svg"}
-                        alt={blog.title}
-                        width={500}
-                        height={300}
-                        className="w-full h-64 object-cover"
-                      />
-                    </motion.div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <Badge className="absolute top-4 left-4 bg-blue-600 hover:bg-blue-700 text-white font-medium">
-                      {blog.category}
-                    </Badge>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex items-center gap-4 text-white text-sm">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
-                          {blog.view_count}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Heart className="h-4 w-4" />
-                          {blog.like_count}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="h-4 w-4" />
-                          {blog.comment_count}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="secondary" className="text-xs">
-                        {blog.reading_time}
+          <div className="grid md:grid-cols-2 gap-8">
+            {Array.isArray(featuredBlogs) && featuredBlogs.map((blog: IBlog) => (
+              <motion.div
+                key={blog.id}
+                variants={itemVariants}
+                whileHover={{ y: -8 }}
+                onHoverStart={() => setHoveredCard(blog.id)}
+                onHoverEnd={() => setHoveredCard(null)}
+                className="group cursor-pointer"
+              >
+                <Link href={`/blogs/${blog.id}`}>
+                  <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-500 bg-white">
+                    <div className="relative overflow-hidden">
+                      <motion.div animate={{ scale: hoveredCard === blog.id ? 1.1 : 1 }} transition={{ duration: 0.6 }}>
+                        <Image
+                          src={blog.image || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNmM2Y0ZjYiLz4KICA8cmVjdCB4PSIxNTAiIHk9IjEwMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHJ4PSI4IiBmaWxsPSIjZTVlN2ViIi8+CiAgPHBhdGggZD0iTTE3NSAxMjUgTDE3NSAxMzUgTDE4NSAxMzUgTDE4NSAxMjUgWiBNMTc1IDE0MCBMMTU1IDE1MCBMMTQ1IDE1MCBMMDU1IDE0MCBaIE0xOTAgMTI1IEwxOTAgMTM1IEwyMDAgMTM1IEwyMDAgMTI1IFogTTE5MCAxNDAgTDE5MCAxNTAgTDIwMCAxNTAgTDIwMCAxNDAgWiIgZmlsbD0iIzljYTNhZiIvPgogIDxjaXJjbGUgY3g9IjE4MCIgY3k9IjEzMCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgogIDxjaXJjbGUgY3g9IjE5NSIgY3k9IjEzMCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgogIDx0ZXh0IHg9IjIwMCIgeT0iMTU1IiBmaWxsPSIjNmI3MjgwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4="}
+                          alt={blog.title}
+                          width={500}
+                          height={300}
+                          className="w-full h-64 object-cover"
+                        />
+                      </motion.div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <Badge className="absolute top-4 left-4 bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                        {categoriesWithCounts.find(cat => cat.id === blog.category_id)?.name || blog.category || "Uncategorized"}
                       </Badge>
-                      <span className="text-xs text-gray-500">•</span>
-                      <span className="text-xs text-gray-500">{new Date(blog.published_at).toLocaleDateString()}</span>
-                    </div>
-
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                      {blog.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 line-clamp-3">{blog.content}</p>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10 ring-2 ring-blue-100">
-                          <AvatarImage src={blog.author.avatar || "/placeholder.svg"} />
-                          <AvatarFallback className="bg-blue-100 text-blue-600">
-                            {blog.author.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{blog.author.name}</p>
-                          <p className="text-xs text-gray-500">{blog.author.role}</p>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="flex items-center gap-4 text-white text-sm">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            {blog.view_count || 0}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Heart className="h-4 w-4" />
+                            {blog.like_count || 0}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="h-4 w-4" />
+                            {blog.comment_count || 0}
+                          </div>
                         </div>
                       </div>
-                      <Button size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        Read More
-                      </Button>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {blog.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs hover:bg-blue-50">
-                          <Tag className="h-3 w-3 mr-1" />
-                          {tag}
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge variant="secondary" className="text-xs">
+                          {blog.reading_time || "5 min read"}
                         </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </motion.section>
+                        <span className="text-xs text-gray-500">•</span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(blog.published_at || new Date()).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                        {blog.title}
+                      </h3>
+                      <p className="text-gray-600 mb-4 line-clamp-3">
+                        {blog.content?.replace(/<[^>]*>/g, '').substring(0, 200) || 'No content available'}
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-10 w-10 ring-2 ring-blue-100">
+                            <AvatarImage src={blog.author?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} />
+                            <AvatarFallback className="bg-blue-100 text-blue-600">
+                              {blog.author?.name
+                                ?.split(" ")
+                                .map((n: string) => n[0])
+                                .join("") || "AU"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{blog.author?.name || "Unknown Author"}</p>
+                            <p className="text-xs text-gray-500">{blog.author?.role || "Writer"}</p>
+                          </div>
+                        </div>
+                        <Button size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          Read More
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {blog.tags?.slice(0, 3).map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs hover:bg-blue-50">
+                            <Tag className="h-3 w-3 mr-1" />
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       <div className="grid lg:grid-cols-4 gap-8">
         {/* Main Content */}
@@ -348,17 +258,17 @@ export default function BlogsPage() {
                   </Badge>
                 </Button>
               </motion.div>
-              {categories.map((category) => (
+              {Array.isArray(categoriesWithCounts) && categoriesWithCounts.map((category: IBlogCategory) => (
                 <motion.div key={category.id} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
-                    variant={selectedCategory === category.name ? "default" : "outline"}
-                    onClick={() => setSelectedCategory(category.name)}
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    onClick={() => setSelectedCategory(category.id)}
                     className="rounded-full"
                   >
-                    <div className={`w-2 h-2 rounded-full ${category.color} mr-2`} />
+                    <div className={`w-2 h-2 rounded-full ${category.color || 'bg-blue-500'} mr-2`} />
                     {category.name}
                     <Badge variant="secondary" className="ml-2">
-                      {category.count}
+                      {category.count || 0}
                     </Badge>
                   </Button>
                 </motion.div>
@@ -374,7 +284,7 @@ export default function BlogsPage() {
               animate="visible"
               className="grid md:grid-cols-2 gap-6"
             >
-              {filteredBlogs.map((blog, index) => (
+              {Array.isArray(filteredBlogs) && filteredBlogs.map((blog: IBlog) => (
                 <motion.div
                   key={blog.id}
                   variants={itemVariants}
@@ -384,7 +294,7 @@ export default function BlogsPage() {
                   onHoverEnd={() => setHoveredCard(null)}
                   className="group cursor-pointer"
                 >
-                  <Link href={`/blogs/${blog.slug}`}>
+                  <Link href={`/blogs/${blog.id}`}>
                     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 bg-white">
                       <div className="relative overflow-hidden">
                         <motion.div
@@ -392,7 +302,7 @@ export default function BlogsPage() {
                           transition={{ duration: 0.4 }}
                         >
                           <Image
-                            src={blog.image || "/placeholder.svg"}
+                            src={blog.image || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDQwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNmM2Y0ZjYiLz4KICA8cmVjdCB4PSIxNTAiIHk9IjUwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjgiIGZpbGw9IiNlNWU3ZWIiLz4KICA8Y2lyY2xlIGN4PSIxODAiIGN5PSI4MCIgcj0iMyIgZmlsbD0iIzljYTNhZiIvPgogIDxjaXJjbGUgY3g9IjE5NSIgY3k9IjgwIiByPSIzIiBmaWxsPSIjOWNhM2FmIi8+CiAgPHRleHQgeD0iMjAwIiB5PSIxMjAiIGZpbGw9IiM2YjcyODAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Tm8gSW1hZ2U8L3RleHQ+Cjwvc3ZnPg=="}
                             alt={blog.title}
                             width={400}
                             height={200}
@@ -401,7 +311,7 @@ export default function BlogsPage() {
                         </motion.div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Badge className="absolute top-3 left-3 bg-white/90 text-gray-900 hover:bg-white">
-                          {blog.category}
+                          {categoriesWithCounts.find(cat => cat.id === blog.category_id)?.name || blog.category || "Uncategorized"}
                         </Badge>
                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
@@ -413,50 +323,52 @@ export default function BlogsPage() {
                       <CardContent className="p-5">
                         <div className="flex items-center gap-2 mb-3">
                           <Badge variant="outline" className="text-xs">
-                            {blog.reading_time}
+                            {blog.reading_time || "5 min read"}
                           </Badge>
                           <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-500">
-                            {new Date(blog.published_at).toLocaleDateString()}
+                            {new Date(blog.published_at || new Date()).toLocaleDateString()}
                           </span>
                         </div>
 
                         <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                           {blog.title}
                         </h3>
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{blog.content}</p>
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                          {blog.content?.replace(/<[^>]*>/g, '').substring(0, 150) || 'No content available'}
+                        </p>
 
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-2">
                             <Avatar className="h-7 w-7">
-                              <AvatarImage src={blog.author.avatar || "/placeholder.svg"} />
+                              <AvatarImage src={blog.author?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} />
                               <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
-                                {blog.author.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
+                                {blog.author?.name
+                                  ?.split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("") || "AU"}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <span className="text-xs font-medium text-gray-700">{blog.author.name}</span>
-                              <p className="text-xs text-gray-500">{blog.author.role}</p>
+                              <span className="text-xs font-medium text-gray-700">{blog.author?.name || "Unknown Author"}</span>
+                              <p className="text-xs text-gray-500">{blog.author?.role || "Writer"}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
-                              {blog.view_count}
+                              {blog.view_count || 0}
                             </div>
                             <div className="flex items-center gap-1">
                               <Heart className="h-3 w-3" />
-                              {blog.like_count}
+                              {blog.like_count || 0}
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between">
                           <div className="flex flex-wrap gap-1">
-                            {blog.tags.slice(0, 2).map((tag) => (
+                            {blog.tags?.slice(0, 2).map((tag: string) => (
                               <Badge key={tag} variant="secondary" className="text-xs">
                                 {tag}
                               </Badge>
@@ -479,30 +391,43 @@ export default function BlogsPage() {
           </AnimatePresence>
 
           {/* Pagination */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex justify-center mt-12"
-          >
-            <div className="flex space-x-2">
-              <Button variant="outline" disabled className="rounded-full bg-transparent">
-                Previous
-              </Button>
-              <Button variant="default" className="rounded-full">
-                1
-              </Button>
-              <Button variant="outline" className="rounded-full bg-transparent">
-                2
-              </Button>
-              <Button variant="outline" className="rounded-full bg-transparent">
-                3
-              </Button>
-              <Button variant="outline" className="rounded-full bg-transparent">
-                Next
-              </Button>
-            </div>
-          </motion.div>
+          {meta && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex justify-center mt-12"
+            >
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="rounded-full bg-transparent"
+                >
+                  Previous
+                </Button>
+                {meta?.pages && Array.from({ length: meta.pages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    onClick={() => handlePageChange(page)}
+                    className="rounded-full"
+                  >
+                    {page}
+                  </Button>
+                ))}
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === (meta?.pages || 1)}
+                  className="rounded-full bg-transparent"
+                >
+                  Next
+                </Button>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -522,21 +447,21 @@ export default function BlogsPage() {
                 </h3>
               </CardHeader>
               <CardContent className="space-y-2">
-                {categories.map((category) => (
+                {Array.isArray(categoriesWithCounts) && categoriesWithCounts.map((category: IBlogCategory) => (
                   <motion.div
                     key={category.id}
                     whileHover={{ x: 4 }}
                     className="flex items-center justify-between p-3 rounded-lg hover:bg-blue-50 cursor-pointer transition-all group"
-                    onClick={() => setSelectedCategory(category.name)}
+                    onClick={() => setSelectedCategory(category.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${category.color}`} />
+                      <div className={`w-3 h-3 rounded-full ${category.color || 'bg-blue-500'}`} />
                       <span className="text-sm text-gray-700 group-hover:text-blue-600 font-medium">
                         {category.name}
                       </span>
                     </div>
                     <Badge variant="secondary" className="text-xs">
-                      {category.count}
+                      {category.count || 0}
                     </Badge>
                   </motion.div>
                 ))}
@@ -552,7 +477,7 @@ export default function BlogsPage() {
                 </h3>
               </CardHeader>
               <CardContent className="space-y-4">
-                {blogs.slice(0, 3).map((blog, index) => (
+                {Array.isArray(blogs) && blogs.slice(0, 3).map((blog: IBlog, index: number) => (
                   <motion.div
                     key={blog.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -561,10 +486,10 @@ export default function BlogsPage() {
                     whileHover={{ scale: 1.02 }}
                     className="flex space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-all group"
                   >
-                    <Link href={`/blogs/${blog.slug}`} className="flex space-x-3 w-full">
+                    <Link href={`/blogs/${blog.id}`} className="flex space-x-3 w-full">
                       <div className="relative">
                         <Image
-                          src={blog.image || "/placeholder.svg"}
+                          src={blog.image || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNmOWZhZmIiLz4KICA8cmVjdCB4PSIxNTAiIHk9IjEwMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlNWU3ZWIiLz4KICA8Y2lyY2xlIGN4PSIxNzAiIGN5PSIxMzAiIHI9IjEwIiBmaWxsPSIjOWNhM2FmIi8+CiAgPHBhdGggZD0ibTE1MCAyMDBsNTAtNTAgNTAgNTB6IiBmaWxsPSIjOWNhM2FmIi8+CiAgPHRleHQgeD0iMjAwIiB5PSIyNDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2Yjc0ODEiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiI+Tm8gSW1hZ2U8L3RleHQ+Cjwvc3ZnPg=="}
                           alt={blog.title}
                           width={60}
                           height={60}
@@ -579,11 +504,11 @@ export default function BlogsPage() {
                         <div className="flex items-center gap-3 text-xs text-gray-500">
                           <div className="flex items-center gap-1">
                             <Heart className="h-3 w-3" />
-                            {blog.like_count}
+                            {blog.like_count || 0}
                           </div>
                           <div className="flex items-center gap-1">
                             <Eye className="h-3 w-3" />
-                            {blog.view_count}
+                            {blog.view_count || 0}
                           </div>
                         </div>
                       </div>
