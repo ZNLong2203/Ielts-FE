@@ -50,7 +50,7 @@ export const deleteBlogCategory = async (id: string) => {
   return response.data;
 };
 
-export const getBlogCategoryById = async (id: string): Promise<IBlogCategory> => {
+export const getBlogCategory = async (id: string): Promise<IBlogCategory> => {
   const response = await api.get(`${BASE_URL}${API_URL.ADMIN_BLOG_CATEGORY}/${id}`);
   console.log(response);
   return response.data.data;

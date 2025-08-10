@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getBlogCategory } from "@/api/blogCategory";
+import { getCourseCategory } from "@/api/courseCategory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -17,36 +17,34 @@ import {
 import { ArrowLeft, Edit, FileText } from "lucide-react";
 import ROUTES from "@/constants/route";
 
-const BlogCategoryDetail = () => {
+const CourseCategoryDetail = () => {
   const router = useRouter();
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ["blogCategory", slug],
-    queryFn: () => getBlogCategory(slug),
-    enabled: !!slug,
-    retry: false,
+    queryKey: ["courseCategory", slug],
+    queryFn: () => getCourseCategory(slug),
   });
 
-  if (isPending) {
+    if (isPending) {
     return <Loading />;
   }
 
   if (isError) {
     return (
       <Error
-        title="Blog Category Not Found"
-        description="The requested blog category does not exist or has been deleted."
+        title="Course Category Not Found"
+        description="The requested course category does not exist or has been deleted."
         dismissible={true}
-        onDismiss={() => router.push(ROUTES.ADMIN_BLOG_CATEGORIES)}
+        onDismiss={() => router.push(ROUTES.ADMIN_COURSE_CATEGORIES)}
         onRetry={() => refetch()}
         onGoBack={() => router.back()}
       />
     );
   }
 
-  return (
+    return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b shadow-sm">
@@ -68,7 +66,7 @@ const BlogCategoryDetail = () => {
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
-                <span>Edit Blog Category</span>
+                <span>Edit Course Category</span>
               </Button>
             </div>
           </div>
@@ -81,7 +79,7 @@ const BlogCategoryDetail = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <FileText className="h-5 w-5 text-blue-600" />
-              <span>Blog Category Information</span>
+              <span>Course Category Information</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -89,7 +87,7 @@ const BlogCategoryDetail = () => {
               <div className="space-y-4">
                 <TextInfoField label="Category Name" value={data.name} />
 
-                <TextInfoField label="URL Slug" value={data.slug} />
+                <TextInfoField label="Icon" value={data.icon} />
               </div>
 
               <div className="space-y-4">
@@ -127,4 +125,4 @@ const BlogCategoryDetail = () => {
   );
 };
 
-export default BlogCategoryDetail;
+export default CourseCategoryDetail;

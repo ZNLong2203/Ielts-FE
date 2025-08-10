@@ -17,23 +17,23 @@ import {
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
-import { columns } from "@/components/admin/blogCategory/blogCategoryColumn.";
+import { columns } from "@/components/admin/courseCategory/courseCategoryColumn";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getBlogCategories } from "@/api/blogCategory";
+import { getCourseCategories } from "@/api/courseCategory";
 import { useFilter } from "@/hook/useFilter";
 import ROUTES from "@/constants/route";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 
-const BlogCategoryTable = () => {
+const CourseCategoryTable = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["blogCategories", page],
-    queryFn: () => getBlogCategories({ page }),
+    queryKey: ["courseCategories", page],
+    queryFn: () => getCourseCategories({ page }),
   });
 
   // Meta information
@@ -43,7 +43,7 @@ const BlogCategoryTable = () => {
   const totalPages = data?.meta?.pages || 1;
 
   // Define which fields to filter
-  const filterFields = ["name", "slug", "is_active"];
+  const filterFields = ["name", "is_active"];
 
   // Use the filter hook
   const {
@@ -57,15 +57,14 @@ const BlogCategoryTable = () => {
   } = useFilter(data?.result || [], filterFields);
   const hasActiveFilters = Object.values(filters).some((value) => value !== "");
   const activeFilterCount = Object.values(filters).filter(
-    (v) => v !== ""
+    (value) => value !== ""
   ).length;
   const filteredCount = filteredData.length;
 
-  const activeBlogCategories = filteredData.filter(
+  const activeCourseCategories = filteredData.filter(
     (category) => category.is_active === true
   ).length;
-
-  const inactiveBlogCategories = filteredData.filter(
+  const inactiveCourseCategories = filteredData.filter(
     (category) => category.is_active === false
   ).length;
 
@@ -85,8 +84,8 @@ const BlogCategoryTable = () => {
   if (isError) {
     return (
       <Error
-        title="Error Loading Blog Categories"
-        description="There was an error loading the blog categories. Please try again later."
+        title="Error Loading Course Categories"
+        description="There was an error loading the course categories. Please try again later."
         onRetry={() => refetch()}
       />
     );
@@ -102,14 +101,6 @@ const BlogCategoryTable = () => {
       ),
     },
     {
-      key: "slug",
-      label: "Slug",
-      placeholder: "Search by slug",
-      icon: (
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-      ),
-    },
-    {
       key: "is_active",
       label: "Status",
       placeholder: "Filter by status",
@@ -118,14 +109,15 @@ const BlogCategoryTable = () => {
       ),
     },
   ];
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between">
         <div>
           <Heading
-            title="Blog Category Management"
-            description="Manage your blog categories here."
+            title="Course Category Management"
+            description="Manage your course categories here."
           />
         </div>
         <div className="flex items-center space-x-2">
@@ -164,7 +156,7 @@ const BlogCategoryTable = () => {
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() =>
-              router.push(ROUTES.ADMIN_BLOG_CATEGORIES + "/create")
+              router.push(ROUTES.ADMIN_COURSE_CATEGORIES + "/create")
             }
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -209,7 +201,7 @@ const BlogCategoryTable = () => {
               {hasActiveFilters ? filteredCount : data?.result?.length || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              Blog categories {hasActiveFilters ? "filtered" : "displayed"}
+              Course categories {hasActiveFilters ? "filtered" : "displayed"}
             </p>
           </CardContent>
         </Card>
@@ -221,10 +213,10 @@ const BlogCategoryTable = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {activeBlogCategories}
+              {activeCourseCategories}
             </div>
             <p className="text-xs text-muted-foreground">
-              Blog categories verified and active
+              Course categories verified and active
             </p>
           </CardContent>
         </Card>
@@ -238,10 +230,10 @@ const BlogCategoryTable = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {inactiveBlogCategories}
+              {inactiveCourseCategories}
             </div>
             <p className="text-xs text-muted-foreground">
-              Blog categories not verified or inactive
+              Course categories not verified or inactive
             </p>
           </CardContent>
         </Card>
@@ -266,14 +258,14 @@ const BlogCategoryTable = () => {
       <Card>
         <CardContent>
           {isLoading ? (
-             <Loading />
+            <Loading />
           ) : (
             <div className="space-y-4">
               <DataTable
                 columns={columns}
                 data={filteredData}
-                searchKey={["name", "slug"]}
-                searchPlaceholder="Search by name or slug..."
+                searchKey={["name"]}
+                searchPlaceholder="Search by name..."
               />
 
               {/* Enhanced Pagination */}
@@ -389,4 +381,4 @@ const BlogCategoryTable = () => {
   );
 };
 
-export default BlogCategoryTable;
+export default CourseCategoryTable;

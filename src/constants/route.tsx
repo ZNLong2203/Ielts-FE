@@ -12,6 +12,8 @@ const ROUTES = {
   ADMIN_TEACHERS: "/admin/teacher",
   ADMIN_BLOG_CATEGORIES: "/admin/blogCategory",
   ADMIN_BLOGS: "/admin/blog",
+  ADMIN_COURSE_CATEGORIES: "/admin/courseCategory",
+  ADMIN_COURSES: "/admin/course",
 };
 
 export default ROUTES;

@@ -627,17 +627,6 @@ const BlogTable = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* Filter Panel
-        <AdminFilter
-          isVisible={isFilterVisible}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onClearFilters={handleClearFilters}
-          onClose={handleClose}
-          isVisible={isFilterVisible}
-
-        /> */}
     </div>
   );
 };
