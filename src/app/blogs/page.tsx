@@ -192,17 +192,17 @@ export default function BlogsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-10 w-10 ring-2 ring-blue-100">
-                            <AvatarImage src={blog.author?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} />
+                            <AvatarImage src={blog.users?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} />
                             <AvatarFallback className="bg-blue-100 text-blue-600">
-                              {blog.author?.name
+                              {blog.users?.full_name
                                 ?.split(" ")
                                 .map((n: string) => n[0])
                                 .join("") || "AU"}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{blog.author?.name || "Unknown Author"}</p>
-                            <p className="text-xs text-gray-500">{blog.author?.role || "Writer"}</p>
+                            <p className="text-sm font-medium text-gray-900">{blog.users?.full_name || "Unknown Author"}</p>
+                            <p className="text-xs text-gray-500">{blog.users?.role || "Writer"}</p>
                           </div>
                         </div>
                         <Button size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -341,17 +341,17 @@ export default function BlogsPage() {
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-2">
                             <Avatar className="h-7 w-7">
-                              <AvatarImage src={blog.author?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} />
+                              <AvatarImage src={blog.users?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} />
                               <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
-                                {blog.author?.name
+                                {blog.users?.full_name
                                   ?.split(" ")
                                   .map((n: string) => n[0])
                                   .join("") || "AU"}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <span className="text-xs font-medium text-gray-700">{blog.author?.name || "Unknown Author"}</span>
-                              <p className="text-xs text-gray-500">{blog.author?.role || "Writer"}</p>
+                              <span className="text-xs font-medium text-gray-700">{blog.users?.full_name || "Unknown Author"}</span>
+                              <p className="text-xs text-gray-500">{blog.users?.role || "Writer"}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-500">

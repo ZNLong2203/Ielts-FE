@@ -1,8 +1,200 @@
-/* Tạo file: src/components/richTextEditor/richTextEditor.css */
+/* Rich Text Editor Styles */
 
+.rich-text-editor .ProseMirror {
+  outline: none;
+  min-height: 200px;
+  padding: 1rem;
+}
+
+/* Headings */
+.rich-text-editor .ProseMirror h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.rich-text-editor .ProseMirror h2 {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.rich-text-editor .ProseMirror h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.rich-text-editor .ProseMirror h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.rich-text-editor .ProseMirror h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.rich-text-editor .ProseMirror h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+/* Paragraphs */
+.rich-text-editor .ProseMirror p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+/* Lists */
+.rich-text-editor .ProseMirror ul {
+  list-style-type: disc;
+  list-style-position: inside;
+  padding-left: 0;
+  margin-left: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-editor .ProseMirror ol {
+  list-style-type: decimal;
+  list-style-position: inside;
+  padding-left: 0;
+  margin-left: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rich-text-editor .ProseMirror li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+  padding-left: 0;
+}
+
+.rich-text-editor .ProseMirror ul li {
+  list-style-type: disc;
+  list-style-position: inside;
+  display: list-item;
+}
+
+.rich-text-editor .ProseMirror ol li {
+  list-style-type: decimal;
+  list-style-position: inside;
+  display: list-item;
+}
+
+/* Nested lists */
+.rich-text-editor .ProseMirror ul ul {
+  list-style-type: circle;
+  list-style-position: inside;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  margin-left: 1rem;
+}
+
+.rich-text-editor .ProseMirror ul ul ul {
+  list-style-type: square;
+  list-style-position: inside;
+  margin-left: 2rem;
+}
+
+.rich-text-editor .ProseMirror ol ol {
+  list-style-type: lower-alpha;
+  list-style-position: inside;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  margin-left: 1rem;
+}
+
+.rich-text-editor .ProseMirror ol ol ol {
+  list-style-type: lower-roman;
+  list-style-position: inside;
+  margin-left: 2rem;
+}
+
+/* Task Lists */
+.rich-text-editor .ProseMirror ul[data-type="taskList"] {
+  list-style: none !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.rich-text-editor .ProseMirror li[data-type="taskItem"] {
+  display: flex !important;
+  align-items: center;
+  list-style: none !important;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.rich-text-editor .ProseMirror li[data-type="taskItem"] > label {
+  margin-right: 0.5rem;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.rich-text-editor .ProseMirror li[data-type="taskItem"] > div {
+  flex: 1;
+}
+
+/* Blockquotes */
+.rich-text-editor .ProseMirror blockquote {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+/* Code */
+.rich-text-editor .ProseMirror code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+/* Links */
+.rich-text-editor .ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.rich-text-editor .ProseMirror a:hover {
+  color: #1d4ed8;
+}
+
+/* Images */
+.rich-text-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+/* Tables */
 .rich-text-editor .ProseMirror table {
   border-collapse: collapse;
-  margin: 0;
+  margin: 1rem 0;
   overflow: hidden;
   table-layout: fixed;
   width: 100%;
@@ -27,4 +219,45 @@
 
 .rich-text-editor .ProseMirror table .selectedCell {
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Horizontal Rule */
+.rich-text-editor .ProseMirror hr {
+  border: none;
+  border-top: 2px solid #d1d5db;
+  margin: 2rem 0;
+}
+
+/* Text alignment */
+.rich-text-editor .ProseMirror [style*="text-align: center"] {
+  text-align: center;
+}
+
+.rich-text-editor .ProseMirror [style*="text-align: right"] {
+  text-align: right;
+}
+
+.rich-text-editor .ProseMirror [style*="text-align: justify"] {
+  text-align: justify;
+}
+
+/* Highlighting */
+.rich-text-editor .ProseMirror mark {
+  background-color: #fbbf24;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+/* Focus styles */
+.rich-text-editor .ProseMirror:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
 }

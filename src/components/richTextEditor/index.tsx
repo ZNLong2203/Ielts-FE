@@ -42,6 +42,19 @@ const RichTextField = ({
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
+          HTMLAttributes: {
+            class: 'prose-headings',
+          },
+        },
+        bulletList: {
+          HTMLAttributes: {
+            class: 'prose-bullets',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'prose-ordered',
+          },
         },
       }),
       TextAlign.configure({
@@ -98,7 +111,10 @@ const RichTextField = ({
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       if (onChange) {
-        onChange(editor.getHTML());
+        const newContent = editor.getHTML();
+        if (newContent !== content) {
+          onChange(newContent);
+        }
       }
     },
     editorProps: {
@@ -106,6 +122,20 @@ const RichTextField = ({
         class: cn(
           "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none p-4",
           "min-h-[200px] max-w-none",
+          // Ensure headings are styled properly
+          "[&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-4",
+          "[&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-5 [&_h2]:mb-3",
+          "[&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2",
+          "[&_h4]:text-lg [&_h4]:font-semibold [&_h4]:mt-3 [&_h4]:mb-2",
+          "[&_h5]:text-base [&_h5]:font-semibold [&_h5]:mt-2 [&_h5]:mb-1",
+          "[&_h6]:text-sm [&_h6]:font-semibold [&_h6]:mt-2 [&_h6]:mb-1",
+          // Lists styling
+          "[&_ul]:list-disc [&_ul]:list-inside [&_ul]:my-2",
+          "[&_ol]:list-decimal [&_ol]:list-inside [&_ol]:my-2",
+          "[&_li]:my-1",
+          // Other elements
+          "[&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-4 [&_blockquote]:italic",
+          "[&_p]:my-2",
           className
         ),
         placeholder,
@@ -113,12 +143,24 @@ const RichTextField = ({
     },
   });
 
-  // Thêm useEffect để cập nhật content
+  // Update content when prop changes
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+      editor.commands.setContent(content || "");
     }
   }, [editor, content]);
+
+  // Debug effect to check if editor is working
+  useEffect(() => {
+    if (editor) {
+      console.log("Editor initialized successfully");
+      console.log("Editor commands available:", Object.keys(editor.commands));
+    }
+  }, [editor]);
+
+  if (!editor) {
+    return <div className="border rounded-lg p-4 bg-gray-100">Loading editor...</div>;
+  }
 
 
   return (

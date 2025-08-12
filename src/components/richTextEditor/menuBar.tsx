@@ -6,9 +6,6 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Heading4,
-  Heading5,
-  Heading6,
   Highlighter,
   Italic,
   List,
@@ -17,18 +14,16 @@ import {
   Underline as UnderlineIcon,
   Link,
   Link2Off,
-  Image,
+  ImageIcon,
   Table,
   Quote,
   Code,
   Undo,
   Redo,
-  Type,
   Palette,
   AlignJustify,
   Minus,
   CheckSquare,
-  MoreVertical,
 } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
@@ -88,6 +83,16 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
     editor.chain().focus().setColor(color).run();
   };
 
+  // Helper function to handle heading toggle
+  const toggleHeading = (level: 1 | 2 | 3 | 4 | 5 | 6) => {
+    const isActive = editor.isActive("heading", { level });
+    if (isActive) {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      editor.chain().focus().toggleHeading({ level }).run();
+    }
+  };
+
   const colors = [
     "#000000", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", 
     "#FF00FF", "#00FFFF", "#FFA500", "#800080", "#008000"
@@ -142,22 +147,25 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       <div className="flex items-center gap-1">
         <Toggle
           pressed={editor.isActive("heading", { level: 1 })}
-          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          onPressedChange={() => toggleHeading(1)}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <Heading1 className="h-4 w-4" />
         </Toggle>
         <Toggle
           pressed={editor.isActive("heading", { level: 2 })}
-          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          onPressedChange={() => toggleHeading(2)}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <Heading2 className="h-4 w-4" />
         </Toggle>
         <Toggle
           pressed={editor.isActive("heading", { level: 3 })}
-          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          onPressedChange={() => toggleHeading(3)}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <Heading3 className="h-4 w-4" />
         </Toggle>
@@ -171,6 +179,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("bold")}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <Bold className="h-4 w-4" />
         </Toggle>
@@ -178,6 +187,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("italic")}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <Italic className="h-4 w-4" />
         </Toggle>
@@ -185,6 +195,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("underline")}
           onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <UnderlineIcon className="h-4 w-4" />
         </Toggle>
@@ -192,6 +203,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("strike")}
           onPressedChange={() => editor.chain().focus().toggleStrike().run()}
           size="sm"
+          className="data-[state=on]:bg-blue-100 data-[state=on]:text-blue-900"
         >
           <Strikethrough className="h-4 w-4" />
         </Toggle>
@@ -199,6 +211,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("highlight")}
           onPressedChange={() => editor.chain().focus().toggleHighlight().run()}
           size="sm"
+          className="data-[state=on]:bg-yellow-100 data-[state=on]:text-yellow-900"
         >
           <Highlighter className="h-4 w-4" />
         </Toggle>
@@ -238,6 +251,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive({ textAlign: "left" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("left").run()}
           size="sm"
+          className="data-[state=on]:bg-green-100 data-[state=on]:text-green-900"
         >
           <AlignLeft className="h-4 w-4" />
         </Toggle>
@@ -245,6 +259,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive({ textAlign: "center" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("center").run()}
           size="sm"
+          className="data-[state=on]:bg-green-100 data-[state=on]:text-green-900"
         >
           <AlignCenter className="h-4 w-4" />
         </Toggle>
@@ -252,6 +267,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive({ textAlign: "right" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("right").run()}
           size="sm"
+          className="data-[state=on]:bg-green-100 data-[state=on]:text-green-900"
         >
           <AlignRight className="h-4 w-4" />
         </Toggle>
@@ -259,6 +275,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive({ textAlign: "justify" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("justify").run()}
           size="sm"
+          className="data-[state=on]:bg-green-100 data-[state=on]:text-green-900"
         >
           <AlignJustify className="h-4 w-4" />
         </Toggle>
@@ -272,6 +289,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("bulletList")}
           onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
           size="sm"
+          className="data-[state=on]:bg-purple-100 data-[state=on]:text-purple-900"
         >
           <List className="h-4 w-4" />
         </Toggle>
@@ -279,6 +297,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("orderedList")}
           onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
           size="sm"
+          className="data-[state=on]:bg-purple-100 data-[state=on]:text-purple-900"
         >
           <ListOrdered className="h-4 w-4" />
         </Toggle>
@@ -286,6 +305,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("taskList")}
           onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
           size="sm"
+          className="data-[state=on]:bg-purple-100 data-[state=on]:text-purple-900"
         >
           <CheckSquare className="h-4 w-4" />
         </Toggle>
@@ -299,6 +319,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("blockquote")}
           onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
           size="sm"
+          className="data-[state=on]:bg-gray-100 data-[state=on]:text-gray-900"
         >
           <Quote className="h-4 w-4" />
         </Toggle>
@@ -306,6 +327,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           pressed={editor.isActive("code")}
           onPressedChange={() => editor.chain().focus().toggleCode().run()}
           size="sm"
+          className="data-[state=on]:bg-gray-100 data-[state=on]:text-gray-900"
         >
           <Code className="h-4 w-4" />
         </Toggle>
@@ -359,7 +381,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       <Popover open={isImageOpen} onOpenChange={setIsImageOpen}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="sm">
-            <Image className="h-4 w-4" />
+            <ImageIcon className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-80">

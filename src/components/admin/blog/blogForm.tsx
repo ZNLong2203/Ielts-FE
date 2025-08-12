@@ -22,8 +22,8 @@ import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBlog } from "@/api/blog";
 import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
-import { useEffect, useState } from "react";
-import { Save, Eye, FileText, Image, Tag, Settings } from "lucide-react";
+import { useEffect } from "react";
+import { Save, Eye, FileText, ImageIcon, Tag, Settings } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { getBlog, updateBlogByAdmin } from "@/api/blog";
 import { getBlogCategories } from "@/api/blogCategory";
@@ -122,15 +122,15 @@ const BlogForm = () => {
         is_featured: blogData.is_featured,
       });
     }
-  }, [blogData]);
+  }, [blogData, blogForm]);
 
   const onSubmit = async (formData: z.infer<typeof BlogCreateSchema>) => {
     console.log("Blog data:", formData);
     if (slug && slug !== "") {
       return updateBlogMutation.mutate({
         ...formData,
-        is_featured: (formData as any).is_featured ?? false,
-      });
+        is_featured: formData.is_featured ?? false,
+      } as z.infer<typeof BlogUpdateSchema>);
     } else {
       return createBlogMutation.mutate(formData);
     }
@@ -216,7 +216,7 @@ const BlogForm = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <Image className="h-5 w-5 text-green-600" />
+                      <ImageIcon className="h-5 w-5 text-green-600" />
                       <span>Featured Image Content</span>
                     </CardTitle>
                   </CardHeader>

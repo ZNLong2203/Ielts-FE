@@ -13,9 +13,11 @@ export interface IBlog {
   comment_count?: number;
   published_at?: Date | string;
   reading_time?: string;
-  author?: {
-    name: string;
+  users?: {
+    id?: string;
+    full_name?: string;
     avatar?: string;
+    email?: string;
     role?: string;
   };
   category?: string;
