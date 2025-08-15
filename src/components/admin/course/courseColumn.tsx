@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Calendar, Shield } from "lucide-react";
-import CellAction from "@/components/admin/blog/blogAction";
+import CellAction from "@/components/admin/course/courseAction";
 import { TextBadgeInfo } from "@/components/ui/info";
 import { ICourse } from "@/interface/course";
 
@@ -231,5 +231,28 @@ export const columns: ColumnDef<ICourse>[] = [
     cell: ({ row }) => (
       <TextBadgeInfo status={row.original.is_featured ? "True" : "False"} />
     ),
+  },
+  {
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="hover:bg-secondary/20"
+      >
+        <Calendar className="text-muted-foreground" />
+        Created At
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <div className="text-sm text-muted-foreground">
+        {new Date(row.original.created_at).toLocaleDateString()}
+      </div>
+    ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <CellAction data={row.original} />,
   },
 ];

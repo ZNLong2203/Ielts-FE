@@ -21,6 +21,16 @@ export const getAllCoursesForAdmin = async (params?: {
   return response.data.data;
 };
 
+export const getAdminFeaturedCourses = async (): Promise<ICourse[]> => {
+  const response = await api.get(`${BASE_URL}${API_URL.COURSES}/featured`);
+  return response.data.data;
+};
+
+export const getAdminNewestCourses = async (): Promise<ICourse[]> => {
+  const response = await api.get(`${BASE_URL}${API_URL.COURSES}/newest`);
+  return response.data.data;
+};
+
 export const getAdminCourseDetail = async (id: string): Promise<ICourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/${id}`);
   return response.data.data;
