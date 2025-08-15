@@ -41,8 +41,8 @@ export const createAdminCourse = async (data: ICourseCreate) => {
   return response.data;
 };
 
-export const updateAdminCourse = async (data: ICourseUpdate) => {
-  const response = await api.patch(`${BASE_URL}${API_URL.COURSES}`, data);
+export const updateAdminCourse = async (id: string, data: ICourseUpdate) => {
+  const response = await api.patch(`${BASE_URL}${API_URL.COURSES}/${id}`, data);
   return response.data;
 };
 

@@ -1,6 +1,6 @@
 import BlogCategoryForm from "@/components/admin/blogCategory/blogCategoryForm";
 
-const BlogCategoryAdminFormPage = () => {
+const BlogCategoryAdminUpdatePage = () => {
   return (
     <div>
       <BlogCategoryForm />
@@ -8,4 +8,4 @@ const BlogCategoryAdminFormPage = () => {
   );
 };
 
-export default BlogCategoryAdminFormPage;
+export default BlogCategoryAdminUpdatePage;
