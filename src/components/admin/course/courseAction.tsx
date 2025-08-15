@@ -14,13 +14,13 @@ import { AlertModal } from "@/components/modal/alert-modal";
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { IBlog } from "@/interface/blog";
+import { ICourse } from "@/interface/course";
 import { getQueryClient } from "@/utils/getQueryClient";
-import { deleteBlogByAdmin } from "@/api/blog";
 import ROUTES from "@/constants/route";
+import { deleteAdminCourse } from "@/api/course";
 
 interface CellActionProps {
-  data: IBlog;
+  data: ICourse;
 }
 
 const CellAction: React.FC<CellActionProps> = ({ data }) => {
@@ -33,14 +33,14 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
   };
 
   const { mutate: deleteId, isPending } = useMutation({
-    mutationFn: deleteBlogByAdmin,
+    mutationFn: deleteAdminCourse,
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to delete blog");
+      toast.error(error.response?.data?.message || "Failed to delete course");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["blogs"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
       setOpen(false);
-      toast.success("Blog deleted successfully");
+      toast.success("Course deleted successfully");
     },
   });
 
@@ -61,30 +61,29 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => onCopy(data.id)}>
-            <Copy className="mr-1 h-4 w-4" />
-            Copy ID
-          </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_BLOGS + `/${data.id}`)}
+            onClick={() => router.push(`${ROUTES.ADMIN_COURSES}/${data.id}`)}
           >
-            <Eye className="mr-1 h-4 w-4" />
-            Detail
+            <Eye className="mr-2 h-4 w-4" />
+            View
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
-              router.push(ROUTES.ADMIN_BLOGS + `/${data.id}/update`)
+              router.push(`${ROUTES.ADMIN_COURSES}/edit/${data.id}`)
             }
           >
-            <Edit className="mr-1 h-4 w-4" />
-            Update
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onCopy(data.id)}>
+            <Copy className="mr-2 h-4 w-4" />
+            Copy ID
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => {
-              setOpen(true);
-            }}
+            onClick={() => setOpen(true)}
+            className="text-red-600"
           >
-            <Trash className="mr-1 h-4 w-4" />
+            <Trash className="mr-2 h-4 w-4" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
