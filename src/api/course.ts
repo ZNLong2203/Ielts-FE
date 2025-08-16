@@ -18,6 +18,7 @@ export const getAllCoursesForAdmin = async (params?: {
   search?: string;
 }): Promise<ICourses> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}`, { params });
+  console.log(response)
   return response.data.data;
 };
 
@@ -33,6 +34,7 @@ export const getAdminNewestCourses = async (): Promise<ICourse[]> => {
 
 export const getAdminCourseDetail = async (id: string): Promise<ICourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/${id}`);
+  console.log("Course detail response:", response);
   return response.data.data;
 };
 

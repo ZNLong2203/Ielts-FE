@@ -2,8 +2,7 @@ export interface ICourse {
   id: string;
   title: string;
   description: string;
-  teacher_id: string;
-  category_id: string;
+  category: CourseCategory;
   skill_focus: string;
   difficulty_level: string;
   estimated_duration: number;
@@ -38,10 +37,15 @@ export interface ICourses {
   result: ICourse[];
 }
 
+export interface CourseCategory {
+  name: string;
+  icon: string;
+  id: string;
+}
+
 export interface ICourseCreate {
   title: string;
   description: string;
-  teacher_id: string;
   category_id: string;
   skill_focus: string;
   difficulty_level: string;

@@ -5,12 +5,14 @@ import { IUser, IUsers } from "@/interface/user";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const getStudents = async ({
-  page,
-}: {
-  page: number;
+export const getStudents = async (params?: {
+  page?: number;
+  all?: boolean;
 }): Promise<IUsers> => {
-  const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/?page=${page}`);
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.all) queryParams.append("all", params.all.toString());
+  const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/?${queryParams.toString()}`);
   console.log("Student list response:", response);
   return response.data.data;
 };

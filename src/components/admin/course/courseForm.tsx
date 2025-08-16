@@ -1,5 +1,12 @@
 "use client";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
@@ -59,7 +66,12 @@ const CourseForm = () => {
   }
 
   // Queries
-  const { data: courseData, isLoading, isError, refetch } = useQuery({
+  const {
+    data: courseData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["course", slug],
     queryFn: () => getAdminCourseDetail(slug),
     enabled: slug !== undefined && slug !== "",
@@ -67,13 +79,47 @@ const CourseForm = () => {
 
   const { data: teacherData } = useQuery({
     queryKey: ["teachers"],
-    queryFn: () => getTeachers({page: 1}),
+    queryFn: () => getTeachers({ all: true }),
   });
 
   const { data: categoryData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCourseCategories({ page: 1 }),
   });
+
+  const skillFocusOptions = [
+    {
+      label: "Reading",
+      value: "reading",
+    },
+    {
+      label: "Listening",
+      value: "listening",
+    },
+    {
+      label: "Speaking",
+      value: "speaking",
+    },
+    {
+      label: "Writing",
+      value: "writing",
+    },
+  ];
+
+  const difficultyLevelOptions = [
+    {
+      label: "Beginner",
+      value: "beginner",
+    },
+    {
+      label: "Intermediate",
+      value: "intermediate",
+    },
+    {
+      label: "Advanced",
+      value: "advanced",
+    },
+  ];
 
   // Mutations
   const createCourseMutation = useMutation({
@@ -113,7 +159,7 @@ const CourseForm = () => {
       description: "",
       teacher_id: "",
       category_id: "",
-      skill_focus: "general",
+      skill_focus: "speaking",
       difficulty_level: "beginner",
       estimated_duration: 0,
       price: 0,
@@ -138,13 +184,31 @@ const CourseForm = () => {
     name: "course_outline.sections",
   });
 
+  const teacherOptions =
+    teacherData?.result.map((teacher) => ({
+      label: teacher.full_name || "Unknown Teacher",
+      value: teacher.id,
+    })) || [];
+
+  const detailCategory = categoryData?.result.find(
+    (category) => category.id === courseData?.category.id
+  );
+  
+  const categoryOptions =
+    categoryData?.result.map((category) => ({
+      label: category.name,
+      value: category.id,
+    })) || [];
+
   useEffect(() => {
     if (courseData) {
       courseForm.reset(courseData);
+      courseForm.setValue("category_id", detailCategory?.id || "");
     }
   }, [courseData, courseForm]);
 
   const onSubmit = async (data: z.infer<typeof CourseCreateSchema>) => {
+    console.log("click")
     console.log("Course Form Submitted:", data);
     if (slug) {
       updateCourseMutation.mutate(data);
@@ -152,16 +216,6 @@ const CourseForm = () => {
       createCourseMutation.mutate(data);
     }
   };
-
-  const teacherOptions = teacherData?.result.map((teacher) => ({
-    label: teacher.full_name || "Unknown Teacher",
-    value: teacher.id,
-  })) || [];
-
-  const categoryOptions = categoryData?.result.map((category) => ({
-    label: category.name,
-    value: category.id,
-  })) || [];
 
   if (isLoading) {
     return <Loading />;
@@ -193,7 +247,9 @@ const CourseForm = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                onClick={() => {/* Preview logic */}}
+                onClick={() => {
+                  /* Preview logic */
+                }}
                 className="flex items-center space-x-2"
               >
                 <FileText className="h-4 w-4" />
@@ -207,12 +263,13 @@ const CourseForm = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Form {...courseForm}>
-          <form onSubmit={courseForm.handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            onSubmit={courseForm.handleSubmit(onSubmit)}
+            className="space-y-8"
+          >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
               {/* Main Content Area */}
               <div className="lg:col-span-2 space-y-8">
-                
                 {/* Basic Information */}
                 <Card>
                   <CardHeader>
@@ -239,13 +296,13 @@ const CourseForm = () => {
                         className="md:col-span-2"
                       />
 
-                      <SelectField
+                      {/* <SelectField
                         control={courseForm.control}
                         name="teacher_id"
                         label="Teacher"
                         placeholder="Select teacher"
                         options={teacherOptions}
-                      />
+                      /> */}
 
                       <SelectField
                         control={courseForm.control}
@@ -255,18 +312,19 @@ const CourseForm = () => {
                         options={categoryOptions}
                       />
 
-                      <TextField
+                      <SelectField
                         control={courseForm.control}
                         name="skill_focus"
                         label="Skill Focus"
                         placeholder="Select skill"
+                        options={skillFocusOptions}
                       />
-
-                      <TextField
+                      <SelectField
                         control={courseForm.control}
                         name="difficulty_level"
                         label="Difficulty Level"
                         placeholder="Select difficulty"
+                        options={difficultyLevelOptions}
                       />
                     </div>
                   </CardContent>
@@ -287,7 +345,6 @@ const CourseForm = () => {
                         name="price"
                         label="Price (VND)"
                         type="number"
-                        placeholder="0"
                       />
 
                       <TextField
@@ -295,7 +352,6 @@ const CourseForm = () => {
                         name="discount_price"
                         label="Discount Price (VND)"
                         type="number"
-                        placeholder="0"
                       />
 
                       <TextField
@@ -303,7 +359,6 @@ const CourseForm = () => {
                         name="estimated_duration"
                         label="Duration (hours)"
                         type="number"
-                        placeholder="0"
                       />
                     </div>
                   </CardContent>
@@ -318,7 +373,7 @@ const CourseForm = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                   <TagsField
+                    <TagsField
                       control={courseForm.control}
                       name="requirements"
                       label="Course Requirements"
@@ -355,7 +410,10 @@ const CourseForm = () => {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {sectionFields.map((section, sectionIndex) => (
-                      <div key={section.id} className="border rounded-lg p-4 space-y-4">
+                      <div
+                        key={section.id}
+                        className="border rounded-lg p-4 space-y-4"
+                      >
                         <div className="flex items-center gap-2">
                           <TextField
                             control={courseForm.control}
@@ -382,7 +440,9 @@ const CourseForm = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => appendSection({ title: "", lessons: [""] })}
+                      onClick={() =>
+                        appendSection({ title: "", lessons: [""] })
+                      }
                       className="w-full"
                     >
                       <Plus className="h-4 w-4 mr-2" />
@@ -412,7 +472,6 @@ const CourseForm = () => {
 
               {/* Sidebar */}
               <div className="space-y-6">
-                
                 {/* Course Settings */}
                 <Card>
                   <CardHeader>
@@ -454,14 +513,21 @@ const CourseForm = () => {
                       <Button
                         type="submit"
                         className="w-full flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                        disabled={createCourseMutation.isPending || updateCourseMutation.isPending}
+                        disabled={
+                          createCourseMutation.isPending ||
+                          updateCourseMutation.isPending
+                        }
                       >
                         <Save className="h-4 w-4" />
                         <span>
-                          {(createCourseMutation.isPending || updateCourseMutation.isPending)
-                            ? slug ? "Updating..." : "Creating..."
-                            : slug ? "Update Course" : "Create Course"
-                          }
+                          {createCourseMutation.isPending ||
+                          updateCourseMutation.isPending
+                            ? slug
+                              ? "Updating..."
+                              : "Creating..."
+                            : slug
+                            ? "Update Course"
+                            : "Create Course"}
                         </span>
                       </Button>
 

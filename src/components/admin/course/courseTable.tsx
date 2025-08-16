@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Plus,
   ChevronLeft,
@@ -11,24 +10,22 @@ import {
   RefreshCw,
   Filter,
   Search,
-  FileText,
   Download,
-  Eye,
-  Edit,
-  Archive,
-  FileX,
-  FileCheck,
+  BookOpen,
+  GraduationCap,
+  Star,
+  Users,
+  TrendingUp,
+  Target,
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/admin/course/courseColumn";
-import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import ROUTES from "@/constants/route";
 import { getAllCoursesForAdmin } from "@/api/course";
 import { useFilter } from "@/hook/useFilter";
-import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 
@@ -65,6 +62,13 @@ const CourseTable = () => {
     (v) => v !== ""
   ).length;
   const filteredCount = filteredData.length;
+
+  const featureCount = filteredData.filter(
+    (course) => course.is_featured
+  ).length;
+  const notFeatureCount = filteredData.filter(
+    (course) => !course.is_featured
+  ).length;
 
   // Metadata information
   const currentPage = allCourses?.meta?.current || 1;
@@ -123,7 +127,7 @@ const CourseTable = () => {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header Section */}
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between">
         <div>
@@ -167,12 +171,81 @@ const CourseTable = () => {
 
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => router.push(ROUTES.ADMIN_BLOGS + "/create")}
+            onClick={() => router.push(ROUTES.ADMIN_COURSES + "/create")}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Blog
+            Add Course
           </Button>
         </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total Courses Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              {hasActiveFilters ? "Filtered Courses" : "Total Courses"}
+            </p>
+            <BookOpen className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {hasActiveFilters ? filteredCount : totalItems || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {hasActiveFilters
+                ? `of ${totalItems} total`
+                : `${pageSize} per page`}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Current Page Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Current Page
+            </p>
+            <TrendingUp className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{currentPage}</div>
+            <p className="text-xs text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Featured Courses Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <p className="text-sm font-medium text-muted-foreground">
+              Featured
+            </p>
+            <Star className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {featureCount || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Featured courses</p>
+          </CardContent>
+        </Card>
+
+        {/* Not Featured Courses Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <p className="text-sm font-medium text-muted-foreground">Regular</p>
+            <GraduationCap className="h-4 w-4 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">
+              {notFeatureCount || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Regular courses</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filter Section */}
@@ -185,7 +258,7 @@ const CourseTable = () => {
           isVisible={isFilterVisible}
           totalItems={totalItems}
           filteredCount={filteredCount}
-          label="Students"
+          label="Courses"
           fieldConfigs={fieldConfigs}
         />
       )}
@@ -200,8 +273,8 @@ const CourseTable = () => {
               <DataTable
                 columns={columns}
                 data={filteredData}
-                searchKey={["full_name", "email", "phone"]}
-                searchPlaceholder="Search by name, email, or phone..."
+                searchKey={["title", "skill_focus", "difficulty_level"]}
+                searchPlaceholder="Search by title, skill focus, or difficulty..."
               />
 
               {/* Enhanced Pagination */}

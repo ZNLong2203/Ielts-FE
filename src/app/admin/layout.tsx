@@ -3,7 +3,7 @@ import ProtectedRoute from "@/components/auth/protectedRoute";
 
 const AdminPageLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ProtectedRoute allowedRoles={["ADMIN"]}>
+    <ProtectedRoute allowedRoles={["admin"]}>
       <div>
         {/* <AdminNavbar /> */}
         <AdminLayout>{children}</AdminLayout>

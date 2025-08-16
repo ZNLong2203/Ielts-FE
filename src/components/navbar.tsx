@@ -229,7 +229,7 @@ const LandingNavbar = () => {
                           <div className="border-t border-white/20 my-1"></div>
                           <NavbarLink
                             text="Admin Portal"
-                            href="/auth/admin/login"
+                            href={ROUTES.ADMIN}
                           />
                         </div>
                       </div>
@@ -297,7 +297,7 @@ const LandingNavbar = () => {
                         {/* Profile Link */}
                         <a
                           href={
-                            user?.role === "TEACHER"
+                            user?.role === "teacher"
                               ? ROUTES.TEACHER_PROFILE
                               : ROUTES.STUDENT_PROFILE
                           }
@@ -309,7 +309,7 @@ const LandingNavbar = () => {
                         </a>
 
                         {/* My Learning (Student) */}
-                        {user?.role === "STUDENT" && (
+                        {user?.role === "student" && (
                           <a
                             href="/my-learning"
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
@@ -321,7 +321,7 @@ const LandingNavbar = () => {
                         )}
 
                         {/* My Classes (Teacher) */}
-                        {user?.role === "TEACHER" && (
+                        {user?.role === "teacher" && (
                           <a
                             href="/my-classes"
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
@@ -353,7 +353,7 @@ const LandingNavbar = () => {
                         </a>
 
                         {/* Admin Dashboard (Admin only) */}
-                        {user?.role === "ADMIN" && (
+                        {user?.role === "admin" && (
                           <>
                             <div className="border-t border-white/10 my-2"></div>
                             <a
@@ -471,7 +471,7 @@ const LandingNavbar = () => {
                   <div className="space-y-2">
                     <a
                       href={
-                        user?.role === "TEACHER"
+                        user?.role === "teacher"
                           ? ROUTES.TEACHER_PROFILE
                           : ROUTES.STUDENT_PROFILE
                       }
@@ -481,7 +481,7 @@ const LandingNavbar = () => {
                       My Profile
                     </a>
 
-                    {user?.role === "STUDENT" && (
+                    {user?.role === "student" && (
                       <a
                         href="/my-learning"
                         className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
@@ -517,7 +517,7 @@ const LandingNavbar = () => {
                       Settings
                     </a>
 
-                    {user?.role === "ADMIN" && (
+                    {user?.role === "admin" && (
                       <a
                         href={ROUTES.ADMIN}
                         className="flex items-center gap-3 py-2 text-white/70 hover:text-white"

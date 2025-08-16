@@ -5,12 +5,14 @@ import { ITeacherUpdate } from "@/interface/teacher";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const getTeachers = async ({
-  page,
-}: {
-  page: number;
+export const getTeachers = async (params?: {
+  page?: number;
+  all?: boolean;
 }): Promise<IUsers> => {
-  const response = await api.get(`${BASE_URL}${API_URL.TEACHER}/?page=${page}`);
+  const queryParams = new URLSearchParams();
+  if(params?.page) queryParams.append('page', params.page.toString());
+  if(params?.all) queryParams.append('all', params.all.toString());
+  const response = await api.get(`${BASE_URL}${API_URL.TEACHER}/?${queryParams.toString()}`);
   console.log("Teacher list response:", response);
   return response.data.data;
 };

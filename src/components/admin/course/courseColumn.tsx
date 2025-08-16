@@ -29,66 +29,6 @@ export const columns: ColumnDef<ICourse>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "teacher_id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-secondary/20"
-        >
-          Teacher ID
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="text-xs font-mono text-muted-foreground">
-        {row.original.teacher_id}
-      </div>
-    ),
-  },
-  // Category Id
-  {
-    accessorKey: "category_id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-secondary/20"
-        >
-          Category ID
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="text-xs font-mono text-muted-foreground">
-        {row.original.category_id}
-      </div>
-    ),
-  },
-
-  {
-    accessorKey: "teacher_id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-secondary/20"
-        >
-          Teacher ID
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="text-xs font-mono text-muted-foreground">
-        {row.original.teacher_id}
-      </div>
-    ),
-  },
-
   // Title
   {
     accessorKey: "title",
@@ -107,25 +47,6 @@ export const columns: ColumnDef<ICourse>[] = [
       <div className="text-sm font-medium text-gray-900">
         {row.original.title}
       </div>
-    ),
-  },
-
-  // Skill focus
-  {
-    accessorKey: "skill_focus",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-secondary/20"
-        >
-          Skill focus
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="text-sm font-mono">{row.original.skill_focus}</div>
     ),
   },
   // Difficulty Level

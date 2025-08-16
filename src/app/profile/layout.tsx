@@ -4,7 +4,7 @@ import LandingNavbar from "@/components/navbar";
 
 const ProfileLayout = ({ children }: { children: React.ReactNode }) => {
     return (
-       <ProtectedRoute allowedRoles={['STUDENT', 'TEACHER', 'ADMIN']}>
+       <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
             <div className="min-h-screen bg-gray-50">
                 <LandingNavbar />
                 {children}
