@@ -58,6 +58,11 @@ export interface IZaloPayCallback {
   mac: string;
 }
 
+export interface IZaloPayCallbackDto {
+  data: string;
+  mac: string;
+}
+
 export interface IZaloPayCallbackData {
   app_trans_id: string;
   zp_trans_id: number;
