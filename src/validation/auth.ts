@@ -44,6 +44,7 @@ export const TeacherRegisterSchema = z
     date_of_birth: z.date(),
     gender: z.enum(["male", "female", "other"]),
     country: z.string().min(1, "Country is required"),
+    city: z.string().min(1, "City is required"),
     qualification: z.string().min(1, "Qualification is required"),
     experience_years: z.number().min(0, "Experience must be 0 or more").max(50),
     specializations: z

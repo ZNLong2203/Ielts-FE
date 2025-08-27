@@ -142,7 +142,7 @@ const TeacherRegisterForm = ({
               Join our team of expert IELTS instructors and help students
               achieve their dreams
             </motion.p>
-          </div>  
+          </div>
 
           <div className="grid gap-6">
             {/* Personal Information Section */}
@@ -286,7 +286,7 @@ const TeacherRegisterForm = ({
               />
             </motion.div>
 
-             {/* Documents & Media Section */}
+            {/* Documents & Media Section */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

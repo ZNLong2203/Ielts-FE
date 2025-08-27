@@ -1,9 +1,9 @@
-import TeacherForm from "@/components/admin/teacher/teacherForm";
+import TeacherRegisterAdminForm from "@/components/admin/teacher/teacherRegisterAdmin";
 
 const TeacherAdminFormPage = () => {
   return (
     <div>
-      <TeacherForm />
+      <TeacherRegisterAdminForm />
     </div>
   );
 };
