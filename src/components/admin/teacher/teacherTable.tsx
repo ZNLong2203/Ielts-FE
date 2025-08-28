@@ -35,13 +35,13 @@ import ROUTES from "@/constants/route";
 const TeacherTable = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState("active");
+  const [activeTab, setActiveTab] = useState("all");
 
   // Get the current page from search params or default to 1
   const page = Number(searchParams.get("page")) || 1;
 
   const {
-    data: activeTeachersData,
+    data: allTeachersData,
     isLoading: isLoadingActive,
     refetch: refetchActive,
     isError: isErrorActive,
@@ -64,16 +64,16 @@ const TeacherTable = () => {
 
   // Combined tab data management
   const tabData = useMemo(() => {
-    if (activeTab === "active") {
+    if (activeTab === "all") {
       return {
-        currentPage: activeTeachersData?.meta?.current || 1,
-        data: activeTeachersData?.result || [],
-        totalItems: activeTeachersData?.meta?.total || 0,
-        pageSize: activeTeachersData?.meta?.pageSize || 10,
-        totalPages: activeTeachersData?.meta?.pages || 1,
+        currentPage: allTeachersData?.meta?.current || 1,
+        data: allTeachersData?.result || [],
+        totalItems: allTeachersData?.meta?.total || 0,
+        pageSize: allTeachersData?.meta?.pageSize || 10,
+        totalPages: allTeachersData?.meta?.pages || 1,
         isLoading: isLoadingActive,
         refetch: refetchActive,
-        meta: activeTeachersData?.meta,
+        meta: allTeachersData?.meta,
       };
     } else {
       return {
@@ -89,8 +89,8 @@ const TeacherTable = () => {
     }
   }, [
     activeTab,
-    activeTeachersData?.meta,
-    activeTeachersData?.result,
+    allTeachersData?.meta,
+    allTeachersData?.result,
     pendingTeachersData?.meta,
     pendingTeachersData?.result,
     isLoadingActive,
@@ -110,16 +110,16 @@ const TeacherTable = () => {
   } = tabData;
 
   // Stats for cards (keep separate as they're always for active teachers)
-  const totalActiveItems = activeTeachersData?.meta?.total || 0;
+  const totalItems = allTeachersData?.meta?.total || 0;
   const totalPendingItems = pendingTeachersData?.meta?.total || 0;
 
   // Calculate stats for active teachers
   const activeTeachers =
-    activeTeachersData?.result?.filter((teacher) => teacher.status === "active")
+    allTeachersData?.result?.filter((teacher) => teacher.status === "active")
       .length || 0;
 
   const inactiveTeachers =
-    activeTeachersData?.result?.filter(
+    allTeachersData?.result?.filter(
       (teacher) => teacher.status === "inactive"
     ).length || 0;
 
@@ -278,7 +278,7 @@ const TeacherTable = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalActiveItems}</div>
+            <div className="text-2xl font-bold">{activeTeachers}</div>
             <p className="text-xs text-muted-foreground">{pageSize} per page</p>
           </CardContent>
         </Card>
@@ -342,7 +342,7 @@ const TeacherTable = () => {
           totalItems={currentTotalItems}
           filteredCount={filteredCount}
           label={
-            activeTab === "active" ? "Active Teachers" : "Pending Applications"
+            activeTab === "all" ? "All Teachers" : "Pending Applications"
           }
           fieldConfigs={fieldConfigs}
         />
@@ -355,11 +355,11 @@ const TeacherTable = () => {
         className="w-full"
       >
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="active" className="flex items-center space-x-2">
+          <TabsTrigger value="all" className="flex items-center space-x-2">
             <Users className="h-4 w-4" />
-            <span>Active Teachers</span>
+            <span>All Teachers</span>
             <Badge variant="secondary" className="ml-2">
-              {totalActiveItems}
+              {totalItems}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="pending" className="flex items-center space-x-2">
@@ -373,15 +373,15 @@ const TeacherTable = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Active Teachers Tab */}
-        <TabsContent value="active" className="space-y-4">
+        {/* All Teachers Tab */}
+        <TabsContent value="all" className="space-y-4">
           <Card>
             <CardContent>
               {currentIsLoading ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                   <p className="text-sm text-muted-foreground">
-                    Loading active teachers...
+                    Loading all teachers...
                   </p>
                 </div>
               ) : (

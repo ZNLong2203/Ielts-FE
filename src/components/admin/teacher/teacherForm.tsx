@@ -21,6 +21,9 @@ import {
   Phone,
   MapPin,
   Target,
+  Shield,
+  RefreshCw,
+  Loader2,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -32,21 +35,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
 
-import { getTeacher, updateTeacher } from "@/api/teacher";
+import { getTeacher, updateTeacher, updateTeacherStatus } from "@/api/teacher";
 import { ProfileFormSchema } from "@/validation/profile";
 import { TeacherFormSchema } from "@/validation/teacher";
-import { updateProfile } from "@/api/profile";
-import { uploadAvatar } from "@/api/file";
-import { TextIconInfo } from "@/components/ui/info";
+import { updateProfile, updateProfileStatus } from "@/api/profile";
+import { TextIconInfo, TextBadgeInfo } from "@/components/ui/info";
 import { USER_GENDER } from "@/constants/user";
 
 const TeacherForm = () => {
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
-  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
 
   const userId = params.userId as string;
+
+  // State for current status
+  const [currentStatus, setCurrentStatus] = useState("pending");
+  const [currentTeacherStatus, setCurrentTeacherStatus] = useState("");
 
   // Get teacher details
   const { data, isPending, isError, refetch } = useQuery({
@@ -55,18 +60,37 @@ const TeacherForm = () => {
     retry: false,
   });
 
-  const uploadAvatarMutation = useMutation({
-    mutationFn: async (file: File) => {
-      return uploadAvatar(file, userId);
+  // Update profile status
+  const updateProfileStatusMutation = useMutation({
+    mutationFn: (status: string) => {
+      return updateProfileStatus(userId, status);
     },
     onSuccess: (data) => {
-      toast.success(data.data.message || "Avatar uploaded successfully");
-      queryClient.invalidateQueries({
-        queryKey: ["studentDetail", userId],
-      });
+      toast.success(data.data.message || "Status updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
+      // Update local state
+      setCurrentStatus(data.data.data?.status || status);
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to upload avatar");
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update status");
+    },
+  });
+
+  // Update teacher status
+  const updateTeacherStatusMutation = useMutation({
+    mutationFn: (status: string) => {
+      return updateTeacherStatus(userId, status);
+    },
+    onSuccess: (data) => {
+      toast.success(data.data.message || "Teacher status updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
+      // Update local state
+      setCurrentTeacherStatus(data.data.data?.status || status);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update teacher status");
     },
   });
 
@@ -81,8 +105,8 @@ const TeacherForm = () => {
       queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
       router.push(ROUTES.ADMIN_TEACHERS);
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update profile");
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update profile");
     },
   });
 
@@ -97,8 +121,8 @@ const TeacherForm = () => {
       queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
       router.push(ROUTES.ADMIN_TEACHERS);
     },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update teacher details");
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Failed to update teacher details");
     },
   });
 
@@ -140,35 +164,74 @@ const TeacherForm = () => {
     updateProfileMutation.mutate(formData);
   };
 
-  // Handle avatar upload
-  const onAvatarUpload = (file: File) => {
-    console.log("Uploading avatar:", file);
-    uploadAvatarMutation.mutate(file);
+  // Handle status change
+  const handleStatusChange = (newStatus: string) => {
+    if (newStatus !== currentStatus && newStatus) {
+      updateProfileStatusMutation.mutate(newStatus);
+    }
   };
+
+  const handleTeacherStatusChange = (newStatus: string) => {
+    if (newStatus !== currentTeacherStatus && newStatus) {
+      updateTeacherStatusMutation.mutate(newStatus);
+    }
+  };
+
+  // Profile status options
+  const profileStatusOptions = [
+    {
+      value: "active",
+      label: "Active",
+    },
+    {
+      value: "inactive",
+      label: "Inactive",
+    }
+  ];
+
+  const teacherStatusOptions = [
+    {
+      value: "pending",
+      label: "Pending"
+    },
+    {
+      value: "approved",
+      label: "Approved"
+    },
+    {
+      value: "rejected",
+      label: "Rejected"
+    }
+  ]
 
   useEffect(() => {
     if (data) {
+      // Set current status
+      setCurrentStatus(data?.status || "inactive");
+      setCurrentTeacherStatus(data?.teachers?.status || "pending");
+
+      // Reset forms
       teacherForm.reset({
-        qualification: data?.teachers?.qualification,
-        experience_years: data?.teachers?.experience_years,
-        specializations: data?.teachers?.specializations,
-        ielts_band_score: data?.teachers?.ielts_band_score,
-        teaching_style: data?.teachers?.teaching_style,
-        hourly_rate: data?.teachers?.hourly_rate,
+        qualification: data?.teachers?.qualification || "",
+        experience_years: data?.teachers?.experience_years || 0,
+        specializations: data?.teachers?.specializations || [],
+        ielts_band_score: data?.teachers?.ielts_band_score || 0,
+        teaching_style: data?.teachers?.teaching_style || "",
+        hourly_rate: data?.teachers?.hourly_rate || 0,
       });
       profileForm.reset({
-        full_name: data?.full_name,
+        full_name: data?.full_name || "",
         avatar: data?.avatar,
-        phone: data?.phone,
-        country: data?.country,
-        city: data?.city,
+        phone: data?.phone || "",
+        country: data?.country || "",
+        city: data?.city || "",
         date_of_birth: data.date_of_birth
           ? new Date(data.date_of_birth)
           : undefined,
-        gender: data?.gender,
+        gender: data?.gender || "",
       });
     }
-  }, [data]);
+  }, [data, teacherForm, profileForm]);
 
   if (isPending) {
     return <Loading />;
@@ -222,11 +285,11 @@ const TeacherForm = () => {
                 <Avatar className="h-24 w-24 mx-auto mb-4">
                   <AvatarImage src={data?.avatar} />
                   <AvatarFallback className="text-2xl">
-                    {data?.full_name?.charAt(0) || "S"}
+                    {data?.full_name?.charAt(0) || "T"}
                   </AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-xl">
-                  {data?.full_name || "Student"}
+                  {data?.full_name || "Teacher"}
                 </CardTitle>
                 <p className="text-sm text-gray-500">{data?.email}</p>
               </CardHeader>
@@ -279,6 +342,8 @@ const TeacherForm = () => {
 
           {/* Right Content - Forms */}
           <div className="lg:col-span-2 space-y-8">
+      
+            {/* Profile Information Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -297,24 +362,10 @@ const TeacherForm = () => {
                       name="avatar"
                       label="Profile Avatar"
                       currentImage={data?.avatar}
-                      fallback={data?.full_name?.charAt(0) || "S"}
-                      onFileSelected={(file) => setSelectedAvatar(file)}
+                      fallback={data?.full_name?.charAt(0) || "T"}
                       maxSize={2 * 1024 * 1024} // 2MB
                     />
 
-                    {selectedAvatar && (
-                      <Button
-                        type="button"
-                        size={"default"}
-                        variant="outline"
-                        onClick={() => onAvatarUpload(selectedAvatar)}
-                        disabled={uploadAvatarMutation.isPending}
-                      >
-                        {uploadAvatarMutation.isPending
-                          ? "Uploading..."
-                          : "Upload Avatar"}
-                      </Button>
-                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <TextField
                         control={profileForm.control}
@@ -383,6 +434,81 @@ const TeacherForm = () => {
               </CardContent>
             </Card>
 
+                {/* Status Management Card - Full Width */}
+            <Card className="border-orange-200 bg-orange-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-orange-600" />
+                  <span>Account Status Management</span>
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  Manage Account status
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Current Status Display */}
+                  <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Current Status</h4>
+                      <p className="text-sm text-gray-600">Account status</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <TextBadgeInfo status={currentStatus} />
+                    </div>
+                  </div>
+
+                  {/* Status Change Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Change Account Status
+                      </label>
+                      <select
+                        value={currentStatus}
+                        onChange={(e) => handleStatusChange(e.target.value)}
+                        disabled={updateProfileStatusMutation.isPending}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      >
+                        {profileStatusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex items-end">
+                      <Button
+                        onClick={() => {
+                          const select = document.querySelector('select') as HTMLSelectElement;
+                          if (select) {
+                            handleStatusChange(select.value);
+                          }
+                        }}
+                        disabled={updateProfileStatusMutation.isPending}
+                        variant="outline"
+                        className="w-full border-orange-300 text-orange-600 hover:bg-orange-50"
+                      >
+                        {updateProfileStatusMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Update Status
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Teacher Information Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -429,14 +555,14 @@ const TeacherForm = () => {
                         type="number"
                         placeholder="Enter hourly rate in USD"
                       />
-
-                      <TextField
-                        control={teacherForm.control}
-                        name="teaching_style"
-                        label="Teaching Style"
-                        placeholder="Describe your teaching style"
-                      />
                     </div>
+
+                    <TextField
+                      control={teacherForm.control}
+                      name="teaching_style"
+                      label="Teaching Style"
+                      placeholder="Describe your teaching style"
+                    />
 
                     <TagsField
                       control={teacherForm.control}
@@ -461,6 +587,80 @@ const TeacherForm = () => {
                     </div>
                   </form>
                 </Form>
+              </CardContent>
+            </Card>
+
+                  {/* Status Management Card - Full Width */}
+            <Card className="border-blue-200 bg-blue-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <span>Teacher Status Management</span>
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  Manage Teacher status
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Current Status Display */}
+                  <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Current Teacher Status</h4>
+                      <p className="text-sm text-gray-600">Teacher status</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <TextBadgeInfo status={currentTeacherStatus} />
+                    </div>
+                  </div>
+
+                  {/* Status Change Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Change Teacher Status
+                      </label>
+                      <select
+                        value={currentTeacherStatus}
+                        onChange={(e) => handleTeacherStatusChange(e.target.value)}
+                        disabled={updateTeacherStatusMutation.isPending}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        {teacherStatusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex items-end">
+                      <Button
+                        onClick={() => {
+                          const select = document.querySelector('select') as HTMLSelectElement;
+                          if (select) {
+                            handleTeacherStatusChange(select.value);
+                          }
+                        }}
+                        disabled={updateTeacherStatusMutation.isPending}
+                        variant="outline"
+                        className="w-full border-blue-300 text-blue-600 hover:bg-orange-50"
+                      >
+                        {updateTeacherStatusMutation.isPending ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Update Teacher Status
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

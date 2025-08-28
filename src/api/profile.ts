@@ -33,3 +33,9 @@ export const updateOwnTeacherProfile = async (data: IUserUpdate) => {
   console.log(response);
   return response;
 };
+
+export const updateProfileStatus = async (id: string, status: string) => {
+  const response = await api.put(`${BASE_URL}${API_URL.PROFILE}/${id}/status`, { status });
+  console.log(response);
+  return response;
+};

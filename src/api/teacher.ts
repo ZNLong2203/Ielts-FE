@@ -41,6 +41,12 @@ export const updateTeacher = async (id: string, data: ITeacherUpdate) => {
   return response;
 };
 
+export const updateTeacherStatus = async(id: string, status: string) => {
+  const response = await api.put(`${BASE_URL}${API_URL.TEACHER}/${id}/status`, { status });
+  console.log("Update teacher status response:", response);
+  return response;
+}
+
 export const deleteTeacher = async (id: string) => {
   const response = await api.delete(`${BASE_URL}${API_URL.TEACHER}/${id}`);
   console.log(response);
