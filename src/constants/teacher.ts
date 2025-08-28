@@ -1,26 +1,71 @@
-export const TEACHER_STATUS = {
-  PENDING: 'pending',
-  APPROVED: 'approved',
-  REJECTED: 'rejected',
-  SUSPENDED: 'suspended',
-} as const;
+export const TEACHER_STATUS = [
+  {
+    value: "pending",
+    label: "Pending"
+  },
+  {
+    value: "approved",
+    label: "Approved"
+  },
+  {
+    value: "rejected",
+    label: "Rejected"
+  },
+  {
+    value: "suspended",
+    label: "Suspended"
+  }
+];
 
-export const TEACHER_SPECIALIZATION = {
-  READING: 'reading',
-  WRITING: 'writing',
-  LISTENING: 'listening',
-  SPEAKING: 'speaking',
-} as const;
+export const TEACHER_SPECIALIZATION = [
+  {
+    value: "reading",
+    label: "Reading"
+  },
+  {
+    value: "writing",
+    label: "Writing"
+  },
+  {
+    value: "listening",
+    label: "Listening"
+  },
+  {
+    value: "speaking",
+    label: "Speaking"
+  }
+];
 
-export const DAY_OF_WEEK = {
-  MONDAY: 'monday',
-  TUESDAY: 'tuesday',
-  WEDNESDAY: 'wednesday',
-  THURSDAY: 'thursday',
-  FRIDAY: 'friday',
-  SATURDAY: 'saturday',
-  SUNDAY: 'sunday',
-} as const;
+export const DAY_OF_WEEK = [
+  {
+    value: "monday",
+    label: "Monday"
+  },
+  {
+    value: "tuesday",
+    label: "Tuesday"
+  },
+  {
+    value: "wednesday",
+    label: "Wednesday"
+  },
+  {
+    value: "thursday",
+    label: "Thursday"
+  },
+  {
+    value: "friday",
+    label: "Friday"
+  },
+  {
+    value: "saturday",
+    label: "Saturday"
+  },
+  {
+    value: "sunday",
+    label: "Sunday"
+  }
+];
 
 export type TeacherStatus =
   (typeof TEACHER_STATUS)[keyof typeof TEACHER_STATUS];

@@ -40,7 +40,8 @@ import { ProfileFormSchema } from "@/validation/profile";
 import { TeacherFormSchema } from "@/validation/teacher";
 import { updateProfile, updateProfileStatus } from "@/api/profile";
 import { TextIconInfo, TextBadgeInfo } from "@/components/ui/info";
-import { USER_GENDER } from "@/constants/user";
+import { USER_GENDER, USER_STATUS } from "@/constants/user";
+import { TEACHER_STATUS } from "@/constants/teacher";
 
 const TeacherForm = () => {
   const router = useRouter();
@@ -176,34 +177,7 @@ const TeacherForm = () => {
       updateTeacherStatusMutation.mutate(newStatus);
     }
   };
-
-  // Profile status options
-  const profileStatusOptions = [
-    {
-      value: "active",
-      label: "Active",
-    },
-    {
-      value: "inactive",
-      label: "Inactive",
-    }
-  ];
-
-  const teacherStatusOptions = [
-    {
-      value: "pending",
-      label: "Pending"
-    },
-    {
-      value: "approved",
-      label: "Approved"
-    },
-    {
-      value: "rejected",
-      label: "Rejected"
-    }
-  ]
-
+  
   useEffect(() => {
     if (data) {
       // Set current status
@@ -470,7 +444,7 @@ const TeacherForm = () => {
                         disabled={updateProfileStatusMutation.isPending}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       >
-                        {profileStatusOptions.map((option) => (
+                        {USER_STATUS.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>
@@ -626,7 +600,7 @@ const TeacherForm = () => {
                         disabled={updateTeacherStatusMutation.isPending}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        {teacherStatusOptions.map((option) => (
+                        {TEACHER_STATUS.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}
                           </option>

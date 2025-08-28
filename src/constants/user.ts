@@ -1,7 +1,13 @@
-export const USER_STATUS = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-} as const;
+export const USER_STATUS = [
+  {
+    value: "active",
+    label: "Active"
+  },
+  {
+    value: "inactive",
+    label: "Inactive"
+  }
+]
 
 // filepath: c:\Workspace\Ielts-FE\src\constants\user.ts
 export const USER_GENDER = [
