@@ -296,13 +296,13 @@ const CourseForm = () => {
                         className="md:col-span-2"
                       />
 
-                      {/* <SelectField
+                      <SelectField
                         control={courseForm.control}
                         name="teacher_id"
                         label="Teacher"
                         placeholder="Select teacher"
                         options={teacherOptions}
-                      /> */}
+                      />
 
                       <SelectField
                         control={courseForm.control}
@@ -344,6 +344,7 @@ const CourseForm = () => {
                         control={courseForm.control}
                         name="price"
                         label="Price (VND)"
+                        placeholder="Enter price..."
                         type="number"
                       />
 
@@ -351,6 +352,7 @@ const CourseForm = () => {
                         control={courseForm.control}
                         name="discount_price"
                         label="Discount Price (VND)"
+                        placeholder="Enter discount price..."
                         type="number"
                       />
 

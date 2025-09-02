@@ -323,11 +323,11 @@ const LandingNavbar = () => {
                         {/* My Classes (Teacher) */}
                         {user?.role === "teacher" && (
                           <a
-                            href="/my-classes"
+                            href="/teacher/dashboard"
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <BookOpen className="h-4 w-4" />
-                            <span>My Classes</span>
+                            <span>Teacher Dashboard</span>
                             <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}

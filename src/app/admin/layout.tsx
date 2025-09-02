@@ -5,7 +5,6 @@ const AdminPageLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <ProtectedRoute allowedRoles={["admin"]}>
       <div>
-        {/* <AdminNavbar /> */}
         <AdminLayout>{children}</AdminLayout>
       </div>
     </ProtectedRoute>
