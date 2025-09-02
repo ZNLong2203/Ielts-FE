@@ -8,67 +8,68 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import RichTextField from "@/components/richTextEditor";
-import { 
-  Form, 
-  FormLabel, 
-  FormField, 
-  FormItem, 
-  FormControl, 
-  FormDescription 
+import {
+  Form,
+  FormLabel,
+  FormField,
+  FormItem,
+  FormControl,
+  FormDescription,
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createBlog } from "@/api/blog";
+import { createTeacherBlog } from "@/api/blog";
 import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
 import { useEffect, useState } from "react";
-import { 
-  Eye, 
-  FileText, 
-  ImageIcon, 
-  Tag, 
-  ArrowLeft,
+import {
+  Eye,
+  FileText,
+  ImageIcon,
+  Tag,
   BookOpen,
   Users,
   Star,
   PenTool,
-  Send,
-  CheckCircle
+  Save,
+  Settings,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { getBlog } from "@/api/blog";
 import { getBlogCategories } from "@/api/blogCategory";
 import TagsField from "@/components/form/tags-field";
 import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { selectUser } from "@/redux/features/user/userSlice";
 
 const TeacherBlogForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
+  const user = useSelector(selectUser);
+
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
   let title = "";
   let description = "";
-  let actionText = "";
-  
+
   if (slug === undefined || param.slug === "") {
     title = "Create New Blog Post";
-    description = "Share your teaching insights and expertise with the community";
-    actionText = "Publish Post";
+    description =
+      "Share your teaching insights and expertise with the community";
   } else {
     title = "Edit Blog Post";
     description = "Update your blog content and insights";
-    actionText = "Update Post";
   }
 
   // Teacher-specific blog creation
   const createBlogMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogCreateSchema>) => {
-      return createBlog(formData);
+      return createTeacherBlog(formData);
     },
     onSuccess: (data) => {
       toast.success("Blog post created successfully!");
@@ -78,13 +79,15 @@ const TeacherBlogForm = () => {
       router.push(ROUTES.TEACHER_BLOGS);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create blog post");
+      toast.error(
+        error.response?.data?.message || "Failed to create blog post"
+      );
     },
   });
 
   const updateBlogMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogUpdateSchema>) => {
-    //   return updateBlog(slug, formData);
+      //   return updateBlog(slug, formData);
     },
     onSuccess: (data) => {
       toast.success("Blog post updated successfully!");
@@ -97,7 +100,9 @@ const TeacherBlogForm = () => {
       router.push(ROUTES.TEACHER_BLOGS);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update blog post");
+      toast.error(
+        error.response?.data?.message || "Failed to update blog post"
+      );
     },
   });
 
@@ -155,7 +160,6 @@ const TeacherBlogForm = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Teacher-styled Header */}
@@ -163,25 +167,12 @@ const TeacherBlogForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => router.back()}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to My Blogs</span>
-              </Button>
-              
-              <div className="h-6 w-px bg-gray-300" />
-              
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <PenTool className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-                  <p className="text-sm text-gray-600">{description}</p>
-                </div>
+              <div className="p-2 bg-green-100 rounded-lg">
+                <PenTool className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+                <p className="text-sm text-gray-600">{description}</p>
               </div>
             </div>
 
@@ -194,10 +185,6 @@ const TeacherBlogForm = () => {
                 <Eye className="h-4 w-4" />
                 <span>{isPreviewMode ? "Edit" : "Preview"}</span>
               </Button>
-
-              <Badge variant="secondary" className="hidden md:flex">
-                Teaching Blog
-              </Badge>
             </div>
           </div>
         </div>
@@ -206,7 +193,10 @@ const TeacherBlogForm = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Form {...blogForm}>
-          <form className="space-y-8">
+          <form
+            className="space-y-8"
+            onSubmit={blogForm.handleSubmit(onSubmit)}
+          >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Main Content Area */}
               <div className="lg:col-span-2 space-y-6">
@@ -220,7 +210,9 @@ const TeacherBlogForm = () => {
                           Teaching Blog Guidelines
                         </h4>
                         <p className="text-sm text-green-800">
-                          Share your IELTS teaching experience, student success stories, study tips, and educational insights to help the learning community.
+                          Share your IELTS teaching experience, student success
+                          stories, study tips, and educational insights to help
+                          the learning community.
                         </p>
                       </div>
                     </div>
@@ -246,7 +238,7 @@ const TeacherBlogForm = () => {
                     />
 
                     <div>
-                      <FormLabel className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
+                      <FormLabel className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                         <PenTool className="h-4 w-4" />
                         Content
                       </FormLabel>
@@ -296,14 +288,6 @@ const TeacherBlogForm = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <SelectField
-                      control={blogForm.control}
-                      name="category_id"
-                      label="Category"
-                      placeholder="Select a category"
-                      options={categoriesOptions ?? []}
-                    />
-
                     <TagsField
                       control={blogForm.control}
                       name="tags"
@@ -330,8 +314,12 @@ const TeacherBlogForm = () => {
                         T
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">Teacher Name</p>
-                        <p className="text-sm text-gray-600">IELTS Instructor</p>
+                        <p className="font-medium text-gray-900">
+                          {user?.full_name || "Teacher Name"}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          IELTS Instructor
+                        </p>
                       </div>
                     </div>
                     <div className="mt-4 space-y-2 text-sm text-gray-600">
@@ -347,12 +335,83 @@ const TeacherBlogForm = () => {
                   </CardContent>
                 </Card>
 
-            
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Settings className="h-5 w-5 text-gray-600" />
+                      <span>Options</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <SelectField
+                      control={blogForm.control}
+                      name="category_id"
+                      label="Category"
+                      placeholder="Select category"
+                      options={categoriesOptions ?? []}
+                    />
+
+                    {/* Featured Switch */}
+                    <FormField
+                      control={blogForm.control}
+                      name="is_featured"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base font-medium">
+                              Featured Post
+                            </FormLabel>
+                            <FormDescription className="text-sm text-muted-foreground">
+                              Display this post prominently on the homepage
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="space-y-3">
+                      <Button
+                        type="submit"
+                        className="w-full flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+                        disabled={createBlogMutation.isPending}
+                      >
+                        <Save className="h-4 w-4" />
+                        <span>
+                          {slug && slug !== ""
+                            ? "Update Blog Post"
+                            : "Create Blog Post"}
+                        </span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => router.back()}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Tips for Teachers */}
                 <Card className="border-blue-200 bg-blue-50/50">
                   <CardHeader>
-                    <CardTitle className="text-blue-700 text-sm">Writing Tips</CardTitle>
+                    <CardTitle className="text-blue-700 text-sm">
+                      Writing Tips
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2 text-xs text-blue-800">
                     <p>• Share practical teaching strategies</p>
