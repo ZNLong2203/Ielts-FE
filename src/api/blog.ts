@@ -60,7 +60,7 @@ export const getTeacherBlogDetail = async (id: string): Promise<IBlog> => {
   return response.data.data;
 };
 
-export const updateTeacherBlog = async (id: string, data: FormData) => {
+export const updateTeacherBlog = async (id: string, data: IBlogUpdate) => {
   const response = await api.patch(`${BASE_URL}/blogs/teacher/${id}`, data, {
     headers: {
       "Content-Type": "multipart/form-data",

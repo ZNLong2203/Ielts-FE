@@ -6,7 +6,6 @@ import SelectField from "@/components/form/select-field";
 import FileUploadField from "@/components/form/file-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import RichTextField from "@/components/richTextEditor";
 import {
   Form,
@@ -21,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTeacherBlog } from "@/api/blog";
+import { createTeacherBlog, updateTeacherBlog } from "@/api/blog";
 import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
 import { useEffect, useState } from "react";
 import {
@@ -87,7 +86,7 @@ const TeacherBlogForm = () => {
 
   const updateBlogMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof BlogUpdateSchema>) => {
-      //   return updateBlog(slug, formData);
+        return updateTeacherBlog(slug, formData);
     },
     onSuccess: (data) => {
       toast.success("Blog post updated successfully!");
