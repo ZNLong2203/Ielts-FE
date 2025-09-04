@@ -36,7 +36,7 @@ export const columns: ColumnDef<ICoupon>[] = [
     ),
   },
   {
-    accessorKey: "name",
+    accessorKey: "code",
     header: ({ column }) => {
       return (
         <Button
@@ -51,6 +51,25 @@ export const columns: ColumnDef<ICoupon>[] = [
     cell: ({ row }) => (
       <div className="text-sm font-medium text-primary">
         {row.original.code}
+      </div>
+    ),
+  },
+   {
+    accessorKey: "name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-secondary/20"
+        >
+          Name
+        </Button>
+      );
+    },
+    cell: ({ row }) => (
+      <div className="text-sm font-medium text-primary">
+        {row.original.name}
       </div>
     ),
   },

@@ -31,6 +31,9 @@ interface DateFieldProps {
   label: string;
   placeholder?: string;
   className?: string;
+  allowFuture?: boolean; // Thêm prop này
+  minDate?: Date; // Thêm prop để set minimum date
+  maxDate?: Date; // Thêm prop để set maximum date
 }
 
 const DateField = ({
@@ -39,15 +42,53 @@ const DateField = ({
   label,
   placeholder = "Select date",
   className,
+  allowFuture = false, // Default false để backward compatibility
+  minDate,
+  maxDate,
 }: DateFieldProps) => {
   const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
-  // Generate years (current year to 1950)
+  // Generate years - điều chỉnh range dựa trên allowFuture
   const currentYear = new Date().getFullYear();
+  const startYear = allowFuture ? 1950 : 1950;
+  const endYear = allowFuture ? currentYear + 10 : currentYear; // Cho phép 10 năm tương lai
+  
   const years = Array.from(
-    { length: currentYear - 1949 },
-    (_, i) => currentYear - i
+    { length: endYear - startYear + 1 },
+    (_, i) => endYear - i
   );
+
+  // Function to determine disabled dates
+  const getDisabledDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare only dates
+    
+    let isDisabled = false;
+    
+    // Check minimum date
+    if (minDate) {
+      const minDateOnly = new Date(minDate);
+      minDateOnly.setHours(0, 0, 0, 0);
+      isDisabled = isDisabled || date < minDateOnly;
+    }
+    
+    // Check maximum date
+    if (maxDate) {
+      const maxDateOnly = new Date(maxDate);
+      maxDateOnly.setHours(0, 0, 0, 0);
+      isDisabled = isDisabled || date > maxDateOnly;
+    }
+    
+    // Check future dates if not allowed
+    if (!allowFuture) {
+      isDisabled = isDisabled || date > today;
+    }
+    
+    // Check very old dates
+    isDisabled = isDisabled || date < new Date("1900-01-01");
+    
+    return isDisabled;
+  };
 
   return (
     <FormField
@@ -59,6 +100,7 @@ const DateField = ({
             setCalendarMonth(new Date(field.value));
           }
         }, [field.value]);
+        
         return (
           <FormItem className="flex flex-col">
             <FormLabel className="text-sm font-semibold">{label}</FormLabel>
@@ -144,7 +186,7 @@ const DateField = ({
                         <SelectContent>
                           {[
                             "January",
-                            "February",
+                            "February", 
                             "March",
                             "April",
                             "May",
@@ -164,6 +206,69 @@ const DateField = ({
                       </Select>
                     </div>
                   </div>
+                  
+                  {/* Quick Date Buttons cho coupon */}
+                  {allowFuture && (
+                    <div className="mt-3 pt-3 border-t">
+                      <label className="text-xs text-slate-600 block mb-2">
+                        Quick Selection
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-8"
+                          onClick={() => {
+                            const date = new Date();
+                            date.setDate(date.getDate() + 7);
+                            field.onChange(date);
+                          }}
+                        >
+                          +1 Week
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-8"
+                          onClick={() => {
+                            const date = new Date();
+                            date.setMonth(date.getMonth() + 1);
+                            field.onChange(date);
+                          }}
+                        >
+                          +1 Month
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-8"
+                          onClick={() => {
+                            const date = new Date();
+                            date.setMonth(date.getMonth() + 3);
+                            field.onChange(date);
+                          }}
+                        >
+                          +3 Months
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-8"
+                          onClick={() => {
+                            const date = new Date();
+                            date.setFullYear(date.getFullYear() + 1);
+                            field.onChange(date);
+                          }}
+                        >
+                          +1 Year
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Traditional Calendar */}
@@ -173,9 +278,7 @@ const DateField = ({
                   onSelect={field.onChange}
                   month={calendarMonth}
                   onMonthChange={setCalendarMonth}
-                  disabled={(date) =>
-                    date > new Date() || date < new Date("1900-01-01")
-                  }
+                  disabled={getDisabledDate}
                   initialFocus
                   className="p-3"
                 />

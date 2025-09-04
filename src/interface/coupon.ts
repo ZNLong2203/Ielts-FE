@@ -1,5 +1,6 @@
 export interface ICoupon {
   id: string;
+  name: string;
   code: string;
   description: string;
   discount_type: string;
@@ -18,6 +19,7 @@ export interface ICoupon {
 
 export interface ICouponCreate {
   code: string;
+  name: string;
   description: string;
   discount_type: string;
   discount_value: number;
@@ -31,8 +33,8 @@ export interface ICouponCreate {
 }
 
 export interface ICouponUpdate {
-  id: string;
   code?: string;
+  name?: string;
   description?: string;
   discount_type?: string;
   discount_value?: number;
