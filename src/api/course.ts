@@ -4,6 +4,11 @@ import {
   ICourseCreate,
   ICourses,
   ICourseUpdate,
+  IComboCourse,
+  IComboCourses,
+  IComboCourseCreate,
+  IComboCourseUpdate,
+  IComboCourseLevelRangeResponse,
 } from "@/interface/course";
 import { API_URL } from "@/constants/api";
 
@@ -51,4 +56,50 @@ export const updateAdminCourse = async (id: string, data: ICourseUpdate) => {
 export const deleteAdminCourse = async (id: string) => {
   const response = await api.delete(`${BASE_URL}${API_URL.COURSES}/${id}`);
   return response.data;
+};
+
+// COMBO COURSE APIS
+export const getAllComboCourses = async (params?: {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  search?: string;
+  tags?: string;
+}): Promise<IComboCourses> => {
+  const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo`, { params });
+  return response.data.data;
+};
+
+export const getComboCourseDetail = async (id: string): Promise<IComboCourse> => {
+  const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo/${id}`);
+  return response.data.data;
+};
+
+export const createComboCourse = async (data: IComboCourseCreate) => {
+  const response = await api.post(`${BASE_URL}${API_URL.COURSES}/combo`, data);
+  return response.data;
+};
+
+export const updateComboCourse = async (id: string, data: IComboCourseUpdate) => {
+  const response = await api.patch(`${BASE_URL}${API_URL.COURSES}/combo/${id}`, data);
+  return response.data;
+};
+
+export const deleteComboCourse = async (id: string) => {
+  const response = await api.delete(`${BASE_URL}${API_URL.COURSES}/combo/${id}`);
+  return response.data;
+};
+
+// Get combo courses by level range (for landing page)
+export const getComboCoursesByLevel = async (currentLevel: number, targetLevel: number): Promise<IComboCourseLevelRangeResponse> => {
+  console.log(`Frontend: Fetching combo courses for ${currentLevel} - ${targetLevel}`);
+  try {
+    const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo/level-range/${currentLevel}/${targetLevel}`);
+    console.log('Frontend: API response:', response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error('Frontend: Error fetching combo courses:', error);
+    throw error;
+  }
 };

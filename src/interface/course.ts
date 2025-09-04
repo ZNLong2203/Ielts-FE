@@ -75,3 +75,64 @@ export interface ICourseUpdate {
   course_outline?: CourseOutline;
   tags?: string[];
 }
+
+// Combo Course Interfaces
+export interface IComboCourse {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail?: string;
+  original_price: number;
+  combo_price: number;
+  discount_percentage: number;
+  course_ids: string[];
+  enrollment_count: number;
+  tags: string[];
+  created_at: Date;
+  updated_at: Date;
+  // Additional fields for frontend display
+  courses?: ICourse[];
+  total_duration?: number;
+  total_lessons?: number;
+}
+
+export interface IComboCourses {
+  meta: {
+    current: number;
+    currentSize: number;
+    pageSize: number;
+    pages: number;
+    total: number;
+  };
+  result: IComboCourse[];
+}
+
+export interface IComboCourseCreate {
+  name: string;
+  description: string;
+  original_price: number;
+  combo_price: number;
+  discount_percentage: number;
+  course_ids: string[];
+  tags?: string[];
+}
+
+export interface IComboCourseUpdate {
+  name?: string;
+  description?: string;
+  original_price?: number;
+  combo_price?: number;
+  discount_percentage?: number;
+  course_ids?: string[];
+  tags?: string[];
+}
+
+// New interface for combo course level range response
+export interface IComboCourseLevelRangeResponse {
+  comboCourses: IComboCourse[];
+  totalOriginalPrice: number;
+  totalComboPrice: number;
+  totalSavings: number;
+  levelRange: string;
+  includedLevels: string[];
+}
