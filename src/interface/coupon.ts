@@ -4,9 +4,9 @@ export interface ICoupon {
   code: string;
   description: string;
   discount_type: string;
-  discount_value: number;
-  minimum_amount: number;
-  maximum_discount: number;
+  discount_value: string;
+  minimum_amount: string;
+  maximum_discount: string;
   usage_limit: number;
   valid_from: Date;
   valid_until: Date;
@@ -22,9 +22,9 @@ export interface ICouponCreate {
   name: string;
   description: string;
   discount_type: string;
-  discount_value: number;
-  minimum_amount: number;
-  maximum_discount: number;
+  discount_value: string;
+  minimum_amount: string;
+  maximum_discount: string;
   usage_limit: number;
   valid_from: Date;
   valid_until: Date;
@@ -37,9 +37,9 @@ export interface ICouponUpdate {
   name?: string;
   description?: string;
   discount_type?: string;
-  discount_value?: number;
-  minimum_amount?: number;
-  maximum_discount?: number;
+  discount_value?: string;
+  minimum_amount?: string;
+  maximum_discount?: string;
   usage_limit?: number;
   valid_from?: Date;
   valid_until?: Date;

@@ -2,12 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { TextBadgeInfo } from "@/components/ui/info";
 import { ArrowUpDown, Calendar, Shield } from "lucide-react";
 import CellAction from "./couponAction";

@@ -6,8 +6,8 @@ export interface ICourse {
   skill_focus: string;
   difficulty_level: string;
   estimated_duration: number;
-  price: number;
-  discount_price?: number;
+  price: string;
+  discount_price?: string;
   is_featured: boolean;
   requirements: string[];
   what_you_learn: string[];
@@ -50,8 +50,8 @@ export interface ICourseCreate {
   skill_focus: string;
   difficulty_level: string;
   estimated_duration: number;
-  price: number;
-  discount_price?: number;
+  price: string;
+  discount_price?: string;
   is_featured: boolean;
   requirements: string[];
   what_you_learn: string[];
@@ -67,8 +67,8 @@ export interface ICourseUpdate {
   skill_focus?: string;
   difficulty_level?: string;
   estimated_duration?: number;
-  price?: number;
-  discount_price?: number;
+  price?: string;
+  discount_price?: string;
   is_featured?: boolean;
   requirements?: string[];
   what_you_learn?: string[];

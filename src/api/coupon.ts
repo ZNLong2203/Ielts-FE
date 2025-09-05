@@ -15,6 +15,7 @@ export const getCoupons = async ({page}: {page: number}): Promise<ICoupons> => {
 
 export const getCoupon = async (id: string): Promise<ICoupon> => {
   const response = await api.get(`${BASE_URL}${API_URL.COUPON}/${id}`);
+  console.log(response)
   return response.data.data;
 };
 
@@ -24,7 +25,7 @@ export const createCoupon = async (data: ICouponCreate): Promise<ICoupon> => {
 };
 
 export const updateCoupon = async (id: string, data: ICouponUpdate): Promise<ICoupon> => {
-  const response = await api.put(`${BASE_URL}${API_URL.COUPON}/${id}`, data);
+  const response = await api.patch(`${BASE_URL}${API_URL.COUPON}/${id}`, data);
   return response.data;
 };
 

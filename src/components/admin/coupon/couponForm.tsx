@@ -106,9 +106,9 @@ const CouponForm = () => {
       name: "",
       description: "",
       discount_type: "percentage",
-      discount_value: 0,
-      minimum_amount: 0,
-      maximum_discount: 0,
+      discount_value: "",
+      minimum_amount: "",
+      maximum_discount: "",
       usage_limit: 1,
       valid_from: new Date(),
       valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -316,7 +316,6 @@ const CouponForm = () => {
                         control={couponForm.control}
                         name="minimum_amount"
                         label="Minimum Purchase Amount ($)"
-                        type="number"
                         placeholder="e.g., 100"
                       />
 
@@ -325,7 +324,6 @@ const CouponForm = () => {
                           control={couponForm.control}
                           name="maximum_discount"
                           label="Maximum Discount Amount ($)"
-                          type="number"
                           placeholder="e.g., 200"
                         />
                       )}
@@ -343,13 +341,13 @@ const CouponForm = () => {
                               {couponForm.watch("discount_value")}%
                             </strong>{" "}
                             off
-                            {couponForm.watch("maximum_discount") > 0 && (
+                            {Number(couponForm.watch("maximum_discount")) > 0 && (
                               <span>
                                 {" "}
                                 (max ${couponForm.watch("maximum_discount")})
                               </span>
                             )}
-                            {couponForm.watch("minimum_amount") > 0 && (
+                            {Number(couponForm.watch("minimum_amount")) > 0 && (
                               <span>
                                 {" "}
                                 on orders over $
@@ -363,7 +361,7 @@ const CouponForm = () => {
                               ${couponForm.watch("discount_value")}
                             </strong>{" "}
                             off
-                            {couponForm.watch("minimum_amount") > 0 && (
+                            {Number(couponForm.watch("minimum_amount")) > 0 && (
                               <span>
                                 {" "}
                                 on orders over $
@@ -393,7 +391,6 @@ const CouponForm = () => {
                       control={couponForm.control}
                       name="usage_limit"
                       label="Usage Limit"
-                      type="number"
                       placeholder="e.g., 100"
                       required
                     />

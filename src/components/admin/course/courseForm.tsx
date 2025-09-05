@@ -162,8 +162,8 @@ const CourseForm = () => {
       skill_focus: "speaking",
       difficulty_level: "beginner",
       estimated_duration: 0,
-      price: 0,
-      discount_price: 0,
+      price: "",
+      discount_price: "",
       is_featured: false,
       requirements: [],
       what_you_learn: [],
@@ -353,14 +353,12 @@ const CourseForm = () => {
                         name="discount_price"
                         label="Discount Price (VND)"
                         placeholder="Enter discount price..."
-                        type="number"
                       />
 
                       <TextField
                         control={courseForm.control}
                         name="estimated_duration"
                         label="Duration (hours)"
-                        type="number"
                       />
                     </div>
                   </CardContent>
