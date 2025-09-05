@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Ticket,
   BookOpen,
+  Package,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -79,6 +80,12 @@ const AdminSidebar = ({ isOpen, onToggle, isCollapsed, onCollapse }: AdminSideba
       label: "Coupons",
       icon: Ticket,
       active: pathName === ROUTES.ADMIN_COUPONS,
+    },
+    {
+      href: ROUTES.ADMIN_COMBO_COURSES,
+      label: "Combo Courses",
+      icon: Package,
+      active: pathName === ROUTES.ADMIN_COMBO_COURSES,
     }
   ];
 
