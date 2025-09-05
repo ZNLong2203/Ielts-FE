@@ -12,16 +12,18 @@ import { Badge } from "@/components/ui/badge"
 
 interface PaymentMethodsProps {
   totalAmount: number
-  onPaymentSubmit: (method: string, data: any) => void
+  onPaymentSubmit: (method: string) => void
+  isProcessing?: boolean
+  isAuthenticated?: boolean
 }
 
-export default function PaymentMethods({ totalAmount, onPaymentSubmit }: PaymentMethodsProps) {
-  const [selectedMethod, setSelectedMethod] = useState("stripe")
+export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcessing: externalProcessing, isAuthenticated }: PaymentMethodsProps) {
+  const [selectedMethod, setSelectedMethod] = useState("STRIPE")
   const [isProcessing, setIsProcessing] = useState(false)
 
   const paymentMethods = [
     {
-      id: "stripe",
+      id: "STRIPE",
       name: "Credit/Debit Card",
       description: "Visa, Mastercard, American Express",
       icon: CreditCard,
@@ -31,31 +33,25 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit }: Payment
       redirectUrl: "https://checkout.stripe.com/pay/...",
     },
     {
-      id: "qr",
-      name: "QR Code Payment",
+      id: "ZALOPAY",
+      name: "ZaloPay",
       description: "Mobile banking & e-wallets",
       icon: QrCode,
       color: "emerald",
       popular: false,
       features: ["Mobile friendly", "No card needed", "Bank direct transfer"],
-      redirectUrl: "https://payment.qr.com/...",
+      redirectUrl: "https://payment.zalopay.com/...",
     },
   ]
 
   const handlePaymentRedirect = (method: any) => {
+    if (!isAuthenticated) {
+      alert("Please log in to complete your purchase")
+      return
+    }
+    
     setIsProcessing(true)
-
-    setTimeout(() => {
-      console.log(`Redirecting to ${method.name} payment page...`)
-      // Simulate redirect
-      if (method.id === "stripe") {
-        window.location.href = "/payment/success"
-      } else {
-        window.location.href = "/payment/success"
-      }
-      onPaymentSubmit(method.id, { amount: totalAmount, redirectUrl: method.redirectUrl })
-      setIsProcessing(false)
-    }, 2000)
+    onPaymentSubmit(method.id)
   }
 
   const selectedPaymentMethod = paymentMethods.find((method) => method.id === selectedMethod)
@@ -140,7 +136,7 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit }: Payment
         <div className="bg-gray-50 rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between text-lg">
             <span className="font-medium text-gray-700">Total Amount:</span>
-            <span className="text-2xl font-bold text-gray-900">${totalAmount}</span>
+            <span className="text-2xl font-bold text-gray-900">{totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ₫</span>
           </div>
           <div className="text-sm text-gray-600 mt-1">
             You&apos;ll be redirected to {selectedPaymentMethod?.name} to complete payment
@@ -150,11 +146,11 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit }: Payment
         {/* Payment Button */}
         <Button
           onClick={() => handlePaymentRedirect(selectedPaymentMethod)}
-          disabled={isProcessing}
-          className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+          disabled={isProcessing || externalProcessing || !isAuthenticated}
+          className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <AnimatePresence mode="wait">
-            {isProcessing ? (
+            {(isProcessing || externalProcessing) ? (
               <motion.div
                 key="processing"
                 initial={{ opacity: 0 }}
@@ -163,7 +159,18 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit }: Payment
                 className="flex items-center gap-3"
               >
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Redirecting to {selectedPaymentMethod?.name}...
+                Processing payment...
+              </motion.div>
+            ) : !isAuthenticated ? (
+              <motion.div
+                key="login"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-3"
+              >
+                <Lock className="h-5 w-5" />
+                Please log in to continue
               </motion.div>
             ) : (
               <motion.div
@@ -174,7 +181,7 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit }: Payment
                 className="flex items-center gap-3"
               >
                 <Lock className="h-5 w-5" />
-                Pay ${totalAmount} with {selectedPaymentMethod?.name}
+                Pay {totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ₫ with {selectedPaymentMethod?.name}
                 <ArrowRight className="h-5 w-5" />
               </motion.div>
             )}

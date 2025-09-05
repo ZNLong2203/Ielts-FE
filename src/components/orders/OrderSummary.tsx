@@ -1,11 +1,12 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Clock, Users, CheckCircle, Tag, TrendingUp } from "lucide-react"
+import { Clock, Users, CheckCircle, Tag, TrendingUp, Package } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
+import { IComboCourse } from "@/interface/course"
 
 interface Course {
   id: string
@@ -26,6 +27,7 @@ interface OrderSummaryProps {
   totalOriginalPrice: number
   totalDiscountPrice: number
   finalPrice: number
+  comboCourse?: IComboCourse
 }
 
 export default function OrderSummary({
@@ -34,27 +36,36 @@ export default function OrderSummary({
   totalOriginalPrice,
   totalDiscountPrice,
   finalPrice,
+  comboCourse,
 }: OrderSummaryProps) {
+  const formatPrice = (price: number) => {
+    // Custom Vietnamese number formatting
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫'
+  }
   return (
     <Card className="shadow-sm border border-gray-200 bg-white">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 rounded-lg">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <Package className="h-5 w-5 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">IELTS Learning Path</h3>
-            <p className="text-sm text-blue-600">Band 3.0 → 7.5+ Complete Journey</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {comboCourse ? comboCourse.name : 'IELTS Learning Path'}
+            </h3>
+            <p className="text-sm text-blue-600">
+              {comboCourse ? 'Combo Course Package' : 'Band 3.0 → 7.5+ Complete Journey'}
+            </p>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-6">
-        {/* Learning Path Badge */}
+        {/* Combo Course Badge */}
         <div className="flex items-center justify-center mb-6">
           <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2">
             <Tag className="h-3 w-3 mr-1" />
-            COMPLETE PATH - Save {comboDiscount}%
+            {comboCourse ? `COMBO PACKAGE - Save ${comboDiscount}%` : `COMPLETE PATH - Save ${comboDiscount}%`}
           </Badge>
         </div>
 
@@ -113,9 +124,8 @@ export default function OrderSummary({
 
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-600">by {course.instructor}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-400 line-through">${course.originalPrice}</span>
-                    <span className="text-sm font-semibold text-emerald-600">${course.discountPrice}</span>
+                  <div className="text-sm font-semibold text-emerald-600">
+                    {formatPrice(course.discountPrice)}
                   </div>
                 </div>
               </div>
@@ -129,17 +139,17 @@ export default function OrderSummary({
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Subtotal ({courses.length} courses)</span>
-            <span className="text-gray-900">${totalOriginalPrice}</span>
+            <span className="text-gray-900">{formatPrice(totalOriginalPrice)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Course Discounts</span>
-            <span className="text-emerald-600">-${totalOriginalPrice - totalDiscountPrice}</span>
+            <span className="text-emerald-600">-{formatPrice(totalOriginalPrice - totalDiscountPrice)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Learning Path Discount ({comboDiscount}%)</span>
-            <span className="text-emerald-600">-${totalDiscountPrice - finalPrice}</span>
+            <span className="text-gray-600">{comboCourse ? 'Combo Package Discount' : 'Learning Path Discount'} ({comboDiscount}%)</span>
+            <span className="text-emerald-600">-{formatPrice(totalDiscountPrice - finalPrice)}</span>
           </div>
 
           <Separator />
@@ -147,22 +157,22 @@ export default function OrderSummary({
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-gray-900">Total</span>
             <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900">${finalPrice}</div>
-              <div className="text-sm text-emerald-600">You save ${totalOriginalPrice - finalPrice}</div>
+              <div className="text-2xl font-bold text-gray-900">{formatPrice(finalPrice)}</div>
+              <div className="text-sm text-emerald-600">You save {formatPrice(totalOriginalPrice - finalPrice)}</div>
             </div>
           </div>
         </div>
 
-        {/* Learning Path Benefits */}
+        {/* Package Benefits */}
         <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
           <h4 className="font-medium text-emerald-800 mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Complete Learning Path Includes
+            {comboCourse ? 'Combo Package Includes' : 'Complete Learning Path Includes'}
           </h4>
           <div className="space-y-2 text-sm text-emerald-700">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-emerald-600" />
-              <span>Structured progression from Band 3.0 to 7.5+</span>
+              <span>{comboCourse ? 'All courses in the package' : 'Structured progression from Band 3.0 to 7.5+'}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-emerald-600" />

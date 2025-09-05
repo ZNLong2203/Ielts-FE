@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, Target, TrendingUp, Check, Sparkles, Package } from "lucide-react";
 
@@ -13,7 +13,7 @@ import { IComboCourse } from "@/interface/course";
 
 export default function CourseSection() {
   const level = [3.5, 4.0, 5.0, 6.0];
-  const target = [5.0, 6.0, 7.0];
+  const target = useMemo(() => [5.0, 6.0, 7.0], []);
   const [selectedLevel, setSelectedLevel] = useState<number>(3.5);
   const [selectedTarget, setSelectedTarget] = useState<number>(5.0);
   const [stageQuantity, setStageQuantity] = useState<number>(0);
@@ -247,11 +247,6 @@ export default function CourseSection() {
                 </span>
               </p>
             </div>
-            <div className="mt-4 md:mt-0">
-              <Button className="bg-yellow-400 text-blue-900 hover:bg-yellow-300 px-6 py-6 rounded-xl font-medium flex items-center">
-                <Check className="mr-2 h-5 w-5" /> Compare All Courses
-              </Button>
-            </div>
           </div>
 
           {/* Tab Navigation */}
@@ -270,7 +265,7 @@ export default function CourseSection() {
                   <Package className="h-4 w-4 mr-2" />
                   Combo Courses
                 </Button>
-                <Button
+                {/* <Button
                   onClick={() => setActiveTab('individual')}
                   variant="ghost"
                   className={`${
@@ -281,7 +276,7 @@ export default function CourseSection() {
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
                   Individual Courses
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
@@ -345,7 +340,31 @@ export default function CourseSection() {
                         </div>
                       </div>
 
-                      <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-medium py-3 rounded-xl">
+                      <Button 
+                        onClick={() => {
+                          if (comboCourses.length > 0) {
+                            // Navigate to orders page with the first combo course
+                            const firstComboCourse = comboCourses[0];
+                            const orderData = {
+                              comboCourseId: firstComboCourse.id,
+                              comboCourseName: firstComboCourse.name,
+                              comboPrice: firstComboCourse.combo_price,
+                              originalPrice: firstComboCourse.original_price,
+                              courseIds: firstComboCourse.course_ids,
+                              levelRange: `${selectedLevel} - ${selectedTarget}`,
+                              selectedLevel: Number(selectedLevel),
+                              selectedTarget: Number(selectedTarget),
+                              currentLevel: Number(selectedLevel),
+                              targetLevel: Number(selectedTarget),
+                              comboCourse: firstComboCourse
+                            };
+                            
+                            sessionStorage.setItem('selectedComboCourse', JSON.stringify(orderData));
+                            window.location.href = '/orders';
+                          }
+                        }}
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-medium py-3 rounded-xl"
+                      >
                         Purchase Complete Package
                       </Button>
                     </div>

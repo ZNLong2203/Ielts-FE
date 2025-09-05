@@ -68,7 +68,7 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white/5 rounded-lg p-6 border border-white/10"
+      className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm"
     >
       {/* Header */}
       <div className="flex items-center space-x-3 mb-4">
@@ -76,8 +76,8 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
           <Gift className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-white">Apply Coupon</h3>
-          <p className="text-blue-200 text-sm">Enter your discount code</p>
+          <h3 className="text-lg font-semibold text-gray-900">Apply Coupon</h3>
+          <p className="text-gray-600 text-sm">Enter your discount code</p>
         </div>
       </div>
 
@@ -113,13 +113,13 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
         <form onSubmit={handleApplyCoupon} className="space-y-4">
           <div className="flex space-x-3">
             <div className="flex-1 relative">
-              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-300" />
+              <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
               <Input
                 type="text"
                 placeholder="Enter coupon code"
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
-                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-300 focus:border-blue-400"
+                className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                 disabled={isLoading}
               />
             </div>
@@ -167,26 +167,23 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
 
       {/* Available Coupons */}
       <div className="mt-6">
-        <h4 className="text-sm font-medium text-blue-200 mb-3">Available Coupons:</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">Available Coupons:</h4>
+        <div className="grid grid-cols-2 gap-2">
           {[
-            { code: "WELCOME10", discount: "10%", description: "Welcome discount" },
-            { code: "SAVE20", discount: "20%", description: "General discount" },
-            { code: "COMBO15", discount: "15%", description: "Combo course special" },
-            { code: "NEWUSER", discount: "25%", description: "New user special" }
+            { code: "WELCOME10", discount: "10%" },
+            { code: "SAVE20", discount: "20%" },
+            { code: "COMBO15", discount: "15%" },
+            { code: "NEWUSER", discount: "25%" }
           ].map((coupon) => (
             <motion.div
               key={coupon.code}
               whileHover={{ scale: 1.02 }}
-              className="bg-white/5 border border-white/10 rounded-lg p-3 cursor-pointer hover:bg-white/10 transition-all duration-200"
+              className="bg-gray-50 border border-gray-200 rounded-lg p-2 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all duration-200"
               onClick={() => setCouponCode(coupon.code)}
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-white font-medium">{coupon.code}</div>
-                  <div className="text-blue-300 text-xs">{coupon.description}</div>
-                </div>
-                <div className="text-green-400 font-bold">{coupon.discount}</div>
+                <div className="text-gray-900 font-medium text-sm">{coupon.code}</div>
+                <div className="text-green-600 font-bold text-sm">{coupon.discount}</div>
               </div>
             </motion.div>
           ))}
@@ -194,7 +191,7 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
       </div>
 
       {/* Terms */}
-      <div className="mt-4 text-xs text-blue-300">
+      <div className="mt-4 text-xs text-gray-500">
         <p>• Coupons can only be used once per order</p>
         <p>• Cannot be combined with other promotions</p>
         <p>• Valid for new and existing customers</p>

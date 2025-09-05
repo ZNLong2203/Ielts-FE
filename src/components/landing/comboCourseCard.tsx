@@ -1,17 +1,12 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Clock,
   Users,
-  Star,
-  ArrowRight,
   CheckCircle,
-  TrendingUp,
   Sparkles,
   X,
   ShoppingCart
@@ -31,7 +26,6 @@ export default function ComboCourseCard({
   selectedLevel,
   selectedTarget
 }: ComboCourseCardProps) {
-  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -44,55 +38,11 @@ export default function ComboCourseCard({
     return comboCourse.original_price - comboCourse.combo_price;
   };
 
-  const getDifficultyColor = (level: number) => {
-    if (level <= 4.0) return "text-green-400";
-    if (level <= 6.0) return "text-yellow-400";
-    return "text-red-400";
-  };
-
   const handlePurchase = async () => {
     console.log('Starting purchase process...', { selectedLevel, selectedTarget });
     
     try {
-      // Clear sessionStorage first to prevent old data interference
-      console.log('Clearing sessionStorage...');
-      sessionStorage.removeItem('selectedComboCourse');
-      
-      // Clear previous Redux data first and wait for it to complete
-      console.log('Clearing previous Redux data...');
-      dispatch(clearComboData());
-      
-      // Wait a bit to ensure clear is processed
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Set level range in Redux
-      console.log('Setting level range in Redux...');
-      dispatch(setLevelRange({ currentLevel: selectedLevel, targetLevel: selectedTarget }));
-      
-      // Wait a bit to ensure level range is set
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Fetch combo courses data
-      console.log('Fetching combo courses from API...');
-      const result = await dispatch(fetchComboCoursesByLevel({ currentLevel: selectedLevel, targetLevel: selectedTarget }));
-      
-      console.log('API result:', result);
-      
-      if (result.type.endsWith('/rejected')) {
-        console.error('API call was rejected:', result.payload);
-        throw new Error('Failed to fetch combo courses');
-      }
-      
-      // Wait a bit more to ensure Redux state is fully updated
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Navigate to orders page
-      console.log('Navigating to orders page...');
-      router.push('/orders');
-    } catch (error) {
-      console.error('Error handling purchase:', error);
-      // Fallback to sessionStorage if Redux fails
-      console.log('Falling back to sessionStorage...');
+      // Store combo course data in sessionStorage for orders page
       const orderData = {
         comboCourseId: comboCourse.id,
         comboCourseName: comboCourse.name,
@@ -103,15 +53,18 @@ export default function ComboCourseCard({
         selectedLevel: Number(selectedLevel),
         selectedTarget: Number(selectedTarget),
         currentLevel: Number(selectedLevel),
-        targetLevel: Number(selectedTarget)
+        targetLevel: Number(selectedTarget),
+        comboCourse: comboCourse // Store the full combo course object
       };
       
       sessionStorage.setItem('selectedComboCourse', JSON.stringify(orderData));
       console.log('SessionStorage data set:', orderData);
       
-      // Wait a bit before navigating
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Navigate to orders page
+      console.log('Navigating to orders page...');
       router.push('/orders');
+    } catch (error) {
+      console.error('Error handling purchase:', error);
     }
   };
 
@@ -160,7 +113,7 @@ export default function ComboCourseCard({
                 Included Courses ({comboCourse.courses.length})
               </h4>
               <div className="space-y-2">
-                {comboCourse.courses.slice(0, 3).map((course, index) => (
+                {comboCourse.courses.slice(0, 3).map((course) => (
                   <div key={course.id} className="flex items-center text-sm">
                     <CheckCircle className="h-3 w-3 text-green-400 mr-2 flex-shrink-0" />
                     <span className="text-blue-100 truncate">{course.title}</span>
@@ -242,7 +195,7 @@ export default function ComboCourseCard({
           {/* Action Buttons */}
           <div className="flex gap-3 mt-auto">
             <Button
-              className="flex-1 bg-blue-600/30 text-blue-200 hover:bg-blue-600/50 font-medium py-3 rounded-xl transition-all duration-200"
+              className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-900 hover:from-yellow-300 hover:to-yellow-400 font-medium py-3 rounded-xl transition-all duration-200"
               onClick={() => setShowModal(true)}
             >
               <span className="flex items-center justify-center">
@@ -250,7 +203,7 @@ export default function ComboCourseCard({
                 <BookOpen className="ml-2 h-4 w-4" />
               </span>
             </Button>
-            <Button
+            {/* <Button
               className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-900 hover:from-yellow-300 hover:to-yellow-400 font-medium py-3 rounded-xl transition-all duration-200"
               onClick={handlePurchase}
             >
@@ -258,7 +211,7 @@ export default function ComboCourseCard({
                 Purchase
                 <ShoppingCart className="ml-2 h-4 w-4" />
               </span>
-            </Button>
+            </Button> */}
           </div>
 
           {/* Hover Effect */}
