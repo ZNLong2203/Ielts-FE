@@ -392,6 +392,7 @@ const CouponForm = () => {
                       name="usage_limit"
                       label="Usage Limit"
                       placeholder="e.g., 100"
+                      type="number"
                       required
                     />
 

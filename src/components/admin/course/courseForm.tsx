@@ -345,7 +345,6 @@ const CourseForm = () => {
                         name="price"
                         label="Price (VND)"
                         placeholder="Enter price..."
-                        type="number"
                       />
 
                       <TextField
@@ -359,6 +358,7 @@ const CourseForm = () => {
                         control={courseForm.control}
                         name="estimated_duration"
                         label="Duration (hours)"
+                        type="number"
                       />
                     </div>
                   </CardContent>

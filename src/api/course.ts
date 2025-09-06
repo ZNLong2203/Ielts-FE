@@ -59,7 +59,7 @@ export const deleteAdminCourse = async (id: string) => {
 };
 
 // COMBO COURSE APIS
-export const getAllComboCourses = async (params?: {
+export const getComboCourses = async (params?: {
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -71,7 +71,7 @@ export const getAllComboCourses = async (params?: {
   return response.data.data;
 };
 
-export const getComboCourseDetail = async (id: string): Promise<IComboCourse> => {
+export const getComboCourse = async (id: string): Promise<IComboCourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo/${id}`);
   return response.data.data;
 };
