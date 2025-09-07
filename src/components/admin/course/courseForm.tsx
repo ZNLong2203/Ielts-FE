@@ -77,11 +77,6 @@ const CourseForm = () => {
     enabled: slug !== undefined && slug !== "",
   });
 
-  const { data: teacherData } = useQuery({
-    queryKey: ["teachers"],
-    queryFn: () => getTeachers({ all: true }),
-  });
-
   const { data: categoryData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCourseCategories({ page: 1 }),
@@ -157,7 +152,6 @@ const CourseForm = () => {
     defaultValues: {
       title: "",
       description: "",
-      teacher_id: "",
       category_id: "",
       skill_focus: "speaking",
       difficulty_level: "beginner",
@@ -183,12 +177,6 @@ const CourseForm = () => {
     control: courseForm.control,
     name: "course_outline.sections",
   });
-
-  const teacherOptions =
-    teacherData?.result.map((teacher) => ({
-      label: teacher.full_name || "Unknown Teacher",
-      value: teacher.id,
-    })) || [];
 
   const detailCategory = categoryData?.result.find(
     (category) => category.id === courseData?.category.id
@@ -294,14 +282,6 @@ const CourseForm = () => {
                         label="Description"
                         placeholder="Course description..."
                         className="md:col-span-2"
-                      />
-
-                      <SelectField
-                        control={courseForm.control}
-                        name="teacher_id"
-                        label="Teacher"
-                        placeholder="Select teacher"
-                        options={teacherOptions}
                       />
 
                       <SelectField

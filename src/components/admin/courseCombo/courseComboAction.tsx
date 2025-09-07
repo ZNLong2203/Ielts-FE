@@ -72,13 +72,13 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             Copy ID
           </DropdownMenuItem>
            <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_COMBO_COURSES + `/${data.id}`)}
+            onClick={() => router.push(ROUTES.ADMIN_COURSE_COMBO+ `/${data.id}`)}
           >
             <Eye className="mr-1 h-4 w-4" />
             Detail
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_COMBO_COURSES + `/${data.id}/update`)}
+            onClick={() => router.push(ROUTES.ADMIN_COURSE_COMBO + `/${data.id}/update`)}
           >
             <Edit className="mr-1 h-4 w-4" />
             Update

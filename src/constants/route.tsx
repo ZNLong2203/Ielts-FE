@@ -15,7 +15,7 @@ const ROUTES = {
   ADMIN_COURSE_CATEGORIES: "/admin/courseCategory",
   ADMIN_COURSES: "/admin/course",
   ADMIN_COUPONS: "/admin/coupon",
-  ADMIN_COMBO_COURSES: "/admin/comboCourse",
+  ADMIN_COURSE_COMBO: "/admin/courseCombo",
 
   TEACHER: "/teacher/dashboard",
   TEACHER_COURSES: "/teacher/dashboard/course",

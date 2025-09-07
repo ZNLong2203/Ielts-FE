@@ -41,12 +41,6 @@ const TeacherSidebar = ({
       active: pathName === ROUTES.TEACHER,
     },
     {
-      href: ROUTES.TEACHER_COURSES,
-      label: "My Courses",
-      icon: BookOpen,
-      active: pathName === ROUTES.TEACHER_COURSES,
-    },
-    {
       href: ROUTES.TEACHER_BLOGS,
       label: "My Blogs",
       icon: FolderOpen,

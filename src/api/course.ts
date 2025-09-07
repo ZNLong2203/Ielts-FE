@@ -59,7 +59,7 @@ export const deleteAdminCourse = async (id: string) => {
 };
 
 // COMBO COURSE APIS
-export const getComboCourses = async (params?: {
+export const getCourseCombos = async (params?: {
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -68,25 +68,26 @@ export const getComboCourses = async (params?: {
   tags?: string;
 }): Promise<IComboCourses> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo`, { params });
+  console.log(response)
   return response.data.data;
 };
 
-export const getComboCourse = async (id: string): Promise<IComboCourse> => {
+export const getCourseCombo = async (id: string): Promise<IComboCourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo/${id}`);
   return response.data.data;
 };
 
-export const createComboCourse = async (data: IComboCourseCreate) => {
+export const createCourseCombo = async (data: IComboCourseCreate) => {
   const response = await api.post(`${BASE_URL}${API_URL.COURSES}/combo`, data);
   return response.data;
 };
 
-export const updateComboCourse = async (id: string, data: IComboCourseUpdate) => {
+export const updateCourseCombo = async (id: string, data: IComboCourseUpdate) => {
   const response = await api.patch(`${BASE_URL}${API_URL.COURSES}/combo/${id}`, data);
   return response.data;
 };
 
-export const deleteComboCourse = async (id: string) => {
+export const deleteCourseCombo = async (id: string) => {
   const response = await api.delete(`${BASE_URL}${API_URL.COURSES}/combo/${id}`);
   return response.data;
 };

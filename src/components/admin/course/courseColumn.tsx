@@ -108,7 +108,7 @@ export const columns: ColumnDef<ICourse>[] = [
       const price = row.original.price;
       return (
         <div className="text-sm font-medium text-gray-900">
-          {price ? `$${Number(price).toFixed(2)}` : "Free"}
+          {price ? `${Number(price).toLocaleString()} VND` : "Free"}
         </div>
       );
     },
@@ -131,7 +131,7 @@ export const columns: ColumnDef<ICourse>[] = [
       const price = row.original.discount_price;
       return (
         <div className="text-sm font-medium text-gray-900">
-          {price ? `$${Number(price).toFixed(2)}` : "Free"}
+          {price ? `${Number(price).toLocaleString()} VND` : "Free"}
         </div>
       );
     },

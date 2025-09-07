@@ -48,7 +48,7 @@ export const columns: ColumnDef<ICoupon>[] = [
       </div>
     ),
   },
-   {
+  {
     accessorKey: "name",
     header: ({ column }) => {
       return (
@@ -99,7 +99,11 @@ export const columns: ColumnDef<ICoupon>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.minimum_amount || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.minimum_amount
+          ? `${Number(row.original.minimum_amount).toLocaleString()} VND`
+          : "N/A"}
+      </div>
     ),
   },
   {
@@ -117,7 +121,11 @@ export const columns: ColumnDef<ICoupon>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.maximum_discount || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.maximum_discount
+          ? `${Number(row.original.maximum_discount).toLocaleString()} VND`
+          : "N/A"}
+      </div>
     ),
   },
   {

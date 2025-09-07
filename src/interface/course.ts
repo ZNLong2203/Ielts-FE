@@ -62,7 +62,6 @@ export interface ICourseCreate {
 export interface ICourseUpdate {
   title?: string;
   description?: string;
-  teacher_id?: string;
   category_id?: string;
   skill_focus?: string;
   difficulty_level?: string;
@@ -110,8 +109,8 @@ export interface IComboCourses {
 export interface IComboCourseCreate {
   name: string;
   description: string;
-  original_price: number;
-  combo_price: number;
+  original_price: string;
+  combo_price: string;
   discount_percentage: number;
   course_ids: string[];
   tags?: string[];
@@ -120,8 +119,8 @@ export interface IComboCourseCreate {
 export interface IComboCourseUpdate {
   name?: string;
   description?: string;
-  original_price?: number;
-  combo_price?: number;
+  original_price?: string;
+  combo_price?: string;
   discount_percentage?: number;
   course_ids?: string[];
   tags?: string[];

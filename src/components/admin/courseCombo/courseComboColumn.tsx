@@ -63,7 +63,11 @@ export const columns: ColumnDef<IComboCourse>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.original_price || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.original_price
+          ? `${Number(row.original.original_price).toLocaleString()} VND`
+          : "N/A"}
+      </div>
     ),
   },
   {
@@ -81,7 +85,11 @@ export const columns: ColumnDef<IComboCourse>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.combo_price || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.combo_price
+          ? `${Number(row.original.combo_price).toLocaleString()} VND`
+          : "N/A"}
+      </div>
     ),
   },
   {
@@ -99,7 +107,11 @@ export const columns: ColumnDef<IComboCourse>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="text-sm">{row.original.combo_price || "N/A"}</div>
+      <div className="text-sm">
+        {row.original.discount_percentage
+          ? `${Number(row.original.discount_percentage).toLocaleString()} %`
+          : "N/A"}
+      </div>
     ),
   },
   {

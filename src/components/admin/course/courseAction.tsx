@@ -65,7 +65,7 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             onClick={() => router.push(`${ROUTES.ADMIN_COURSES}/${data.id}`)}
           >
             <Eye className="mr-2 h-4 w-4" />
-            View
+            Detail
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>

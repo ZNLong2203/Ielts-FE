@@ -14,7 +14,6 @@ const CourseOutlineSchema = z.object({
 export const CourseCreateSchema = z.object({
   title: z.string().min(1, "Course title is required"),
   description: z.string().min(10, "Course description is required"),
-  teacher_id: z.string().min(1, "Teacher ID is required"),
   category_id: z.string().min(1, "Category ID is required"),
   skill_focus: z.string().min(1, "Skill focus is required"),
   difficulty_level: z.string().min(1, "Difficulty level is required"),
@@ -31,7 +30,6 @@ export const CourseCreateSchema = z.object({
 export const CourseUpdateSchema = z.object({
     title: z.string().optional(),
     description: z.string().optional(),
-    teacher_id: z.string().optional(),
     category_id: z.string().optional(),
     skill_focus: z.string().optional(),
     difficulty_level: z.string().optional(),

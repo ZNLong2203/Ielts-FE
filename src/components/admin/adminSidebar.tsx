@@ -82,10 +82,10 @@ const AdminSidebar = ({ isOpen, onToggle, isCollapsed, onCollapse }: AdminSideba
       active: pathName === ROUTES.ADMIN_COUPONS,
     },
     {
-      href: ROUTES.ADMIN_COMBO_COURSES,
+      href: ROUTES.ADMIN_COURSE_COMBO,
       label: "Combo Courses",
       icon: Package,
-      active: pathName === ROUTES.ADMIN_COMBO_COURSES,
+      active: pathName === ROUTES.ADMIN_COURSE_COMBO,
     }
   ];
 
