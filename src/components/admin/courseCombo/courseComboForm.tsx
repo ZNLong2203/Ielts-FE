@@ -46,7 +46,6 @@ const CourseComboForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
@@ -75,6 +74,7 @@ const CourseComboForm = () => {
 
   const createComboMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof CourseComboCreateSchema>) => {
+      console.log("Creating combo with data:", formData);
       return createCourseCombo(formData);
     },
     onSuccess: (data) => {
@@ -85,6 +85,7 @@ const CourseComboForm = () => {
       router.push(ROUTES.ADMIN_COURSE_COMBO);
     },
     onError: (error: any) => {
+      console.error("Create error:", error);
       toast.error(
         error.response?.data?.message || "Failed to create course combo"
       );
@@ -93,6 +94,7 @@ const CourseComboForm = () => {
 
   const updateComboMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof CourseComboUpdateSchema>) => {
+      console.log("Updating combo with data:", formData);
       return updateCourseCombo(slug, formData);
     },
     onSuccess: (data) => {
@@ -106,6 +108,7 @@ const CourseComboForm = () => {
       router.push(ROUTES.ADMIN_COURSE_COMBO);
     },
     onError: (error: any) => {
+      console.error("Update error:", error);
       toast.error(
         error.response?.data?.message || "Failed to update course combo"
       );
@@ -145,17 +148,24 @@ const CourseComboForm = () => {
         course_ids: data.course_ids || [],
         tags: data.tags || [],
       });
-      setSelectedCourses(data.course_ids || []);
     }
   }, [data, comboForm]);
 
   const onSubmit = (formData: z.infer<typeof CourseComboCreateSchema>) => {
     console.log("Course Combo Form Data:", formData);
+    console.log("Course IDs from form:", formData.course_ids);
+
+    // Validate that course_ids are selected
+    if (!formData.course_ids || formData.course_ids.length === 0) {
+      toast.error("Please select at least one course");
+      return;
+    }
 
     const submitData = {
       ...formData,
-      course_ids: selectedCourses,
     };
+
+    console.log("Final submit data:", submitData);
 
     if (slug && slug !== "") {
       return updateComboMutation.mutate(submitData);
@@ -165,16 +175,58 @@ const CourseComboForm = () => {
   };
 
   const handleCourseSelection = (courseId: string, checked: boolean) => {
+    // Get current course_ids from form
+    const currentCourseIds = comboForm.getValues("course_ids") || [];
+    
+    let newSelectedCourses;
     if (checked) {
-      setSelectedCourses([...selectedCourses, courseId]);
+      newSelectedCourses = [...currentCourseIds, courseId];
     } else {
-      setSelectedCourses(selectedCourses.filter((id) => id !== courseId));
+      newSelectedCourses = currentCourseIds.filter((id) => id !== courseId);
+    }
+    
+    // Update course_ids in form
+    comboForm.setValue("course_ids", newSelectedCourses);
+    
+    // Auto-calculate original price based on selected courses
+    const selectedCoursesInfo = courseOptions.filter((course) =>
+      newSelectedCourses.includes(course.id)
+    );
+    
+    const totalOriginalPrice = selectedCoursesInfo.reduce(
+      (sum, course) => sum + Number(course.price || 0),
+      0
+    );
+    
+    // Update original price in form
+    comboForm.setValue("original_price", totalOriginalPrice.toString());
+    
+    // Recalculate combo price if discount percentage exists
+    const currentDiscountPercentage = Number(comboForm.getValues("discount_percentage")) || 0;
+    if (currentDiscountPercentage > 0) {
+      const calculatedComboPrice = totalOriginalPrice * (1 - currentDiscountPercentage / 100);
+      comboForm.setValue("combo_price", Math.round(calculatedComboPrice).toString());
     }
   };
 
-  // Calculate pricing info
+  // Watch for discount percentage changes to auto-calculate combo price
+  const watchDiscountPercentage = comboForm.watch("discount_percentage");
+  const watchOriginalPrice = comboForm.watch("original_price");
+  const watchCourseIds = comboForm.watch("course_ids"); // Watch course_ids
+
+  useEffect(() => {
+    const originalPrice = Number(watchOriginalPrice) || 0;
+    const discountPercentage = Number(watchDiscountPercentage) || 0;
+    
+    if (originalPrice > 0 && discountPercentage > 0) {
+      const calculatedComboPrice = originalPrice * (1 - discountPercentage / 100);
+      comboForm.setValue("combo_price", Math.round(calculatedComboPrice).toString());
+    }
+  }, [watchDiscountPercentage, watchOriginalPrice, comboForm]);
+
+  // Calculate pricing info based on form course_ids
   const selectedCoursesInfo = courseOptions.filter((course) =>
-    selectedCourses.includes(course.id)
+    watchCourseIds?.includes(course.id)
   );
 
   const totalOriginalPrice = selectedCoursesInfo.reduce(
@@ -193,8 +245,6 @@ const CourseComboForm = () => {
 
   // Watch for form changes
   const watchName = comboForm.watch("name");
-  const watchOriginalPrice = comboForm.watch("original_price");
-  const watchDiscountPercentage = comboForm.watch("discount_percentage");
   const watchComboPrice = comboForm.watch("combo_price");
 
   if (isLoading) {
@@ -239,24 +289,21 @@ const CourseComboForm = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  <span>Basic Information</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...comboForm}>
-                  <form
-                    onSubmit={comboForm.handleSubmit(onSubmit)}
-                    className="space-y-6"
-                  >
+      <Form {...comboForm}>
+        <form onSubmit={comboForm.handleSubmit(onSubmit)} className="space-y-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Form */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Basic Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
+                      <span>Basic Information</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
                     <TextField
                       control={comboForm.control}
                       name="name"
@@ -279,149 +326,176 @@ const CourseComboForm = () => {
                       label="Tags"
                       placeholder="Add tags (e.g., IELTS, Speaking, Writing, Premium)"
                     />
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
 
-            {/* Course Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Target className="h-5 w-5 text-orange-600" />
-                  <span>Course Selection</span>
-                </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  Select courses to include in this combo package
-                </p>
-              </CardHeader>
-              <CardContent>
-                {courseOptions.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {courseOptions.map((course) => (
-                        <div
-                          key={course.id}
-                          className={`p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
-                            selectedCourses.includes(course.id)
-                              ? "border-green-300 bg-green-50"
-                              : "border-gray-200"
-                          }`}
-                        >
-                          <div className="flex items-start space-x-3">
-                            <Checkbox
-                              id={course.id}
-                              checked={selectedCourses.includes(course.id)}
-                              onCheckedChange={(checked: any) =>
-                                handleCourseSelection(course.id, checked as boolean)
-                              }
-                              className="mt-1"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <label
-                                htmlFor={course.id}
-                                className="block text-sm font-medium text-gray-900 cursor-pointer"
-                              >
-                                {course.title}
-                              </label>
-                              <div className="flex items-center justify-between mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {course.level}
-                                </Badge>
-                                <span className="text-sm font-medium text-green-600">
-                                  ${course.price}
+                {/* Course Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Target className="h-5 w-5 text-orange-600" />
+                      <span>Course Selection</span>
+                    </CardTitle>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Select courses to include in this combo package (Original price will be auto-calculated)
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    {courseOptions.length > 0 ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {courseOptions.map((course) => (
+                            <div
+                              key={course.id}
+                              className={`p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
+                                watchCourseIds?.includes(course.id)
+                                  ? "border-green-300 bg-green-50"
+                                  : "border-gray-200"
+                              }`}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <Checkbox
+                                  id={course.id}
+                                  checked={watchCourseIds?.includes(course.id) || false}
+                                  onCheckedChange={(checked: any) =>
+                                    handleCourseSelection(course.id, checked as boolean)
+                                  }
+                                  className="mt-1"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <label
+                                    htmlFor={course.id}
+                                    className="block text-sm font-medium text-gray-900 cursor-pointer"
+                                  >
+                                    {course.title}
+                                  </label>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {course.level}
+                                    </Badge>
+                                    <span className="text-sm font-medium text-green-600">
+                                      {Number(course.price).toLocaleString()} VND
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Selected Courses Summary */}
+                        {watchCourseIds && watchCourseIds.length > 0 && (
+                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h4 className="text-sm font-medium text-blue-900 mb-2">
+                              Selected Courses ({watchCourseIds.length})
+                            </h4>
+                            <div className="space-y-2">
+                              {selectedCoursesInfo.map((course) => (
+                                <div
+                                  key={course.id}
+                                  className="flex justify-between text-sm"
+                                >
+                                  <span className="text-blue-800">
+                                    {course.title}
+                                  </span>
+                                  <span className="font-medium text-blue-900">
+                                    {Number(course.price).toLocaleString()} VND
+                                  </span>
+                                </div>
+                              ))}
+                              <div className="border-t border-blue-300 pt-2 mt-2">
+                                <div className="flex justify-between text-sm font-medium">
+                                  <span className="text-blue-900">
+                                    Total Course Price:
+                                  </span>
+                                  <span className="text-blue-900">
+                                    {totalOriginalPrice.toLocaleString()} VND
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Auto-calculation notice */}
+                            <div className="mt-3 p-2 bg-blue-100 rounded border border-blue-300">
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle className="h-4 w-4 text-blue-600" />
+                                <span className="text-xs text-blue-800">
+                                  Original price will be automatically set to {totalOriginalPrice.toLocaleString()} VND
                                 </span>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Selected Courses Summary */}
-                    {selectedCourses.length > 0 && (
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h4 className="text-sm font-medium text-blue-900 mb-2">
-                          Selected Courses ({selectedCourses.length})
-                        </h4>
-                        <div className="space-y-2">
-                          {selectedCoursesInfo.map((course) => (
-                            <div
-                              key={course.id}
-                              className="flex justify-between text-sm"
-                            >
-                              <span className="text-blue-800">
-                                {course.title}
-                              </span>
-                              <span className="font-medium text-blue-900">
-                                ${course.price}
-                              </span>
-                            </div>
-                          ))}
-                          <div className="border-t border-blue-300 pt-2 mt-2">
-                            <div className="flex justify-between text-sm font-medium">
-                              <span className="text-blue-900">
-                                Total Course Price:
-                              </span>
-                              <span className="text-blue-900">
-                                ${totalOriginalPrice}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                        <p>No courses available</p>
                       </div>
                     )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p>No courses available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
 
-            {/* Pricing Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                  <span>Pricing Information</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...comboForm}>
-                  <div className="space-y-6">
+                {/* Pricing Information */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      <span>Pricing Information</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <TextField
-                        control={comboForm.control}
-                        name="original_price"
-                        label="Original Price ($)"
-                        placeholder="e.g., 299.99"
-                        required
-                      />
+                      <div>
+                        <TextField
+                          control={comboForm.control}
+                          name="original_price"
+                          label="Original Price (VND)"
+                          placeholder="Auto-calculated from selected courses"
+                          required
+                        />
+                        {watchCourseIds && watchCourseIds.length > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            <CheckCircle className="h-3 w-3 inline mr-1" />
+                            Auto-calculated from selected courses
+                          </p>
+                        )}
+                      </div>
 
-                      <TextField
-                        control={comboForm.control}
-                        name="discount_percentage"
-                        label="Discount Percentage (%)"
-                        type="number"
-                        placeholder="e.g., 20"
-                        required
-                      />
+                      <div>
+                        <TextField
+                          control={comboForm.control}
+                          name="discount_percentage"
+                          label="Discount Percentage (%)"
+                          type="number"
+                          placeholder="e.g., 20"
+                          required
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Final price will be auto-calculated
+                        </p>
+                      </div>
 
-                      <TextField
-                        control={comboForm.control}
-                        name="combo_price"
-                        label="Final Combo Price ($)"
-                        placeholder="e.g., 199.99"
-                        required
-                      />
+                      <div>
+                        <TextField
+                          control={comboForm.control}
+                          name="combo_price"
+                          label="Final Combo Price (VND)"
+                          placeholder="Auto-calculated from discount"
+                          required
+                        />
+                        {discountPercentage > 0 && originalPrice > 0 && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            <Calculator className="h-3 w-3 inline mr-1" />
+                            Auto-calculated: {Math.round(calculatedDiscountPrice).toLocaleString()} VND
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Pricing Validation */}
-                    {Number(watchComboPrice) > Number(watchOriginalPrice) &&
-                      watchOriginalPrice &&
+                    {Number(watchComboPrice) > Number(originalPrice) &&
+                      originalPrice &&
                       watchComboPrice && (
                         <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                           <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
@@ -436,7 +510,7 @@ const CourseComboForm = () => {
                         </div>
                       )}
 
-                    {Number(watchDiscountPercentage) > 100 && watchDiscountPercentage && (
+                    {Number(discountPercentage) > 100 && discountPercentage && (
                       <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                         <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
                         <div>
@@ -450,22 +524,30 @@ const CourseComboForm = () => {
                       </div>
                     )}
 
-                    {/* Pricing Calculator */}
+                    {/* Real-time Pricing Calculator */}
                     {originalPrice > 0 && discountPercentage > 0 && (
                       <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
                         <div className="flex items-start space-x-2 mb-3">
                           <Calculator className="h-5 w-5 text-purple-600 mt-0.5" />
                           <h4 className="text-sm font-medium text-purple-900">
-                            Discount Calculator
+                            Auto Calculation Preview
                           </h4>
                         </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-purple-800">
-                              Original Price:
+                              Selected Courses Total:
                             </span>
                             <span className="font-medium text-purple-900">
-                              ${originalPrice}
+                              {totalOriginalPrice.toLocaleString()} VND
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-purple-800">
+                              Original Price (Form):
+                            </span>
+                            <span className="font-medium text-purple-900">
+                              {originalPrice.toLocaleString()} VND
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -473,70 +555,28 @@ const CourseComboForm = () => {
                               Discount ({discountPercentage}%):
                             </span>
                             <span className="text-red-600">
-                              -${(originalPrice * discountPercentage / 100).toFixed(2)}
+                              - {(originalPrice * discountPercentage / 100).toLocaleString()} VND
                             </span>
                           </div>
                           <div className="border-t border-purple-300 pt-2">
                             <div className="flex justify-between font-medium">
                               <span className="text-purple-900">
-                                Calculated Price:
+                                Final Combo Price:
                               </span>
                               <span className="text-purple-700">
-                                ${calculatedDiscountPrice.toFixed(2)}
+                                {Math.round(calculatedDiscountPrice).toLocaleString()} VND
                               </span>
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
 
-                    {/* Savings Preview */}
-                    {originalPrice > 0 && comboPrice > 0 && (
-                      <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                        <div className="flex items-start space-x-2 mb-3">
-                          <Percent className="h-5 w-5 text-green-600 mt-0.5" />
-                          <h4 className="text-sm font-medium text-green-900">
-                            Final Pricing Summary
-                          </h4>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-green-800">
-                              Original Price:
-                            </span>
-                            <span className="line-through text-gray-500">
-                              ${originalPrice}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-green-800">Final Combo Price:</span>
-                            <span className="font-medium text-green-900">
-                              ${comboPrice}
-                            </span>
-                          </div>
-                          <div className="border-t border-green-300 pt-2">
-                            <div className="flex justify-between font-medium">
-                              <span className="text-green-900">
-                                You Save:
-                              </span>
-                              <span className="text-green-700">
-                                ${actualSavings.toFixed(2)} ({actualDiscountPercentage.toFixed(1)}% off)
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Form>
-              </CardContent>
-            </Card>
-
-            {/* Submit Button */}
-            <Card>
-              <CardContent className="pt-6">
-                <Form {...comboForm}>
-                  <form onSubmit={comboForm.handleSubmit(onSubmit)}>
+                {/* Submit Button */}
+                <Card>
+                  <CardContent className="pt-6">
                     <div className="flex justify-end space-x-3">
                       <Button
                         type="button"
@@ -551,7 +591,8 @@ const CourseComboForm = () => {
                         disabled={
                           createComboMutation.isPending ||
                           updateComboMutation.isPending ||
-                          selectedCourses.length === 0
+                          !watchCourseIds ||
+                          watchCourseIds.length === 0
                         }
                       >
                         {createComboMutation.isPending ||
@@ -572,168 +613,93 @@ const CourseComboForm = () => {
                         )}
                       </Button>
                     </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Combo Summary */}
-            <Card className="border-green-200 bg-green-50/50">
-              <CardHeader>
-                <CardTitle className="text-green-700 text-sm">
-                  Combo Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-green-900">
-                      {watchName || "Course Combo Name"}
-                    </div>
-                    <Badge variant="secondary" className="mt-1">
-                      {selectedCourses.length} Course
-                      {selectedCourses.length !== 1 ? "s" : ""}
-                    </Badge>
-                  </div>
-
-                  {comboPrice > 0 && (
-                    <div className="text-center space-y-2">
-                      <div className="text-2xl font-bold text-green-600">
-                        ${comboPrice}
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Enhanced Combo Summary */}
+                <Card className="border-green-200 bg-green-50/50">
+                  <CardHeader>
+                    <CardTitle className="text-green-700 text-sm">
+                      Combo Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-green-900">
+                          {watchName || "Course Combo Name"}
+                        </div>
+                        <Badge variant="secondary" className="mt-1">
+                          {watchCourseIds?.length || 0} Course
+                          {(watchCourseIds?.length || 0) !== 1 ? "s" : ""}
+                        </Badge>
                       </div>
-                      {originalPrice > 0 && (
-                        <div className="space-y-1">
-                          <div className="text-sm text-gray-600 line-through">
-                            Was ${originalPrice}
+
+                      {comboPrice > 0 && (
+                        <div className="text-center space-y-2">
+                          <div className="text-2xl font-bold text-green-600">
+                            {comboPrice.toLocaleString()} VND
                           </div>
-                          <div className="text-sm font-medium text-green-700">
-                            Save ${actualSavings.toFixed(2)} (
-                            {actualDiscountPercentage.toFixed(1)}% off)
-                          </div>
+                          {originalPrice > 0 && (
+                            <div className="space-y-1">
+                              <div className="text-sm text-gray-600 line-through">
+                                Was {originalPrice.toLocaleString()} VND
+                              </div>
+                              <div className="text-sm font-medium text-green-700">
+                                Save {actualSavings.toLocaleString()} VND (
+                                {actualDiscountPercentage.toFixed(1)}% off)
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
+
+                      {/* Pricing breakdown */}
+                      <div className="space-y-2 text-sm border-t pt-3">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Courses Total:</span>
+                          <span>{totalOriginalPrice.toLocaleString()} VND</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Original Price:</span>
+                          <span>{originalPrice.toLocaleString()} VND</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Discount:</span>
+                          <span>{discountPercentage}%</span>
+                        </div>
+                        <div className="flex justify-between font-medium border-t pt-1">
+                          <span className="text-gray-900">Final Price:</span>
+                          <span className="text-green-600">{comboPrice.toLocaleString()} VND</span>
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </CardContent>
+                </Card>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Original:</span>
-                      <span>${watchOriginalPrice || "0"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Discount:</span>
-                      <span>{watchDiscountPercentage || "0"}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Final Price:</span>
-                      <span className="font-medium">
-                        ${watchComboPrice || "0"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Tips */}
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardHeader>
-                <CardTitle className="text-blue-700 text-sm">
-                  Combo Tips
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-xs text-blue-800">
-                <p>• Select complementary courses that work well together</p>
-                <p>• Set competitive original price based on market research</p>
-                <p>• Use appropriate discount percentage to attract students</p>
-                <p>• Ensure final combo price provides good value</p>
-                <p>• Consider different skill levels and progression paths</p>
-              </CardContent>
-            </Card>
-
-            {/* Validation Status */}
-            <Card className="border-gray-200">
-              <CardHeader>
-                <CardTitle className="text-gray-700 text-sm">
-                  Validation Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    {watchName ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                    <span
-                      className={
-                        watchName ? "text-green-700" : "text-red-700"
-                      }
-                    >
-                      Combo Name
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    {selectedCourses.length > 0 ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                    <span
-                      className={
-                        selectedCourses.length > 0
-                          ? "text-green-700"
-                          : "text-red-700"
-                      }
-                    >
-                      Courses Selected
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    {watchOriginalPrice && Number(watchOriginalPrice) > 0 ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                    <span
-                      className={
-                        watchOriginalPrice && Number(watchOriginalPrice) > 0
-                          ? "text-green-700"
-                          : "text-red-700"
-                      }
-                    >
-                      Original Price Set
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    {watchComboPrice && Number(watchComboPrice) > 0 ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-500" />
-                    )}
-                    <span
-                      className={
-                        watchComboPrice && Number(watchComboPrice) > 0
-                          ? "text-green-700"
-                          : "text-red-700"
-                      }
-                    >
-                      Final Price Set
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                {/* Quick Tips */}
+                <Card className="border-gray-200 bg-gray-50/50">
+                  <CardHeader>
+                    <CardTitle className="text-gray-700 text-sm">
+                      Combo Tips
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-xs text-gray-800">
+                    <p>• Select complementary courses that work well together</p>
+                    <p>• Set competitive original price based on market research</p>
+                    <p>• Use appropriate discount percentage to attract students</p>
+                    <p>• Ensure final combo price provides good value</p>
+                    <p>• Consider different skill levels and progression paths</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </form>
+      </Form>
     </div>
   );
 };

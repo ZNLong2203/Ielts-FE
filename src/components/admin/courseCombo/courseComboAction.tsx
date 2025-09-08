@@ -16,7 +16,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { getQueryClient } from "@/utils/getQueryClient";
 import ROUTES from "@/constants/route";
-import { deleteComboCourse } from "@/api/course";
+import { deleteCourseCombo } from "@/api/course";
 import { IComboCourse } from "@/interface/course";
 
 interface CellActionProps {
@@ -37,7 +37,7 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
     isError,
     isPending,
   } = useMutation({
-    mutationFn: deleteComboCourse,
+    mutationFn: deleteCourseCombo,
     onError: (error: any) => {
       toast.error(
         error.response?.data?.message || "Failed to delete combo course"

@@ -22,7 +22,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./courseComboColumn";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { getComboCourses } from "@/api/course";
+import { getCourseCombos } from "@/api/course";
 import { useFilter } from "@/hook/useFilter";
 import ROUTES from "@/constants/route";
 import Loading from "@/components/ui/loading";
@@ -35,7 +35,7 @@ const CourseComboTable = () => {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["courseCombos", page],
-    queryFn: () => getComboCourses({ page }),
+    queryFn: () => getCourseCombos({ page }),
   });
 
   // Meta information
