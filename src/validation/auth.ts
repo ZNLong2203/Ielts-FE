@@ -57,3 +57,13 @@ export const TeacherRegisterSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+export const ResetTeacherPasswordSchema = z
+  .object({
+    new_password: PasswordSchema,
+    confirm_password: z.string().min(8, "Confirm password is required"),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: "Passwords don't match",
+    path: ["confirm_password"],
+  });

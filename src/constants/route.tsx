@@ -2,6 +2,7 @@ const ROUTES = {
   HOME: "/",
   STUDENT_REGISTER: "/auth/student/register",
   TEACHER_REGISTER: "/auth/teacher/register",
+  TEACHER_RESET_PASSWORD: "/auth/teacher/reset-password",
   LOGIN: "/auth/login",
 
   STUDENT_PROFILE: "/profile/student",

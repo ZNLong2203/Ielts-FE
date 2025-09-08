@@ -1,6 +1,7 @@
 export const API_URL = {
     STUDENT_REGISTER: '/auth/register-student',
     TEACHER_REGISTER: '/auth/register-teacher',
+    TEACHER_RESET_PASSWORD: '/auth/reset-teacher-password',
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     REFRESH_TOKEN: '/auth/refresh',

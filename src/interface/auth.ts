@@ -24,3 +24,8 @@ export interface ITeacherRegister {
     ielts_band_score: number,
     file: File
 }
+
+export interface IResetTeacherPassword {
+    new_password: string,
+    confirm_password: string
+}
