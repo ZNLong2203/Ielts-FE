@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store"
+import toast from "react-hot-toast"
 
 // Components
 import OrderProgress from "@/components/orders/OrderProgress"
@@ -20,6 +21,7 @@ import CouponSection from "@/components/orders/CouponSection"
 import { IComboCourse } from "@/interface/course"
 import { createOrder } from "@/api/order"
 import { IOrderCreate } from "@/interface/order"
+import { handleStripeSuccess, handleStripeCancel } from "@/api/payment"
 
 // Mock user data for non-authenticated users
 const mockUserInfo = {
@@ -45,6 +47,52 @@ export default function OrderPage() {
   const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated)
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const orderId = urlParams.get('orderId')
+    const paymentId = urlParams.get('paymentId')
+    const success = urlParams.get('success')
+    const cancel = urlParams.get('cancel')
+
+    if (orderId && paymentId) {
+      if (success === 'true') {
+        // Handle Stripe success callback
+        handleStripeSuccess(orderId, paymentId)
+          .then(() => {
+            console.log('Payment successful!')
+            toast.success('Payment completed successfully! Redirecting to success page...')
+
+            setTimeout(() => {
+              window.location.href = '/payment/success'
+            }, 1500)
+          })
+          .catch((error) => {
+            console.error('Error handling payment success:', error)
+            toast.error('Payment verification failed. Please contact support.')
+
+            setTimeout(() => {
+              window.location.href = '/payment/failed'
+            }, 1500)
+          })
+      } else if (cancel === 'true') {
+        handleStripeCancel(orderId, paymentId)
+          .then(() => {
+            console.log('Payment cancelled')
+            toast.error('Payment was cancelled. You can try again.')
+
+            setTimeout(() => {
+              window.location.href = '/payment/failed'
+            }, 1500)
+          })
+          .catch((error) => {
+            console.error('Error handling payment cancel:', error)
+            toast.error('Error processing payment cancellation.')
+            setTimeout(() => {
+              window.location.href = '/payment/failed'
+            }, 1500)
+          })
+      }
+    }
+
     // Get combo course data from sessionStorage
     const storedData = sessionStorage.getItem('selectedComboCourse')
     if (storedData) {
@@ -102,8 +150,8 @@ export default function OrderPage() {
     id: course.id,
     title: course.title,
     image: "/placeholder.svg?height=80&width=120",
-    originalPrice: course.price || 0,
-    discountPrice: course.price || 0,
+    originalPrice: Number(course.price) || 0,
+    discountPrice: Number(course.price) || 0,
     duration: `${course.estimated_duration || 0}h`,
     lessons: course.estimated_duration || 0,
     level: course.difficulty_level || 'All Levels',
@@ -113,42 +161,92 @@ export default function OrderPage() {
 
   const handlePaymentSubmit = async (method: string) => {
     if (!isAuthenticated) {
-      alert("Please log in to complete your purchase")
+      toast.error("Please log in to complete your purchase")
       return
     }
 
     if (!comboCourseData?.comboCourseId) {
-      alert("No combo course selected")
+      toast.error("No combo course selected")
       return
     }
 
     setIsProcessingPayment(true)
+    toast.loading("Processing your payment...", { id: "payment-processing" })
     
     try {
+      // Validate combo course data
+      if (!comboCourseData?.comboCourseId) {
+        toast.error("Invalid combo course data. Please try again.", { id: "payment-processing" })
+        return
+      }
+
       const orderData: IOrderCreate = {
         comboId: comboCourseData.comboCourseId,
         couponId: appliedCoupon?.code || undefined,
-        paymentMethod: method.toUpperCase(),
+        paymentMethod: method.toLowerCase(),
         notes: `Combo course purchase: ${comboCourseData.comboCourseName}`
       }
 
       console.log("Creating order with data:", orderData)
+      console.log("Payment method:", method.toLowerCase())
+      console.log("Combo price:", comboCourseData.comboPrice)
+      
       const response = await createOrder(orderData)
       console.log("Order created successfully:", response)
+      console.log("Payment data:", response.data?.payment)
       
       // Clear session storage
       sessionStorage.removeItem('selectedComboCourse')
       
-      // Redirect to success page or payment gateway
-      if (response.payment?.payment_url) {
-        window.location.href = response.payment.payment_url
+      // Handle payment response based on method
+      if (response.data?.payment) {
+        const { payment } = response.data
+        
+        if (method.toLowerCase() === 'stripe') {
+          if (payment.checkoutUrl) {
+            console.log("Redirecting to Stripe checkout:", payment.checkoutUrl)
+            toast.success("Redirecting to Stripe checkout...", { id: "payment-processing" })
+            setTimeout(() => {
+              window.location.href = payment.checkoutUrl
+            }, 1000)
+          } else {
+            toast.error("Stripe checkout URL not available. Please try again.", { id: "payment-processing" })
+          }
+        } else if (method.toLowerCase() === 'zalopay') {
+          // ZaloPay: Show QR code or redirect to payment URL
+          if (payment.checkoutUrl) {
+            console.log("Redirecting to ZaloPay:", payment.checkoutUrl)
+            toast.success("Redirecting to ZaloPay...", { id: "payment-processing" })
+            setTimeout(() => {
+              window.location.href = payment.checkoutUrl
+            }, 1000)
+          } else {
+            toast.error("ZaloPay payment URL not available. Please try again.", { id: "payment-processing" })
+          }
+        } else {
+          toast.error("Unsupported payment method. Please try again.", { id: "payment-processing" })
+        }
       } else {
-        alert("Order created successfully! Payment processing...")
-        // TODO: Redirect to order success page
+        toast.error("Payment information not available. Please try again.", { id: "payment-processing" })
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating order:", error)
-      alert("Failed to create order. Please try again.")
+      console.error("Error response:", error.response?.data)
+      console.error("Error status:", error.response?.status)
+      
+      let errorMessage = error.response?.data?.message || error.message || "Failed to create order. Please try again."
+      
+      if (method.toLowerCase() === 'zalopay') {
+        if (errorMessage.includes('ZaloPay create order failed')) {
+          errorMessage = "ZaloPay payment service is temporarily unavailable. Please try Stripe payment instead."
+        } else if (errorMessage.includes('Dữ liệu yêu cầu không hợp lệ')) {
+          errorMessage = "Invalid payment data for ZaloPay. Please try Stripe payment instead."
+        }
+        
+        console.log("ZaloPay error detected. Consider using Stripe as alternative.")
+      }
+      
+      toast.error(errorMessage, { id: "payment-processing" })
     } finally {
       setIsProcessingPayment(false)
     }
