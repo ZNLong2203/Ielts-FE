@@ -34,6 +34,12 @@ const CourseTable = () => {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
+  // Dynamic query params
+  const queryParams = {
+    deleted: false,
+    page: page,
+  }
+  
   // Get all courses
   const {
     data: allCourses,
@@ -41,8 +47,8 @@ const CourseTable = () => {
     refetch: allRefetch,
     isError: allError,
   } = useQuery({
-    queryKey: ["courses", page],
-    queryFn: () => getAllCoursesForAdmin({ page }),
+    queryKey: ["courses", queryParams],
+    queryFn: () => getAllCoursesForAdmin(queryParams),
   });
 
   const filterFields = ["title", "skill_focus", "difficulty_level"];

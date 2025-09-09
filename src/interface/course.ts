@@ -81,9 +81,9 @@ export interface IComboCourse {
   name: string;
   description: string;
   thumbnail?: string;
-  original_price: number;
-  combo_price: number;
-  discount_percentage: number;
+  original_price: string;
+  combo_price: string;
+  discount_percentage: string;
   course_ids: string[];
   enrollment_count: number;
   tags: string[];
@@ -111,7 +111,7 @@ export interface IComboCourseCreate {
   description: string;
   original_price: string;
   combo_price: string;
-  discount_percentage: number;
+  discount_percentage: string;
   course_ids: string[];
   tags?: string[];
 }
@@ -121,7 +121,7 @@ export interface IComboCourseUpdate {
   description?: string;
   original_price?: string;
   combo_price?: string;
-  discount_percentage?: number;
+  discount_percentage?: string;
   course_ids?: string[];
   tags?: string[];
 }

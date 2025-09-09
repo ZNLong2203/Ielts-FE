@@ -121,7 +121,7 @@ const CourseComboForm = () => {
       name: "",
       description: "",
       original_price: "",
-      discount_percentage: 0,
+      discount_percentage: "",
       combo_price: "",
       course_ids: [],
       tags: [],
@@ -142,7 +142,7 @@ const CourseComboForm = () => {
       comboForm.reset({
         name: data.name,
         description: data.description,
-        discount_percentage: data.discount_percentage || 0,
+        discount_percentage: data.discount_percentage || "",
         combo_price: data.combo_price?.toString() || "",
         original_price: data.original_price?.toString() || "",
         course_ids: data.course_ids || [],
@@ -467,7 +467,6 @@ const CourseComboForm = () => {
                           control={comboForm.control}
                           name="discount_percentage"
                           label="Discount Percentage (%)"
-                          type="number"
                           placeholder="e.g., 20"
                           required
                         />

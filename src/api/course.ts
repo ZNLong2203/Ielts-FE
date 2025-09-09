@@ -17,7 +17,6 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 // ADMIN APIS
 export const getAllCoursesForAdmin = async (params?: {
   page?: number;
-  pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   search?: string;
@@ -74,6 +73,7 @@ export const getCourseCombos = async (params?: {
 
 export const getCourseCombo = async (id: string): Promise<IComboCourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/combo/${id}`);
+  console.log("Combo course detail response:", response);
   return response.data.data;
 };
 
