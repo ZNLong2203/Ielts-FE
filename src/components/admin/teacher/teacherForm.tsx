@@ -24,6 +24,7 @@ import {
   Shield,
   RefreshCw,
   Loader2,
+  Upload,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -34,11 +35,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
-
 import { getTeacher, updateTeacher, updateTeacherStatus } from "@/api/teacher";
 import { ProfileFormSchema } from "@/validation/profile";
 import { TeacherFormSchema } from "@/validation/teacher";
 import { updateProfile, updateProfileStatus } from "@/api/profile";
+import { uploadAvatar } from "@/api/file";
 import { TextIconInfo, TextBadgeInfo } from "@/components/ui/info";
 import { USER_GENDER, USER_STATUS } from "@/constants/user";
 import { TEACHER_STATUS } from "@/constants/teacher";
@@ -53,12 +54,30 @@ const TeacherForm = () => {
   // State for current status
   const [currentStatus, setCurrentStatus] = useState("pending");
   const [currentTeacherStatus, setCurrentTeacherStatus] = useState("");
+  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
 
   // Get teacher details
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: ["teacherDetail", userId],
     queryFn: () => getTeacher(userId),
     retry: false,
+  });
+
+  // Upload teacher avatar
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return uploadAvatar(file, userId);
+    },
+    onSuccess: (data) => {
+      toast.success(data.data.message);
+      queryClient.invalidateQueries({
+        queryKey: ["teacherDetail", userId],
+      });
+      router.push(ROUTES.ADMIN_TEACHERS);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to upload avatar");
+    },
   });
 
   // Update profile status
@@ -70,7 +89,6 @@ const TeacherForm = () => {
       toast.success(data.data.message || "Status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
-      // Update local state
       setCurrentStatus(data.data.data?.status || status);
     },
     onError: (error: any) => {
@@ -87,11 +105,12 @@ const TeacherForm = () => {
       toast.success(data.data.message || "Teacher status updated successfully");
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
-      // Update local state
       setCurrentTeacherStatus(data.data.data?.status || status);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update teacher status");
+      toast.error(
+        error.response?.data?.message || "Failed to update teacher status"
+      );
     },
   });
 
@@ -117,13 +136,17 @@ const TeacherForm = () => {
       return updateTeacher(userId, FormData);
     },
     onSuccess: (data) => {
-      toast.success(data.data.data.message || "Teacher details updated successfully");
+      toast.success(
+        data.data.data.message || "Teacher details updated successfully"
+      );
       queryClient.invalidateQueries({ queryKey: ["teachers"] });
       queryClient.invalidateQueries({ queryKey: ["teacherDetail", userId] });
       router.push(ROUTES.ADMIN_TEACHERS);
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update teacher details");
+      toast.error(
+        error.response?.data?.message || "Failed to update teacher details"
+      );
     },
   });
 
@@ -139,12 +162,11 @@ const TeacherForm = () => {
     },
   });
 
-  // Profile form
+  // Profile form (without avatar since we handle it separately)
   const profileForm = useForm<z.infer<typeof ProfileFormSchema>>({
     resolver: zodResolver(ProfileFormSchema),
     defaultValues: {
       full_name: "",
-      avatar: undefined,
       phone: "",
       country: "",
       city: "",
@@ -153,13 +175,19 @@ const TeacherForm = () => {
     },
   });
 
-  // Handle student form submission
+  // Handle avatar upload
+  const onAvatarUpload = (file: File) => {
+    console.log("Uploading avatar:", file);
+    uploadAvatarMutation.mutate(file);
+  };
+
+  // Handle teacher form submission
   const onTeacherFormSubmit = (formData: z.infer<typeof TeacherFormSchema>) => {
     console.log("Teacher Form Data:", formData);
     updateTeacherMutation.mutate(formData);
   };
 
-  // Handle profile form submission
+  // Handle profile form submission (without avatar)
   const onProfileFormSubmit = (formData: z.infer<typeof ProfileFormSchema>) => {
     console.log("Profile Form Data:", formData);
     updateProfileMutation.mutate(formData);
@@ -177,7 +205,7 @@ const TeacherForm = () => {
       updateTeacherStatusMutation.mutate(newStatus);
     }
   };
-  
+
   useEffect(() => {
     if (data) {
       // Set current status
@@ -193,9 +221,9 @@ const TeacherForm = () => {
         teaching_style: data?.teachers?.teaching_style || "",
         hourly_rate: data?.teachers?.hourly_rate || 0,
       });
+
       profileForm.reset({
         full_name: data?.full_name || "",
-        avatar: data?.avatar,
         phone: data?.phone || "",
         country: data?.country || "",
         city: data?.city || "",
@@ -259,7 +287,7 @@ const TeacherForm = () => {
                 <Avatar className="h-24 w-24 mx-auto mb-4">
                   <AvatarImage src={data?.avatar} />
                   <AvatarFallback className="text-2xl">
-                    {data?.full_name?.charAt(0) || "T"}
+                    {data?.full_name?.charAt(0) || "S"}
                   </AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-xl">
@@ -269,6 +297,8 @@ const TeacherForm = () => {
               </CardHeader>
 
               <CardContent className="space-y-4">
+                <Separator />
+
                 <div className="space-y-3">
                   <TextIconInfo
                     icon={UserCircle}
@@ -316,7 +346,6 @@ const TeacherForm = () => {
 
           {/* Right Content - Forms */}
           <div className="lg:col-span-2 space-y-8">
-      
             {/* Profile Information Card */}
             <Card>
               <CardHeader>
@@ -336,9 +365,23 @@ const TeacherForm = () => {
                       name="avatar"
                       label="Profile Avatar"
                       currentImage={data?.avatar}
-                      fallback={data?.full_name?.charAt(0) || "T"}
+                      fallback={data?.full_name?.charAt(0) || "S"}
+                      onFileSelected={(file: File) => setSelectedAvatar(file)}
                       maxSize={2 * 1024 * 1024} // 2MB
                     />
+                    {selectedAvatar && (
+                      <Button
+                        type="button"
+                        size={"default"}
+                        variant="outline"
+                        onClick={() => onAvatarUpload(selectedAvatar)}
+                        disabled={uploadAvatarMutation.isPending}
+                      >
+                        {uploadAvatarMutation.isPending
+                          ? "Uploading..."
+                          : "Upload Avatar"}
+                      </Button>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <TextField
@@ -408,23 +451,24 @@ const TeacherForm = () => {
               </CardContent>
             </Card>
 
-                {/* Status Management Card - Full Width */}
+            {/* Rest of your existing cards remain the same */}
+            {/* Status Management Card - Account Status */}
             <Card className="border-orange-200 bg-orange-50/30">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-orange-600" />
                   <span>Account Status Management</span>
                 </CardTitle>
-                <p className="text-sm text-gray-600">
-                  Manage Account status
-                </p>
+                <p className="text-sm text-gray-600">Manage Account status</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {/* Current Status Display */}
                   <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
                     <div>
-                      <h4 className="font-medium text-gray-900">Current Status</h4>
+                      <h4 className="font-medium text-gray-900">
+                        Current Status
+                      </h4>
                       <p className="text-sm text-gray-600">Account status</p>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -455,7 +499,9 @@ const TeacherForm = () => {
                     <div className="flex items-end">
                       <Button
                         onClick={() => {
-                          const select = document.querySelector('select') as HTMLSelectElement;
+                          const select = document.querySelector(
+                            "select"
+                          ) as HTMLSelectElement;
                           if (select) {
                             handleStatusChange(select.value);
                           }
@@ -564,23 +610,23 @@ const TeacherForm = () => {
               </CardContent>
             </Card>
 
-                  {/* Status Management Card - Full Width */}
+            {/* Status Management Card - Teacher Status */}
             <Card className="border-blue-200 bg-blue-50/30">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Shield className="h-5 w-5 text-blue-600" />
                   <span>Teacher Status Management</span>
                 </CardTitle>
-                <p className="text-sm text-gray-600">
-                  Manage Teacher status
-                </p>
+                <p className="text-sm text-gray-600">Manage Teacher status</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {/* Current Status Display */}
                   <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
                     <div>
-                      <h4 className="font-medium text-gray-900">Current Teacher Status</h4>
+                      <h4 className="font-medium text-gray-900">
+                        Current Teacher Status
+                      </h4>
                       <p className="text-sm text-gray-600">Teacher status</p>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -596,7 +642,9 @@ const TeacherForm = () => {
                       </label>
                       <select
                         value={currentTeacherStatus}
-                        onChange={(e) => handleTeacherStatusChange(e.target.value)}
+                        onChange={(e) =>
+                          handleTeacherStatusChange(e.target.value)
+                        }
                         disabled={updateTeacherStatusMutation.isPending}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
@@ -611,14 +659,15 @@ const TeacherForm = () => {
                     <div className="flex items-end">
                       <Button
                         onClick={() => {
-                          const select = document.querySelector('select') as HTMLSelectElement;
-                          if (select) {
-                            handleTeacherStatusChange(select.value);
+                          const selects = document.querySelectorAll("select");
+                          const teacherSelect = selects[1] as HTMLSelectElement;
+                          if (teacherSelect) {
+                            handleTeacherStatusChange(teacherSelect.value);
                           }
                         }}
                         disabled={updateTeacherStatusMutation.isPending}
                         variant="outline"
-                        className="w-full border-blue-300 text-blue-600 hover:bg-orange-50"
+                        className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
                       >
                         {updateTeacherStatusMutation.isPending ? (
                           <>

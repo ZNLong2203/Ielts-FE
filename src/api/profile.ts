@@ -39,8 +39,3 @@ export const updateProfileStatus = async (id: string, status: string) => {
   console.log(response);
   return response;
 };
-
-// Upload avatar for profile
-export const uploadAvatar = async (file: File, id: string ) => {
-  
-}

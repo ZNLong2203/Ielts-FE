@@ -73,10 +73,10 @@ const CourseComboDetail = () => {
   }
 
   // Calculate combo stats
-  const savings = (data.original_price || 0) - (data.combo_price || 0);
+  const savings = (Number(data.original_price) || 0) - (Number(data.combo_price) || 0);
   const savingsPercentage =
-    data.original_price > 0
-      ? ((savings / data.original_price) * 100).toFixed(1)
+    Number(data.original_price) > 0
+      ? ((savings / Number(data.original_price)) * 100).toFixed(1)
       : "0";
 
   return (
@@ -197,7 +197,7 @@ const CourseComboDetail = () => {
                       Original Price
                     </label>
                     <div className="mt-1 text-2xl font-bold text-gray-900">
-                      {data.original_price?.toLocaleString()} VND
+                      {Number(data.original_price || 0).toLocaleString()} VND
                     </div>
                   </div>
 
@@ -218,7 +218,7 @@ const CourseComboDetail = () => {
                       Final Price
                     </label>
                     <div className="mt-1 text-2xl font-bold text-green-600">
-                      {data.combo_price?.toLocaleString()} VND
+                      {Number(data.combo_price || 0).toLocaleString()} VND
                     </div>
                     <div className="text-xs text-green-600 mt-1">
                       {savingsPercentage}% off
@@ -240,7 +240,7 @@ const CourseComboDetail = () => {
                         Individual Course Total:
                       </span>
                       <span className="font-medium text-blue-900">
-                        {data.original_price?.toLocaleString()} VND
+                        {Number(data.original_price || 0).toLocaleString()} VND
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -257,7 +257,7 @@ const CourseComboDetail = () => {
                           Final Combo Price:
                         </span>
                         <span className="text-green-600">
-                          {data.combo_price?.toLocaleString()} VND
+                          {Number(data.combo_price || 0).toLocaleString()} VND
                         </span>
                       </div>
                     </div>
@@ -341,7 +341,7 @@ const CourseComboDetail = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Users className="h-6 w-6 text-blue-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-blue-700">
@@ -354,12 +354,23 @@ const CourseComboDetail = () => {
                     <ShoppingCart className="h-6 w-6 text-purple-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-purple-700">
                       {(
-                        (data.enrollment_count || 0) * (data.combo_price || 0)
+                        (data.enrollment_count || 0) * (Number(data.combo_price) || 0)
                       ).toLocaleString()}
                     </div>
                     <div className="text-sm text-purple-600">Revenue (VND)</div>
                   </div>
+
+                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                    <BookOpen className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-yellow-700">
+                      {(
+                        (data.total_lessons || 0)
+                      ).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-yellow-600">Total lessons</div>
+                  </div>
                 </div>
+                
               </CardContent>
             </Card>
 
@@ -428,10 +439,10 @@ const CourseComboDetail = () => {
                     {data.courses?.length || 0} Courses Included
                   </div>
                   <div className="text-lg font-bold text-green-800">
-                    {data.combo_price?.toLocaleString()} VND
+                    {Number(data.combo_price || 0).toLocaleString()} VND
                   </div>
                   <div className="text-xs text-green-600 line-through">
-                    Was {data.original_price?.toLocaleString()} VND
+                    Was {Number(data.original_price || 0).toLocaleString()} VND
                   </div>
                   <div className="text-xs text-green-600">
                     Save {savings.toLocaleString()} VND

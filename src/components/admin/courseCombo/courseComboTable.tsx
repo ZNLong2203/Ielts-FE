@@ -33,9 +33,14 @@ const CourseComboTable = () => {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
+  const queryParams = {
+    deleted: false,
+    page
+  }
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["courseCombos", page],
-    queryFn: () => getCourseCombos({ page }),
+    queryKey: ["courseCombos", queryParams],
+    queryFn: () => getCourseCombos(queryParams),
   });
 
   // Meta information
