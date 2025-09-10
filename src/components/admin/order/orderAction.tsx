@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import { Copy, Edit, Eye, MoreHorizontal, Trash } from "lucide-react";
 import { useState } from "react";
 import {
@@ -16,11 +16,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { getQueryClient } from "@/utils/getQueryClient";
 import ROUTES from "@/constants/route";
-import { deleteCoupon } from "@/api/coupon";
-import { ICoupon } from "@/interface/coupon";
+import { deleteOrder } from "@/api/order";
+import { IOrder } from "@/interface/order";
 
 interface CellActionProps {
-  data: ICoupon;
+  data: IOrder;
 }
 
 const CellAction: React.FC<CellActionProps> = ({ data }) => {
@@ -37,16 +37,16 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
     isError,
     isPending,
   } = useMutation({
-    mutationFn: deleteCoupon,
+    mutationFn: deleteOrder,
     onError: (error: any) => {
       toast.error(
-        error.response?.data?.message || "Failed to delete coupon"
+        error.response?.data?.message || "Failed to delete order"
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
       setOpen(false);
-      toast.success("Coupon deleted successfully");
+      toast.success("Order deleted successfully");
     },
   });
 
@@ -72,13 +72,13 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             Copy ID
           </DropdownMenuItem>
            <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_COUPONS + `/${data.id}`)}
+            onClick={() => router.push(ROUTES.ADMIN_ORDERS + `/${data.id}`)}
           >
             <Eye className="mr-1 h-4 w-4" />
             Detail
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_COUPONS + `/${data.id}/update`)}
+            onClick={() => router.push(ROUTES.ADMIN_ORDERS + `/${data.id}/update`)}
           >
             <Edit className="mr-1 h-4 w-4" />
             Update

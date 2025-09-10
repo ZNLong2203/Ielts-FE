@@ -46,9 +46,9 @@ export interface IOrder {
   id: string;
   user_id: string;
   order_code: string;
-  total_amount: number;
-  discount_amount: number;
-  final_amount: number;
+  total_amount: string;
+  discount_amount: string;
+  final_amount: string;
   status: OrderStatus;
   payment_method?: string;
   payment_status: PaymentStatus;
@@ -62,13 +62,14 @@ export interface IOrder {
 }
 
 export interface IOrders {
-  data: IOrder[];
-  pagination: {
-    page: number;
-    pageSize: number;
+  meta: {
+    current: number;
+    currentSize: number;
     total: number;
-    totalPages: number;
+    pageSize: number;
+    pages: number;
   };
+  result: IOrder[];
 }
 
 export interface IOrderCreate {

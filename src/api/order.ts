@@ -2,6 +2,7 @@ import api from "@/utils/interceptor";
 import { 
   IOrder, 
   IOrderCreate, 
+  IOrders, 
   IOrderUpdate, 
   IRetryPayment
 } from "@/interface/order";
@@ -16,7 +17,7 @@ export const createOrder = async (data: IOrderCreate) => {
 };
 
 // List orders (with pagination and filters)
-export const listOrders = async (params?: {
+export const getOrders = async (params?: {
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -26,7 +27,7 @@ export const listOrders = async (params?: {
   search?: string;
   user_id?: string;
   order_code?: string;
-}) => {
+}): Promise<IOrders> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());

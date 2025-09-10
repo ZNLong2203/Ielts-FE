@@ -20,6 +20,7 @@ import {
   Ticket,
   BookOpen,
   Package,
+  NotepadText,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -86,6 +87,12 @@ const AdminSidebar = ({ isOpen, onToggle, isCollapsed, onCollapse }: AdminSideba
       label: "Combo Courses",
       icon: Package,
       active: pathName === ROUTES.ADMIN_COURSE_COMBO,
+    },
+    {
+      href: ROUTES.ADMIN_ORDERS,
+      label: "Orders",
+      icon: NotepadText,
+      active: pathName === ROUTES.ADMIN_ORDERS,
     }
   ];
 
