@@ -40,7 +40,7 @@ export const getTeacherBlogs = async (teacherId: string, params?: {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
-  status?: 'draft' | 'published' | 'archived';
+  status?: string;
 }) => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append('page', params.page.toString());
@@ -51,7 +51,7 @@ export const getTeacherBlogs = async (teacherId: string, params?: {
 
   const response = await api.get(`${BASE_URL}/blogs/teacher/${teacherId}?${queryParams.toString()}`);
   console.log("Get teacher blogs response:", response);
-  return response.data;
+  return response.data.data;
 };
 
 export const getTeacherBlogDetail = async (id: string): Promise<IBlog> => {

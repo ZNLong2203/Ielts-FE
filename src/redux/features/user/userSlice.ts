@@ -72,6 +72,7 @@ export const { loginSuccess, loginFailure, logout, saveUser, restoreAuth } =
 // Selectors to access user state
 export const selectUser = (state: RootState) => state.user.user;
 export const selectAccessToken = (state: RootState) => state.user.accessToken;
+export const selectUserId = (state: RootState) => state.user.user?.id;
 export const selectIsAuthenticated = (state: RootState) =>
   state.user.isAuthenticated;
 export const selectUserRole = (state: RootState) => state.user.user?.role;

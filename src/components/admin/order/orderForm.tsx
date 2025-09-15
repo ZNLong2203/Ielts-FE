@@ -34,8 +34,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { OrderCreateSchema, OrderUpdateStatusSchema } from "@/validation/order";
-import { createOrder, updateOrderStatus, getOrder } from "@/api/order";
+import { OrderCreateSchema } from "@/validation/order";
+import { createOrder, getOrder } from "@/api/order";
 import { getCourseCombos } from "@/api/course";
 import { getCoupons } from "@/api/coupon";
 import toast from "react-hot-toast";
@@ -70,7 +70,7 @@ const OrderForm = () => {
     discountAmount: 0,
     finalAmount: 0,
   });
-  
+
   // Pagination states for combos
   const [comboPage, setComboPage] = useState(1);
   const [comboSearch, setComboSearch] = useState("");
@@ -90,10 +90,11 @@ const OrderForm = () => {
 
   const { data: combosData, isLoading: combosLoading } = useQuery({
     queryKey: ["combos", comboPage, comboSearch],
-    queryFn: () => getCourseCombos({ 
-      page: comboPage,
-      search: comboSearch,
-    }),
+    queryFn: () =>
+      getCourseCombos({
+        page: comboPage,
+        search: comboSearch,
+      }),
   });
 
   const { data: couponsData } = useQuery({
@@ -117,20 +118,18 @@ const OrderForm = () => {
   const hasNextPage = comboPage < totalComboPages;
   const hasPrevPage = comboPage > 1;
 
-  const couponOptions = [
-    { label: "No coupon", value: "" },
-    ...(couponsData?.result?.map((coupon) => ({
-      label: `${coupon.code} (${
-        coupon.discount_type === "percentage"
-          ? coupon.discount_value + "%"
-          : Number(coupon.discount_value).toLocaleString() + " VND"
-      })`,
-      value: coupon.id,
-      code: coupon.code,
-      discount_type: coupon.discount_type,
-      discount_value: Number(coupon.discount_value),
-    })) || []),
-  ];
+  const couponOptions =
+  couponsData?.result?.map((coupon) => ({
+    label: `${coupon.code} (${
+      coupon.discount_type === "percentage"
+        ? coupon.discount_value + "%"
+        : Number(coupon.discount_value).toLocaleString() + " VND"
+    })`,
+    value: coupon.id,
+    code: coupon.code,
+    discount_type: coupon.discount_type,
+    discount_value: Number(coupon.discount_value),
+  })) || [];
 
   // Mutations
   const createOrderMutation = useMutation({
@@ -162,26 +161,32 @@ const OrderForm = () => {
   const calculateTotals = () => {
     const comboId = orderForm.getValues("comboId");
     const couponId = orderForm.getValues("couponId");
-    
+
     // Calculate original price from selected combo
     let originalPrice = 0;
     if (comboId) {
-      const combo = comboOptions.find(c => c.value === comboId);
+      const combo = comboOptions.find((c) => c.value === comboId);
       originalPrice = combo?.price || 0;
     }
 
     // Calculate discount
     let discountAmount = 0;
     if (couponId) {
-      const selectedCoupon = couponOptions.find(c => c.value === couponId);
-      if (selectedCoupon && 'discount_value' in selectedCoupon && selectedCoupon.discount_value !== undefined) {
+      const selectedCoupon = couponOptions.find((c) => c.value === couponId);
+      if (
+        selectedCoupon &&
+        "discount_value" in selectedCoupon &&
+        selectedCoupon.discount_value !== undefined
+      ) {
         if (selectedCoupon.discount_type === "percentage") {
-          discountAmount = (originalPrice * selectedCoupon.discount_value) / 100;
+          discountAmount =
+            (originalPrice * selectedCoupon.discount_value) / 100;
         } else {
           discountAmount = selectedCoupon.discount_value;
         }
       }
     }
+
     const finalAmount = originalPrice - discountAmount;
 
     // Update state
@@ -195,7 +200,7 @@ const OrderForm = () => {
   // Handle combo selection - CHANGED: single selection
   const handleComboChange = (comboId: string) => {
     orderForm.setValue("comboId", comboId);
-    const combo = comboOptions.find(c => c.value === comboId);
+    const combo = comboOptions.find((c) => c.value === comboId);
     setSelectedCombo(combo);
     setTimeout(calculateTotals, 100);
   };
@@ -211,13 +216,13 @@ const OrderForm = () => {
   // Pagination handlers
   const handleNextPage = () => {
     if (hasNextPage) {
-      setComboPage(prev => prev + 1);
+      setComboPage((prev) => prev + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (hasPrevPage) {
-      setComboPage(prev => prev - 1);
+      setComboPage((prev) => prev - 1);
     }
   };
 
@@ -342,7 +347,9 @@ const OrderForm = () => {
                                 </div>
                               ) : comboOptions.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500">
-                                  {comboSearch ? "No combos found for your search" : "No combos available"}
+                                  {comboSearch
+                                    ? "No combos found for your search"
+                                    : "No combos available"}
                                 </div>
                               ) : (
                                 <>
@@ -373,14 +380,19 @@ const OrderForm = () => {
                                             </div>
                                             <div className="ml-3 flex-shrink-0">
                                               <span className="text-md font-bold text-blue-600">
-                                                {Number(combo.price).toLocaleString()} VND
+                                                {Number(
+                                                  combo.price
+                                                ).toLocaleString()}{" "}
+                                                VND
                                               </span>
                                             </div>
                                           </div>
 
                                           {field.value === combo.value && (
                                             <div className="flex items-center text-sm text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                                              <span className="font-medium">✓ Selected</span>
+                                              <span className="font-medium">
+                                                ✓ Selected
+                                              </span>
                                             </div>
                                           )}
                                         </div>
@@ -392,9 +404,13 @@ const OrderForm = () => {
                                   {totalComboPages > 1 && (
                                     <div className="flex items-center justify-between pt-4 border-t">
                                       <div className="text-sm text-gray-500">
-                                        Showing {((comboPage - 1) * combosPerPage) + 1} to{" "}
-                                        {Math.min(comboPage * combosPerPage, totalCombos)} of{" "}
-                                        {totalCombos} combos
+                                        Showing{" "}
+                                        {(comboPage - 1) * combosPerPage + 1} to{" "}
+                                        {Math.min(
+                                          comboPage * combosPerPage,
+                                          totalCombos
+                                        )}{" "}
+                                        of {totalCombos} combos
                                       </div>
 
                                       <div className="flex items-center space-x-2">
@@ -406,36 +422,56 @@ const OrderForm = () => {
                                           disabled={!hasPrevPage}
                                         >
                                           <ChevronLeft className="h-4 w-4" />
-                                          <span className="ml-1 hidden sm:inline">Previous</span>
+                                          <span className="ml-1 hidden sm:inline">
+                                            Previous
+                                          </span>
                                         </Button>
 
                                         {/* Page Numbers */}
                                         <div className="flex items-center space-x-1">
-                                          {Array.from({ length: Math.min(5, totalComboPages) }, (_, i) => {
-                                            let pageNum;
-                                            if (totalComboPages <= 5) {
-                                              pageNum = i + 1;
-                                            } else if (comboPage <= 3) {
-                                              pageNum = i + 1;
-                                            } else if (comboPage >= totalComboPages - 2) {
-                                              pageNum = totalComboPages - 4 + i;
-                                            } else {
-                                              pageNum = comboPage - 2 + i;
-                                            }
+                                          {Array.from(
+                                            {
+                                              length: Math.min(
+                                                5,
+                                                totalComboPages
+                                              ),
+                                            },
+                                            (_, i) => {
+                                              let pageNum;
+                                              if (totalComboPages <= 5) {
+                                                pageNum = i + 1;
+                                              } else if (comboPage <= 3) {
+                                                pageNum = i + 1;
+                                              } else if (
+                                                comboPage >=
+                                                totalComboPages - 2
+                                              ) {
+                                                pageNum =
+                                                  totalComboPages - 4 + i;
+                                              } else {
+                                                pageNum = comboPage - 2 + i;
+                                              }
 
-                                            return (
-                                              <Button
-                                                key={pageNum}
-                                                type="button"
-                                                variant={pageNum === comboPage ? "default" : "outline"}
-                                                size="sm"
-                                                className="w-8 h-8"
-                                                onClick={() => handlePageChange(pageNum)}
-                                              >
-                                                {pageNum}
-                                              </Button>
-                                            );
-                                          })}
+                                              return (
+                                                <Button
+                                                  key={pageNum}
+                                                  type="button"
+                                                  variant={
+                                                    pageNum === comboPage
+                                                      ? "default"
+                                                      : "outline"
+                                                  }
+                                                  size="sm"
+                                                  className="w-8 h-8"
+                                                  onClick={() =>
+                                                    handlePageChange(pageNum)
+                                                  }
+                                                >
+                                                  {pageNum}
+                                                </Button>
+                                              );
+                                            }
+                                          )}
                                         </div>
 
                                         <Button
@@ -445,7 +481,9 @@ const OrderForm = () => {
                                           onClick={handleNextPage}
                                           disabled={!hasNextPage}
                                         >
-                                          <span className="mr-1 hidden sm:inline">Next</span>
+                                          <span className="mr-1 hidden sm:inline">
+                                            Next
+                                          </span>
                                           <ChevronRight className="h-4 w-4" />
                                         </Button>
                                       </div>
@@ -471,31 +509,12 @@ const OrderForm = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <FormField
+                    <SelectField
+                      label="Select Coupon"
+                      placeholder="Select a coupon"
                       control={orderForm.control}
                       name="couponId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Apply Coupon (Optional)</FormLabel>
-                          <FormControl>
-                            <select
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(e.target.value);
-                                handleCouponChange(e.target.value);
-                              }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                              {couponOptions.map((coupon) => (
-                                <option key={coupon.value} value={coupon.value}>
-                                  {coupon.label}
-                                </option>
-                              ))}
-                            </select>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      options={couponOptions || []}
                     />
 
                     {selectedCoupon && selectedCoupon.value !== "" && (
@@ -596,25 +615,35 @@ const OrderForm = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Subtotal:</span>
                         <span className="font-medium">
-                          {Number(calculatedTotals.originalPrice).toLocaleString()} VND
+                          {Number(
+                            calculatedTotals.originalPrice
+                          ).toLocaleString()}{" "}
+                          VND
                         </span>
                       </div>
-                      
+
                       {calculatedTotals.discountAmount > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Discount:</span>
                           <span className="font-medium text-green-600">
-                            -{Number(calculatedTotals.discountAmount).toLocaleString()} VND
+                            -
+                            {Number(
+                              calculatedTotals.discountAmount
+                            ).toLocaleString()}{" "}
+                            VND
                           </span>
                         </div>
                       )}
-                      
+
                       <Separator />
-                      
+
                       <div className="flex justify-between text-lg font-bold">
                         <span>Total:</span>
                         <span className="text-blue-600">
-                          {Number(calculatedTotals.finalAmount).toLocaleString()} VND
+                          {Number(
+                            calculatedTotals.finalAmount
+                          ).toLocaleString()}{" "}
+                          VND
                         </span>
                       </div>
                     </div>

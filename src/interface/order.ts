@@ -81,9 +81,6 @@ export interface IOrderCreate {
 
 export interface IOrderUpdate {
   status?: OrderStatus;
-  payment_method?: string;
-  payment_status?: PaymentStatus;
-  notes?: string;
 }
 
 export interface IRetryPayment {

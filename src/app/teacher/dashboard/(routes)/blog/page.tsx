@@ -1,7 +1,9 @@
+import TeacherBlogList from "@/components/teacher/dashboard/blog/teacherBlogList";
+
 const TeacherBlog = () => {
     return (
         <div>
-            <h1>Teacher Blog</h1>
+            <TeacherBlogList />
         </div>
     )
 }
