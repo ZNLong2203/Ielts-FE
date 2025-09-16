@@ -4,16 +4,17 @@ import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 import FileUploadField from "@/components/form/file-field";
+import { TextBadgeInfo } from "@/components/ui/info";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import RichTextField from "@/components/richTextEditor";
-import { 
-  Form, 
-  FormLabel, 
-  FormField, 
-  FormItem, 
-  FormControl, 
-  FormDescription 
+import {
+  Form,
+  FormLabel,
+  FormField,
+  FormItem,
+  FormControl,
+  FormDescription,
 } from "@/components/ui/form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,10 +23,26 @@ import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBlog } from "@/api/blog";
 import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
-import { useEffect } from "react";
-import { Save, Eye, FileText, ImageIcon, Tag, Settings } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  Save,
+  Eye,
+  FileText,
+  ImageIcon,
+  Tag,
+  Settings,
+  Loader2,
+  Shield,
+  RefreshCw,
+} from "lucide-react";
 import ROUTES from "@/constants/route";
-import { getBlog, updateBlogByAdmin } from "@/api/blog";
+import {
+  getBlog,
+  updateBlogByAdmin,
+  publishBlog,
+  draftBlog,
+  archiveBlog,
+} from "@/api/blog";
 import { getBlogCategories } from "@/api/blogCategory";
 import TagsField from "@/components/form/tags-field";
 import toast from "react-hot-toast";
@@ -34,7 +51,7 @@ const BlogForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
-
+  const [currentStatus, setCurrentStatus] = useState<string>("");
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
   let title = "";
@@ -72,13 +89,25 @@ const BlogForm = () => {
       queryClient.invalidateQueries({
         queryKey: ["blogs"],
       });
-       queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["blog"],
       });
       router.push(ROUTES.ADMIN_BLOGS);
     },
     onError: (error) => {
       toast.error(error.message);
+    },
+  });
+
+  const updateBlogStatusMutation = useMutation({
+    mutationFn: async (status: string) => {
+      if (status === "published") {
+        return publishBlog(slug);
+      } else if (status === "draft") {
+        return draftBlog(slug);
+      } else if (status === "archived") {
+        return archiveBlog(slug);
+      }
     },
   });
 
@@ -114,6 +143,7 @@ const BlogForm = () => {
 
   useEffect(() => {
     if (blogData) {
+      setCurrentStatus(blogData.status);
       blogForm.reset({
         category_id: blogData.category_id,
         title: blogData.title,
@@ -136,6 +166,12 @@ const BlogForm = () => {
     }
   };
 
+  const BLOG_STATUS = [
+    { value: "draft", label: "Draft" },
+    { value: "published", label: "Published" },
+    { value: "archived", label: "Archived" },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -143,10 +179,7 @@ const BlogForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <Heading
-                title={title}
-                description={description}
-              />
+              <Heading title={title} description={description} />
             </div>
 
             <div className="flex items-center space-x-3">
@@ -297,6 +330,84 @@ const BlogForm = () => {
                   </CardContent>
                 </Card>
 
+                {/* Status Change Section */}
+                <Card className="border-blue-200 bg-blue-50/30">
+                  <CardHeader className="">
+                   <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <span>Blog Status Management</span>
+                </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Current Status Display */}
+                      <div className="flex items-center justify-between p-4 bg-white rounded-lg border">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            Current Status
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            Account status
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <TextBadgeInfo status={currentStatus} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Change Blog Status
+                          </label>
+                          <select
+                            value={currentStatus}
+                            onChange={(e) =>
+                              updateBlogStatusMutation.mutate(e.target.value)
+                            }
+                            disabled={updateBlogStatusMutation.isPending}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          >
+                            {BLOG_STATUS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex items-end">
+                          <Button
+                            onClick={() => {
+                              const select = document.querySelector(
+                                "select"
+                              ) as HTMLSelectElement;
+                              if (select) {
+                                updateBlogStatusMutation.mutate(select.value);
+                              }
+                            }}
+                            disabled={updateBlogStatusMutation.isPending}
+                            variant="outline"
+                            className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+                          >
+                            {updateBlogStatusMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                Updating...
+                              </>
+                            ) : (
+                              <>
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Update Status
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Action Buttons */}
                 <Card>
                   <CardContent className="pt-6">
@@ -308,7 +419,9 @@ const BlogForm = () => {
                       >
                         <Save className="h-4 w-4" />
                         <span>
-                          {slug && slug !== "" ? "Update Blog Post" : "Create Blog Post"}
+                          {slug && slug !== ""
+                            ? "Update Blog Post"
+                            : "Create Blog Post"}
                         </span>
                       </Button>
 

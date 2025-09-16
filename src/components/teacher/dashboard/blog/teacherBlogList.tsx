@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getTeacherBlogs, deleteBlog } from "@/api/blog";
+import { getTeacherBlogs } from "@/api/blog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,17 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,11 +49,8 @@ const TeacherBlogList = () => {
 
   // State management
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
   const [status, setStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("created_at");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Fetch blogs
   const {
@@ -77,19 +63,13 @@ const TeacherBlogList = () => {
       "teacherBlogs",
       userId,
       page,
-      pageSize,
       status,
       search,
-      sortBy,
-      sortOrder,
     ],
     queryFn: () =>
       getTeacherBlogs(userId, {
         page,
-        pageSize,
         status: status === "all" ? undefined : status,
-        sortBy,
-        sortOrder,
       }),
     enabled: !!userId,
   });
@@ -117,13 +97,12 @@ const TeacherBlogList = () => {
   // Handle filter change
   const handleFilterChange = (key: string, value: string) => {
     if (key === "status") setStatus(value);
-    if (key === "sortBy") setSortBy(value);
-    if (key === "sortOrder") setSortOrder(value as "asc" | "desc");
     setPage(1);
   };
 
   // Pagination info
   const totalBlogs = blogsData?.meta?.total || 0;
+  const pageSize = blogsData?.meta?.pageSize || 10;
   const totalPages = Math.ceil(totalBlogs / pageSize);
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
@@ -201,35 +180,7 @@ const TeacherBlogList = () => {
                   </SelectContent>
                 </Select>
 
-                <Select
-                  value={sortBy}
-                  onValueChange={(value) => handleFilterChange("sortBy", value)}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="created_at">Created Date</SelectItem>
-                    <SelectItem value="updated_at">Updated Date</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                    <SelectItem value="views">Views</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={sortOrder}
-                  onValueChange={(value) =>
-                    handleFilterChange("sortOrder", value)
-                  }
-                >
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="desc">Newest</SelectItem>
-                    <SelectItem value="asc">Oldest</SelectItem>
-                  </SelectContent>
-                </Select>
+               
               </div>
             </div>
           </CardContent>
