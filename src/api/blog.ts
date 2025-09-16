@@ -223,7 +223,11 @@ export const draftBlog = async (id: string) => {
 };
 
 export const updateBlogByAdmin = async (id: string, data: IBlogUpdate) => {
-  const response = await api.patch(`${BASE_URL}/blogs/admin/${id}`, data);
+  const response = await api.patch(`${BASE_URL}/blogs/admin/${id}`, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   console.log("Update blog by admin response:", response);
   return response.data;
 };
