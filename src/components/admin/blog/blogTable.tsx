@@ -100,6 +100,19 @@ const BlogTable = () => {
     }
   };
 
+  const getFilterData = () => {
+       switch (activeTab) {
+      case "published":
+        return publishedBlogs?.result;
+      case "draft":
+        return draftBlogs?.result;
+      case "archived":
+        return archivedBlogs?.result;
+      default:
+        return allBlogs?.result;
+    }
+  }
+
   const getCurrentLoading = () => {
     switch (activeTab) {
       case "published":
@@ -113,13 +126,32 @@ const BlogTable = () => {
     }
   };
 
+   const fieldConfigs = [
+    {
+      key: "title",
+      label: "Title",
+      placeholder: "Search by title",
+      icon: (
+        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      placeholder: "Search by status",
+      icon: (
+        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+      ),
+    },
+  ];
+
   const data = getCurrentData();
   const isLoading = getCurrentLoading();
 
   // Define which fields to filter
-  const filterFields = ["title", "category"];
+  const filterFields = ["title"];
 
-  // Use the filter hook
+  
   const {
     filters,
     isFilterVisible,
@@ -128,7 +160,7 @@ const BlogTable = () => {
     handleClearFilters,
     handleClose,
     setIsFilterVisible,
-  } = useFilter(data?.result || [], filterFields);
+  } = useFilter(getFilterData() || [], filterFields);
 
   const hasActiveFilters = Object.values(filters).some((value) => value !== "");
   const activeFilterCount = Object.values(filters).filter(
@@ -332,6 +364,21 @@ const BlogTable = () => {
           </CardContent>
         </Card>
       </div>
+
+        {/* Filter Section */}
+        {isFilterVisible && (
+          <AdminFilter
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            onClose={handleClose}
+            isVisible={isFilterVisible}
+            totalItems={data?.meta.total || 0}
+            filteredCount={filteredCount}
+            label="Courses"
+            fieldConfigs={fieldConfigs}
+          />
+        )}
 
       <Card>
         <CardHeader>

@@ -1,19 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { useFilter } from "@/hook/useFilter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getTeacherBlogs } from "@/api/blog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +15,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Loading from "@/components/ui/loading";
+import Heading from "@/components/ui/heading";
 import Error from "@/components/ui/error";
+import { TextBadgeInfo } from "@/components/ui/info";
+import AdminFilter from "@/components/filter/admin-filter";
 import {
   Plus,
   Search,
@@ -32,19 +29,18 @@ import {
   Eye,
   Calendar,
   FileText,
-  TrendingUp,
   ChevronLeft,
   ChevronRight,
+  Filter,
 } from "lucide-react";
+import { IBlog } from "@/interface/blog";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import Link from "next/link";
 import Image from "next/image";
 
 const TeacherBlogList = () => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const userId = useSelector((state: any) => state.user.user?.id);
 
   // State management
@@ -59,46 +55,31 @@ const TeacherBlogList = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: [
-      "teacherBlogs",
-      userId,
-      page,
-      status,
-      search,
-    ],
+    queryKey: ["teacherBlogs", page],
     queryFn: () =>
       getTeacherBlogs(userId, {
         page,
-        status: status === "all" ? undefined : status,
       }),
     enabled: !!userId,
   });
 
-  // Status badge styles
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "published":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "draft":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "archived":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-200";
-    }
-  };
+  const filterFields = ["title", "status"];
 
-  // Handle search
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setPage(1);
-  };
-
-  // Handle filter change
-  const handleFilterChange = (key: string, value: string) => {
-    if (key === "status") setStatus(value);
-    setPage(1);
-  };
+  // Use the filter hook
+  const {
+    filters,
+    isFilterVisible,
+    filteredData,
+    handleFilterChange,
+    handleClearFilters,
+    handleClose,
+    setIsFilterVisible,
+  } = useFilter(blogsData?.result || [], filterFields);
+  const hasActiveFilters = Object.values(filters).some((value) => value !== "");
+  const activeFilterCount = Object.values(filters).filter(
+    (v) => v !== ""
+  ).length;
+  const filteredCount = filteredData.length;
 
   // Pagination info
   const totalBlogs = blogsData?.meta?.total || 0;
@@ -106,6 +87,25 @@ const TeacherBlogList = () => {
   const totalPages = Math.ceil(totalBlogs / pageSize);
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
+
+  const fieldConfigs = [
+    {
+      key: "title",
+      label: "Title",
+      placeholder: "Search by title",
+      icon: (
+        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      placeholder: "Search by status",
+      icon: (
+        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+      ),
+    },
+  ];
 
   if (isLoading) {
     return <Loading />;
@@ -127,14 +127,23 @@ const TeacherBlogList = () => {
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Blogs</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Manage and organize your blog content
-              </p>
-            </div>
+            <Heading title="My Blogs" description="Manage your blog posts" />
 
             <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFilterVisible(!isFilterVisible)}
+                className={hasActiveFilters ? "bg-blue-50 border-blue-200" : ""}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="ml-2 bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
               <Link href="/teacher/blogs/create">
                 <Button className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2">
                   <Plus className="h-4 w-4" />
@@ -148,46 +157,8 @@ const TeacherBlogList = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters & Search */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search blogs..."
-                  value={search}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              {/* Filters */}
-              <div className="flex items-center space-x-3">
-                <Select
-                  value={status}
-                  onValueChange={(value) => handleFilterChange("status", value)}
-                >
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-
-               
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8  ">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center">
@@ -198,6 +169,7 @@ const TeacherBlogList = () => {
                   <p className="text-2xl font-bold text-gray-900">
                     {totalBlogs}
                   </p>
+                  <p className="text-xs text-muted-foreground">10 per page</p>
                 </div>
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
@@ -211,8 +183,11 @@ const TeacherBlogList = () => {
                   <p className="text-sm font-medium text-gray-600">Published</p>
                   <p className="text-2xl font-bold text-green-600">
                     {blogsData?.result?.filter(
-                      (blog) => blog.status === "published"
+                      (blog: IBlog) => blog.status === "published"
                     ).length || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Blog published
                   </p>
                 </div>
                 <CheckCircle className="h-6 w-6 text-green-600" />
@@ -227,9 +202,10 @@ const TeacherBlogList = () => {
                   <p className="text-sm font-medium text-gray-600">Drafts</p>
                   <p className="text-2xl font-bold text-yellow-600">
                     {blogsData?.result?.filter(
-                      (blog) => blog.status === "draft"
+                      (blog: IBlog) => blog.status === "draft"
                     ).length || 0}
                   </p>
+                  <p className="text-xs text-muted-foreground">Blog drafts</p>
                 </div>
                 <Edit className="h-6 w-6 text-yellow-600" />
               </div>
@@ -245,10 +221,12 @@ const TeacherBlogList = () => {
                   </p>
                   <p className="text-2xl font-bold text-purple-600">
                     {blogsData?.result?.reduce(
-                      (sum, blog) => sum + (blog.views || 0),
+                      (sum: number, blog: IBlog) =>
+                        sum + (blog.view_count || 0),
                       0
                     ) || 0}
                   </p>
+                  <p className="text-xs text-muted-foreground">Blog views</p>
                 </div>
                 <Eye className="h-6 w-6 text-purple-600" />
               </div>
@@ -256,25 +234,34 @@ const TeacherBlogList = () => {
           </Card>
         </div>
 
+        {/* Filter Section */}
+        {isFilterVisible && (
+          <AdminFilter
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            onClose={handleClose}
+            isVisible={isFilterVisible}
+            totalItems={totalBlogs}
+            filteredCount={filteredCount}
+            label="Courses"
+            fieldConfigs={fieldConfigs}
+          />
+        )}
+
         {/* Blog Grid */}
-        {blogsData?.result && blogsData.result.length > 0 ? (
+        {filteredData?.length > 0 ? (
           <>
             {/* Grid View */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {blogsData.result.map((blog) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-10">
+              {filteredData.map((blog) => (
                 <Card
                   key={blog.id}
                   className="group hover:shadow-lg transition-shadow duration-200"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
-                      <Badge
-                        className={`${getStatusBadge(
-                          blog.status
-                        )} text-xs px-2 py-1`}
-                      >
-                        {blog.status?.toUpperCase()}
-                      </Badge>
+                      <TextBadgeInfo status={blog.status} />
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -301,6 +288,10 @@ const TeacherBlogList = () => {
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -329,28 +320,37 @@ const TeacherBlogList = () => {
                       </div>
                     )}
 
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {blog.excerpt || "No excerpt available..."}
-                    </p>
-
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <div className="flex items-center space-x-4">
                         <span className="flex items-center space-x-1">
                           <Calendar className="h-3 w-3" />
                           <span>
-                            {format(new Date(blog.created_at), "MMM dd, yyyy")}
+                            {blog.created_at
+                              ? format(
+                                  new Date(blog.created_at),
+                                  "MMM dd, yyyy"
+                                )
+                              : "N/A"}
                           </span>
                         </span>
                         <span className="flex items-center space-x-1">
                           <Eye className="h-3 w-3" />
-                          <span>{blog.views || 0}</span>
+                          <span>{blog.view_count || 0}</span>
                         </span>
                       </div>
 
-                      {blog.category && (
-                        <Badge variant="secondary" className="text-xs">
-                          {blog.category.name}
-                        </Badge>
+                      {Array.isArray(blog?.tags) && blog.tags.length > 0 && (
+                        <div className="flex space-x-1">
+                          {blog.tags.slice(0, 2).map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </CardContent>
