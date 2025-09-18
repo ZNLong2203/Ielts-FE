@@ -36,7 +36,7 @@ export const createTeacherBlog = async (data: IBlogCreate) => {
 };
 
 export const getTeacherBlogs = async (teacherId: string, params?: {
-  page?: number;
+  page?: number;  
   pageSize?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';

@@ -38,6 +38,7 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import ROUTES from "@/constants/route";
 
 const TeacherBlogList = () => {
   const router = useRouter();
@@ -45,8 +46,6 @@ const TeacherBlogList = () => {
 
   // State management
   const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<string>("all");
-  const [search, setSearch] = useState("");
 
   // Fetch blogs
   const {
@@ -57,9 +56,7 @@ const TeacherBlogList = () => {
   } = useQuery({
     queryKey: ["teacherBlogs", page],
     queryFn: () =>
-      getTeacherBlogs(userId, {
-        page,
-      }),
+      getTeacherBlogs(userId),
     enabled: !!userId,
   });
 
@@ -144,7 +141,7 @@ const TeacherBlogList = () => {
                   </span>
                 )}
               </Button>
-              <Link href="/teacher/blogs/create">
+              <Link href={ROUTES.TEACHER_BLOGS + "/create"}>
                 <Button className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2">
                   <Plus className="h-4 w-4" />
                   <span>New Blog</span>
@@ -244,7 +241,7 @@ const TeacherBlogList = () => {
             isVisible={isFilterVisible}
             totalItems={totalBlogs}
             filteredCount={filteredCount}
-            label="Courses"
+            label="Blogs"
             fieldConfigs={fieldConfigs}
           />
         )}
@@ -275,7 +272,7 @@ const TeacherBlogList = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() =>
-                              router.push(`/teacher/blogs/${blog.id}`)
+                              router.push(ROUTES.TEACHER_BLOGS + `/${blog.id}`)
                             }
                           >
                             <Eye className="h-4 w-4 mr-2" />
@@ -283,15 +280,11 @@ const TeacherBlogList = () => {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
-                              router.push(`/teacher/blogs/${blog.id}/edit`)
+                              router.push(ROUTES.TEACHER_BLOGS + `/${blog.id}/update`)
                             }
                           >
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+                            Update
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -426,11 +419,6 @@ const TeacherBlogList = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No blogs found
                 </h3>
-                <p className="text-gray-500 mb-6">
-                  {search || status !== "all"
-                    ? "Try adjusting your search or filter criteria"
-                    : "Get started by creating your first blog post"}
-                </p>
                 <Link href="/teacher/blogs/create">
                   <Button className="bg-blue-600 hover:bg-blue-700">
                     <Plus className="h-4 w-4 mr-2" />

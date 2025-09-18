@@ -20,7 +20,6 @@ const ROUTES = {
   ADMIN_ORDERS: "/admin/order",
 
   TEACHER: "/teacher/dashboard",
-  TEACHER_COURSES: "/teacher/dashboard/course",
   TEACHER_BLOGS: "/teacher/dashboard/blog",
 };
 

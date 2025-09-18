@@ -109,6 +109,19 @@ const BlogForm = () => {
         return archiveBlog(slug);
       }
     },
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setCurrentStatus(data.data.status);
+      queryClient.invalidateQueries({
+        queryKey: ["blogs"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["blog"],
+      });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
   });
 
   // Get blog detail

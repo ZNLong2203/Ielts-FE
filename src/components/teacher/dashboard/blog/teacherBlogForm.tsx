@@ -73,7 +73,7 @@ const TeacherBlogForm = () => {
     onSuccess: (data) => {
       toast.success("Blog post created successfully!");
       queryClient.invalidateQueries({
-        queryKey: ["teacher-blogs"],
+        queryKey: ["teacherBlogs"],
       });
       router.push(ROUTES.TEACHER_BLOGS);
     },
@@ -91,7 +91,7 @@ const TeacherBlogForm = () => {
     onSuccess: (data) => {
       toast.success("Blog post updated successfully!");
       queryClient.invalidateQueries({
-        queryKey: ["teacher-blogs"],
+        queryKey: ["teacherBlogs"],
       });
       queryClient.invalidateQueries({
         queryKey: ["blog", slug],
