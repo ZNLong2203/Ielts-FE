@@ -62,6 +62,7 @@ const TeacherBlogDetail = () => {
       setOpen(false);
 
       toast.success("Blog deleted successfully");
+      router.push(ROUTES.TEACHER_BLOGS);
     },
   });
 
@@ -75,7 +76,7 @@ const TeacherBlogDetail = () => {
         title="Blog Not Found"
         description="The requested blog post does not exist or has been deleted."
         dismissible={true}
-        onDismiss={() => router.push(ROUTES.ADMIN_BLOGS)}
+        onDismiss={() => router.push(ROUTES.TEACHER_BLOGS)}
         onRetry={() => refetch()}
         onGoBack={() => router.back()}
       />
