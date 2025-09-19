@@ -7,6 +7,9 @@ const PasswordSchema = z
   .refine((password) => /[A-Z]/.test(password), {
     message: "Password must contain at least one uppercase letter",
   })
+  .refine((password) => /[a-z]/.test(password), {
+    message: "Password must contain at least one lowercase letter",
+  })
   .refine((password) => /[0-9]/.test(password), {
     message: "Password must contain at least one number",
   })

@@ -4,8 +4,6 @@ import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  EyeIcon,
-  EyeOffIcon,
   Lock,
   ArrowRight,
   Shield,
@@ -40,8 +38,9 @@ const TeacherResetPasswordForm = ({
     let strength = 0;
     if (value.length >= 8) strength += 1;
     if (/[A-Z]/.test(value)) strength += 1;
+    if (/[a-z]/.test(value)) strength += 1;
     if (/[0-9]/.test(value)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(value)) strength += 1;
+    if (/[!@#$%^&*]/.test(value)) strength += 1;
     setPasswordStrength(strength);
   };
 
@@ -189,7 +188,7 @@ const TeacherResetPasswordForm = ({
 
                 {/* Password Strength Indicator */}
                 <div className="flex gap-1 mt-2">
-                  {[...Array(4)].map((_, i) => (
+                  {[...Array(5)].map((_, i) => (
                     <div
                       key={i}
                       className={`h-1 flex-1 rounded-full ${
@@ -198,15 +197,16 @@ const TeacherResetPasswordForm = ({
                               "bg-red-500",
                               "bg-orange-500",
                               "bg-yellow-500",
+                              "bg-blue-500",
                               "bg-green-500",
-                            ][Math.min(passwordStrength - 1, 3)]
+                            ][Math.min(passwordStrength - 1, 4)]
                           : "bg-gray-200"
                       }`}
                     />
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Password must be at least 8 characters with uppercase, number,
+                  Password must be at least 8 characters with uppercase, lowercase, number,
                   and special character
                 </p>
               </div>
