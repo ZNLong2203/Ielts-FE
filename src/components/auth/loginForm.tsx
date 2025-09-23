@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema } from "@/validation/auth";
 
 import { useDispatch } from "react-redux";
-import { loginSuccess, loginFailure } from "@/redux/features/user/userSlice";
+import { loginSuccess } from "@/redux/features/user/userSlice";
 import ROUTES from "@/constants/route";
 
 const LoginForm = ({
@@ -35,10 +35,7 @@ const LoginForm = ({
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
-  const {
-    mutate: loginHandler,
-    isPending,
-  } = useMutation({
+  const { mutate: loginHandler, isPending } = useMutation({
     mutationFn: Login,
     onError: (error: any) => {
       toast.error(error.response?.data?.message || error.message);
@@ -48,10 +45,10 @@ const LoginForm = ({
     },
     onSuccess: (response) => {
       const { user, access_token } = response.data.data;
-    
+
       // Save to redux store
       dispatch(loginSuccess({ user, accessToken: access_token }));
-      router.push(ROUTES.HOME)
+      router.push(ROUTES.HOME);
       toast.success(response.data.message);
     },
   });

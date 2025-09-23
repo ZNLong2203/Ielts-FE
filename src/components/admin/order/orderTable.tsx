@@ -45,7 +45,12 @@ const OrderTable = () => {
   const totalPages = data?.meta?.pages || 1;
 
   // Define which fields to filter
-  const filterFields = ["order_code", "status", "payment_status", "payment_method"];
+  const filterFields = [
+    "order_code",
+    "status",
+    "payment_status",
+    "payment_method",
+  ];
 
   // Use the filter hook
   const {
@@ -73,10 +78,9 @@ const OrderTable = () => {
     (order) => order.status === "pending"
   ).length;
 
-  const cancelledOrders = filteredData.filter(
-    (order) => order.status === "cancelled"
+  const failedOrders = filteredData.filter(
+    (order) => order.status === "failed"
   ).length;
-
 
   // Calculate total revenue from completed orders
   const totalRevenue = filteredData
@@ -122,17 +126,6 @@ const OrderTable = () => {
       icon: (
         <Package className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
-      type: "select",
-      options: [
-        { value: "", label: "All Statuses" },
-        { value: "pending", label: "Pending" },
-        { value: "confirmed", label: "Confirmed" },
-        { value: "shipped", label: "Shipped" },
-        { value: "delivered", label: "Delivered" },
-        { value: "completed", label: "Completed" },
-        { value: "cancelled", label: "Cancelled" },
-        { value: "refunded", label: "Refunded" },
-      ],
     },
     {
       key: "payment_status",
@@ -141,14 +134,6 @@ const OrderTable = () => {
       icon: (
         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
-      type: "select",
-      options: [
-        { value: "", label: "All Payment Status" },
-        { value: "pending", label: "Pending" },
-        { value: "paid", label: "Paid" },
-        { value: "failed", label: "Failed" },
-        { value: "refunded", label: "Refunded" },
-      ],
     },
     {
       key: "payment_method",
@@ -157,16 +142,6 @@ const OrderTable = () => {
       icon: (
         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
-      type: "select",
-      options: [
-        { value: "", label: "All Payment Methods" },
-        { value: "credit_card", label: "Credit Card" },
-        { value: "debit_card", label: "Debit Card" },
-        { value: "paypal", label: "PayPal" },
-        { value: "bank_transfer", label: "Bank Transfer" },
-        { value: "cash_on_delivery", label: "Cash on Delivery" },
-        { value: "wallet", label: "Digital Wallet" },
-      ],
     },
   ];
 
@@ -263,9 +238,7 @@ const OrderTable = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Pending
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">Pending</p>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -280,21 +253,18 @@ const OrderTable = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Cancelled
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">Failed</p>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {cancelledOrders}
+              {failedOrders}
             </div>
             <p className="text-xs text-muted-foreground">
-              Cancelled or refunded orders
+              Failed or refunded orders
             </p>
           </CardContent>
         </Card>
-
       </div>
 
       {/* Filter Section */}

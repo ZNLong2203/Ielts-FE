@@ -176,4 +176,10 @@ export const columns: ColumnDef<IOrder>[] = [
       </div>
     ),
   },
+  // Actions Column
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => <CellAction data={row.original} />,
+  },
 ];
