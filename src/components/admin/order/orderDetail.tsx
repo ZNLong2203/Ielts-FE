@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { TextBadgeInfo } from "@/components/ui/info";
 import {
   Package,
   CreditCard,
@@ -105,13 +105,6 @@ const OrderDetail = () => {
       color: "bg-red-100 text-red-800",
     },
   ];
-
-  // Get status badge color
-  const getStatusBadge = (status: string) => {
-    const options = orderStatusOptions;
-    const statusOption = options.find((option) => option.value === status);
-    return statusOption ? statusOption.color : "bg-gray-100 text-gray-800";
-  };
 
   // Handle status update
   const handleStatusUpdate = () => {
@@ -260,19 +253,11 @@ const OrderDetail = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-600">
-                      Order Status
-                    </label>
-                    <Badge
-                      className={`${getStatusBadge(
-                        orderData.status
-                      )} text-sm px-3 py-1`}
-                    >
-                      {orderData.status?.toUpperCase()}
-                    </Badge>
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600">
+                    Order Status
+                  </label>
+                  <TextBadgeInfo status={orderData.status} />
                 </div>
 
                 <Separator />
@@ -380,17 +365,11 @@ const OrderDetail = () => {
                     </p>
                   </div>
 
-                  <div>
+                  <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-600">
                       Payment Status
                     </label>
-                    <Badge
-                      className={`${getStatusBadge(
-                        orderData.payment_status
-                      )} text-sm px-3 py-1 mt-1`}
-                    >
-                      {orderData.payment_status?.toUpperCase()}
-                    </Badge>
+                    <TextBadgeInfo status={orderData.payment_status} />
                   </div>
                 </div>
 
@@ -414,13 +393,7 @@ const OrderDetail = () => {
                               {format(new Date(payment.created_at), "PPP")}
                             </p>
                           </div>
-                          <Badge
-                            className={`${getStatusBadge(
-                              payment.status
-                            )} text-xs px-2 py-1`}
-                          >
-                            {payment.status}
-                          </Badge>
+                          <TextBadgeInfo status={payment.status} />
                         </div>
                       ))}
                     </div>

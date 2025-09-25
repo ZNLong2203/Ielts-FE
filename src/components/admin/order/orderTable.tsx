@@ -78,8 +78,8 @@ const OrderTable = () => {
     (order) => order.status === "pending"
   ).length;
 
-  const failedOrders = filteredData.filter(
-    (order) => order.status === "failed"
+  const cancelledOrders = filteredData.filter(
+    (order) => order.status === "cancelled"
   ).length;
 
   // Calculate total revenue from completed orders
@@ -253,16 +253,16 @@ const OrderTable = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">Failed</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Cancelled
+            </p>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {failedOrders}
+              {cancelledOrders}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Failed or refunded orders
-            </p>
+            <p className="text-xs text-muted-foreground">Canceled orders</p>
           </CardContent>
         </Card>
       </div>

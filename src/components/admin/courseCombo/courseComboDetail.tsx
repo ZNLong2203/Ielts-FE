@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getCourseCombo, deleteCourseCombo } from "@/api/course";
+import { getCourseCombo } from "@/api/course";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -22,22 +22,12 @@ import {
   DollarSign,
   BookOpen,
   Users,
-  Star,
-  Eye,
   TrendingUp,
-  Percent,
   ShoppingCart,
-  CheckCircle,
-  XCircle,
-  Trash2,
-  Copy,
-  Target,
-  Calendar,
   Tag,
   AlertCircle,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
-import toast from "react-hot-toast";
 import { useState } from "react";
 
 const CourseComboDetail = () => {
@@ -73,7 +63,8 @@ const CourseComboDetail = () => {
   }
 
   // Calculate combo stats
-  const savings = (Number(data.original_price) || 0) - (Number(data.combo_price) || 0);
+  const savings =
+    (Number(data.original_price) || 0) - (Number(data.combo_price) || 0);
   const savingsPercentage =
     Number(data.original_price) > 0
       ? ((savings / Number(data.original_price)) * 100).toFixed(1)
@@ -87,9 +78,6 @@ const CourseComboDetail = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Package className="h-6 w-6 text-purple-600" />
-                </div>
                 <div>
                   <Heading
                     title="Course Combo Details"
@@ -354,7 +342,8 @@ const CourseComboDetail = () => {
                     <ShoppingCart className="h-6 w-6 text-purple-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-purple-700">
                       {(
-                        (data.enrollment_count || 0) * (Number(data.combo_price) || 0)
+                        (data.enrollment_count || 0) *
+                        (Number(data.combo_price) || 0)
                       ).toLocaleString()}
                     </div>
                     <div className="text-sm text-purple-600">Revenue (VND)</div>
@@ -363,14 +352,11 @@ const CourseComboDetail = () => {
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
                     <BookOpen className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold text-yellow-700">
-                      {(
-                        (data.total_lessons || 0)
-                      ).toLocaleString()}
+                      {(data.total_lessons || 0).toLocaleString()}
                     </div>
                     <div className="text-sm text-yellow-600">Total lessons</div>
                   </div>
                 </div>
-                
               </CardContent>
             </Card>
 
@@ -479,7 +465,6 @@ const CourseComboDetail = () => {
               >
                 Cancel
               </Button>
-             
             </div>
           </div>
         </div>

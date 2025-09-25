@@ -10,11 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
-import {
-  TextInfoField,
-  DateInfoField,
-  TextBadgeInfo,
-} from "@/components/ui/info";
+import { TextInfoField, DateInfoField } from "@/components/ui/info";
 import {
   ArrowLeft,
   Edit,
@@ -25,7 +21,6 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  TrendingUp,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { format } from "date-fns";
@@ -88,15 +83,10 @@ const CouponDetail = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Gift className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <Heading
-                    title="Coupon Details"
-                    description="View coupon information and usage statistics"
-                  />
-                </div>
+                <Heading
+                  title="Coupon Details"
+                  description="View coupon information and usage statistics"
+                />
               </div>
             </div>
 
@@ -233,7 +223,7 @@ const CouponDetail = () => {
                         >
                           {data.discount_type === "percentage"
                             ? "Percentage (%)"
-                            : "Fixed Amount ($)"}
+                            : "Fixed Amount (VND)"}
                         </Badge>
                       </div>
                     </div>
@@ -245,7 +235,9 @@ const CouponDetail = () => {
                       <div className="mt-1 text-2xl font-bold text-green-600">
                         {data.discount_type === "percentage"
                           ? `${data.discount_value}%`
-                          : `$${data.discount_value}`}
+                          : `${Number(
+                              data.discount_value
+                            ).toLocaleString()} VND`}
                       </div>
                     </div>
                   </div>
@@ -255,7 +247,9 @@ const CouponDetail = () => {
                       label="Minimum Purchase Amount"
                       value={
                         Number(data.minimum_amount) > 0
-                          ? `$${data.minimum_amount}`
+                          ? `${Number(
+                              data.minimum_amount
+                            ).toLocaleString()} VND`
                           : "No minimum"
                       }
                     />
@@ -264,7 +258,9 @@ const CouponDetail = () => {
                       Number(data.maximum_discount) > 0 && (
                         <TextInfoField
                           label="Maximum Discount"
-                          value={`$${data.maximum_discount}`}
+                          value={`${Number(
+                            data.maximum_discount
+                          ).toLocaleString()} VND`}
                         />
                       )}
                   </div>
@@ -408,14 +404,16 @@ const CouponDetail = () => {
                   <div className="text-2xl font-bold text-purple-600">
                     {data.discount_type === "percentage"
                       ? `${data.discount_value}% OFF`
-                      : `$${data.discount_value} OFF`}
+                      : `${Number(data.discount_value).toLocaleString()} VND`}
                   </div>
                   <div className="text-xs text-purple-700 font-mono bg-white px-2 py-1 rounded border">
                     Code: {data.code}
                   </div>
                   {Number(data.minimum_amount) > 0 && (
                     <div className="text-xs text-purple-600">
-                      Min. purchase: ${data.minimum_amount}
+                      Min. purchase:
+                      {Number(data.minimum_amount).toLocaleString() + " "}
+                      VND
                     </div>
                   )}
                   <div className="text-xs text-purple-600">
