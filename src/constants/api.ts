@@ -20,4 +20,5 @@ export const API_URL = {
   SECTIONS: "/sections",
   LESSONS: "/lessons",
   ORDERS: "/orders",
+  WRITING: "/writing",
 };
