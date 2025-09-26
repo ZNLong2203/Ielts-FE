@@ -6,12 +6,13 @@ import {
   IOrderUpdate,
   IRetryPayment,
 } from "@/interface/order";
+import { API_URL } from "@/constants/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 // Create order from combo
 export const createOrder = async (data: IOrderCreate) => {
-  const response = await api.post(`${BASE_URL}/orders`, data);
+  const response = await api.post(`${BASE_URL}${API_URL.ORDERS}`, data);
   console.log("Create order response:", response);
   return response.data;
 };
@@ -50,28 +51,28 @@ export const getOrders = async (params?: {
 
 // Get order details
 export const getOrder = async (id: string): Promise<IOrder> => {
-  const response = await api.get(`${BASE_URL}/orders/${id}`);
+  const response = await api.get(`${BASE_URL}${API_URL.ORDERS}/${id}`);
   console.log("Get order response:", response);
   return response.data.data;
 };
 
 // Cancel order
 export const cancelOrder = async (id: string) => {
-  const response = await api.patch(`${BASE_URL}/orders/${id}/cancel`);
+  const response = await api.patch(`${BASE_URL}${API_URL.ORDERS}/${id}/cancel`);
   console.log("Cancel order response:", response);
   return response.data;
 };
 
 // Update order status (admin)
 export const updateOrderStatus = async (id: string, data: IOrderUpdate) => {
-  const response = await api.patch(`${BASE_URL}/orders/${id}/status`, data);
+  const response = await api.patch(`${BASE_URL}${API_URL.ORDERS}/${id}/status`, data);
   console.log("Update order status response:", response);
   return response.data;
 };
 
 // Soft delete order
 export const deleteOrder = async (id: string) => {
-  const response = await api.delete(`${BASE_URL}/orders/${id}`);
+  const response = await api.delete(`${BASE_URL}${API_URL.ORDERS}/${id}`);
   console.log("Delete order response:", response);
   return response.data;
 };
@@ -79,7 +80,7 @@ export const deleteOrder = async (id: string) => {
 // Retry payment for order
 export const retryPayment = async (id: string, data: IRetryPayment) => {
   const response = await api.post(
-    `${BASE_URL}/orders/${id}/retry-payment`,
+    `${BASE_URL}${API_URL.ORDERS}/${id}/retry-payment`,
     data
   );
   console.log("Retry payment response:", response);

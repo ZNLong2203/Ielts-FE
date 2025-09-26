@@ -5,17 +5,17 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
-import TagsField from "@/components/form/tags-field"; // Thêm import
+import TagsField from "@/components/form/tags-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Save,
@@ -24,17 +24,18 @@ import {
   BookOpen,
   Tag,
   Plus,
-  X,
   GraduationCap,
   Target,
   CheckCircle,
   Settings,
+  List,
+  Trash2,
 } from "lucide-react";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CourseCreateSchema, CourseUpdateSchema } from "@/validation/course";
 import {
@@ -42,16 +43,18 @@ import {
   updateAdminCourse,
   getAdminCourseDetail,
 } from "@/api/course";
-import { getTeachers } from "@/api/teacher";
+import { createSection, getSectionsByCourseId } from "@/api/section";
 import { getCourseCategories } from "@/api/courseCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { useEffect, useState } from "react";
+import { ISectionCreate } from "@/interface/section";
 
 const CourseForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
+  const [newSections, setNewSections] = useState<ISectionCreate[]>([]);
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
@@ -77,43 +80,28 @@ const CourseForm = () => {
     enabled: slug !== undefined && slug !== "",
   });
 
+  const { data: sectionsData } = useQuery({
+    queryKey: ["sections", slug],
+    queryFn: () => getSectionsByCourseId(slug),
+    enabled: slug !== undefined && slug !== "",
+  });
+
   const { data: categoryData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCourseCategories({ page: 1 }),
   });
 
   const skillFocusOptions = [
-    {
-      label: "Reading",
-      value: "reading",
-    },
-    {
-      label: "Listening",
-      value: "listening",
-    },
-    {
-      label: "Speaking",
-      value: "speaking",
-    },
-    {
-      label: "Writing",
-      value: "writing",
-    },
+    { label: "Reading", value: "reading" },
+    { label: "Listening", value: "listening" },
+    { label: "Speaking", value: "speaking" },
+    { label: "Writing", value: "writing" },
   ];
 
   const difficultyLevelOptions = [
-    {
-      label: "Beginner",
-      value: "beginner",
-    },
-    {
-      label: "Intermediate",
-      value: "intermediate",
-    },
-    {
-      label: "Advanced",
-      value: "advanced",
-    },
+    { label: "Beginner", value: "beginner" },
+    { label: "Intermediate", value: "intermediate" },
+    { label: "Advanced", value: "advanced" },
   ];
 
   // Mutations
@@ -121,8 +109,24 @@ const CourseForm = () => {
     mutationFn: async (formData: z.infer<typeof CourseCreateSchema>) => {
       return createAdminCourse(formData);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data?.message || "Course created successfully");
+
+      // Create sections after course creation
+      if (newSections.length > 0 && data?.data?.id) {
+        try {
+          for (const section of newSections) {
+            await createSection({
+              ...section,
+              course_id: data.data.id,
+            });
+          }
+          toast.success("Sections created successfully");
+        } catch (error: any) {
+          toast.error("Failed to create some sections");
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["courses"] });
       router.push(ROUTES.ADMIN_COURSES);
     },
@@ -135,10 +139,27 @@ const CourseForm = () => {
     mutationFn: async (formData: z.infer<typeof CourseUpdateSchema>) => {
       return updateAdminCourse(slug, formData);
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data?.message || "Course updated successfully");
+
+      // Create new sections if any
+      if (newSections.length > 0) {
+        try {
+          for (const section of newSections) {
+            await createSection({
+              ...section,
+              course_id: slug,
+            });
+          }
+          toast.success("New sections created successfully");
+        } catch (error) {
+          toast.error("Failed to create some sections");
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["courses"] });
       queryClient.invalidateQueries({ queryKey: ["course", slug] });
+      queryClient.invalidateQueries({ queryKey: ["sections", slug] });
       router.push(ROUTES.ADMIN_COURSES);
     },
     onError: (error) => {
@@ -161,27 +182,14 @@ const CourseForm = () => {
       is_featured: false,
       requirements: [],
       what_you_learn: [],
-      course_outline: {
-        sections: [{ title: "", lessons: [""] }],
-      },
       tags: [],
     },
-  });
-
-  // Field arrays
-  const {
-    fields: sectionFields,
-    append: appendSection,
-    remove: removeSection,
-  } = useFieldArray({
-    control: courseForm.control,
-    name: "course_outline.sections",
   });
 
   const detailCategory = categoryData?.result.find(
     (category) => category.id === courseData?.category.id
   );
-  
+
   const categoryOptions =
     categoryData?.result.map((category) => ({
       label: category.name,
@@ -193,16 +201,40 @@ const CourseForm = () => {
       courseForm.reset(courseData);
       courseForm.setValue("category_id", detailCategory?.id || "");
     }
-  }, [courseData, courseForm]);
+  }, [courseData, courseForm, detailCategory?.id]);
 
-  const onSubmit = async (data: z.infer<typeof CourseCreateSchema>) => {
-    console.log("click")
+  const onSubmit = async (
+    data: z.infer<typeof CourseCreateSchema>
+  ) => {
     console.log("Course Form Submitted:", data);
     if (slug) {
-      updateCourseMutation.mutate(data);
+      updateCourseMutation.mutate(data as z.infer<typeof CourseUpdateSchema>);
     } else {
       createCourseMutation.mutate(data);
     }
+  };
+
+  // Section management functions
+  const addNewSection = () => {
+    setNewSections([
+      ...newSections,
+      {
+        course_id: slug || "",
+        title: "",
+        description: "",
+        ordering: (sectionsData?.length || 0) + newSections.length + 1,
+      },
+    ]);
+  };
+
+  const updateNewSection = (index: number, field: string, value: string) => {
+    const updated = [...newSections];
+    updated[index] = { ...updated[index], [field]: value };
+    setNewSections(updated);
+  };
+
+  const removeNewSection = (index: number) => {
+    setNewSections(newSections.filter((_, i) => i !== index));
   };
 
   if (isLoading) {
@@ -380,58 +412,153 @@ const CourseForm = () => {
                   </CardContent>
                 </Card>
 
-                {/* Course Outline */}
+                {/* Course Sections */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <GraduationCap className="h-5 w-5 text-indigo-600" />
-                      <span>Course Outline</span>
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <List className="h-5 w-5 text-indigo-600" />
+                        <span>Course Sections</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addNewSection}
+                        className="flex items-center space-x-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Add Section</span>
+                      </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {sectionFields.map((section, sectionIndex) => (
-                      <div
-                        key={section.id}
-                        className="border rounded-lg p-4 space-y-4"
-                      >
-                        <div className="flex items-center gap-2">
-                          <TextField
-                            control={courseForm.control}
-                            name={`course_outline.sections.${sectionIndex}.title`}
-                            label={`Section ${sectionIndex + 1} Title`}
-                            placeholder="Enter section title..."
-                            className="flex-1"
-                          />
-                          {sectionFields.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeSection(sectionIndex)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
+                    {/* Existing Sections (for edit mode) */}
+                    {sectionsData && sectionsData.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-sm text-gray-700 flex items-center space-x-2">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>Existing Sections</span>
+                        </h4>
+                        {sectionsData.map((section) => (
+                          <div
+                            key={section.id}
+                            className="border rounded-lg p-4 bg-gray-50"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Badge variant="secondary">
+                                    Section {section.ordering}
+                                  </Badge>
+                                  <span className="font-medium">
+                                    {section.title}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">
+                                  {section.description}
+                                </p>
+                                <div className="text-xs text-gray-500">
+                                  {section.lessons?.length || 0} lessons
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() =>
-                        appendSection({ title: "", lessons: [""] })
-                      }
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Section
-                    </Button>
+                    {/* New Sections */}
+                    {newSections.length > 0 && (
+                      <div className="space-y-4">
+                        <h4 className="font-medium text-sm text-gray-700 flex items-center space-x-2">
+                          <Plus className="h-4 w-4" />
+                          <span>New Sections</span>
+                        </h4>
+                        {newSections.map((section, index) => (
+                          <div
+                            key={index}
+                            className="border rounded-lg p-4 space-y-4 bg-blue-50 border-blue-200"
+                          >
+                            <div className="flex items-start justify-between">
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-100 text-blue-800"
+                              >
+                                New Section {section.ordering}
+                              </Badge>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeNewSection(index)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            <div className="space-y-4">
+                              <div>
+                                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                  Section Title
+                                </label>
+                                <input
+                                  type="text"
+                                  value={section.title}
+                                  onChange={(e) =>
+                                    updateNewSection(
+                                      index,
+                                      "title",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Enter section title..."
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-sm font-medium text-gray-700 mb-2 block">
+                                  Section Description
+                                </label>
+                                <textarea
+                                  value={section.description}
+                                  onChange={(e) =>
+                                    updateNewSection(
+                                      index,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Enter section description..."
+                                  rows={3}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Empty state */}
+                    {(!sectionsData || sectionsData.length === 0) &&
+                      newSections.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <List className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                          <p className="text-lg font-medium mb-2">
+                            No sections yet
+                          </p>
+                          <p className="text-sm">
+                            Add sections to organize your course content
+                          </p>
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
 
-                {/* Tags - Sử dụng TagsField */}
+                {/* Tags */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">

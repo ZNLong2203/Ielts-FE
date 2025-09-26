@@ -14,10 +14,8 @@ import {
   TextBadgeInfo,
 } from "@/components/ui/info";
 import {
-  ArrowLeft,
   Edit,
   Eye,
-  Calendar,
   Tag,
   Share2,
   BookOpen,
@@ -30,7 +28,6 @@ import {
   Target,
   CheckCircle,
   Play,
-  Trash2,
   Settings,
 } from "lucide-react";
 
@@ -186,7 +183,6 @@ const CourseDetail = () => {
                       >
                         {course.is_featured ? (
                           <div className="flex items-center space-x-1">
-                            <Star className="h-3 w-3" />
                             <span>Yes</span>
                           </div>
                         ) : (
@@ -206,7 +202,7 @@ const CourseDetail = () => {
                       <DollarSign className="h-4 w-4 text-green-500" />
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">
-                          {course.price?.toLocaleString()} VND
+                          {Number(course.price)?.toLocaleString()} VND
                         </span>
                         {course.discount_price &&
                           course.discount_price < course.price && (
@@ -214,7 +210,8 @@ const CourseDetail = () => {
                               variant="outline"
                               className="text-xs bg-red-50 text-red-700"
                             >
-                              {course.discount_price?.toLocaleString()} VND
+                              {Number(course.discount_price)?.toLocaleString()}{" "}
+                              VND
                             </Badge>
                           )}
                       </div>
@@ -375,7 +372,7 @@ const CourseDetail = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Price:</span>
                     <span className="text-sm font-medium">
-                      {course.price?.toLocaleString()} VND
+                      {Number(course.price)?.toLocaleString()} VND
                     </span>
                   </div>
 
@@ -384,7 +381,7 @@ const CourseDetail = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Discount:</span>
                         <span className="text-sm font-medium text-red-600">
-                          {course.discount_price?.toLocaleString()} VND
+                          {Number(course.discount_price)?.toLocaleString()} VND
                         </span>
                       </div>
                     )}
@@ -499,8 +496,7 @@ const CourseDetail = () => {
                     <span>{course.estimated_duration}h</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <DollarSign className="h-3 w-3" />
-                    <span>{course.price?.toLocaleString()}</span>
+                    <span>{Number(course.price)?.toLocaleString()} VND</span>
                   </div>
                 </div>
               </CardContent>

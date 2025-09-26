@@ -1,3 +1,5 @@
+import { ISection } from "./section";
+
 export interface ICourse {
   id: string;
   title: string;
@@ -12,6 +14,7 @@ export interface ICourse {
   requirements: string[];
   what_you_learn: string[];
   course_outline: CourseOutline;
+  sections: ISection[];
   tags: string[];
   created_at: Date;
   updated_at: Date;
@@ -22,8 +25,8 @@ export interface CourseOutline {
 }
 
 export interface CourseSection {
-  title: string;
-  lessons: string[];
+  title?: string;
+  lessons?: string[];
 }
 
 export interface ICourses {
@@ -55,7 +58,7 @@ export interface ICourseCreate {
   is_featured: boolean;
   requirements: string[];
   what_you_learn: string[];
-  course_outline: CourseOutline;
+  // course_outline: CourseOutline;
   tags: string[];
 }
 
@@ -71,7 +74,7 @@ export interface ICourseUpdate {
   is_featured?: boolean;
   requirements?: string[];
   what_you_learn?: string[];
-  course_outline?: CourseOutline;
+  // course_outline?: CourseOutline;
   tags?: string[];
 }
 
