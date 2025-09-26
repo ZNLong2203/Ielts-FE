@@ -15,8 +15,8 @@ export const getSectionsByCourseId = async (
 };
 
 // Create a new section
-export const createSection = async (data: ISectionCreate) => {
-  const response = await api.post(`${BASE_URL}${API_URL.SECTIONS}`, data);
+export const createSection = async (data: ISectionCreate, courseId: string) => {
+  const response = await api.post(`${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}`, data);
   return response.data;
 };
 

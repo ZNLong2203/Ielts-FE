@@ -29,12 +29,18 @@ import {
   CheckCircle,
   Play,
   Settings,
+  User,
+  Award,
+  FileText,
+  Video,
+  Calendar,
 } from "lucide-react";
 
 import { getAdminCourseDetail } from "@/api/course";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 const CourseDetail = () => {
   const router = useRouter();
@@ -54,7 +60,7 @@ const CourseDetail = () => {
   });
 
   const getDifficultyColor = (level: string) => {
-    switch (level) {
+    switch (level?.toLowerCase()) {
       case "beginner":
         return "bg-green-100 text-green-800";
       case "intermediate":
@@ -67,7 +73,7 @@ const CourseDetail = () => {
   };
 
   const getSkillColor = (skill: string) => {
-    switch (skill) {
+    switch (skill?.toLowerCase()) {
       case "reading":
         return "bg-blue-100 text-blue-800";
       case "writing":
@@ -79,6 +85,20 @@ const CourseDetail = () => {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getRatingStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={cn(
+          "h-4 w-4",
+          i < Math.floor(rating)
+            ? "text-yellow-400 fill-current"
+            : "text-gray-300"
+        )}
+      />
+    ));
   };
 
   if (courseLoading) {
@@ -98,6 +118,8 @@ const CourseDetail = () => {
     );
   }
 
+  const courseData = course;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -106,7 +128,7 @@ const CourseDetail = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <Heading
-                title="Course Details"
+                title={`Course: ${courseData.title}`}
                 description="Course information and content overview"
               />
             </div>
@@ -130,11 +152,14 @@ const CourseDetail = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <TextInfoField label="Course Title" value={course.title} />
+                    <TextInfoField
+                      label="Course Title"
+                      value={courseData.title}
+                    />
 
                     <TextInfoField
                       label="Category"
-                      value={course.category.name || "Uncategorized"}
+                      value={courseData.category?.name || "Uncategorized"}
                     />
 
                     <div>
@@ -144,12 +169,30 @@ const CourseDetail = () => {
                       <Badge
                         className={cn(
                           "text-xs",
-                          getSkillColor(course.skill_focus)
+                          getSkillColor(courseData.skill_focus)
                         )}
                       >
-                        {course.skill_focus?.charAt(0).toUpperCase() +
-                          course.skill_focus?.slice(1)}
+                        {courseData.skill_focus?.charAt(0).toUpperCase() +
+                          courseData.skill_focus?.slice(1)}
                       </Badge>
+                    </div>
+
+                    {/* Rating */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        Rating
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex items-center">
+                          {getRatingStars(parseFloat(courseData.rating || "0"))}
+                        </div>
+                        <span className="text-sm font-medium">
+                          {courseData.rating || 0}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          ({courseData.rating_count || 0} reviews)
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -161,11 +204,11 @@ const CourseDetail = () => {
                       <Badge
                         className={cn(
                           "text-xs",
-                          getDifficultyColor(course.difficulty_level)
+                          getDifficultyColor(courseData.difficulty_level)
                         )}
                       >
-                        {course.difficulty_level?.charAt(0).toUpperCase() +
-                          course.difficulty_level?.slice(1)}
+                        {courseData.difficulty_level?.charAt(0).toUpperCase() +
+                          courseData.difficulty_level?.slice(1)}
                       </Badge>
                     </div>
 
@@ -174,15 +217,18 @@ const CourseDetail = () => {
                         Featured:
                       </label>
                       <Badge
-                        variant={course.is_featured ? "default" : "secondary"}
+                        variant={
+                          courseData.is_featured ? "default" : "secondary"
+                        }
                         className={
-                          course.is_featured
+                          courseData.is_featured
                             ? "bg-yellow-100 text-yellow-800"
                             : ""
                         }
                       >
-                        {course.is_featured ? (
+                        {courseData.is_featured ? (
                           <div className="flex items-center space-x-1">
+                            <Star className="h-3 w-3" />
                             <span>Yes</span>
                           </div>
                         ) : (
@@ -194,7 +240,7 @@ const CourseDetail = () => {
                     <div className="flex items-center space-x-2">
                       <Clock className="h-4 w-4 text-gray-500" />
                       <span className="text-sm font-medium">
-                        {course.estimated_duration} hours
+                        {courseData.estimated_duration} hours
                       </span>
                     </div>
 
@@ -202,15 +248,18 @@ const CourseDetail = () => {
                       <DollarSign className="h-4 w-4 text-green-500" />
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">
-                          {Number(course.price)?.toLocaleString()} VND
+                          {Number(courseData.price)?.toLocaleString()} VND
                         </span>
-                        {course.discount_price &&
-                          course.discount_price < course.price && (
+                        {courseData.discount_price &&
+                          parseFloat(courseData.discount_price) <
+                            parseFloat(courseData.price) && (
                             <Badge
                               variant="outline"
                               className="text-xs bg-red-50 text-red-700"
                             >
-                              {Number(course.discount_price)?.toLocaleString()}{" "}
+                              {Number(
+                                courseData.discount_price
+                              )?.toLocaleString()}{" "}
                               VND
                             </Badge>
                           )}
@@ -221,17 +270,26 @@ const CourseDetail = () => {
                   <div className="md:col-span-2">
                     <TextInfoField
                       label="Description"
-                      value={course.description}
+                      value={courseData.description}
                     />
                   </div>
 
-                  <DateInfoField label="Created At" value={course.created_at} />
-
-                  <DateInfoField label="Updated At" value={course.updated_at} />
+                  <DateInfoField
+                    label="Created At"
+                    value={courseData.created_at}
+                  />
+                  <DateInfoField
+                    label="Updated At"
+                    value={courseData.updated_at}
+                  />
+                  <DateInfoField
+                    label="Published At"
+                    value={courseData.published_at}
+                  />
                 </div>
 
                 {/* Tags */}
-                {course.tags && course.tags.length > 0 && (
+                {courseData.tags && courseData.tags.length > 0 && (
                   <>
                     <Separator />
                     <div>
@@ -239,7 +297,7 @@ const CourseDetail = () => {
                         Tags
                       </label>
                       <div className="flex flex-wrap gap-2">
-                        {course.tags.map((tag, index) => (
+                        {courseData.tags.map((tag, index) => (
                           <Badge
                             key={index}
                             variant="outline"
@@ -256,8 +314,215 @@ const CourseDetail = () => {
               </CardContent>
             </Card>
 
+            {/* Teacher Information */}
+            {courseData.teacher && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5 text-green-600" />
+                    <span>Teacher Information</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start space-x-6">
+                    {/* Avatar Section */}
+                    <div className="flex-shrink-0">
+                      {courseData.teacher.avatar ? (
+                        <div className="relative">
+                          <img
+                            src={courseData.teacher.avatar}
+                            alt={courseData.teacher.name}
+                            className="w-20 h-20 rounded-full object-cover border-3 border-green-200 shadow-lg"
+                          />
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <Award className="h-3 w-3 text-white" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center border-3 border-green-300 shadow-lg">
+                            <User className="h-10 w-10 text-green-600" />
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <Award className="h-3 w-3 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Teacher Details */}
+                    <div className="flex-1 space-y-4">
+                      {/* Name and Title */}
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-xl font-bold text-gray-900">
+                            {courseData.teacher.name || "Unknown Teacher"}
+                          </h4>
+                          <Badge className="bg-green-100 text-green-700 border-green-200">
+                            Instructor
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-green-600 font-medium flex items-center space-x-1">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>Course Instructor & IELTS Expert</span>
+                        </p>
+                      </div>
+
+                      {/* Teacher Info Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Qualification Card */}
+                        {courseData.teacher.qualification ? (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                              <div className="flex-shrink-0 p-2 bg-blue-500 rounded-lg">
+                                <GraduationCap className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-1">
+                                  Qualification
+                                </p>
+                                <p className="text-sm text-blue-900 font-medium leading-tight">
+                                  {courseData.teacher.qualification}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                              <div className="flex-shrink-0 p-2 bg-gray-400 rounded-lg">
+                                <GraduationCap className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+                                  Qualification
+                                </p>
+                                <p className="text-sm text-gray-500 font-medium leading-tight">
+                                  Not specified
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Experience Card */}
+                        {courseData.teacher.experience_years ? (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                              <div className="flex-shrink-0 p-2 bg-purple-500 rounded-lg">
+                                <Award className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-purple-800 uppercase tracking-wider mb-1">
+                                  Experience
+                                </p>
+                                <p className="text-sm text-purple-900 font-medium leading-tight">
+                                  {courseData.teacher.experience_years} years
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                              <div className="flex-shrink-0 p-2 bg-gray-400 rounded-lg">
+                                <Award className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+                                  Experience
+                                </p>
+                                <p className="text-sm text-gray-500 font-medium leading-tight">
+                                  Not specified
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Course Outline */}
+            {courseData?.sections && courseData?.sections.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    <span>Course Outline</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {courseData.sections.map((section, sectionIndex) => (
+                      <div key={sectionIndex} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-gray-900">
+                            Section {section.ordering}: {section.title}
+                          </h4>
+                          <Badge variant="outline" className="text-xs">
+                            {section.lessons?.length || 0} lessons
+                          </Badge>
+                        </div>
+
+                        {section.description && (
+                          <p className="text-sm text-gray-600 mb-3">
+                            {section.description}
+                          </p>
+                        )}
+
+                        {section.lessons && section.lessons.length > 0 && (
+                          <div className="space-y-2">
+                            {section.lessons.map((lesson, lessonIndex) => (
+                              <div
+                                key={lessonIndex}
+                                className="flex items-center space-x-3 p-2 bg-gray-50 rounded"
+                              >
+                                <div className="flex-shrink-0">
+                                  {lesson.lesson_type === "video" ? (
+                                    <Video className="h-4 w-4 text-blue-500" />
+                                  ) : (
+                                    <FileText className="h-4 w-4 text-gray-500" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    {lesson.title}
+                                  </p>
+                                  {lesson.description && (
+                                    <p className="text-xs text-gray-500 line-clamp-1">
+                                      {lesson.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex-shrink-0 text-xs text-gray-500">
+                                  {lesson.video_duration &&
+                                    `${lesson.video_duration}min`}
+                                  {lesson.is_preview && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs ml-2"
+                                    >
+                                      Preview
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Requirements */}
-            {course.requirements && course.requirements.length > 0 && (
+            {courseData.requirements && courseData.requirements.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -267,7 +532,7 @@ const CourseDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {course.requirements.map((requirement, index) => (
+                    {courseData.requirements.map((requirement, index) => (
                       <div
                         key={index}
                         className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg"
@@ -282,68 +547,26 @@ const CourseDetail = () => {
             )}
 
             {/* What You Learn */}
-            {course.what_you_learn && course.what_you_learn.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-orange-600" />
-                    <span>What Students Will Learn</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {course.what_you_learn.map((learning, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg"
-                      >
-                        <Target className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm">{learning}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Course Outline */}
-            {course.course_outline?.sections &&
-              course.course_outline.sections.length > 0 && (
+            {courseData.what_you_learn &&
+              courseData.what_you_learn.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
-                      <GraduationCap className="h-5 w-5 text-indigo-600" />
-                      <span>Course Outline</span>
+                      <Target className="h-5 w-5 text-orange-600" />
+                      <span>What Students Will Learn</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {course.course_outline.sections.map(
-                        (section, sectionIndex) => (
-                          <div
-                            key={sectionIndex}
-                            className="border rounded-lg p-4"
-                          >
-                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                              <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-sm font-medium">
-                                {sectionIndex + 1}
-                              </div>
-                              {section.title}
-                            </h4>
-                            <div className="space-y-2 ml-8">
-                              {section.lessons?.map((lesson, lessonIndex) => (
-                                <div
-                                  key={lessonIndex}
-                                  className="flex items-center gap-2 text-sm text-gray-600"
-                                >
-                                  <Play className="h-3 w-3 text-gray-400" />
-                                  {lesson}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      )}
+                    <div className="space-y-2">
+                      {courseData.what_you_learn.map((learning, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg"
+                        >
+                          <Target className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm">{learning}</span>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -365,45 +588,73 @@ const CourseDetail = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Duration:</span>
                     <span className="text-sm font-medium">
-                      {course.estimated_duration} hours
+                      {courseData.estimated_duration} hours
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Price:</span>
                     <span className="text-sm font-medium">
-                      {Number(course.price)?.toLocaleString()} VND
+                      {Number(courseData.price)?.toLocaleString()} VND
                     </span>
                   </div>
 
-                  {course.discount_price &&
-                    course.discount_price < course.price && (
+                  {courseData.discount_price &&
+                    parseFloat(courseData.discount_price) <
+                      parseFloat(courseData.price) && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Discount:</span>
                         <span className="text-sm font-medium text-red-600">
-                          {Number(course.discount_price)?.toLocaleString()} VND
+                          {Number(courseData.discount_price)?.toLocaleString()}{" "}
+                          VND
                         </span>
                       </div>
                     )}
 
                   <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Rating:</span>
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-3 w-3 text-yellow-400 fill-current" />
+                      <span className="text-sm font-medium">
+                        {courseData.rating || 0}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        ({courseData.rating_count || 0})
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Featured:</span>
                     <span className="text-sm font-medium">
-                      {course.is_featured ? "Yes" : "No"}
+                      {courseData.is_featured ? "Yes" : "No"}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Sections:</span>
                     <span className="text-sm font-medium">
-                      {course.course_outline?.sections?.length || 0}
+                      {courseData.course_outline?.sections?.length || 0}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">
+                      Total Lessons:
+                    </span>
+                    <span className="text-sm font-medium">
+                      {courseData.course_outline?.sections?.reduce(
+                        (total, section) =>
+                          total + (section.lessons?.length || 0),
+                        0
+                      ) || 0}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Tags:</span>
                     <span className="text-sm font-medium">
-                      {course.tags?.length || 0}
+                      {courseData.tags?.length || 0}
                     </span>
                   </div>
                 </div>
@@ -411,10 +662,20 @@ const CourseDetail = () => {
                 <Separator />
 
                 <div className="text-xs text-gray-500">
-                  <div>ID: {course.id}</div>
+                  <div>ID: {courseData.id}</div>
                   <div>
-                    Created: {new Date(course.created_at).toLocaleDateString()}
+                    Created:{" "}
+                    {format(new Date(courseData.created_at), "MMM dd, yyyy")}
                   </div>
+                  {courseData.published_at && (
+                    <div>
+                      Published:{" "}
+                      {format(
+                        new Date(courseData.published_at),
+                        "MMM dd, yyyy"
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -466,17 +727,17 @@ const CourseDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <BookOpen className="h-5 w-5 text-green-600" />
-                  <span>Summary</span>
+                  <Award className="h-5 w-5 text-green-600" />
+                  <span>Course Summary</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-sm">
                   <div className="font-medium text-gray-900 mb-2">
-                    {course.title}
+                    {courseData.title}
                   </div>
                   <div className="text-gray-600 line-clamp-3">
-                    {course.description}
+                    {courseData.description}
                   </div>
                 </div>
 
@@ -485,18 +746,21 @@ const CourseDetail = () => {
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
                   <div className="flex items-center space-x-1">
                     <GraduationCap className="h-3 w-3" />
-                    <span>{course.skill_focus}</span>
+                    <span>{courseData.skill_focus}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="h-3 w-3" />
-                    <span>{course.difficulty_level}</span>
+                    <span>{courseData.difficulty_level}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="h-3 w-3" />
-                    <span>{course.estimated_duration}h</span>
+                    <span>{courseData.estimated_duration}h</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <span>{Number(course.price)?.toLocaleString()} VND</span>
+                    <DollarSign className="h-3 w-3" />
+                    <span>
+                      {Number(courseData.price)?.toLocaleString()} VND
+                    </span>
                   </div>
                 </div>
               </CardContent>

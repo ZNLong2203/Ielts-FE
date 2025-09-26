@@ -116,10 +116,7 @@ const CourseForm = () => {
       if (newSections.length > 0 && data?.data?.id) {
         try {
           for (const section of newSections) {
-            await createSection({
-              ...section,
-              course_id: data.data.id,
-            });
+            await createSection(section, slug);
           }
           toast.success("Sections created successfully");
         } catch (error: any) {
@@ -146,10 +143,9 @@ const CourseForm = () => {
       if (newSections.length > 0) {
         try {
           for (const section of newSections) {
-            await createSection({
-              ...section,
-              course_id: slug,
-            });
+            console.log("Creating section:", section);
+            console.log("For course ID:", slug);
+            await createSection(section, slug);
           }
           toast.success("New sections created successfully");
         } catch (error) {
@@ -203,9 +199,7 @@ const CourseForm = () => {
     }
   }, [courseData, courseForm, detailCategory?.id]);
 
-  const onSubmit = async (
-    data: z.infer<typeof CourseCreateSchema>
-  ) => {
+  const onSubmit = async (data: z.infer<typeof CourseCreateSchema>) => {
     console.log("Course Form Submitted:", data);
     if (slug) {
       updateCourseMutation.mutate(data as z.infer<typeof CourseUpdateSchema>);

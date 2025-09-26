@@ -10,12 +10,23 @@ export interface ICourse {
   estimated_duration: number;
   price: string;
   discount_price?: string;
+  rating: string;
+  rating_count: number;
   is_featured: boolean;
   requirements: string[];
   what_you_learn: string[];
   course_outline: CourseOutline;
   sections: ISection[];
   tags: string[];
+  teacher: {
+    id: string;
+    avatar: string;
+    experience_years: number;
+    name: string;
+    qualification: string;
+    rating: string;
+  }
+  published_at: Date;
   created_at: Date;
   updated_at: Date;
 }
