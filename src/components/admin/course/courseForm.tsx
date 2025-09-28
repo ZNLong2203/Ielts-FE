@@ -54,9 +54,13 @@ const CourseForm = () => {
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
+  // FIX: Determine if we're editing or creating
+  const isEditing = slug !== undefined && slug !== "";
+  const isCreating = !isEditing;
+
   let title = "";
   let description = "";
-  if (slug === undefined || param.slug === "") {
+  if (isCreating) {
     title = "Create New Course";
     description = "Design and create a new IELTS course";
   } else {
@@ -73,13 +77,14 @@ const CourseForm = () => {
   } = useQuery({
     queryKey: ["course", slug],
     queryFn: () => getAdminCourseDetail(slug),
-    enabled: slug !== undefined && slug !== "",
+    enabled: isEditing, // FIX: Only fetch when editing
   });
 
+  // FIX: Only fetch sections when editing
   const { data: sectionsData } = useQuery({
     queryKey: ["section", slug],
     queryFn: () => getSectionsByCourseId(slug),
-    enabled: slug !== undefined && slug !== "",
+    enabled: isEditing, // FIX: Only fetch when editing
   });
 
   const { data: categoryData } = useQuery({
@@ -112,7 +117,7 @@ const CourseForm = () => {
       if (newSections.length > 0 && data?.data?.id) {
         try {
           for (const section of newSections) {
-            await createSection(section, slug);
+            await createSection(section, data.data.id); // FIX: Use the new course ID
           }
           toast.success("Sections created successfully");
         } catch (error: any) {
@@ -189,26 +194,29 @@ const CourseForm = () => {
     })) || [];
 
   useEffect(() => {
-    if (courseData) {
+    if (courseData && isEditing) {
+      // FIX: Only reset form when editing and data exists
       courseForm.reset(courseData);
       courseForm.setValue("category_id", detailCategory?.id || "");
     }
-  }, [courseData, courseForm, detailCategory?.id]);
+  }, [courseData, courseForm, detailCategory?.id, isEditing]);
 
   const onSubmit = async (data: z.infer<typeof CourseCreateSchema>) => {
     console.log("Course Form Submitted:", data);
-    if (slug) {
+    if (isEditing) {
       updateCourseMutation.mutate(data as z.infer<typeof CourseUpdateSchema>);
     } else {
       createCourseMutation.mutate(data);
     }
   };
-  
-  if (isLoading) {
+
+  // FIX: Only show loading for relevant queries
+  if (isEditing && isLoading) {
     return <Loading />;
   }
 
-  if (isError) {
+  // FIX: Only show error when editing and there's an actual error
+  if (isEditing && isError) {
     return (
       <Error
         title="Course Not Found"
@@ -232,16 +240,17 @@ const CourseForm = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  /* Preview logic */
-                }}
-                className="flex items-center space-x-2"
-              >
-                <FileText className="h-4 w-4" />
-                <span>Preview</span>
-              </Button>
+              {/* FIX: Only show preview button when editing */}
+              {isEditing && (
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(`/courses/${slug}`, "_blank")}
+                  className="flex items-center space-x-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Preview</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -452,10 +461,10 @@ const CourseForm = () => {
                           <span>
                             {createCourseMutation.isPending ||
                             updateCourseMutation.isPending
-                              ? slug
+                              ? isEditing
                                 ? "Updating..."
                                 : "Creating..."
-                              : slug
+                              : isEditing
                               ? "Update Course"
                               : "Create Course"}
                           </span>
@@ -477,10 +486,11 @@ const CourseForm = () => {
             </form>
           </Form>
 
-          {courseData?.sections && courseData?.sections.length > 0 && (
-            <SectionDetail 
-              sections={courseData.sections} 
-              isEditable 
+          {/* FIX: Always show SectionDetail when editing (whether has sections or not) */}
+          {isEditing && courseData && (
+            <SectionDetail
+              sections={courseData.sections || []} // FIX: Pass empty array if no sections
+              isEditable
               courseId={courseData.id}
             />
           )}
@@ -490,4 +500,4 @@ const CourseForm = () => {
   );
 };
 
-export default CourseForm;  
+export default CourseForm;
