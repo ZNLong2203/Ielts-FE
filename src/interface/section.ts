@@ -9,8 +9,13 @@ export interface ISection {
 }
 
 export interface ISectionCreate {
-  course_id: string;
   title: string;
   description: string;
   ordering: number;
+}
+
+export interface ISectionUpdate {
+  title?: string;
+  description?: string;
+  ordering?: number;
 }

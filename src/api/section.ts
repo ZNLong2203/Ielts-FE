@@ -1,5 +1,5 @@
 import api from "@/utils/interceptor";
-import { ISection, ISectionCreate } from "@/interface/section";
+import { ISection, ISectionCreate, ISectionUpdate } from "@/interface/section";
 import { API_URL } from "@/constants/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -16,7 +16,23 @@ export const getSectionsByCourseId = async (
 
 // Create a new section
 export const createSection = async (data: ISectionCreate, courseId: string) => {
-  const response = await api.post(`${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}`, data);
+  const response = await api.post(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}`,
+    data
+  );
+  return response.data;
+};
+
+// Update a section by ID
+export const updateSection = async (
+  data: ISectionUpdate,
+  id: string,
+  courseId: string
+) => {
+  const response = await api.patch(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}/${id}`,
+    data
+  );
   return response.data;
 };
 

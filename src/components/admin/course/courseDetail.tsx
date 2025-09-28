@@ -11,7 +11,6 @@ import Error from "@/components/ui/error";
 import {
   TextInfoField,
   DateInfoField,
-  TextBadgeInfo,
 } from "@/components/ui/info";
 import {
   Edit,
@@ -27,13 +26,9 @@ import {
   DollarSign,
   Target,
   CheckCircle,
-  Play,
   Settings,
   User,
   Award,
-  FileText,
-  Video,
-  Calendar,
 } from "lucide-react";
 
 import { getAdminCourseDetail } from "@/api/course";
@@ -41,6 +36,7 @@ import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import SectionDetail from "../section/sectionDetail";
 
 const CourseDetail = () => {
   const router = useRouter();
@@ -448,77 +444,7 @@ const CourseDetail = () => {
 
             {/* Course Outline */}
             {courseData?.sections && courseData?.sections.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BookOpen className="h-5 w-5 text-blue-600" />
-                    <span>Course Outline</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {courseData.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-gray-900">
-                            Section {section.ordering}: {section.title}
-                          </h4>
-                          <Badge variant="outline" className="text-xs">
-                            {section.lessons?.length || 0} lessons
-                          </Badge>
-                        </div>
-
-                        {section.description && (
-                          <p className="text-sm text-gray-600 mb-3">
-                            {section.description}
-                          </p>
-                        )}
-
-                        {section.lessons && section.lessons.length > 0 && (
-                          <div className="space-y-2">
-                            {section.lessons.map((lesson, lessonIndex) => (
-                              <div
-                                key={lessonIndex}
-                                className="flex items-center space-x-3 p-2 bg-gray-50 rounded"
-                              >
-                                <div className="flex-shrink-0">
-                                  {lesson.lesson_type === "video" ? (
-                                    <Video className="h-4 w-4 text-blue-500" />
-                                  ) : (
-                                    <FileText className="h-4 w-4 text-gray-500" />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {lesson.title}
-                                  </p>
-                                  {lesson.description && (
-                                    <p className="text-xs text-gray-500 line-clamp-1">
-                                      {lesson.description}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="flex-shrink-0 text-xs text-gray-500">
-                                  {lesson.video_duration &&
-                                    `${lesson.video_duration}min`}
-                                  {lesson.is_preview && (
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs ml-2"
-                                    >
-                                      Preview
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+             <SectionDetail sections={courseData.sections} courseId={slug} />
             )}
 
             {/* Requirements */}
