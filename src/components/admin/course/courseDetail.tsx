@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
-import {
-  TextInfoField,
-  DateInfoField,
-} from "@/components/ui/info";
+import { TextInfoField, DateInfoField } from "@/components/ui/info";
 import {
   Edit,
   Eye,
@@ -325,7 +323,7 @@ const CourseDetail = () => {
                     <div className="flex-shrink-0">
                       {courseData.teacher.avatar ? (
                         <div className="relative">
-                          <img
+                          <Image
                             src={courseData.teacher.avatar}
                             alt={courseData.teacher.name}
                             className="w-20 h-20 rounded-full object-cover border-3 border-green-200 shadow-lg"
@@ -444,7 +442,7 @@ const CourseDetail = () => {
 
             {/* Course Outline */}
             {courseData?.sections && courseData?.sections.length > 0 && (
-             <SectionDetail sections={courseData.sections} courseId={slug} />
+              <SectionDetail sections={courseData.sections} courseId={slug} />
             )}
 
             {/* Requirements */}

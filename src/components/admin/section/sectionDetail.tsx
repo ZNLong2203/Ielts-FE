@@ -22,6 +22,7 @@ import { ISection } from "@/interface/section";
 import { deleteSection } from "@/api/section";
 import { AlertModal } from "@/components/modal/alert-modal";
 import SectionForm from "./sectionForm";
+import LessonList from "../lesson/lessonList";
 
 interface SectionDetailProps {
   courseId: string;
@@ -44,6 +45,9 @@ const SectionDetail = ({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [sectionToDelete, setSectionToDelete] = useState<ISection | null>(null);
 
+  const [managingLessonsForSection, setManagingLessonsForSection] =
+    useState<ISection | null>(null);
+
   // Sort sections by ordering field, fallback to original index
   const sortedSections = [...sections].sort((a, b) => {
     const orderA = a.ordering ?? 999;
@@ -64,7 +68,7 @@ const SectionDetail = ({
       setDeleteModalOpen(false);
       setSectionToDelete(null);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Delete section error:", error);
       toast.error(error?.message || "Failed to delete section");
       setDeleteModalOpen(false);
@@ -77,7 +81,6 @@ const SectionDetail = ({
     setSectionToDelete(section);
     setDeleteModalOpen(true);
   };
-
   // Handle confirm delete
   const handleConfirmDelete = () => {
     if (sectionToDelete?.id) {
@@ -115,7 +118,17 @@ const SectionDetail = ({
     setShowCreateForm(false);
   };
 
-  // Show form if editing or creating
+  // Handle manage lessons for section
+  const handleManageLessons = (section: ISection) => {
+    setManagingLessonsForSection(section);
+  };
+
+  // Handle back from lesson management
+  const handleBackFromLessonManagement = () => {
+    setManagingLessonsForSection(null);
+  };
+
+  // Show form if editing or creating section
   if (editingSection || showCreateForm) {
     return (
       <>
@@ -135,6 +148,33 @@ const SectionDetail = ({
           onConfirm={handleConfirmDelete}
           loading={deleteSectionMutation.isPending}
         />
+      </>
+    );
+  }
+
+  // Show lesson management view
+  if (managingLessonsForSection) {
+    return (
+      <>
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={handleBackFromLessonManagement}
+            className="mb-4 flex items-center space-x-2"
+          >
+            <span>← Back to Course Outline</span>
+          </Button>
+          <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+            <h3 className="font-medium text-green-900 mb-1">
+              Managing lessons for: {managingLessonsForSection.title}
+            </h3>
+            <p className="text-sm text-green-700">
+              Section {managingLessonsForSection.ordering}
+            </p>
+          </div>
+        </div>
+
+        <LessonList section={managingLessonsForSection} courseId={courseId} />
       </>
     );
   }
@@ -167,7 +207,7 @@ const SectionDetail = ({
               <BookOpen className="h-16 w-16 mx-auto mb-4 text-gray-300" />
               <p className="text-lg font-medium mb-2">No sections available</p>
               <p className="text-sm mb-4">
-                This course doesn't have any sections yet.
+                This course doesn&apos;t have any sections yet.
               </p>
               {isEditable && (
                 <Button
@@ -277,6 +317,16 @@ const SectionDetail = ({
                       </Badge>
                       {isEditable && (
                         <div className="flex items-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleManageLessons(section)}
+                            className="h-8 px-2 text-xs hover:bg-green-50 text-green-700 hover:text-green-800"
+                            title="Manage lessons"
+                          >
+                            <Play className="h-3 w-3 mr-1" />
+                            Manage
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -390,45 +440,23 @@ const SectionDetail = ({
                         <p className="text-xs text-gray-500 mb-2">
                           No lessons in this section
                         </p>
+                        {isEditable && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleManageLessons(section)}
+                            className="mt-2 text-xs"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Manage Lessons
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               );
             })}
-          </div>
-
-          {/* Summary Stats */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <div className="text-lg font-bold text-blue-600">
-                  {sections.length}
-                </div>
-                <div className="text-xs text-blue-600">Sections</div>
-              </div>
-              <div className="p-3 bg-green-50 rounded-lg">
-                <div className="text-lg font-bold text-green-600">
-                  {getTotalLessons()}
-                </div>
-                <div className="text-xs text-green-600">Total Lessons</div>
-              </div>
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <div className="text-lg font-bold text-purple-600">
-                  {sections.reduce((total, section) => {
-                    const sectionDuration =
-                      section.lessons?.reduce(
-                        (lessonTotal, lesson) =>
-                          lessonTotal + (lesson.video_duration || 0),
-                        0
-                      ) || 0;
-                    return total + sectionDuration;
-                  }, 0)}{" "}
-                  min
-                </div>
-                <div className="text-xs text-purple-600">Total Duration</div>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
