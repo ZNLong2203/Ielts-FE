@@ -54,3 +54,16 @@ export const deleteSection = async (id: string, courseId: string) => {
   );
   return response.data;
 };
+
+// Reorder sections within a course
+
+export const reorderSections = async (
+  courseId: string,
+  sectionData: { id: string; ordering: number }[]
+) => {
+  const response = await api.patch(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}/reorder`,
+    { sections: sectionData }
+  );
+  return response.data;
+};

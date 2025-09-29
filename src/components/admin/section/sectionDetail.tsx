@@ -325,7 +325,7 @@ const SectionDetail = ({
                             title="Manage lessons"
                           >
                             <Play className="h-3 w-3 mr-1" />
-                            Manage
+                            Manage Lesson 
                           </Button>
                           <Button
                             variant="ghost"
