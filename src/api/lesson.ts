@@ -60,13 +60,34 @@ export const getLessonById = async (
   return response.data.data;
 };
 
-export const uploadVideo = async (lessonId: string, sectionId: string, video: File) => {
+export const uploadVideo = async (
+  lessonId: string,
+  sectionId: string,
+  video: File
+) => {
   const formData = new FormData();
   formData.append("video", video);
-  const response = await api.patch(`${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/upload`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await api.patch(
+    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/upload`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+};
+
+// Reorder lesson
+export const reorderLesson = async (
+  sectionId: string,
+  lessonData: { id: string; ordering: number }[]
+) => {
+  const data = { lessons: lessonData };
+  const response = await api.patch(
+    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/reorder`,
+    data
+  );
   return response.data;
 };
