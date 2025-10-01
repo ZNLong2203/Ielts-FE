@@ -67,7 +67,7 @@ export const uploadVideo = async (
 ) => {
   const formData = new FormData();
   formData.append("video", video);
-  const response = await api.patch(
+  const response = await api.post(
     `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/upload`,
     formData,
     {

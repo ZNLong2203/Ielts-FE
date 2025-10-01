@@ -1,9 +1,11 @@
 "use client";
+import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useDropzone } from "react-dropzone";
 
 import {
   Form,
@@ -27,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import {
   Save,
   X,
@@ -38,10 +41,16 @@ import {
   Eye,
   EyeOff,
   BookOpen,
+  Upload,
+  Film,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 
 import { ILesson, ILessonCreate, ILessonUpdate } from "@/interface/lesson";
-import { createLesson, updateLesson } from "@/api/lesson";
+import { createLesson, updateLesson, uploadVideo } from "@/api/lesson";
+import { cn } from "@/lib/utils";
 
 // Validation Schema
 const LessonFormSchema = z.object({
@@ -60,12 +69,215 @@ type LessonFormData = z.infer<typeof LessonFormSchema>;
 interface LessonFormProps {
   sectionId: string;
   courseId: string;
-  lesson?: ILesson | null; // null for create, ILesson for edit
+  lesson?: ILesson | null;
   existingLessons?: ILesson[];
   onSuccess?: () => void;
   onCancel?: () => void;
   className?: string;
 }
+
+// FIX: Add Video Upload Component
+const VideoUploadSection = ({
+  lessonId,
+  sectionId,
+  currentVideoUrl,
+  onUploadSuccess,
+}: {
+  lessonId?: string;
+  sectionId: string;
+  currentVideoUrl?: string;
+  onUploadSuccess?: (videoData: any) => void;
+}) => {
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedVideo, setUploadedVideo] = useState<any>(null);
+
+  const uploadVideoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!lessonId) {
+        throw new Error("Lesson must be created before uploading video");
+      }
+      return uploadVideo(lessonId, sectionId, file);
+    },
+    onSuccess: (data) => {
+      toast.success("Video uploaded successfully!");
+      setUploadedVideo(data);
+      setUploadProgress(100);
+      setIsUploading(false);
+      onUploadSuccess?.(data);
+    },
+    onError: (error: any) => {
+      console.error("Upload error:", error);
+      setUploadError(error?.message || "Failed to upload video");
+      setIsUploading(false);
+      setUploadProgress(0);
+      toast.error("Failed to upload video");
+    },
+  });
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
+      if (!file) return;
+
+      // Validate file size (max 2GB)
+      const maxSize = 2 * 1024 * 1024 * 1024; // 2GB
+      if (file.size > maxSize) {
+        setUploadError("File size must be less than 2GB");
+        toast.error("File size must be less than 2GB");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith("video/")) {
+        setUploadError("Please select a valid video file");
+        toast.error("Please select a valid video file");
+        return;
+      }
+
+      setUploadError(null);
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      // Simulate progress (since onUploadProgress might not work with FormData)
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 500);
+
+      uploadVideoMutation.mutate(file);
+    },
+    [lessonId, sectionId, uploadVideoMutation]
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "video/*": [".mp4", ".avi", ".mov", ".wmv", ".flv", ".webm"],
+    },
+    maxFiles: 1,
+    disabled: !lessonId || isUploading,
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <FormLabel className="flex items-center space-x-2">
+          <Film className="h-4 w-4" />
+          <span>Video Content</span>
+        </FormLabel>
+       
+      </div>
+
+      {!lessonId ? (
+        <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50">
+          <div className="text-center text-gray-500">
+            <Video className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Save the lesson first to upload video</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Upload Area */}
+          <div
+            {...getRootProps()}
+            className={cn(
+              "p-6 border-2 border-dashed rounded-lg transition-all cursor-pointer",
+              isDragActive
+                ? "border-blue-400 bg-blue-50"
+                : uploadError
+                ? "border-red-300 bg-red-50"
+                : "border-gray-300 hover:border-gray-400 hover:bg-gray-50",
+              (!lessonId || isUploading) && "cursor-not-allowed opacity-50"
+            )}
+          >
+            <input {...getInputProps()} />
+            <div className="text-center">
+              {isUploading ? (
+                <Loader2 className="h-8 w-8 mx-auto mb-3 text-blue-600 animate-spin" />
+              ) : (
+                <Upload className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+              )}
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-900">
+                  {isUploading
+                    ? "Uploading video..."
+                    : isDragActive
+                    ? "Drop the video here"
+                    : "Drag & drop a video file here"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {isUploading
+                    ? "Please wait while we process your video"
+                    : "or click to browse (max 2GB)"}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Supported formats: MP4, AVI, MOV, WMV, FLV, WebM
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Upload Progress */}
+          {isUploading && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Uploading...</span>
+                <span className="font-medium">{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </div>
+          )}
+
+          {/* Upload Error */}
+          {uploadError && (
+            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+              <span className="text-sm text-red-700">{uploadError}</span>
+            </div>
+          )}
+
+          {/* Upload Success */}
+          {uploadedVideo && (
+            <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-900">
+                  Video uploaded successfully!
+                </p>
+                <p className="text-xs text-green-700">
+                  Your video is ready for students to watch.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Current Video */}
+          {currentVideoUrl && !uploadedVideo && (
+            <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <Video className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900">
+                  Current video available
+                </p>
+                <p className="text-xs text-blue-700">
+                  Upload a new video to replace the current one.
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
 const LESSON_TYPES = [
   { value: "video", label: "Video", icon: Video },
@@ -85,6 +297,9 @@ const LessonForm = ({
 }: LessonFormProps) => {
   const queryClient = useQueryClient();
   const isEditing = !!lesson;
+  const [savedLessonId, setSavedLessonId] = useState<string | null>(
+    lesson?.id || null
+  );
 
   // Form setup
   const form = useForm<LessonFormData>({
@@ -100,6 +315,8 @@ const LessonForm = ({
       document_url: lesson?.document_url || "",
     },
   });
+
+  const selectedLessonType = form.watch("lesson_type");
 
   // Get next available ordering number
   function getNextOrdering() {
@@ -123,14 +340,18 @@ const LessonForm = ({
       };
       return createLesson(lessonData, sectionId);
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
       toast.success("Lesson created successfully");
+      setSavedLessonId(response.data?.id || response.id);
       queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
       queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
       queryClient.invalidateQueries({ queryKey: ["course", courseId] });
-
-      onSuccess?.();
-      form.reset();
+      
+      // Don't close form immediately for video lessons to allow upload
+      if (selectedLessonType !== "video") {
+        onSuccess?.();
+        form.reset();
+      }
     },
     onError: (error: Error) => {
       toast.error(error?.message || "Failed to create lesson");
@@ -392,28 +613,43 @@ const LessonForm = ({
               )}
             />
 
-            {/* Content URLs based on lesson type */}
+            {/* Content Section */}
             <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="document_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <FileText className="h-4 w-4" />
-                      <span>Document URL</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://example.com/document.pdf"
-                        {...field}
-                        className="focus:ring-2 focus:ring-green-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {selectedLessonType === "video" ? (
+                /* FIX: Add Video Upload Section */
+                <VideoUploadSection
+                  lessonId={savedLessonId || lesson?.id}
+                  sectionId={sectionId}
+                  currentVideoUrl={lesson?.video_url}
+                  onUploadSuccess={(videoData) => {
+                    console.log("Video uploaded:", videoData);
+                    // Refresh lesson data
+                    queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+                  }}
+                />
+              ) : (
+                /* Document URL for other types */
+                <FormField
+                  control={form.control}
+                  name="document_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center space-x-1">
+                        <FileText className="h-4 w-4" />
+                        <span>Document URL</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://example.com/document.pdf"
+                          {...field}
+                          className="focus:ring-2 focus:ring-green-500"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Existing Lessons Preview */}
@@ -503,6 +739,23 @@ const LessonForm = ({
                     : "Create Lesson"}
                 </span>
               </Button>
+
+              {/* Finish Button for video lessons after creation */}
+              {savedLessonId && selectedLessonType === "video" && !isEditing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    onSuccess?.();
+                    form.reset();
+                    setSavedLessonId(null);
+                  }}
+                  className="flex items-center space-x-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Finish</span>
+                </Button>
+              )}
             </div>
           </div>
         </Form>
