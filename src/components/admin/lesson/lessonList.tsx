@@ -265,7 +265,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     queryFn: () => getLessonsBySectionId(section.id!),
   });
 
-  console.log(lessons);
+  // console.log(lessons);
   const safeLessons = lessons.result || [];
 
   // FIX: Update local lessons when data changes

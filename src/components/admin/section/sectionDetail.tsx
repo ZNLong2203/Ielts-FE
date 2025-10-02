@@ -89,6 +89,14 @@ const SortableSectionItem = ({
     disabled: !isEditable, // FIX: Disable when not editable
   });
 
+   // Format duration
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (minutes === 0) return `${remainingSeconds}s`;
+    return `${minutes}m${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ""}`;
+  };
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -255,7 +263,7 @@ const SortableSectionItem = ({
                   {lesson.video_duration && (
                     <div className="flex items-center space-x-1 text-xs text-gray-500">
                       <Clock className="h-3 w-3" />
-                      <span>{lesson.video_duration} min</span>
+                      <span>{formatDuration(lesson.video_duration)}</span>
                     </div>
                   )}
 
