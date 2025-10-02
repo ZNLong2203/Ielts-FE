@@ -50,6 +50,7 @@ import {
 
 import { ILesson, ILessonCreate, ILessonUpdate } from "@/interface/lesson";
 import { createLesson, updateLesson, uploadVideo } from "@/api/lesson";
+import VideoPlayer from "@/components/modal/video-player";
 import { cn } from "@/lib/utils";
 
 // Validation Schema
@@ -76,7 +77,7 @@ interface LessonFormProps {
   className?: string;
 }
 
-// FIX: Add Video Upload Component
+// Enhanced Video Upload Section with Preview
 const VideoUploadSection = ({
   lessonId,
   sectionId,
@@ -92,6 +93,7 @@ const VideoUploadSection = ({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<any>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const uploadVideoMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -140,7 +142,7 @@ const VideoUploadSection = ({
       setIsUploading(true);
       setUploadProgress(0);
 
-      // Simulate progress (since onUploadProgress might not work with FormData)
+      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -165,6 +167,9 @@ const VideoUploadSection = ({
     disabled: !lessonId || isUploading,
   });
 
+  const videoUrl = uploadedVideo?.video_url || currentVideoUrl;
+  const hasVideo = !!videoUrl;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -172,8 +177,42 @@ const VideoUploadSection = ({
           <Film className="h-4 w-4" />
           <span>Video Content</span>
         </FormLabel>
-       
+        {hasVideo && (
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Video Available
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-xs"
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              {showPreview ? "Hide Preview" : "Preview Video"}
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Video Preview */}
+      {showPreview && hasVideo && (
+        <div className="mb-4">
+          <VideoPlayer
+            videoUrl={videoUrl}
+            title="Video Preview"
+            description="Preview of the uploaded video"
+            isPreview={true}
+            onProgress={(current, total) => {
+              console.log(`Preview progress: ${Math.round((current/total)*100)}%`);
+            }}
+            onComplete={() => {
+              console.log("Preview completed");
+            }}
+          />
+        </div>
+      )}
 
       {!lessonId ? (
         <div className="p-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50">
@@ -211,6 +250,8 @@ const VideoUploadSection = ({
                     ? "Uploading video..."
                     : isDragActive
                     ? "Drop the video here"
+                    : hasVideo
+                    ? "Upload a new video to replace current one"
                     : "Drag & drop a video file here"}
                 </p>
                 <p className="text-xs text-gray-500">
@@ -259,7 +300,7 @@ const VideoUploadSection = ({
             </div>
           )}
 
-          {/* Current Video */}
+          {/* Current Video Status */}
           {currentVideoUrl && !uploadedVideo && (
             <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <Video className="h-4 w-4 text-blue-600 flex-shrink-0" />
@@ -616,19 +657,16 @@ const LessonForm = ({
             {/* Content Section */}
             <div className="space-y-4">
               {selectedLessonType === "video" ? (
-                /* FIX: Add Video Upload Section */
                 <VideoUploadSection
                   lessonId={savedLessonId || lesson?.id}
                   sectionId={sectionId}
                   currentVideoUrl={lesson?.video_url}
                   onUploadSuccess={(videoData) => {
                     console.log("Video uploaded:", videoData);
-                    // Refresh lesson data
                     queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
                   }}
                 />
               ) : (
-                /* Document URL for other types */
                 <FormField
                   control={form.control}
                   name="document_url"
