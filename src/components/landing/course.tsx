@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, Target, TrendingUp, Check, Sparkles, Package } from "lucide-react";
+import { ArrowRight, BookOpen, Target, TrendingUp, Sparkles, Package } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { courseMockData } from "@/courseMockData";
@@ -89,7 +89,7 @@ export default function CourseSection() {
   }, [selectedLevel, selectedTarget]);
 
   return (
-    <section className="w-full bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white py-20 px-4">
+    <section id="learning-path" className="w-full bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white py-20 px-4">
       <div className="container mx-auto max-w-6xl">
         {/* Header Section with Animation */}
         <motion.div
@@ -250,19 +250,19 @@ export default function CourseSection() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-1 border border-white/20">
-              <div className="flex space-x-1">
+          <div className="flex justify-center mb-10">
+            <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl p-2 border border-slate-600/20 shadow-lg">
+              <div className="flex">
                 <Button
                   onClick={() => setActiveTab('combo')}
                   variant="ghost"
                   className={`${
                     activeTab === 'combo'
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                      : 'text-blue-200 hover:text-white hover:bg-white/10'
-                  } rounded-lg px-6 py-2 transition-all duration-200`}
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-700/30 '
+                  } rounded-xl px-8 py-3 font-medium transition-all duration-300`}
                 >
-                  <Package className="h-4 w-4 mr-2" />
+                  <Package className="h-5 w-5 mr-2" />
                   Combo Courses
                 </Button>
                 {/* <Button
@@ -293,46 +293,44 @@ export default function CourseSection() {
                 <div>
                   {/* Pricing Summary */}
                   {comboPricing && (
-                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 mb-8">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-bold text-white flex items-center">
-                          <Package className="h-5 w-5 mr-2 text-purple-300" />
+                    <div className="bg-gradient-to-br from-slate-800/90 via-slate-700/60 to-slate-600/70 backdrop-blur-lg rounded-3xl p-8 border border-slate-500/30 mb-8 shadow-2xl">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold text-white flex items-center">
+                          <Package className="h-6 w-6 mr-3 text-blue-400" />
                           Combo Package Summary
                         </h3>
-                        <div className="bg-purple-600/30 px-3 py-1 rounded-full text-sm">
-                          <span className="text-purple-300 font-medium">{comboPricing.levelRange}</span>
+                        <div className="bg-blue-600/40 px-4 py-2 rounded-full text-sm border border-blue-400/30">
+                          <span className="text-blue-100 font-semibold">{comboPricing.levelRange}</span>
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-white">
+                      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                        <div className="lg:col-span-2 text-center lg:text-left">
+                          <div className="text-4xl font-bold text-white mb-2 tracking-tight">
                             {comboPricing.totalComboPrice.toLocaleString('vi-VN')} ₫
                           </div>
-                          <div className="text-sm text-blue-200">Combo Price</div>
+                          <div className="text-lg text-slate-300 font-medium">Combo Price</div>
                         </div>
-                        <div className="text-center">
-                          <div className="text-lg text-blue-300 line-through">
+                        <div className="lg:col-span-2 text-center lg:text-right">
+                          <div className="text-2xl text-gray-400 line-through mb-1">
                             {comboPricing.totalOriginalPrice.toLocaleString('vi-VN')} ₫
                           </div>
-                          <div className="text-sm text-blue-200">Original Price</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-lg text-green-400 font-medium">
+                          <div className="text-sm text-gray-300 mb-3">Original Price</div>
+                          <div className="text-xl text-emerald-500 font-bold">
                             Save {comboPricing.totalSavings.toLocaleString('vi-VN')} ₫
                           </div>
-                          <div className="text-sm text-blue-200">Total Savings</div>
+                          <div className="text-sm text-emerald-400">Total Savings</div>
                         </div>
                       </div>
 
-                      {/* Included Levels */}
-                      <div className="mb-4">
-                        <h4 className="text-sm font-medium text-purple-200 mb-2">Included Level Ranges:</h4>
-                        <div className="flex flex-wrap gap-2">
+                      {/* Included Level Ranges */}
+                      <div className="mb-6">
+                        <h4 className="text-sm font-medium text-slate-300 mb-3 uppercase tracking-wide">Included Level Ranges:</h4>
+                        <div className="flex flex-wrap gap-3">
                           {comboPricing.includedLevels.map((level, index) => (
                             <span
                               key={index}
-                              className="bg-purple-600/30 text-purple-200 px-3 py-1 rounded-full text-sm"
+                              className="bg-slate-600/40 text-slate-100 px-4 py-2 rounded-full text-sm font-medium border border-slate-500/30 hover:bg-slate-600/50 transition-all duration-200"
                             >
                               {level}
                             </span>
@@ -363,7 +361,7 @@ export default function CourseSection() {
                             window.location.href = '/orders';
                           }
                         }}
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 font-medium py-3 rounded-xl"
+                        className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 text-white font-semibold py-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.01] transition-all duration-300"
                       >
                         Purchase Complete Package
                       </Button>
@@ -371,14 +369,21 @@ export default function CourseSection() {
                   )}
 
                   {/* Combo Course Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                    {comboCourses.map((comboCourse) => (
-                      <ComboCourseCard
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                    {comboCourses.map((comboCourse, index) => (
+                      <div
                         key={comboCourse.id}
-                        comboCourse={comboCourse}
-                        selectedLevel={selectedLevel}
-                        selectedTarget={selectedTarget}
-                      />
+                        className="transform hover:scale-[1.02] transition-all duration-300"
+                        style={{
+                          animationDelay: `${index * 100}ms`
+                        }}
+                      >
+                        <ComboCourseCard
+                          comboCourse={comboCourse}
+                          selectedLevel={selectedLevel}
+                          selectedTarget={selectedTarget}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>

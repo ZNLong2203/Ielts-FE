@@ -161,9 +161,9 @@ const LandingNavbar = () => {
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
-                        <NavbarLink text="IELTS" href="/courses" />
-                        <NavbarLink text="TOEIC" href="/courses" />
-                        <NavbarLink text="TOEFL" href="/courses" />
+                        <NavbarLink text="IELTS" href="/#learning-path" />
+                        <NavbarLink text="TOEIC" href="/#learning-path" />
+                        <NavbarLink text="TOEFL" href="/#learning-path" />
                       </div>
                     </div>
                   </div>
@@ -311,11 +311,11 @@ const LandingNavbar = () => {
                         {/* My Learning (Student) */}
                         {user?.role === "student" && (
                           <a
-                            href="/my-learning"
+                            href="/student/dashboard"
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <BookOpen className="h-4 w-4" />
-                            <span>My Learning</span>
+                            <span>Student Dashboard</span>
                             <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
@@ -399,7 +399,7 @@ const LandingNavbar = () => {
               Home
             </a>
             <a
-              href="/courses"
+              href="/#learning-path"
               className="block py-2 text-white/70 hover:text-white"
             >
               Courses
@@ -483,11 +483,11 @@ const LandingNavbar = () => {
 
                     {user?.role === "student" && (
                       <a
-                        href="/my-learning"
+                        href="/student/dashboard"
                         className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                       >
                         <BookOpen className="h-4 w-4" />
-                        My Learning
+                        Student Dashboard
                       </a>
                     )}
 
