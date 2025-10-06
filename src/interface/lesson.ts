@@ -8,6 +8,7 @@ export interface ILesson {
   video_duration: number;
   video_url?: string;
   document_url?: string;
+  hlsUrl?: string;
 }
 
 export interface ILessonCreate {

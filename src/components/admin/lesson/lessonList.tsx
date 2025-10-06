@@ -7,12 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -23,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// FIX: Add DnD imports
+// DnD imports
 import {
   DndContext,
   closestCenter,
@@ -39,217 +33,31 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import {
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 import {
   PlayCircle,
-  FileText,
-  BookOpen,
   Plus,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  Clock,
-  Video,
-  GripVertical, // FIX: Add drag handle icon
+  GripVertical,
   Save,
   RotateCcw,
+  Clock,
 } from "lucide-react";
 
 import { ILesson } from "@/interface/lesson";
 import { ISection } from "@/interface/section";
-import { getLessonsBySectionId, deleteLesson, reorderLesson } from "@/api/lesson"; // FIX: Import reorderLessons
+import { getLessonsBySectionId, deleteLesson, reorderLesson } from "@/api/lesson";
 import LessonForm from "./lessonForm";
-import { cn } from "@/lib/utils";
+import SortableLessonItem from "./sortableLessonItem";
 
 interface LessonListProps {
   section: ISection;
   courseId?: string;
 }
 
-const LESSON_TYPE_CONFIG = {
-  video: { icon: Video, label: "Video", color: "bg-red-100 text-red-700" },
-  document: {
-    icon: FileText,
-    label: "Document",
-    color: "bg-blue-100 text-blue-700",
-  },
-  quiz: { icon: BookOpen, label: "Quiz", color: "bg-green-100 text-green-700" },
-  assignment: {
-    icon: FileText,
-    label: "Assignment",
-    color: "bg-purple-100 text-purple-700",
-  },
-};
-
-// FIX: Add Sortable Lesson Item Component
-const SortableLessonItem = ({
-  lesson,
-  lessonIndex,
-  handleEditLesson,
-  handleDeleteLesson,
-  formatDuration,
-  hasUnsavedChanges,
-}: {
-  lesson: ILesson;
-  lessonIndex: number;
-  handleEditLesson: (lesson: ILesson) => void;
-  handleDeleteLesson: (lesson: ILesson) => void;
-  formatDuration: (seconds: number) => string;
-  hasUnsavedChanges: boolean;
-}) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: lesson.id,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  const typeConfig =
-    LESSON_TYPE_CONFIG[
-      lesson.lesson_type as keyof typeof LESSON_TYPE_CONFIG
-    ];
-  const Icon = typeConfig?.icon || PlayCircle;
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "flex items-center justify-between p-4 border rounded-lg transition-all duration-200 bg-white",
-        isDragging && "shadow-2xl border-blue-400 bg-blue-50 rotate-1 scale-105 z-50",
-        hasUnsavedChanges && !isDragging && "border-orange-300 bg-orange-50",
-        !isDragging && !hasUnsavedChanges && "hover:bg-gray-50"
-      )}
-    >
-      <div className="flex items-center space-x-4 flex-1">
-        {/* FIX: Add drag handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className={cn(
-            "flex items-center justify-center w-6 h-6 rounded cursor-grab active:cursor-grabbing transition-all",
-            "border border-dashed hover:border-solid",
-            isDragging
-              ? "bg-blue-500 text-white border-blue-600"
-              : "bg-gray-50 text-gray-400 hover:bg-blue-100 hover:text-blue-600 hover:border-blue-300"
-          )}
-          title="Drag to reorder"
-        >
-          <GripVertical className="h-3 w-3" />
-        </div>
-
-        {/* Order number */}
-        <div className="flex-shrink-0">
-          <Badge
-            variant="outline"
-            className={cn(
-              "w-8 h-6 justify-center",
-              hasUnsavedChanges && "bg-orange-100 text-orange-700 border-orange-300"
-            )}
-          >
-            {lessonIndex + 1}
-          </Badge>
-        </div>
-
-        {/* Lesson icon and type */}
-        <div className="flex-shrink-0">
-          <Icon className="h-5 w-5 text-gray-600" />
-        </div>
-
-        {/* Lesson info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2 mb-1">
-            <h4 className="font-medium text-gray-900 truncate">
-              {lesson.title}
-            </h4>
-            {lesson.is_preview && (
-              <Eye className="h-4 w-4 text-green-600 flex-shrink-0" />
-            )}
-            {/* FIX: Add reorder indicator */}
-           
-          </div>
-          {lesson.description && (
-            <p className="text-sm text-gray-600 truncate">
-              {lesson.description}
-            </p>
-          )}
-        </div>
-
-        {/* Lesson metadata */}
-        <div className="flex items-center space-x-3 flex-shrink-0">
-          <Badge
-            className={`${
-              typeConfig?.color || "bg-gray-100 text-gray-700"
-            } px-2 py-1`}
-          >
-            {typeConfig?.label || lesson.lesson_type}
-          </Badge>
-
-          {lesson.lesson_type === "video" &&
-            lesson.video_duration > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-gray-600">
-                <Clock className="h-3 w-3" />
-                <span>
-                  {formatDuration(lesson.video_duration)}
-                </span>
-              </div>
-            )}
-        </div>
-      </div>
-
-      {/* Actions dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => handleEditLesson(lesson)}
-            className="flex items-center space-x-2"
-          >
-            <Edit className="h-4 w-4" />
-            <span>Edit</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleDeleteLesson(lesson)}
-            className="flex items-center space-x-2 text-red-600 focus:text-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>Delete</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
-};
-
 const LessonList = ({ section, courseId = "" }: LessonListProps) => {
   const [showForm, setShowForm] = useState(false);
   const [editingLesson, setEditingLesson] = useState<ILesson | null>(null);
   const [deletingLesson, setDeletingLesson] = useState<ILesson | null>(null);
-  
-  // FIX: Add reorder state
   const [localLessons, setLocalLessons] = useState<ILesson[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
@@ -268,7 +76,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
   // console.log(lessons);
   const safeLessons = lessons.result || [];
 
-  // FIX: Update local lessons when data changes
+  // Update local lessons when data changes
   useEffect(() => {
     if (safeLessons && safeLessons.length > 0) {
       const sortedLessons = [...safeLessons].sort((a, b) => {
@@ -283,7 +91,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     }
   }, [safeLessons]);
 
-  // FIX: Add DnD sensors
+  // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -295,7 +103,54 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     })
   );
 
-  // FIX: Add reorder mutation
+  // Enhanced duration formatting
+  const formatDuration = (seconds: number) => {
+    if (!seconds || isNaN(seconds) || seconds <= 0) return "0:00";
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ''}`;
+    } else if (minutes > 0) {
+      return `${minutes}m${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ''}`;
+    } else {
+      return `${remainingSeconds}s`;
+    }
+  };
+
+  // Calculate total duration
+  const formatDurationVietnamese = (seconds: number) => {
+    if (!seconds || isNaN(seconds) || seconds <= 0) return "0 s";
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    
+    const parts = [];
+    
+    if (hours > 0) {
+      parts.push(`${hours} h`);
+    }
+    if (minutes > 0) {
+      parts.push(`${minutes} m`);
+    }
+    if (remainingSeconds > 0 || parts.length === 0) {
+      parts.push(`${remainingSeconds} s`);
+    }
+    
+    return parts.join(' ');
+  };
+
+  const getTotalDuration = () => {
+    const totalSeconds = localLessons.reduce((total, lesson) => {
+      return total + (lesson.video_duration || 0);
+    }, 0);
+    return formatDurationVietnamese(totalSeconds);
+  };
+
+  // Reorder mutation
   const reorderMutation = useMutation({
     mutationFn: async (reorderedLessons: ILesson[]) => {
       const reorderData = reorderedLessons.map((lesson, index) => ({
@@ -346,7 +201,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     },
   });
 
-  // FIX: Add drag end handler
+  // Drag end handler
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -373,7 +228,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     }
   };
 
-  // FIX: Add save and reset handlers
+  // Save and reset handlers
   const handleSaveReorder = () => {
     console.log("Saving lesson reorder...", localLessons);
     reorderMutation.mutate(localLessons);
@@ -390,38 +245,26 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     setHasUnsavedChanges(false);
   };
 
-  // Format duration
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    if (minutes === 0) return `${remainingSeconds}s`;
-    return `${minutes}m${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ""}`;
-  };
-
-  // Handle form success
+  // Form handlers
   const handleFormSuccess = () => {
     setShowForm(false);
     setEditingLesson(null);
   };
 
-  // Handle form cancel
   const handleFormCancel = () => {
     setShowForm(false);
     setEditingLesson(null);
   };
 
-  // Handle edit lesson
   const handleEditLesson = (lesson: ILesson) => {
     setEditingLesson(lesson);
     setShowForm(true);
   };
 
-  // Handle delete lesson
   const handleDeleteLesson = (lesson: ILesson) => {
     setDeletingLesson(lesson);
   };
 
-  // Confirm delete
   const confirmDelete = () => {
     if (deletingLesson) {
       deleteLessonMutation.mutate(deletingLesson.id);
@@ -460,9 +303,16 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
             <PlayCircle className="h-5 w-5 text-green-600" />
             <span>Lessons</span>
             <Badge variant="outline">{localLessons.length}</Badge>
+            {/* Total duration badge */}
+            {localLessons.some(l => l.video_duration > 0) && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                <Clock className="h-3 w-3 mr-1" />
+                {getTotalDuration()}
+              </Badge>
+            )}
           </CardTitle>
           <div className="flex items-center space-x-2">
-            {/* FIX: Add reorder controls */}
+            {/* Reorder controls */}
             {hasUnsavedChanges && (
               <>
                 <Button
@@ -499,7 +349,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
           </div>
         </CardHeader>
 
-        {/* FIX: Add unsaved changes indicator */}
+        {/* Unsaved changes indicator */}
         {hasUnsavedChanges && (
           <div className="mx-6 mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
             <div className="flex items-center space-x-2 text-orange-800">
@@ -530,7 +380,6 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
               </Button>
             </div>
           ) : (
-            /* FIX: Wrap lessons in DnD context */
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -548,6 +397,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
                     return (
                       <SortableLessonItem
                         key={lesson.id}
+                        sectionId={section.id!}
                         lesson={lesson}
                         lessonIndex={lessonIndex}
                         handleEditLesson={handleEditLesson}

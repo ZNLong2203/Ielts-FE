@@ -42,7 +42,7 @@ export const updateLesson = async (
 };
 
 // Delete a lesson
-export const deleteLesson = async (lessonId: string, sectionId: string) => {
+export const deleteLesson = async (sectionId: string, lessonId: string) => {
   const response = await api.delete(
     `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}`
   );
@@ -51,13 +51,13 @@ export const deleteLesson = async (lessonId: string, sectionId: string) => {
 
 // Get a specific lesson
 export const getLessonById = async (
-  lessonId: string,
-  sectionId: string
+  sectionId: string,
+  lessonId: string
 ): Promise<ILesson> => {
   const response = await api.get(
     `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}`
   );
-  return response.data.data;
+  return response.data.data.data;
 };
 
 export const uploadVideo = async (
@@ -79,6 +79,14 @@ export const uploadVideo = async (
   return response.data;
 };
 
+//Check video status
+export const videoStatus = async (sectionId: string, lessonId: string) => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/status`
+  );
+  return response.data;
+}
+
 // Reorder lesson
 export const reorderLesson = async (
   sectionId: string,
@@ -91,3 +99,4 @@ export const reorderLesson = async (
   );
   return response.data;
 };
+
