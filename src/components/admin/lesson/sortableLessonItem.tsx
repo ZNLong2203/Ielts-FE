@@ -19,14 +19,13 @@ import {
   Edit,
   Trash2,
   Eye,
-  Clock,
   Video,
   GripVertical,
   X,
 } from "lucide-react";
 import { ILesson } from "@/interface/lesson";
 import { getLessonById } from "@/api/lesson";
-import VideoPlayer from "@/components/modal/video-player";
+import HlsVideoPlayer from "@/components/modal/video-player";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -46,8 +45,8 @@ const LESSON_TYPE_CONFIG = {
 };
 
 interface SortableLessonItemProps {
+  lessonId: string;
   sectionId: string;
-  lesson: ILesson;
   lessonIndex: number;
   handleEditLesson: (lesson: ILesson) => void;
   handleDeleteLesson: (lesson: ILesson) => void;
@@ -95,8 +94,8 @@ const formatDurationVietnamese = (seconds: number) => {
 };
 
 const SortableLessonItem = ({
+  lessonId,
   sectionId,
-  lesson,
   lessonIndex,
   handleEditLesson,
   handleDeleteLesson,
@@ -111,7 +110,7 @@ const SortableLessonItem = ({
     error,
   } = useQuery({
     queryKey: ["lesson"],
-    queryFn: () => getLessonById(sectionId, lesson.id),
+    queryFn: () => getLessonById(sectionId, lessonId),
   });
   const {
     attributes,
@@ -121,7 +120,7 @@ const SortableLessonItem = ({
     transition,
     isDragging,
   } = useSortable({
-    id: lesson.id,
+    id: lessonId,
   });
 
   console.log("Lesson Info: ", lessonInfo);
@@ -135,7 +134,7 @@ const SortableLessonItem = ({
   //   console.log("Lesson fetch:", lesson);
 
   const typeConfig =
-    LESSON_TYPE_CONFIG[lesson.lesson_type as keyof typeof LESSON_TYPE_CONFIG];
+    LESSON_TYPE_CONFIG[lessonInfo?.lesson_type as keyof typeof LESSON_TYPE_CONFIG];
   const Icon = typeConfig?.icon || PlayCircle;
 
   return (
@@ -191,9 +190,9 @@ const SortableLessonItem = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2 mb-1">
               <h4 className="font-medium text-gray-900 truncate">
-                {lesson.title}
+                {lessonInfo?.title}
               </h4>
-              {lesson.is_preview && (
+              {lessonInfo?.is_preview && (
                 <Eye className="h-4 w-4 text-green-600 flex-shrink-0" />
               )}
               {hasUnsavedChanges && (
@@ -205,9 +204,9 @@ const SortableLessonItem = ({
                 </Badge>
               )}
             </div>
-            {lesson.description && (
+            {lessonInfo?.description && (
               <p className="text-sm text-gray-600 truncate">
-                {lesson.description}
+                {lessonInfo?.description}
               </p>
             )}
           </div>
@@ -219,24 +218,11 @@ const SortableLessonItem = ({
                 typeConfig?.color || "bg-gray-100 text-gray-700"
               } px-2 py-1`}
             >
-              {typeConfig?.label || lesson.lesson_type}
+              {typeConfig?.label || lessonInfo?.lesson_type}
             </Badge>
 
-            {/* Enhanced duration display for video lessons */}
-            {lesson.lesson_type === "video" && lesson.video_duration > 0 && (
-              <div className="flex items-center space-x-1 text-sm text-gray-600">
-                <Clock className="h-3 w-3" />
-                <span className="font-mono">
-                  {formatDurationCompact(lesson.video_duration)}
-                </span>
-                <span className="text-xs text-gray-500 hidden md:inline">
-                  ({formatDuration(lesson.video_duration)})
-                </span>
-              </div>
-            )}
-
             {/* Video preview button */}
-            {lesson.lesson_type === "video" && lesson.video_url && (
+            {lessonInfo?.lesson_type === "video" && lessonInfo?.hlsUrl && (
               <Button
                 variant="outline"
                 size="sm"
@@ -258,25 +244,15 @@ const SortableLessonItem = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {/* Watch video option */}
-            {lesson.lesson_type === "video" && lesson.video_url && (
-              <DropdownMenuItem
-                onClick={() => setShowVideoPreview(!showVideoPreview)}
-                className="flex items-center space-x-2"
-              >
-                <Video className="h-4 w-4" />
-                <span>{showVideoPreview ? "Hide Video" : "Watch Video"}</span>
-              </DropdownMenuItem>
-            )}
             <DropdownMenuItem
-              onClick={() => handleEditLesson(lesson)}
+              onClick={() => lessonInfo && handleEditLesson(lessonInfo)}
               className="flex items-center space-x-2"
             >
               <Edit className="h-4 w-4" />
               <span>Edit</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => handleDeleteLesson(lesson)}
+              onClick={() => lessonInfo && handleDeleteLesson(lessonInfo)}
               className="flex items-center space-x-2 text-red-600 focus:text-red-600"
             >
               <Trash2 className="h-4 w-4" />
@@ -287,7 +263,7 @@ const SortableLessonItem = ({
       </div>
 
       {/* Video Preview Section */}
-      {showVideoPreview && lessonInfo?.hlsUrl && (
+       {showVideoPreview && lessonInfo?.hlsUrl && (
         <div className="mt-3 px-4">
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
@@ -295,7 +271,10 @@ const SortableLessonItem = ({
                 <Video className="h-4 w-4 text-blue-600" />
                 <span className="font-medium text-gray-900">Video Preview</span>
                 <Badge variant="outline" className="text-xs">
-                  {formatDurationVietnamese(lesson.video_duration)}
+                  HLS Stream
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {formatDurationVietnamese(lessonInfo?.video_duration || 0)}
                 </Badge>
               </div>
               <Button
@@ -307,24 +286,27 @@ const SortableLessonItem = ({
                 <X className="h-3 w-3" />
               </Button>
             </div>
-
-            <VideoPlayer
-              videoUrl={lessonInfo.hlsUrl || ""}
-              title={lesson.title}
-              description={lesson.description}
-              duration={lesson.video_duration}
-              isPreview={lesson.is_preview}
+            
+            {/* FIX: Use HlsVideoPlayer instead of regular VideoPlayer */}
+            <HlsVideoPlayer
+              hlsUrl={lessonInfo.hlsUrl}
+              title={lessonInfo?.title}
+              description={lessonInfo?.description}
+              duration={lessonInfo?.video_duration}
+              isPreview={lessonInfo?.is_preview}
+              autoPlay={false}
               onProgress={(current, total) => {
-                // Track video progress
                 console.log(
-                  `${lesson.title} progress: ${Math.round(
-                    (current / total) * 100
-                  )}%`
+                  `${lessonInfo?.title} progress: ${Math.round((current / total) * 100)}%`
                 );
               }}
               onComplete={() => {
-                console.log(`${lesson.title} completed`);
-                toast.success("Video completed!");
+                console.log(`${lessonInfo?.title} completed`);
+                toast.success("Video completed! 🎉");
+              }}
+              onError={(error) => {
+                console.error(`Video error for ${lessonInfo?.title}:`, error);
+                toast.error("Failed to load video");
               }}
               className="mt-2"
             />

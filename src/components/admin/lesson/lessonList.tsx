@@ -391,14 +391,14 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
               >
                 <div className="space-y-3">
                   {localLessons.map((lesson, lessonIndex) => {
-                    const originalIndex = safeLessons.findIndex(l => l.id === lesson.id);
+                    const originalIndex = safeLessons.findIndex((l: { id: string }) => l.id === lesson.id);
                     const hasChanged = originalIndex !== lessonIndex && hasUnsavedChanges;
                     
                     return (
                       <SortableLessonItem
                         key={lesson.id}
                         sectionId={section.id!}
-                        lesson={lesson}
+                        lessonId={lesson.id}
                         lessonIndex={lessonIndex}
                         handleEditLesson={handleEditLesson}
                         handleDeleteLesson={handleDeleteLesson}
