@@ -82,9 +82,9 @@ export const uploadVideo = async (
 //Check video status
 export const videoStatus = async (sectionId: string, lessonId: string) => {
   const response = await api.get(
-    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/status`
+    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/video-status`
   );
-  return response.data;
+  return response.data.data;
 }
 
 // Reorder lesson
