@@ -84,11 +84,12 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             Update
           </DropdownMenuItem>
           <DropdownMenuItem
+            className="text-red-500"
             onClick={() => {
               setOpen(true);
             }}
           >
-            <Trash className="mr-1 h-4 w-4" />
+            <Trash className="mr-1 h-4 w-4 text-red-500" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

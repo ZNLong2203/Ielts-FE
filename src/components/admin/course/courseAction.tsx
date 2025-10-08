@@ -81,9 +81,9 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setOpen(true)}
-            className="text-red-600"
+            className="text-red-500"
           >
-            <Trash className="mr-2 h-4 w-4" />
+            <Trash className="mr-2 h-4 w-4 text-red-500" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>

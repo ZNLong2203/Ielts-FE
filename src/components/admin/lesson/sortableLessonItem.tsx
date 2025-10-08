@@ -249,7 +249,7 @@ const SortableLessonItem = ({
               className="flex items-center space-x-2"
             >
               <Edit className="h-4 w-4" />
-              <span>Edit</span>
+              <span>Update</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => lessonInfo && handleDeleteLesson(lessonInfo)}
