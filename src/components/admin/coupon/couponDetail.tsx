@@ -12,7 +12,6 @@ import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import { TextInfoField, DateInfoField } from "@/components/ui/info";
 import {
-  ArrowLeft,
   Edit,
   Gift,
   Percent,
@@ -21,6 +20,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  ArrowRight,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { format } from "date-fns";
@@ -82,6 +82,9 @@ const CouponDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Gift className="h-6 w-6 text-purple-600" />
+              </div>
               <div className="flex items-center space-x-3">
                 <Heading
                   title="Coupon Details"
@@ -355,7 +358,7 @@ const CouponDetail = () => {
             {/* Quick Actions */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Quick Actions</CardTitle>
+                <CardTitle className="text-sm">Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button
@@ -371,20 +374,12 @@ const CouponDetail = () => {
 
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => navigator.clipboard.writeText(data.code)}
-                >
-                  <Gift className="h-4 w-4 mr-2" />
-                  Copy Coupon Code
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-between"
                   onClick={() => router.push(ROUTES.ADMIN_COUPONS)}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                 
                   Back to All Coupons
+                   <ArrowRight className="h-4 w-4 mr-2" />
                 </Button>
               </CardContent>
             </Card>

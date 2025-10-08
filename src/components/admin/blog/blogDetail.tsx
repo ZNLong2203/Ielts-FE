@@ -71,6 +71,9 @@ const BlogDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+               <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
               <Heading
                 title="Blog Details"
                 description="Blog post details and information"
@@ -80,11 +83,11 @@ const BlogDetail = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/edit`)}
+                onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/update`)}
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
-                <span>Edit Blog</span>
+                <span>Update Blog</span>
               </Button>
             </div>
           </div>
@@ -283,7 +286,7 @@ const BlogDetail = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/edit`)}
+                  onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/update`)}
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Blog

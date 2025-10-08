@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  NotepadText,
 } from "lucide-react";
 
 import { z } from "zod";
@@ -119,17 +120,17 @@ const OrderForm = () => {
   const hasPrevPage = comboPage > 1;
 
   const couponOptions =
-  couponsData?.result?.map((coupon) => ({
-    label: `${coupon.code} (${
-      coupon.discount_type === "percentage"
-        ? coupon.discount_value + "%"
-        : Number(coupon.discount_value).toLocaleString() + " VND"
-    })`,
-    value: coupon.code,
-    code: coupon.code,
-    discount_type: coupon.discount_type,
-    discount_value: Number(coupon.discount_value),
-  })) || [];
+    couponsData?.result?.map((coupon) => ({
+      label: `${coupon.code} (${
+        coupon.discount_type === "percentage"
+          ? coupon.discount_value + "%"
+          : Number(coupon.discount_value).toLocaleString() + " VND"
+      })`,
+      value: coupon.code,
+      code: coupon.code,
+      discount_type: coupon.discount_type,
+      discount_value: Number(coupon.discount_value),
+    })) || [];
 
   // Mutations
   const createOrderMutation = useMutation({
@@ -287,6 +288,9 @@ const OrderForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <NotepadText className="h-6 w-6 text-blue-600" />
+              </div>
               <Heading title={title} description={description} />
             </div>
 

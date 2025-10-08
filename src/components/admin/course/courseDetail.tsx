@@ -121,6 +121,9 @@ const CourseDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+              </div>
               <Heading
                 title={`Course: ${courseData.title}`}
                 description="Course information and content overview"
@@ -326,6 +329,8 @@ const CourseDetail = () => {
                           <Image
                             src={courseData.teacher.avatar}
                             alt={courseData.teacher.name}
+                            width={100}
+                            height={100}
                             className="w-20 h-20 rounded-full object-cover border-3 border-green-200 shadow-lg"
                           />
                           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">

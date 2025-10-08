@@ -76,6 +76,9 @@ const StudentDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="h-6 w-6 text-blue-600" />
+              </div>
               <Heading
                 title="Student Details"
                 description="Comprehensive student profile and academic information"
@@ -88,11 +91,11 @@ const StudentDetail = () => {
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  router.push(`${ROUTES.ADMIN_STUDENTS}/edit/${userId}`)
+                  router.push(`${ROUTES.ADMIN_STUDENTS}/${userId}/update`)
                 }
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Edit Student
+                Update Student
               </Button>
               <Button variant="outline" size="sm">
                 <Settings className="h-4 w-4 mr-2" />
@@ -356,8 +359,6 @@ const StudentDetail = () => {
                       label="Role"
                       value={data?.role?.toUpperCase() || "STUDENT"}
                     />
-
-                    
                   </div>
 
                   <div className="space-y-4">

@@ -121,7 +121,7 @@ const BlogForm = () => {
     },
     onError: (error) => {
       toast.error(error.message);
-    }
+    },
   });
 
   // Get blog detail
@@ -192,6 +192,9 @@ const BlogForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FileText className="h-6 w-6 text-blue-600" />
+              </div>
               <Heading title={title} description={description} />
             </div>
 
@@ -346,10 +349,10 @@ const BlogForm = () => {
                 {/* Status Change Section */}
                 <Card className="border-blue-200 bg-blue-50/30">
                   <CardHeader className="">
-                   <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-blue-600" />
-                  <span>Blog Status Management</span>
-                </CardTitle>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Shield className="h-5 w-5 text-blue-600" />
+                      <span>Blog Status Management</span>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">

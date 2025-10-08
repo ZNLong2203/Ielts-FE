@@ -14,7 +14,7 @@ import {
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 
-import { ArrowRight, Save, FileText } from "lucide-react";
+import { ArrowRight, Save, FileText, FolderOpen } from "lucide-react";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -136,6 +136,9 @@ const CourseCategoryForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                <FolderOpen className="h-6 w-6 text-blue-600" />
+              </div>
               <Heading title={title} description={description} />
             </div>
 

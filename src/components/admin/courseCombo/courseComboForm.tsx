@@ -11,12 +11,11 @@ import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 
 import {
-  ArrowLeft,
+  ArrowRight,
   Save,
   BookOpen,
   DollarSign,
   Target,
-  Percent,
   Package,
   AlertCircle,
   CheckCircle,
@@ -40,7 +39,7 @@ import {
 } from "@/api/course";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const CourseComboForm = () => {
   const router = useRouter();
@@ -282,8 +281,8 @@ const CourseComboForm = () => {
               onClick={() => router.back()}
               className="flex items-center space-x-2"
             >
-              <ArrowLeft className="h-4 w-4" />
               <span>Back to Course Combos</span>
+               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>

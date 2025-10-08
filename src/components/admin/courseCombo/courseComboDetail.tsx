@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCourseCombo } from "@/api/course";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,9 @@ import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import {
-  TextInfoField,
   DateInfoField,
-  TextBadgeInfo,
 } from "@/components/ui/info";
 import {
-  ArrowLeft,
   Edit,
   Package,
   DollarSign,
@@ -26,6 +23,7 @@ import {
   ShoppingCart,
   Tag,
   AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import { useState } from "react";
@@ -78,12 +76,13 @@ const CourseComboDetail = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div>
-                  <Heading
-                    title="Course Combo Details"
-                    description="View combo information and course details"
-                  />
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Package className="h-6 w-6 text-green-600" />
                 </div>
+                <Heading
+                  title="Course Combo Details"
+                  description="View combo information and course details"
+                />
               </div>
             </div>
 
@@ -91,7 +90,7 @@ const CourseComboDetail = () => {
               <Button
                 variant="outline"
                 onClick={() =>
-                  router.push(`${ROUTES.ADMIN_COURSE_COMBO}/edit/${slug}`)
+                  router.push(`${ROUTES.ADMIN_COURSE_COMBO}/${slug}/update`)
                 }
                 className="flex items-center space-x-2"
               >
@@ -388,7 +387,7 @@ const CourseComboDetail = () => {
                   variant="outline"
                   className="w-full justify-start"
                   onClick={() =>
-                    router.push(`${ROUTES.ADMIN_COURSE_COMBO}/edit/${slug}`)
+                    router.push(`${ROUTES.ADMIN_COURSE_COMBO}/${slug}/update`)
                   }
                 >
                   <Edit className="h-4 w-4 mr-2" />
@@ -397,11 +396,11 @@ const CourseComboDetail = () => {
 
                 <Button
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-between"
                   onClick={() => router.push(ROUTES.ADMIN_COURSE_COMBO)}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to All Combos
+                   <ArrowRight className="h-4 w-4 mr-2" />
                 </Button>
               </CardContent>
             </Card>
