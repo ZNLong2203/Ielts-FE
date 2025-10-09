@@ -24,6 +24,7 @@ import {
   Image as ImageIcon,
   Star,
   BarChart3,
+  ArrowRight,
 } from "lucide-react";
 
 import { getBlog } from "@/api/blog";
@@ -71,7 +72,7 @@ const BlogDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-               <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
               <Heading
@@ -83,11 +84,23 @@ const BlogDetail = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/update`)}
+                size={"sm"}
+                onClick={() =>
+                  router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/update`)
+                }
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
                 <span>Update Blog</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_BLOGS)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Blog list</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -97,10 +110,8 @@ const BlogDetail = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -112,10 +123,7 @@ const BlogDetail = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <TextInfoField
-                      label="Blog Title"
-                      value={blog.title}
-                    />
+                    <TextInfoField label="Blog Title" value={blog.title} />
 
                     <TextInfoField
                       label="Author ID"
@@ -130,24 +138,29 @@ const BlogDetail = () => {
 
                   <div className="space-y-4">
                     <div>
-                      <TextBadgeInfo
-                        label="Status"
-                        status={blog.status}
-                      />
+                      <TextBadgeInfo label="Status" status={blog.status} />
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">Featured:</label>
-                      <Badge 
+                      <label className="text-sm font-medium text-gray-700">
+                        Featured:
+                      </label>
+                      <Badge
                         variant={blog.is_featured ? "default" : "secondary"}
-                        className={blog.is_featured ? "bg-yellow-100 text-yellow-800" : ""}
+                        className={
+                          blog.is_featured
+                            ? "bg-yellow-100 text-yellow-800"
+                            : ""
+                        }
                       >
                         {blog.is_featured ? (
                           <div className="flex items-center space-x-1">
                             <Star className="h-3 w-3" />
                             <span>Yes</span>
                           </div>
-                        ) : "No"}
+                        ) : (
+                          "No"
+                        )}
                       </Badge>
                     </div>
 
@@ -173,9 +186,9 @@ const BlogDetail = () => {
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {blog.tags.map((tag, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline" 
+                          <Badge
+                            key={index}
+                            variant="outline"
                             className="text-xs bg-blue-50 text-blue-700 border-blue-200"
                           >
                             <Tag className="h-3 w-3 mr-1" />
@@ -219,7 +232,7 @@ const BlogDetail = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div 
+                <div
                   className="prose prose-sm sm:prose lg:prose-lg max-w-none"
                   dangerouslySetInnerHTML={{ __html: blog.content }}
                 />
@@ -229,7 +242,6 @@ const BlogDetail = () => {
 
           {/* Right Column - Statistics & Actions */}
           <div className="space-y-6">
-            
             {/* Statistics */}
             <Card>
               <CardHeader>
@@ -247,7 +259,9 @@ const BlogDetail = () => {
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Likes:</span>
-                    <span className="text-sm font-medium">{blog.like_count || 0}</span>
+                    <span className="text-sm font-medium">
+                      {blog.like_count || 0}
+                    </span>
                   </div>
 
                   <div className="flex justify-between items-center">
@@ -259,7 +273,9 @@ const BlogDetail = () => {
 
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Tags:</span>
-                    <span className="text-sm font-medium">{blog.tags?.length || 0}</span>
+                    <span className="text-sm font-medium">
+                      {blog.tags?.length || 0}
+                    </span>
                   </div>
                 </div>
 
@@ -268,7 +284,10 @@ const BlogDetail = () => {
                 <div className="text-xs text-gray-500">
                   <div>ID: {blog.id}</div>
                   {blog.published_at && (
-                    <div>Published: {new Date(blog.published_at).toLocaleDateString()}</div>
+                    <div>
+                      Published:{" "}
+                      {new Date(blog.published_at).toLocaleDateString()}
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -286,7 +305,9 @@ const BlogDetail = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/update`)}
+                  onClick={() =>
+                    router.push(`${ROUTES.ADMIN_BLOGS}/${slug}/update`)
+                  }
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Blog
@@ -295,7 +316,7 @@ const BlogDetail = () => {
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => window.open(`/blogs/${slug}`, '_blank')}
+                  onClick={() => window.open(`/blogs/${slug}`, "_blank")}
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   View Public
@@ -325,9 +346,11 @@ const BlogDetail = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-sm">
-                  <div className="font-medium text-gray-900 mb-2">{blog.title}</div>
+                  <div className="font-medium text-gray-900 mb-2">
+                    {blog.title}
+                  </div>
                   <div className="text-gray-600 line-clamp-3">
-                    {blog.content.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                    {blog.content.replace(/<[^>]*>/g, "").substring(0, 150)}...
                   </div>
                 </div>
 
@@ -337,10 +360,9 @@ const BlogDetail = () => {
                   <div className="flex items-center space-x-1">
                     <Calendar className="h-3 w-3" />
                     <span>
-                      {blog.published_at 
+                      {blog.published_at
                         ? new Date(blog.published_at).toLocaleDateString()
-                        : 'Not published'
-                      }
+                        : "Not published"}
                     </span>
                   </div>
                   <div className="flex items-center space-x-1">

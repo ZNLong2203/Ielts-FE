@@ -20,11 +20,11 @@ import {
   XCircle,
   GraduationCap,
   UserCircle,
-  Settings,
   Clock,
   FileText,
   Download,
   Eye,
+  ArrowRight
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import Heading from "@/components/ui/heading";
@@ -81,7 +81,7 @@ const TeacherDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <User className="h-6 w-6 text-blue-600" />
               </div>
               <Heading
@@ -102,9 +102,14 @@ const TeacherDetail = () => {
                 <Edit className="h-4 w-4 mr-2" />
                 Update Teacher
               </Button>
-              <Button variant="outline" size="sm">
-                <Settings className="h-4 w-4 mr-2" />
-                Actions
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_TEACHERS)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Teacher list</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

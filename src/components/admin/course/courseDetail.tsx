@@ -27,6 +27,7 @@ import {
   Settings,
   User,
   Award,
+  ArrowRight
 } from "lucide-react";
 
 import { getAdminCourseDetail } from "@/api/course";
@@ -128,6 +129,30 @@ const CourseDetail = () => {
                 title={`Course: ${courseData.title}`}
                 description="Course information and content overview"
               />
+            </div>
+             <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size={"sm"}
+                onClick={() =>
+                  router.push(
+                    `${ROUTES.ADMIN_COURSES}/${slug}/update`
+                  )
+                }
+                className="flex items-center space-x-2"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Update Course</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_COURSES)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Course list</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button> 
             </div>
           </div>
         </div>

@@ -296,10 +296,10 @@ const OrderForm = () => {
 
             <Button
               variant="outline"
-              onClick={() => router.back()}
+              onClick={() => router.push(ROUTES.ADMIN_ORDERS)}
               className="flex items-center space-x-2"
             >
-              <span>Back to Orders</span>
+              <span>Back to Order list</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

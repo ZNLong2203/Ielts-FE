@@ -34,6 +34,7 @@ import {
   Loader2,
   Shield,
   RefreshCw,
+  ArrowRight,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import {
@@ -199,16 +200,15 @@ const BlogForm = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  /* Preview logic */
-                }}
-                className="flex items-center space-x-2"
-              >
-                <Eye className="h-4 w-4" />
-                <span>Preview</span>
-              </Button>
+             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(ROUTES.ADMIN_BLOGS)}
+              className="flex items-center space-x-2"
+            >
+              <span>Back to Blog list</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
             </div>
           </div>
         </div>

@@ -10,9 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
-import {
-  DateInfoField,
-} from "@/components/ui/info";
+import { DateInfoField } from "@/components/ui/info";
 import {
   Edit,
   Package,
@@ -89,13 +87,23 @@ const CourseComboDetail = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
+                size={"sm"}
                 onClick={() =>
                   router.push(`${ROUTES.ADMIN_COURSE_COMBO}/${slug}/update`)
                 }
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
-                <span>Edit Combo</span>
+                <span>Update Combo</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_COURSE_COMBO)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Combo list</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -400,7 +408,7 @@ const CourseComboDetail = () => {
                   onClick={() => router.push(ROUTES.ADMIN_COURSE_COMBO)}
                 >
                   Back to All Combos
-                   <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-4 w-4 mr-2" />
                 </Button>
               </CardContent>
             </Card>

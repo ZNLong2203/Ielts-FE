@@ -144,17 +144,18 @@ const CourseCategoryForm = () => {
 
             <Button
               variant="outline"
-              onClick={() => router.back()}
+              size="sm"
+              onClick={() => router.push(ROUTES.ADMIN_COURSE_CATEGORIES)}
               className="flex items-center space-x-2"
             >
-              <span>Back to Course Categories</span>
+              <span>Back to Course Category list</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">

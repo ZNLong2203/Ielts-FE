@@ -278,10 +278,11 @@ const CourseComboForm = () => {
 
             <Button
               variant="outline"
+              size={"sm"}
               onClick={() => router.back()}
               className="flex items-center space-x-2"
             >
-              <span>Back to Course Combos</span>
+              <span>Back to Course Combo list</span>
                <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

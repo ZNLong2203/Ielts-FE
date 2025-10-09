@@ -25,6 +25,7 @@ import {
   Target,
   CheckCircle,
   Settings,
+  ArrowRight,
 } from "lucide-react";
 
 import { z } from "zod";
@@ -64,7 +65,7 @@ const CourseForm = () => {
     title = "Create New Course";
     description = "Design and create a new IELTS course";
   } else {
-    title = "Edit Course";
+    title = "Update Course";
     description = "Update course information and content";
   }
 
@@ -243,17 +244,15 @@ const CourseForm = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              {/* FIX: Only show preview button when editing */}
-              {isEditing && (
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(`/courses/${slug}`, "_blank")}
-                  className="flex items-center space-x-2"
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>Preview</span>
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_COURSES)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Course list</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

@@ -14,7 +14,7 @@ import {
   DateInfoField,
   TextBadgeInfo,
 } from "@/components/ui/info";
-import { ArrowLeft, Edit, FileText, Folder, FolderOpen } from "lucide-react";
+import { ArrowRight, Edit, FileText, Folder, FolderOpen } from "lucide-react";
 import ROUTES from "@/constants/route";
 
 const BlogCategoryDetail = () => {
@@ -65,13 +65,23 @@ const BlogCategoryDetail = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
+                size={"sm"}
                 onClick={() =>
                   router.push(`${ROUTES.ADMIN_BLOG_CATEGORIES}/${slug}/update`)
                 }
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
-                <span>Edit Blog Category</span>
+                <span>Update Blog Category</span>
+              </Button>
+               <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_BLOG_CATEGORIES)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Blog Category list</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

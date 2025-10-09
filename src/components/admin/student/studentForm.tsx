@@ -224,10 +224,11 @@ const StudentForm = () => {
 
             <Button
               variant="outline"
-              onClick={() => router.back()}
+              size="sm"
+              onClick={() => router.push(ROUTES.ADMIN_STUDENTS)}
               className="flex items-center space-x-2"
             >
-              <span>Back to Student lists</span>
+              <span>Back to Student list</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

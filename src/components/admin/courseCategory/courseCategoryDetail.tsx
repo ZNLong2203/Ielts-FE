@@ -14,7 +14,7 @@ import {
   DateInfoField,
   TextBadgeInfo,
 } from "@/components/ui/info";
-import { ArrowLeft, Edit, FileText, FolderOpen } from "lucide-react";
+import { ArrowLeft, ArrowRight, Edit, FileText, FolderOpen } from "lucide-react";
 import ROUTES from "@/constants/route";
 
 const CourseCategoryDetail = () => {
@@ -27,7 +27,7 @@ const CourseCategoryDetail = () => {
     queryFn: () => getCourseCategory(slug),
   });
 
-    if (isPending) {
+  if (isPending) {
     return <Loading />;
   }
 
@@ -44,33 +44,45 @@ const CourseCategoryDetail = () => {
     );
   }
 
-    return (
+  return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <FolderOpen className="h-6 w-6 text-blue-600" />
               </div>
               <Heading
-                title="Blog Category Details"
-                description="Blog category details and information"
+                title="Course Category Details"
+                description="Course category details and information"
               />
             </div>
 
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
+                size={"sm"}
                 onClick={() =>
-                  router.push(`${ROUTES.ADMIN_BLOG_CATEGORIES}/${slug}/update`)
+                  router.push(
+                    `${ROUTES.ADMIN_COURSE_CATEGORIES}/${slug}/update`
+                  )
                 }
                 className="flex items-center space-x-2"
               >
                 <Edit className="h-4 w-4" />
                 <span>Update Course Category</span>
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_COURSE_CATEGORIES)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Course Category list</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button> 
             </div>
           </div>
         </div>

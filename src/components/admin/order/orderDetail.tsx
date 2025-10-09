@@ -36,6 +36,7 @@ import {
   Tag,
   ShoppingBag,
   NotepadText,
+  ArrowRight,
 } from "lucide-react";
 
 import { useRouter, useParams } from "next/navigation";
@@ -45,6 +46,7 @@ import { OrderStatus } from "@/interface/order";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import ROUTES from "@/constants/route";
 
 const OrderDetail = () => {
   const router = useRouter();
@@ -168,6 +170,29 @@ const OrderDetail = () => {
                 title={`Order #${orderData.order_code}`}
                 description={`Order details and management`}
               />
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size={"sm"}
+                onClick={() =>
+                  router.push(`${ROUTES.ADMIN_ORDERS}/${slug}/update`)
+                }
+                className="flex items-center space-x-2"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Update Order</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(ROUTES.ADMIN_ORDERS)}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to Order list</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
 
             <div className="flex items-center space-x-3">
