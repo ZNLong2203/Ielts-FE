@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Home,
   ChevronLeft,
+  FileQuestion,
   ShoppingBag,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "Dashboard", href: "/student/dashboard", icon: Home },
   { name: "My Courses", href: "/student/dashboard/my-courses", icon: ShoppingBag },
+  { name: "My Quizs", href: "/student/dashboard/my-quizs", icon: FileQuestion },
   { name: "Progress", href: "/student/dashboard/progress", icon: BarChart3 },
   { name: "Certificates", href: "/student/dashboard/certificates", icon: Award },
   { name: "Schedule", href: "/student/dashboard/schedule", icon: Clock },
