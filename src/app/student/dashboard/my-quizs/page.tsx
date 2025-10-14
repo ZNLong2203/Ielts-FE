@@ -1,5 +1,11 @@
+import QuizPage from "@/components/student/quiz/QuizPage"
+
 const StudentQuizPage = () => {
-  return <div>StudentQuizPage</div>
+  return (
+    <div>
+      <QuizPage />
+    </div>
+  )
 }
 
 export default StudentQuizPage
