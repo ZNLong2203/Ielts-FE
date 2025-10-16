@@ -15,6 +15,9 @@ import {
   Search,
   Mail,
   Phone,
+  Shield,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
@@ -39,7 +42,7 @@ const StudentTable = () => {
   });
 
   // Define which fields to filter
-  const filterFields = ["full_name", "email", "phone"];
+  const filterFields = ["full_name", "email", "phone", "status", "role", "created_at", "location"];
 
   // Use the filter hook
   const {
@@ -64,11 +67,13 @@ const StudentTable = () => {
   const totalPages = data?.meta?.pages || 1;
   const totalItems = data?.meta?.total || 0;
 
+  // Enhanced field configs with dropdown options
   const fieldConfigs = [
     {
       key: "full_name",
       label: "Full Name",
       placeholder: "Search by name...",
+      type: "input" as const,
       icon: (
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
@@ -77,6 +82,7 @@ const StudentTable = () => {
       key: "email",
       label: "Email Address",
       placeholder: "Search by email...",
+      type: "input" as const,
       icon: (
         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
@@ -85,9 +91,40 @@ const StudentTable = () => {
       key: "phone",
       label: "Phone Number",
       placeholder: "Search by phone...",
+      type: "input" as const,
       icon: (
         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      placeholder: "Select status...",
+      type: "select" as const,
+      icon: (
+        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Pending", value: "pending" },
+      ],
+    },
+     {
+      key: "created_at",
+      label: "Creation Date",
+      placeholder: "Select creation period...",
+      type: "select" as const,
+      icon: (
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+      ],
     },
   ];
 

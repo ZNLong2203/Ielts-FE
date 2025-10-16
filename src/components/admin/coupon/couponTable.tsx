@@ -14,6 +14,7 @@ import {
   UserX,
   Filter,
   Search,
+  Calendar
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
@@ -43,7 +44,7 @@ const CouponTable = () => {
   const totalPages = data?.meta?.pages || 1;
 
   // Define which fields to filter
-  const filterFields = ["code", "is_active"];
+  const filterFields = ["code", "is_active", "created_at", "name"];
 
   // Use the filter hook
   const {
@@ -97,6 +98,16 @@ const CouponTable = () => {
       key: "name",
       label: "Coupon Name",
       placeholder: "Search by name",
+      type: "input" as const,
+      icon: (
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+    },
+     {
+      key: "code",
+      label: "Coupon Code",
+      placeholder: "Search by code",
+      type: "input" as const,
       icon: (
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
@@ -105,9 +116,30 @@ const CouponTable = () => {
       key: "is_active",
       label: "Status",
       placeholder: "Filter by status",
+      type: "select" as const,
       icon: (
         <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
+      options: [
+        { label: "Active", value: "true" },
+        { label: "Inactive", value: "false" },
+      ],
+    },
+     {
+      key: "created_at",
+      label: "Creation Date",
+      placeholder: "Select creation period...",
+      type: "select" as const,
+      icon: (
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+      ],
     },
   ];
   return (

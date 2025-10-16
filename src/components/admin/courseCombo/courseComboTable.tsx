@@ -8,14 +8,11 @@ import {
   ChevronRight,
   Download,
   RefreshCw,
-  Users,
-  UserCheck,
-  UserX,
   Filter,
   Search,
   BookOpen,
-  Star,
   DollarSign,
+  Calendar
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
@@ -35,8 +32,8 @@ const CourseComboTable = () => {
 
   const queryParams = {
     deleted: false,
-    page
-  }
+    page,
+  };
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["courseCombos", queryParams],
@@ -50,7 +47,7 @@ const CourseComboTable = () => {
   const totalPages = data?.meta?.pages || 1;
 
   // Define which fields to filter
-  const filterFields = ["name", "is_active", "level"];
+  const filterFields = ["name", "is_active", "combo_price", "created_at"];
 
   // Use the filter hook
   const {
@@ -102,9 +99,43 @@ const CourseComboTable = () => {
       key: "name",
       label: "Combo Course Name",
       placeholder: "Search by name",
+      type: "input" as const,
       icon: (
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
+    },
+    {
+      key: "combo_price",
+      label: "Price Range",
+      placeholder: "Select price range...",
+      type: "select" as const,
+      icon: (
+        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Free (0₫)", value: "free" },
+        { label: "Under 500,000₫", value: "under_500k" },
+        { label: "500,000₫ - 1,000,000₫", value: "500k_1m" },
+        { label: "1,000,000₫ - 2,000,000₫", value: "1m_2m" },
+        { label: "2,000,000₫ - 5,000,000₫", value: "2m_5m" },
+        { label: "Over 5,000,000₫", value: "over_5m" },
+      ],
+    },
+     {
+      key: "created_at",
+      label: "Creation Date",
+      placeholder: "Select creation period...",
+      type: "select" as const,
+      icon: (
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+      ],
     },
   ];
 
@@ -206,7 +237,8 @@ const CourseComboTable = () => {
             <div className="text-2xl font-bold text-blue-700">
               {filteredData.length > 0
                 ? Math.round(totalPrice / filteredData.length).toLocaleString()
-                : 0} VND
+                : 0}{" "}
+              VND
             </div>
             <p className="text-xs text-blue-600">Average combo price</p>
           </CardContent>

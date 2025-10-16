@@ -14,9 +14,9 @@ import {
   BookOpen,
   GraduationCap,
   Star,
-  Users,
-  TrendingUp,
   Target,
+  DollarSign,
+  Calendar
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
@@ -51,7 +51,8 @@ const CourseTable = () => {
     queryFn: () => getAllCoursesForAdmin(queryParams),
   });
 
-  const filterFields = ["title", "skill_focus", "difficulty_level"];
+  // Add price to filter fields
+  const filterFields = ["title", "skill_focus", "difficulty_level", "is_featured", "price", "created_at"];
 
   // Use the filter hook
   const {
@@ -76,6 +77,10 @@ const CourseTable = () => {
     (course) => !course.is_featured
   ).length;
 
+  // Calculate price statistics from filtered data
+  const prices = filteredData.map(course => Number(course.price) || 0);
+  const avgPrice = prices.length > 0 ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
+
   // Metadata information
   const currentPage = allCourses?.meta?.current || 1;
   const pageSize = allCourses?.meta?.pageSize || 10;
@@ -87,25 +92,79 @@ const CourseTable = () => {
       key: "title",
       label: "Title",
       placeholder: "Search by title",
+      type: "input" as const,
       icon: (
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
     },
     {
       key: "skill_focus",
       label: "Skill Focus",
       placeholder: "Search by skill focus",
+      type: "input" as const,
       icon: (
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
     },
     {
       key: "difficulty_level",
       label: "Difficulty Level",
-      placeholder: "Search by difficulty level",
+      placeholder: "Select difficulty level...",
+      type: "select" as const,
       icon: (
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
+      options: [
+        { label: "Beginner", value: "beginner" },
+        { label: "Intermediate", value: "intermediate" },
+        { label: "Advanced", value: "advanced" },
+      ],
+    },
+    {
+      key: "is_featured",
+      label: "Featured",
+      placeholder: "Select featured...",
+      type: "select" as const,
+      icon: (
+        <Star className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Featured", value: "true" },
+        { label: "Not Featured", value: "false" },
+      ],
+    },
+    {
+      key: "price",
+      label: "Price Range",
+      placeholder: "Select price range...",
+      type: "select" as const,
+      icon: (
+        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Free (0₫)", value: "free" },
+        { label: "Under 500,000₫", value: "under_500k" },
+        { label: "500,000₫ - 1,000,000₫", value: "500k_1m" },
+        { label: "1,000,000₫ - 2,000,000₫", value: "1m_2m" },
+        { label: "2,000,000₫ - 5,000,000₫", value: "2m_5m" },
+        { label: "Over 5,000,000₫", value: "over_5m" },
+      ],
+    },
+     {
+      key: "created_at",
+      label: "Creation Date",
+      placeholder: "Select creation period...",
+      type: "select" as const,
+      icon: (
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+      ],
     },
   ];
 
@@ -116,6 +175,15 @@ const CourseTable = () => {
 
   const handleRefresh = () => {
     allRefetch();
+  };
+
+  // Format price for display
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+    }).format(price);
   };
 
   if (allLoading) {
@@ -207,18 +275,20 @@ const CourseTable = () => {
           </CardContent>
         </Card>
 
-        {/* Current Page Card */}
+        {/* Average Price Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">
-              Current Page
+              Average Price
             </p>
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentPage}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {formatPrice(avgPrice)}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Page {currentPage} of {totalPages}
+              {hasActiveFilters ? "of filtered courses" : "of all courses"}
             </p>
           </CardContent>
         </Card>
@@ -239,7 +309,7 @@ const CourseTable = () => {
           </CardContent>
         </Card>
 
-        {/* Not Featured Courses Card */}
+        {/* Regular Courses Card */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <p className="text-sm font-medium text-muted-foreground">Regular</p>
@@ -306,7 +376,7 @@ const CourseTable = () => {
                   </span>
                 </div>
 
-                {/* Pagination controls */}
+                {/* Pagination controls - same as before */}
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"

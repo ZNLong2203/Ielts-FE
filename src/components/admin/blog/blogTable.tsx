@@ -17,7 +17,9 @@ import {
   Edit,
   Archive,
   FileX,
+  Shield,
   FileCheck,
+  Calendar
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import { DataTable } from "@/components/ui/data-table";
@@ -101,7 +103,7 @@ const BlogTable = () => {
   };
 
   const getFilterData = () => {
-       switch (activeTab) {
+    switch (activeTab) {
       case "published":
         return publishedBlogs?.result;
       case "draft":
@@ -111,7 +113,7 @@ const BlogTable = () => {
       default:
         return allBlogs?.result;
     }
-  }
+  };
 
   const getCurrentLoading = () => {
     switch (activeTab) {
@@ -126,22 +128,58 @@ const BlogTable = () => {
     }
   };
 
-   const fieldConfigs = [
+  const fieldConfigs = [
     {
       key: "title",
       label: "Title",
       placeholder: "Search by title",
+      type: "input" as const,
       icon: (
         <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
       ),
     },
+     {
+      key: "is_featured",
+      label: "Feature",
+      placeholder: "Select feature...",
+      type: "select" as const,
+      icon: (
+        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "True", value: "true" },
+        { label: "False", value: "false" },
+      ],
+    },
     {
       key: "status",
       label: "Status",
-      placeholder: "Search by status",
+      placeholder: "Select status...",
+      type: "select" as const,
       icon: (
-        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
+      options: [
+        { label: "Published", value: "published" },
+        { label: "Draft", value: "draft" },
+        { label: "Archived", value: "archived" },
+      ],
+    },
+     {
+      key: "created_at",
+      label: "Creation Date",
+      placeholder: "Select creation period...",
+      type: "select" as const,
+      icon: (
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+      ],
     },
   ];
 
@@ -149,9 +187,8 @@ const BlogTable = () => {
   const isLoading = getCurrentLoading();
 
   // Define which fields to filter
-  const filterFields = ["title"];
+  const filterFields = ["title", "is_featured", "status", "created_at"];
 
-  
   const {
     filters,
     isFilterVisible,
@@ -272,9 +309,7 @@ const BlogTable = () => {
 
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() =>
-              router.push(ROUTES.ADMIN_BLOGS + "/create")
-            }
+            onClick={() => router.push(ROUTES.ADMIN_BLOGS + "/create")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Blog
@@ -365,20 +400,20 @@ const BlogTable = () => {
         </Card>
       </div>
 
-        {/* Filter Section */}
-        {isFilterVisible && (
-          <AdminFilter
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-            onClose={handleClose}
-            isVisible={isFilterVisible}
-            totalItems={data?.meta.total || 0}
-            filteredCount={filteredCount}
-            label="Courses"
-            fieldConfigs={fieldConfigs}
-          />
-        )}
+      {/* Filter Section */}
+      {isFilterVisible && (
+        <AdminFilter
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClearFilters={handleClearFilters}
+          onClose={handleClose}
+          isVisible={isFilterVisible}
+          totalItems={data?.meta.total || 0}
+          filteredCount={filteredCount}
+          label="Courses"
+          fieldConfigs={fieldConfigs}
+        />
+      )}
 
       <Card>
         <CardHeader>
@@ -417,28 +452,6 @@ const BlogTable = () => {
 
             <TabsContent value="all" className="mt-6">
               <div className="space-y-4">
-                {hasActiveFilters && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Search className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-900">
-                          {filteredCount} of {data?.result?.length || 0} blogs
-                          match your filters
-                        </span>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleClearFilters}
-                        className="text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
-                      >
-                        Clear Filters
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
                 <DataTable
                   columns={columns}
                   data={filteredData}

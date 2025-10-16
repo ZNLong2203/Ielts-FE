@@ -18,7 +18,9 @@ import {
   Search,
   Mail,
   Phone,
-  Filter, 
+  Filter,
+  Shield,
+  Calendar
 } from "lucide-react";
 import AdminFilter from "@/components/filter/admin-filter";
 import Loading from "@/components/ui/loading";
@@ -119,12 +121,11 @@ const TeacherTable = () => {
       .length || 0;
 
   const inactiveTeachers =
-    allTeachersData?.result?.filter(
-      (teacher) => teacher.status === "inactive"
-    ).length || 0;
+    allTeachersData?.result?.filter((teacher) => teacher.status === "inactive")
+      .length || 0;
 
   // Field for filtering
-  const filterFields = ["full_name", "email", "phone", "status"];
+  const filterFields = ["full_name", "email", "phone", "status", "created_at"];
 
   // Use the filter hook with current tab data
   const {
@@ -148,6 +149,7 @@ const TeacherTable = () => {
       key: "full_name",
       label: "Full Name",
       placeholder: "Search by name...",
+      type: "input" as const,
       icon: (
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
@@ -156,6 +158,7 @@ const TeacherTable = () => {
       key: "email",
       label: "Email Address",
       placeholder: "Search by email...",
+      type: "input" as const,
       icon: (
         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
@@ -164,6 +167,7 @@ const TeacherTable = () => {
       key: "phone",
       label: "Phone Number",
       placeholder: "Search by phone...",
+      type: "input" as const,
       icon: (
         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
@@ -171,12 +175,32 @@ const TeacherTable = () => {
     {
       key: "status",
       label: "Status",
-      placeholder: "Filter by status...",
+      placeholder: "Select status...",
+      type: "select" as const,
       icon: (
-        <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
-      type: "select",
-      defaultValue: "active",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
+        { label: "Pending", value: "pending" },
+      ],
+    },
+     {
+      key: "created_at",
+      label: "Creation Date",
+      placeholder: "Select creation period...",
+      type: "select" as const,
+      icon: (
+        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      ),
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+      ],
     },
   ];
 
@@ -199,11 +223,9 @@ const TeacherTable = () => {
     }
   };
 
-  // Handle loading 
+  // Handle loading
   if (isLoadingActive || isLoadingPending) {
-    return (
-      <Loading/>
-    )
+    return <Loading />;
   }
 
   if (isErrorActive || isErrorPending) {
@@ -341,9 +363,7 @@ const TeacherTable = () => {
           isVisible={isFilterVisible}
           totalItems={currentTotalItems}
           filteredCount={filteredCount}
-          label={
-            activeTab === "all" ? "All Teachers" : "Pending Applications"
-          }
+          label={activeTab === "all" ? "All Teachers" : "Pending Applications"}
           fieldConfigs={fieldConfigs}
         />
       )}
