@@ -40,3 +40,22 @@ export const deleteStudent = async (id: string) => {
   console.log(response);
   return response;
 };
+
+// New APIs for student dashboard
+export const getStudentDashboard = async (id: string) => {
+  const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/${id}/dashboard`);
+  console.log("Student dashboard response:", response);
+  return response.data.data;
+};
+
+export const getStudentComboEnrollments = async (id: string) => {
+  const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/${id}/combo-enrollments`);
+  console.log("Student combo enrollments response:", response);
+  return response.data.data;
+};
+
+export const getStudentCourseEnrollments = async (id: string) => {
+  const response = await api.get(`${BASE_URL}${API_URL.STUDENT}/${id}/course-enrollments`);
+  console.log("Student course enrollments response:", response);
+  return response.data.data;
+};

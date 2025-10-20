@@ -251,7 +251,7 @@ const AdminSidebar = ({ isOpen, onToggle, isCollapsed, onCollapse }: AdminSideba
                     Admin User
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                    admin@prep.vn
+                    admin@tll.vn
                   </p>
                 </div>
               </div>

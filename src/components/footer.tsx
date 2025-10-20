@@ -56,11 +56,11 @@ const Footer = () => {
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">P</span>
                 </div>
-                <span className="text-2xl font-bold text-gray-900">PREP</span>
+                <span className="text-2xl font-bold text-gray-900">TLL</span>
               </div>
               
               <p className="text-gray-600 text-sm">
-                PREP is the leading IELTS preparation platform, helping students achieve their target scores through innovative technology and expert guidance.
+                TLL is the leading IELTS preparation platform, helping students achieve their target scores through innovative technology and expert guidance.
               </p>
 
               {/* App Download */}
@@ -170,7 +170,7 @@ const Footer = () => {
             {/* Usage Guide */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                Using PREP
+                Using TLL
               </h3>
               <ul className="space-y-3">
                 {[
@@ -198,7 +198,7 @@ const Footer = () => {
             {/* About & Policies */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                About PREP
+                About TLL
               </h3>
               <ul className="space-y-3">
                 {[
@@ -247,7 +247,7 @@ const Footer = () => {
                 <h4 className="font-medium text-gray-800 mb-1">Contact</h4>
                 <p className="text-sm text-gray-600">
                   Hotline: 0903 324 4242<br />
-                  Email: support@prep.edu.vn
+                  Email: support@tll.edu.vn
                 </p>
               </div>
             </div>
@@ -269,7 +269,7 @@ const Footer = () => {
           {/* Copyright */}
           <div className="mt-12 pt-6 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-500">
-              © {currentYear} PREP - Posts and Telecommunications Institute of Technology. All rights reserved.
+              © {currentYear} TLL - Posts and Telecommunications Institute of Technology. All rights reserved.
             </p>
           </div>
         </div>

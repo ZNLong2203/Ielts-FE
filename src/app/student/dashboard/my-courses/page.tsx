@@ -1,151 +1,117 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Grid3X3, List, Clock, Users, Star, Play, CheckCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useSelector } from "react-redux"
+import { Search, Grid3X3, List, Clock, Users, Play, CheckCircle } from "lucide-react"
+import { getStudentComboEnrollments } from "@/api/student"
+import { IComboEnrollment } from "@/interface/student"
+import { selectUserId } from "@/redux/features/user/userSlice"
+import Image from "next/image"
 
-// Mock data for individual purchased courses
-const purchasedCourses = [
-  {
-    id: "1",
-    title: "IELTS Listening Fundamentals",
-    instructor: "Sarah Johnson",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    skill: "Listening",
-    level: "Beginner",
-    progress: 100,
-    totalLessons: 15,
-    completedLessons: 15,
-    duration: "3 weeks",
-    rating: 4.8,
-    enrolledStudents: 2847,
-    isCompleted: true,
-    purchaseDate: "2024-01-15",
-    lastAccessed: "2 days ago",
-    price: 49.99,
-    learningPath: "IELTS 5.0 → 6.0 Foundation",
-  },
-  {
-    id: "2",
-    title: "IELTS Reading Strategies",
-    instructor: "Michael Chen",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    skill: "Reading",
-    level: "Intermediate",
-    progress: 85,
-    totalLessons: 18,
-    completedLessons: 15,
-    duration: "3 weeks",
-    rating: 4.9,
-    enrolledStudents: 1923,
-    isCompleted: false,
-    purchaseDate: "2024-01-15",
-    lastAccessed: "1 day ago",
-    price: 59.99,
-    learningPath: "IELTS 5.0 → 6.0 Foundation",
-  },
-  {
-    id: "3",
-    title: "IELTS Writing Task 1 & 2",
-    instructor: "Emma Wilson",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    skill: "Writing",
-    level: "Intermediate",
-    progress: 60,
-    totalLessons: 22,
-    completedLessons: 13,
-    duration: "4 weeks",
-    rating: 4.7,
-    enrolledStudents: 1456,
-    isCompleted: false,
-    purchaseDate: "2024-01-15",
-    lastAccessed: "3 days ago",
-    price: 69.99,
-    learningPath: "IELTS 5.0 → 6.0 Foundation",
-  },
-  {
-    id: "4",
-    title: "IELTS Speaking Confidence",
-    instructor: "David Brown",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    skill: "Speaking",
-    level: "Beginner",
-    progress: 30,
-    totalLessons: 12,
-    completedLessons: 4,
-    duration: "2 weeks",
-    rating: 4.6,
-    enrolledStudents: 2156,
-    isCompleted: false,
-    purchaseDate: "2024-01-15",
-    lastAccessed: "5 days ago",
-    price: 39.99,
-    learningPath: "IELTS 5.0 → 6.0 Foundation",
-  },
-  {
-    id: "5",
-    title: "Advanced Listening Techniques",
-    instructor: "Lisa Anderson",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    skill: "Listening",
-    level: "Advanced",
-    progress: 45,
-    totalLessons: 20,
-    completedLessons: 9,
-    duration: "4 weeks",
-    rating: 4.9,
-    enrolledStudents: 987,
-    isCompleted: false,
-    purchaseDate: "2024-02-01",
-    lastAccessed: "1 week ago",
-    price: 79.99,
-    learningPath: "IELTS 6.0 → 7.0 Advanced",
-  },
-  {
-    id: "6",
-    title: "Complex Reading Comprehension",
-    instructor: "Robert Taylor",
-    thumbnail: "/placeholder.svg?height=200&width=300",
-    skill: "Reading",
-    level: "Advanced",
-    progress: 20,
-    totalLessons: 24,
-    completedLessons: 5,
-    duration: "4 weeks",
-    rating: 4.8,
-    enrolledStudents: 756,
-    isCompleted: false,
-    purchaseDate: "2024-02-01",
-    lastAccessed: "2 weeks ago",
-    price: 89.99,
-    learningPath: "IELTS 6.0 → 7.0 Advanced",
-  },
-]
+// Interface for flattened course from combo
+interface CourseWithComboInfo {
+  id: string
+  title: string
+  thumbnail: string | null
+  skill_focus: string | null
+  teacher: string | null
+  estimated_duration: number
+  enrollment_count: number
+  total_lessons: number
+  completed_lessons: number
+  progress: number
+  comboName: string
+  comboId: string
+  enrollment_date: Date
+  completion_date: Date | null
+}
 
 export default function MyCoursesPage() {
+  // Get userId from Redux store
+  const userId = useSelector(selectUserId)
+  
+  const [allCourses, setAllCourses] = useState<CourseWithComboInfo[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterSkill, setFilterSkill] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
-  const filteredCourses = purchasedCourses.filter((course) => {
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true)
+        
+        // Check if user is authenticated
+        if (!userId) {
+          setError("Please login to view your courses")
+          setLoading(false)
+          return
+        }
+        
+        const data = await getStudentComboEnrollments(userId)
+
+        // Flatten all courses from all combos
+        const coursesFromCombos: CourseWithComboInfo[] = []
+        const seenCourseIds = new Set<string>() // Deduplicate courses across combos
+
+        data.forEach((combo: IComboEnrollment) => {
+          combo.courses?.forEach((course) => {
+            // Only add unique courses
+            if (!seenCourseIds.has(course.id)) {
+              seenCourseIds.add(course.id)
+              coursesFromCombos.push({
+                id: course.id,
+                title: course.title,
+                thumbnail: course.thumbnail || null,
+                skill_focus: course.skill_focus || null,
+                teacher: course.teacher || null,
+                estimated_duration: course.estimated_duration || 0,
+                enrollment_count: course.enrollment_count || 0,
+                total_lessons: course.total_lessons,
+                completed_lessons: course.completed_lessons,
+                progress: course.progress,
+                comboName: combo.combo.name,
+                comboId: combo.combo.id,
+                enrollment_date: combo.enrollment_date,
+                completion_date: course.progress === 100 ? new Date() : null,
+              })
+            }
+          })
+        })
+
+        setAllCourses(coursesFromCombos)
+      } catch (err) {
+        console.error("Error fetching combo enrollments:", err)
+        setError("Failed to load courses")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCourses()
+  }, [userId])
+
+  const filteredCourses = allCourses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.skill.toLowerCase().includes(searchTerm.toLowerCase())
+      (course.skill_focus?.toLowerCase() || "").includes(searchTerm.toLowerCase())
 
-    const matchesSkill = filterSkill === "all" || course.skill.toLowerCase() === filterSkill
+    const matchesSkill =
+      filterSkill === "all" || course.skill_focus?.toLowerCase() === filterSkill
 
     const matchesStatus =
       filterStatus === "all" ||
-      (filterStatus === "completed" && course.isCompleted) ||
-      (filterStatus === "in-progress" && !course.isCompleted && course.progress > 0) ||
+      (filterStatus === "completed" && course.completion_date) ||
+      (filterStatus === "in-progress" && !course.completion_date && course.progress > 0) ||
       (filterStatus === "not-started" && course.progress === 0)
 
     return matchesSearch && matchesSkill && matchesStatus
   })
 
-  const getSkillColor = (skill: string) => {
-    switch (skill.toLowerCase()) {
+  const getSkillColor = (skill: string | undefined) => {
+    switch (skill?.toLowerCase()) {
       case "listening":
         return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }
       case "reading":
@@ -160,10 +126,33 @@ export default function MyCoursesPage() {
   }
 
   const stats = {
-    total: purchasedCourses.length,
-    completed: purchasedCourses.filter((c) => c.isCompleted).length,
-    inProgress: purchasedCourses.filter((c) => !c.isCompleted && c.progress > 0).length,
-    averageProgress: Math.round(purchasedCourses.reduce((acc, c) => acc + c.progress, 0) / purchasedCourses.length),
+    total: allCourses.length,
+    completed: allCourses.filter((c) => c.completion_date).length,
+    inProgress: allCourses.filter((c) => !c.completion_date && c.progress > 0).length,
+    averageProgress: Math.round(
+      allCourses.reduce((acc, c) => acc + c.progress, 0) / (allCourses.length || 1)
+    ),
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading courses...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -180,15 +169,15 @@ export default function MyCoursesPage() {
           <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
           <div className="text-sm text-gray-600">Total Courses</div>
         </div>
-        <div className="bg-white rounded-lg border border-emerald-200 p-6 bg-emerald-50">
+        <div className="rounded-lg border border-emerald-200 p-6 bg-emerald-50">
           <div className="text-2xl font-bold text-emerald-600">{stats.completed}</div>
           <div className="text-sm text-gray-600">Completed</div>
         </div>
-        <div className="bg-white rounded-lg border border-blue-200 p-6 bg-blue-50">
+        <div className="rounded-lg border border-blue-200 p-6 bg-blue-50">
           <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
           <div className="text-sm text-gray-600">In Progress</div>
         </div>
-        <div className="bg-white rounded-lg border border-purple-200 p-6 bg-purple-50">
+        <div className="rounded-lg border border-purple-200 p-6 bg-purple-50">
           <div className="text-2xl font-bold text-purple-600">{stats.averageProgress}%</div>
           <div className="text-sm text-gray-600">Average Progress</div>
         </div>
@@ -254,27 +243,32 @@ export default function MyCoursesPage() {
       {viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course) => {
-            const skillColors = getSkillColor(course.skill)
+            const skillColors = getSkillColor(course.skill_focus ?? undefined)
+            const progress = course.progress
+            const isCompleted = !!course.completion_date
+
             return (
               <div
                 key={course.id}
                 className={`bg-white rounded-lg border ${skillColors.border} overflow-hidden hover:shadow-lg transition-shadow duration-200`}
               >
                 <div className="relative">
-                  <img
+                  <Image
                     src={course.thumbnail || "/placeholder.svg"}
                     alt={course.title}
+                    width={300}
+                    height={200}
                     className="w-full h-48 object-cover"
                   />
                   <div className="absolute top-4 left-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${skillColors.bg} ${skillColors.text}`}
                     >
-                      {course.skill}
+                      {course.skill_focus || "General"}
                     </span>
                   </div>
                   <div className="absolute top-4 right-4">
-                    {course.isCompleted ? (
+                    {isCompleted ? (
                       <CheckCircle className="w-6 h-6 text-emerald-600 bg-white rounded-full" />
                     ) : (
                       <Play className="w-6 h-6 text-white bg-black bg-opacity-50 rounded-full p-1" />
@@ -284,38 +278,35 @@ export default function MyCoursesPage() {
 
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-gray-900 text-lg line-clamp-2">{course.title}</h3>
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      {course.rating}
-                    </div>
+                    <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
+                      {course.title}
+                    </h3>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-2">by {course.instructor}</p>
-                  <p className="text-gray-500 text-xs mb-4">Part of: {course.learningPath}</p>
+                  <p className="text-gray-600 text-sm mb-2">by {course.teacher || "Unknown"}</p>
 
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>
-                        {course.completedLessons} of {course.totalLessons} lessons
+                        {course.completed_lessons} of {course.total_lessons} lessons
                       </span>
-                      <span>{course.progress}%</span>
+                      <span>{progress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
-                        className={`h-2 rounded-full ${course.isCompleted ? "bg-emerald-500" : "bg-blue-500"} transition-all duration-300`}
-                        style={{ width: `${course.progress}%` }}
+                        className={`h-2 rounded-full ${isCompleted ? "bg-emerald-500" : "bg-blue-500"} transition-all duration-300`}
+                        style={{ width: `${progress}%` }}
                       />
                     </div>
 
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {course.duration}
+                        {course.estimated_duration || 0}h
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
-                        {course.enrolledStudents.toLocaleString()}
+                        {course.enrollment_count?.toLocaleString() || 0}
                       </div>
                     </div>
                   </div>
@@ -323,19 +314,19 @@ export default function MyCoursesPage() {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                       <div className="text-xs text-gray-500">
-                        <div>Last accessed: {course.lastAccessed}</div>
-                        <div>Purchased: {new Date(course.purchaseDate).toLocaleDateString()}</div>
+                        <div>Enrolled: {new Date(course.enrollment_date).toLocaleDateString()}</div>
+                        <div className="text-gray-400 mt-1">From: {course.comboName}</div>
                       </div>
                       <button
                         className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                          course.progress === 0
+                          progress === 0
                             ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : course.isCompleted
+                            : isCompleted
                               ? "bg-emerald-600 text-white hover:bg-emerald-700"
                               : "bg-gray-900 text-white hover:bg-gray-800"
                         }`}
                       >
-                        {course.progress === 0 ? "Start" : course.isCompleted ? "Review" : "Continue"}
+                        {progress === 0 ? "Start" : isCompleted ? "Review" : "Continue"}
                       </button>
                     </div>
                   </div>
@@ -347,7 +338,10 @@ export default function MyCoursesPage() {
       ) : (
         <div className="space-y-4">
           {filteredCourses.map((course) => {
-            const skillColors = getSkillColor(course.skill)
+            const skillColors = getSkillColor(course.skill_focus ?? undefined)
+            const progress = course.progress
+            const isCompleted = !!course.completion_date
+
             return (
               <div
                 key={course.id}
@@ -355,13 +349,15 @@ export default function MyCoursesPage() {
               >
                 <div className="flex items-center gap-6">
                   <div className="relative flex-shrink-0">
-                    <img
+                    <Image
                       src={course.thumbnail || "/placeholder.svg"}
                       alt={course.title}
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover rounded-lg"
                     />
                     <div className="absolute -top-2 -right-2">
-                      {course.isCompleted ? (
+                      {isCompleted ? (
                         <CheckCircle className="w-6 h-6 text-emerald-600 bg-white rounded-full" />
                       ) : (
                         <Play className="w-6 h-6 text-blue-600 bg-blue-50 rounded-full p-1" />
@@ -373,18 +369,13 @@ export default function MyCoursesPage() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="font-bold text-gray-900 text-xl">{course.title}</h3>
-                        <p className="text-gray-600 text-sm">by {course.instructor}</p>
-                        <p className="text-gray-500 text-xs mt-1">Part of: {course.learningPath}</p>
+                        <p className="text-gray-600 text-sm">by {course.teacher || "Unknown"}</p>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          {course.rating}
-                        </div>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${skillColors.bg} ${skillColors.text}`}
                         >
-                          {course.skill}
+                          {course.skill_focus || "General"}
                         </span>
                       </div>
                     </div>
@@ -392,42 +383,43 @@ export default function MyCoursesPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
                       <div className="flex items-center gap-1">
                         <Clock className="w-4 h-4" />
-                        {course.duration}
+                        {course.estimated_duration || 0}h
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
-                        {course.enrolledStudents.toLocaleString()}
+                        {course.enrollment_count?.toLocaleString() || 0}
                       </div>
                       <div>
-                        {course.completedLessons} of {course.totalLessons} lessons
+                        {course.completed_lessons} of {course.total_lessons} lessons
                       </div>
-                      <div>Last accessed: {course.lastAccessed}</div>
+                      <div>Enrolled: {new Date(course.enrollment_date).toLocaleDateString()}</div>
+                      <div className="text-gray-400">From: {course.comboName}</div>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="flex-1 mr-4">
                         <div className="flex justify-between text-sm text-gray-600 mb-1">
                           <span>Progress</span>
-                          <span>{course.progress}%</span>
+                          <span>{progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className={`h-2 rounded-full ${course.isCompleted ? "bg-emerald-500" : "bg-blue-500"} transition-all duration-300`}
-                            style={{ width: `${course.progress}%` }}
+                            className={`h-2 rounded-full ${isCompleted ? "bg-emerald-500" : "bg-blue-500"} transition-all duration-300`}
+                            style={{ width: `${progress}%` }}
                           />
                         </div>
                       </div>
 
                       <button
                         className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                          course.progress === 0
+                          progress === 0
                             ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : course.isCompleted
+                            : isCompleted
                               ? "bg-emerald-600 text-white hover:bg-emerald-700"
                               : "bg-gray-900 text-white hover:bg-gray-800"
                         }`}
                       >
-                        {course.progress === 0 ? "Start" : course.isCompleted ? "Review" : "Continue"}
+                        {progress === 0 ? "Start" : isCompleted ? "Review" : "Continue"}
                       </button>
                     </div>
                   </div>

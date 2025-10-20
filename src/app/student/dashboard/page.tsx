@@ -3,138 +3,87 @@
 import { DashboardStats } from "@/components/student/dashboard/DashboardStats"
 import { LearningPathCard } from "@/components/student/dashboard/LearningPathCard"
 import { StudyTips } from "@/components/student/dashboard/StudyTips"
-
-const activeLearningPaths = [
-  {
-    id: "1",
-    title: "IELTS 5.0 → 6.0 Foundation",
-    description: "Build strong fundamentals across all four skills",
-    level: "Beginner to Intermediate",
-    progress: 75,
-    totalCourses: 4,
-    completedCourses: 3,
-    estimatedTime: "8-10 weeks",
-    enrolledStudents: 2847,
-    purchaseDate: "2024-01-15",
-    rating: 4.8,
-    bgColor: "bg-blue-50",
-    textColor: "text-blue-600",
-    courses: [
-      {
-        id: "1",
-        title: "IELTS Listening Fundamentals",
-        skill: "Listening",
-        duration: "3 weeks",
-        progress: 100,
-        isCompleted: true,
-        lessons: 15,
-      },
-      {
-        id: "2",
-        title: "IELTS Reading Strategies",
-        skill: "Reading",
-        duration: "3 weeks",
-        progress: 100,
-        isCompleted: true,
-        lessons: 18,
-      },
-      {
-        id: "3",
-        title: "IELTS Writing Task 1 & 2",
-        skill: "Writing",
-        duration: "4 weeks",
-        progress: 100,
-        isCompleted: true,
-        lessons: 22,
-      },
-      {
-        id: "4",
-        title: "IELTS Speaking Confidence",
-        skill: "Speaking",
-        duration: "2 weeks",
-        progress: 45,
-        isCompleted: false,
-        lessons: 12,
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "IELTS 6.0 → 7.0 Advanced",
-    description: "Master advanced techniques for higher band scores",
-    level: "Intermediate to Advanced",
-    progress: 30,
-    totalCourses: 4,
-    completedCourses: 1,
-    estimatedTime: "10-12 weeks",
-    enrolledStudents: 1923,
-    purchaseDate: "2024-02-01",
-    rating: 4.9,
-    bgColor: "bg-emerald-50",
-    textColor: "text-emerald-600",
-    courses: [
-      {
-        id: "5",
-        title: "Advanced Listening Techniques",
-        skill: "Listening",
-        duration: "4 weeks",
-        progress: 100,
-        isCompleted: true,
-        lessons: 20,
-      },
-      {
-        id: "6",
-        title: "Complex Reading Comprehension",
-        skill: "Reading",
-        duration: "4 weeks",
-        progress: 25,
-        isCompleted: false,
-        lessons: 24,
-      },
-      {
-        id: "7",
-        title: "Academic Writing Mastery",
-        skill: "Writing",
-        duration: "5 weeks",
-        progress: 0,
-        isCompleted: false,
-        lessons: 28,
-      },
-      {
-        id: "8",
-        title: "Fluent Speaking Practice",
-        skill: "Speaking",
-        duration: "3 weeks",
-        progress: 0,
-        isCompleted: false,
-        lessons: 16,
-      },
-    ],
-  },
-]
+import { useStudent } from "@/context/StudentContext"
 
 export default function DashboardPage() {
+  const { studentData, loading, error } = useStudent()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !studentData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600">{error || "Failed to load dashboard"}</p>
+        </div>
+      </div>
+    )
+  }
+
+  const { student, stats, comboEnrollments } = studentData
+
+  // Transform combo enrollments to learning paths format
+  const activeLearningPaths = comboEnrollments.map((enrollment) => ({
+    id: enrollment.id,
+    title: enrollment.combo.name,
+    description: enrollment.combo.description || "",
+    level: `Band ${student.current_level ? Number(student.current_level).toFixed(1) : 0} → ${student.target_ielts_score ? Number(student.target_ielts_score).toFixed(1) : 0}`,
+    progress: Number(enrollment.overall_progress_percentage) || 0,
+    totalCourses: enrollment.combo.total_courses,
+    completedCourses: enrollment.combo.completed_courses,
+    estimatedTime: `${enrollment.courses.reduce((acc: number, c) => acc + (c.estimated_duration || 0), 0)} hours`,
+    enrolledStudents: enrollment.combo.enrollment_count,
+    purchaseDate: new Date(enrollment.enrollment_date).toISOString().split("T")[0],
+    rating: 4.8, // TODO: Add rating to combo in backend
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-600",
+    courses: enrollment.courses.map((course) => ({
+      id: course.id,
+      title: course.title,
+      skill: course.skill_focus || "General",
+      duration: `${course.estimated_duration || 0} hours`,
+      progress: course.progress,
+      isCompleted: course.is_completed,
+      lessons: course.total_lessons,
+    })),
+  }))
+
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back, John!</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome back, {student.full_name || "Student"}!
+            </h1>
             <p className="text-gray-600 mt-2">
               Ready to continue your IELTS journey? Let&apos;s achieve your target band score.
             </p>
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-500">Current Level</div>
-            <div className="text-2xl font-bold text-blue-600">Band 5.5</div>
-            <div className="text-sm text-gray-500">Target: Band 7.0</div>
+            <div className="text-2xl font-bold text-blue-600">
+              Band {student.current_level ? Number(student.current_level).toFixed(1) : "N/A"}
+            </div>
+            <div className="text-sm text-gray-500">
+              Target: Band {student.target_ielts_score ? Number(student.target_ielts_score).toFixed(1) : "N/A"}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats */}
-      <DashboardStats />
+      <DashboardStats stats={stats} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -145,9 +94,16 @@ export default function DashboardPage() {
             <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</button>
           </div>
 
-          {activeLearningPaths.map((path) => (
-            <LearningPathCard key={path.id} path={path} />
-          ))}
+          {activeLearningPaths.length > 0 ? (
+            activeLearningPaths.map((path) => <LearningPathCard key={path.id} path={path} />)
+          ) : (
+            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+              <p className="text-gray-600">No learning paths enrolled yet.</p>
+              <button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                Browse Courses
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Study Tips */}

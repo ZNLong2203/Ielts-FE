@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronUp, Play, CheckCircle, Clock, Users, Star } from "lucide-react"
 
 interface Course {
@@ -36,6 +37,11 @@ interface LearningPathCardProps {
 
 export function LearningPathCard({ path }: LearningPathCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const router = useRouter()
+
+  const handleContinue = () => {
+    router.push(`/student/dashboard/learning-paths/${path.id}`)
+  }
 
   const getSkillColor = (skill: string) => {
     switch (skill.toLowerCase()) {
@@ -104,6 +110,7 @@ export function LearningPathCard({ path }: LearningPathCardProps) {
           </button>
 
           <button
+            onClick={handleContinue}
             className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
               path.progress === 0
                 ? "bg-blue-600 hover:bg-blue-700"

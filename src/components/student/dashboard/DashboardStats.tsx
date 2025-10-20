@@ -1,37 +1,46 @@
 "use client"
 
-import { BookOpen, Target, Award, Clock } from "lucide-react"
+import { BookOpen, Target, Award, TrendingUp } from "lucide-react"
 
-export function DashboardStats() {
+interface DashboardStatsProps {
+  stats?: {
+    totalCourses: number
+    completedCourses: number
+    inProgressCourses: number
+    averageProgress: number
+  }
+}
+
+export function DashboardStats({ stats: propStats }: DashboardStatsProps) {
   const stats = [
     {
-      title: "Active Learning Paths",
-      value: "3",
+      title: "Total Courses",
+      value: propStats?.totalCourses?.toString() || "0",
       icon: Target,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-200",
     },
     {
-      title: "Courses Completed",
-      value: "12",
+      title: "Completed",
+      value: propStats?.completedCourses?.toString() || "0",
       icon: BookOpen,
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
       borderColor: "border-emerald-200",
     },
     {
-      title: "Study Hours",
-      value: "48",
-      icon: Clock,
+      title: "In Progress",
+      value: propStats?.inProgressCourses?.toString() || "0",
+      icon: Award,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
     },
     {
-      title: "Certificates",
-      value: "2",
-      icon: Award,
+      title: "Average Progress",
+      value: `${propStats?.averageProgress || 0}%`,
+      icon: TrendingUp,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
       borderColor: "border-amber-200",

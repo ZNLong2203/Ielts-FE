@@ -17,6 +17,8 @@ import {
   ShoppingBag,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useStudent } from "@/context/StudentContext"
+import Image from "next/image"
 
 const navigation = [
   { name: "Dashboard", href: "/student/dashboard", icon: Home },
@@ -31,6 +33,18 @@ const navigation = [
 export function DashboardSidebar() {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { studentData } = useStudent()
+
+  const student = studentData?.student
+  const stats = studentData?.stats
+
+  // Calculate average progress
+  const averageProgress = stats?.averageProgress || 0
+  const displayName = student?.full_name || "Student"
+  const targetScore = student?.target_ielts_score
+    ? Number(student.target_ielts_score).toFixed(1)
+    : "N/A"
+  const avatar = student?.avatar
 
   return (
     <div
@@ -57,19 +71,28 @@ export function DashboardSidebar() {
       {/* User Info */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center shadow-md">
-            <User className="w-6 h-6 text-white" />
-          </div>
+          {avatar ? (
+            <div className="w-12 h-12 rounded-full overflow-hidden shadow-md relative">
+              <Image src={avatar} alt={displayName} fill className="object-cover" />
+            </div>
+          ) : (
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center shadow-md">
+              <User className="w-6 h-6 text-white" />
+            </div>
+          )}
           {!isCollapsed && (
             <div className="flex-1">
-              <h3 className="font-medium text-gray-900">John Doe</h3>
-              <p className="text-sm text-gray-500">Target: Band 7.0</p>
+              <h3 className="font-medium text-gray-900 truncate">{displayName}</h3>
+              <p className="text-sm text-gray-500">Target: Band {targetScore}</p>
               <div className="mt-2">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-gray-200 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-blue-500 to-emerald-500 h-2 rounded-full w-3/4 transition-all duration-500"></div>
+                    <div
+                      className="bg-gradient-to-r from-blue-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${averageProgress}%` }}
+                    ></div>
                   </div>
-                  <span className="text-xs text-gray-600 font-medium">75%</span>
+                  <span className="text-xs text-gray-600 font-medium">{averageProgress}%</span>
                 </div>
               </div>
             </div>
