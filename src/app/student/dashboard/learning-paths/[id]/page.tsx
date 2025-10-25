@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import { ArrowLeft, Clock, Users, Star, CheckCircle, BookOpen, Award, TrendingUp } from "lucide-react"
+import { ArrowLeft, Clock, Users, CheckCircle, BookOpen, Award, TrendingUp } from "lucide-react"
 import { getStudentComboEnrollments } from "@/api/student"
 import { IComboEnrollment } from "@/interface/student"
 import { selectUserId } from "@/redux/features/user/userSlice"
@@ -105,90 +105,77 @@ export default function LearningPathDetailPage() {
   const { combo, courses, enrollment_date, overall_progress_percentage } = comboEnrollment
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Back Button */}
       <button
         onClick={() => router.push("/student/dashboard")}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
       >
         <ArrowLeft className="w-5 h-5" />
         <span>Back to Dashboard</span>
       </button>
 
-      {/* Learning Path Header - Enhanced Design */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-2xl shadow-2xl">
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
+      {/* Learning Path Header - Clean Professional Design */}
+      <div className="relative overflow-hidden bg-slate-800 rounded-3xl shadow-2xl">
+        {/* Subtle Background Pattern */}
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }}></div>
         
         <div className="relative p-10">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-white font-medium mb-6 shadow-lg">
-                <BookOpen className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 bg-emerald-500 px-6 py-3 rounded-full text-sm text-white font-medium mb-6 shadow-lg">
+                <BookOpen className="w-5 h-5" />
                 <span>Learning Path</span>
-                <Award className="w-4 h-4 ml-2" />
+                <Award className="w-5 h-5 ml-2" />
               </div>
 
               {/* Title & Description */}
-              <h1 className="text-5xl font-extrabold text-white mb-4 drop-shadow-lg">
+              <h1 className="text-6xl font-black text-white mb-6 drop-shadow-lg">
                 {combo.name}
               </h1>
-              <p className="text-xl text-blue-100 mb-8 max-w-3xl leading-relaxed">
+              <p className="text-xl text-slate-200 mb-8 max-w-3xl leading-relaxed font-medium">
                 {combo.description}
               </p>
 
-              {/* Stats Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-lg">
-                  <div className="flex items-center gap-3 text-white">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <Clock className="w-5 h-5" />
+              {/* Stats Row - Clean Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-4 text-gray-700">
+                    <div className="p-3 bg-blue-100 rounded-xl">
+                      <Clock className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                      <div className="text-sm text-blue-100">Duration</div>
-                      <div className="text-lg font-bold">
+                      <div className="text-sm text-gray-500 font-medium">Duration</div>
+                      <div className="text-2xl font-bold">
                         {courses?.reduce((acc, c) => acc + (c.estimated_duration || 0), 0)}h
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-lg">
-                  <div className="flex items-center gap-3 text-white">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <BookOpen className="w-5 h-5" />
+                <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-4 text-gray-700">
+                    <div className="p-3 bg-purple-100 rounded-xl">
+                      <BookOpen className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
-                      <div className="text-sm text-blue-100">Courses</div>
-                      <div className="text-lg font-bold">{combo.total_courses}</div>
+                      <div className="text-sm text-gray-500 font-medium">Courses</div>
+                      <div className="text-2xl font-bold">{combo.total_courses}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-lg">
-                  <div className="flex items-center gap-3 text-white">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <Users className="w-5 h-5" />
+                <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-4 text-gray-700">
+                    <div className="p-3 bg-emerald-100 rounded-xl">
+                      <Users className="w-6 h-6 text-emerald-600" />
                     </div>
                     <div>
-                      <div className="text-sm text-blue-100">Students</div>
-                      <div className="text-lg font-bold">
+                      <div className="text-sm text-gray-500 font-medium">Students</div>
+                      <div className="text-2xl font-bold">
                         {combo.enrollment_count?.toLocaleString()}
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-lg">
-                  <div className="flex items-center gap-3 text-white">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <Star className="w-5 h-5 fill-yellow-300 text-yellow-300" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-blue-100">Rating</div>
-                      <div className="text-lg font-bold">4.8/5</div>
                     </div>
                   </div>
                 </div>
@@ -209,20 +196,19 @@ export default function LearningPathDetailPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    <div className="text-3xl font-extrabold text-blue-600">
                       {Number(overall_progress_percentage).toFixed(1)}%
                     </div>
                   </div>
                 </div>
 
-                {/* Enhanced Progress Bar */}
+                {/* Clean Progress Bar */}
                 <div className="relative">
                   <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                     <div
-                      className="h-4 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 transition-all duration-700 ease-out relative overflow-hidden"
+                      className="h-4 rounded-full bg-blue-500 transition-all duration-700 ease-out"
                       style={{ width: `${overall_progress_percentage}%` }}
                     >
-                      <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
                     </div>
                   </div>
                   {/* Progress Milestones */}
@@ -316,15 +302,15 @@ export default function LearningPathDetailPage() {
 
                 <div className="flex items-center gap-6 p-6">
                   {/* Course Number Badge */}
-                  <div
-                    className={`flex-shrink-0 w-20 h-20 rounded-2xl ${
-                      isCompleted
-                        ? "bg-gradient-to-br from-emerald-400 to-green-600 shadow-lg shadow-emerald-200"
-                        : hasStarted
-                          ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-200"
-                          : "bg-gradient-to-br from-gray-200 to-gray-300"
-                    } flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}
-                  >
+                    <div
+                      className={`flex-shrink-0 w-20 h-20 rounded-2xl ${
+                        isCompleted
+                          ? "bg-green-500 shadow-lg"
+                          : hasStarted
+                            ? "bg-blue-500 shadow-lg"
+                            : "bg-gray-300"
+                      } flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300`}
+                    >
                     {isCompleted ? (
                       <CheckCircle className="w-10 h-10 text-white" />
                     ) : (
@@ -425,22 +411,19 @@ export default function LearningPathDetailPage() {
                         </span>
                       </div>
                       
-                      {/* Gradient Progress Bar */}
+                      {/* Clean Progress Bar */}
                       <div className="relative">
                         <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                           <div
                             className={`h-3 rounded-full transition-all duration-700 ease-out ${
                               isCompleted
-                                ? "bg-gradient-to-r from-emerald-400 to-green-600"
+                                ? "bg-green-500"
                                 : hasStarted
-                                  ? "bg-gradient-to-r from-blue-500 to-indigo-600"
+                                  ? "bg-blue-500"
                                   : "bg-gray-400"
-                            } relative`}
+                            }`}
                             style={{ width: `${course.progress}%` }}
                           >
-                            {hasStarted && (
-                              <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -452,10 +435,10 @@ export default function LearningPathDetailPage() {
                         <button
                           className={`group/btn px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
                             isCompleted
-                              ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700"
+                              ? "bg-green-500 text-white hover:bg-green-600"
                               : hasStarted
-                                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
-                                : "bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-900 hover:to-black"
+                                ? "bg-blue-600 text-white hover:bg-blue-700"
+                                : "bg-gray-800 text-white hover:bg-gray-900"
                           }`}
                         >
                           <span className="flex items-center gap-2">

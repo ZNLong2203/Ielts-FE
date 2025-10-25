@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
 import { Search, Grid3X3, List, Clock, Users, Play, CheckCircle } from "lucide-react"
 import { getStudentComboEnrollments } from "@/api/student"
 import { IComboEnrollment } from "@/interface/student"
@@ -29,6 +30,7 @@ interface CourseWithComboInfo {
 export default function MyCoursesPage() {
   // Get userId from Redux store
   const userId = useSelector(selectUserId)
+  const router = useRouter()
   
   const [allCourses, setAllCourses] = useState<CourseWithComboInfo[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,6 +39,10 @@ export default function MyCoursesPage() {
   const [filterSkill, setFilterSkill] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+
+  const handleCourseClick = (courseId: string) => {
+    router.push(`/student/courses/${courseId}`)
+  }
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -318,6 +324,7 @@ export default function MyCoursesPage() {
                         <div className="text-gray-400 mt-1">From: {course.comboName}</div>
                       </div>
                       <button
+                        onClick={() => handleCourseClick(course.id)}
                         className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
                           progress === 0
                             ? "bg-blue-600 text-white hover:bg-blue-700"
@@ -411,6 +418,7 @@ export default function MyCoursesPage() {
                       </div>
 
                       <button
+                        onClick={() => handleCourseClick(course.id)}
                         className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                           progress === 0
                             ? "bg-blue-600 text-white hover:bg-blue-700"

@@ -43,7 +43,6 @@ export default function DashboardPage() {
     estimatedTime: `${enrollment.courses.reduce((acc: number, c) => acc + (c.estimated_duration || 0), 0)} hours`,
     enrolledStudents: enrollment.combo.enrollment_count,
     purchaseDate: new Date(enrollment.enrollment_date).toISOString().split("T")[0],
-    rating: 4.8, // TODO: Add rating to combo in backend
     bgColor: "bg-blue-50",
     textColor: "text-blue-600",
     courses: enrollment.courses.map((course) => ({
