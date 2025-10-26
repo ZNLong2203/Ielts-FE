@@ -19,10 +19,6 @@ import {
 } from "lucide-react";
 
 import { ISection } from "@/interface/section";
-import { deleteSection, reorderSections } from "@/api/section";
-import { AlertModal } from "@/components/modal/alert-modal";
-import SectionForm from "./sectionForm";
-import LessonList from "../lesson/lessonList";
 import { cn } from "@/lib/utils";
 
 const SortableSectionItem = ({

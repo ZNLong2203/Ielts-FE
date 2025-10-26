@@ -36,20 +36,7 @@ import {
 
 import { IExercise, IExerciseCreate, IExerciseUpdate } from "@/interface/exercise";
 import { createExercise, updateExercise } from "@/api/exercise";
-
-// Validation Schema based on actual interface
-const ExerciseFormSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Title too long"),
-  description: z.string().min(1, "Description is required"),
-  instruction: z.string().min(1, "Instruction is required"),
-  content: z.string().min(1, "Content is required"),
-  media_url: z.string().url().optional().or(z.literal("")),
-  time_limit: z.number().min(30, "Time limit must be at least 30 seconds"),
-  max_attempts: z.number().min(1, "Max attempts must be at least 1").max(10, "Max 10 attempts allowed"),
-  passing_score: z.number().min(0, "Passing score must be at least 0").max(100, "Passing score cannot exceed 100"),
-  ordering: z.number().min(1, "Order must be at least 1"),
-  is_active: z.boolean(),
-});
+import { ExerciseFormSchema } from "@/validation/exercise";
 
 type ExerciseFormData = z.infer<typeof ExerciseFormSchema>;
 
@@ -87,19 +74,19 @@ const ExerciseForm = ({
     resolver: zodResolver(ExerciseFormSchema),
     defaultValues: {
       title: exercise?.title || "",
-      description: exercise?.description || "",
+      description: exercise?.content.description || "",
       instruction: exercise?.instruction || "",
-      content: exercise?.content || "",
+      content: exercise?.content.main_content || "",
       media_url: exercise?.media_url || "",
       time_limit: exercise?.time_limit || 300, // 5 minutes default
       max_attempts: exercise?.max_attempts || 3,
-      passing_score: exercise?.passing_score || 70,
+      passing_score: exercise?.passing_score || "",
       ordering: exercise?.ordering || getNextOrdering(),
       is_active: exercise?.is_active ?? true,
     },
   });
 
-  // Create exercise mutation
+  // Create exercise mutation với comprehensive invalidation
   const createExerciseMutation = useMutation({
     mutationFn: async (data: ExerciseFormData) => {
       const exerciseData: IExerciseCreate = {
@@ -119,19 +106,40 @@ const ExerciseForm = ({
     },
     onSuccess: () => {
       toast.success("Exercise created successfully! 🎯");
-      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
-      if (sectionId) {
-        queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      }
+      
+      // Invalidate all related queries để update ngay lập tức
+      const invalidatePromises = [
+        // Exercise-specific queries
+        queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] }),
+        queryClient.invalidateQueries({ queryKey: ["exercises"] }),
+        
+        // Lesson queries (lesson chứa exercises)
+        queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] }),
+        queryClient.invalidateQueries({ queryKey: ["lessons"] }),
+        
+        // Section queries nếu có sectionId
+        sectionId && queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] }),
+        sectionId && queryClient.invalidateQueries({ queryKey: ["section", sectionId] }),
+        
+        // Refetch specific lesson để get updated exercises
+        queryClient.refetchQueries({ queryKey: ["lesson", lessonId] }),
+      ].filter(Boolean);
+
+      // Execute all invalidations
+      Promise.all(invalidatePromises).then(() => {
+        console.log("✅ All queries invalidated successfully");
+      });
+
       onSuccess?.();
       form.reset();
     },
     onError: (error: Error) => {
+      console.error("❌ Create exercise error:", error);
       toast.error(error?.message || "Failed to create exercise");
     },
   });
 
-  // Update exercise mutation
+  // Update exercise mutation với comprehensive invalidation
   const updateExerciseMutation = useMutation({
     mutationFn: async (data: ExerciseFormData) => {
       if (!exercise?.id) throw new Error("Exercise ID is required");
@@ -151,13 +159,35 @@ const ExerciseForm = ({
     },
     onSuccess: () => {
       toast.success("Exercise updated successfully! ✨");
-      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
-      if (sectionId) {
-        queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      }
+      
+      // Invalidate all related queries để update ngay lập tức
+      const invalidatePromises = [
+        // Exercise-specific queries
+        queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] }),
+        queryClient.invalidateQueries({ queryKey: ["exercises"] }),
+        queryClient.invalidateQueries({ queryKey: ["exercise", exercise?.id] }),
+        
+        // Lesson queries (lesson chứa exercises)
+        queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] }),
+        queryClient.invalidateQueries({ queryKey: ["lessons"] }),
+        
+        // Section queries nếu có sectionId
+        sectionId && queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] }),
+        sectionId && queryClient.invalidateQueries({ queryKey: ["section", sectionId] }),
+        
+        // Refetch specific lesson để get updated exercises
+        queryClient.refetchQueries({ queryKey: ["lesson", lessonId] }),
+      ].filter(Boolean);
+
+      // Execute all invalidations
+      Promise.all(invalidatePromises).then(() => {
+        console.log("✅ All queries invalidated successfully");
+      });
+
       onSuccess?.();
     },
     onError: (error: Error) => {
+      console.error("❌ Update exercise error:", error);
       toast.error(error?.message || "Failed to update exercise");
     },
   });
@@ -165,13 +195,17 @@ const ExerciseForm = ({
   // Submit handler
   const onSubmit = async (data: ExerciseFormData) => {
     try {
+      console.log("📝 Form submission:", { isEditing, data });
+      
       if (isEditing) {
+        console.log("🔄 Updating exercise:", exercise?.id);
         updateExerciseMutation.mutate(data);
       } else {
+        console.log("➕ Creating new exercise for lesson:", lessonId);
         createExerciseMutation.mutate(data);
       }
     } catch (error) {
-      console.error("Form submission error:", error);
+      console.error("❌ Form submission error:", error);
     }
   };
 
@@ -403,11 +437,10 @@ const ExerciseForm = ({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          type="number"
+                          type="text"
                           min={0}
                           max={100}
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 70)}
                           className="focus:ring-2 focus:ring-blue-500"
                         />
                       </FormControl>

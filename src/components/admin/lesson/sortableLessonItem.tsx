@@ -7,16 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   PlayCircle,
   FileText,
   BookOpen,
-  MoreHorizontal,
   Edit,
   Trash2,
   Eye,
@@ -35,7 +28,6 @@ import { getLessonById } from "@/api/lesson";
 import HlsVideoPlayer from "@/components/modal/video-player";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import ExerciseList from "../exercise/exerciseList";
 
 const LESSON_TYPE_CONFIG = {
   video: { icon: Video, label: "Video", color: "bg-red-100 text-red-700" },
@@ -103,7 +95,7 @@ const SortableLessonItem = ({
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["lesson", lessonId],
+    queryKey: ["lesson", sectionId, lessonId],
     queryFn: () => getLessonById(sectionId, lessonId),
   });
 
@@ -131,7 +123,8 @@ const SortableLessonItem = ({
   const Icon = typeConfig?.icon || PlayCircle;
 
   // Get exercises from lesson data
-  const exercises = lessonInfo?.exercises || [];
+  const exercises = lessonInfo?.exercises?.filter(ex => ex.deleted == false) || [];
+  console.log("Lesson Info", lessonInfo)
 
   if (isLoading) {
     return (
@@ -240,18 +233,16 @@ const SortableLessonItem = ({
             )}
 
             {/* Manage exercises button */}
-            {onManageExercises && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => lessonInfo && onManageExercises(lessonInfo)}
+                onClick={() => lessonInfo && onManageExercises?.(lessonInfo)}
                 className="h-8 px-2 text-xs hover:bg-green-50 text-green-700 hover:text-green-800"
                 title="Manage exercises"
               >
                 <Target className="h-3 w-3 mr-1" />
                 Manage Exercise
               </Button>
-            )}
 
             {/* Edit button */}
             <Button
@@ -363,9 +354,111 @@ const SortableLessonItem = ({
         </div>
       )}
 
-      <div>
-        {lessonInfo && <ExerciseList lesson={lessonInfo} />}
-      </div>
+      {/* Exercises List for Lesson item */}
+      {exercises && exercises.length > 0 ? (
+        <div className="space-y-3">
+          <Separator />
+          <div className="flex items-center justify-between">
+            <h5 className="text-sm font-medium text-gray-700 flex items-center space-x-1">
+              <Target className="h-3 w-3" />
+              <span>Exercises</span>
+            </h5>
+          </div>
+
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {exercises
+              .sort((a, b) => (a.ordering ?? 999) - (b.ordering ?? 999))
+              .map((exercise, exerciseIndex) => (
+                <div
+                  key={exercise.id || exerciseIndex}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors group"
+                >
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <Badge
+                      variant="outline"
+                      className="text-xs w-8 justify-center flex-shrink-0"
+                    >
+                      {exercise.ordering ?? exerciseIndex + 1}
+                    </Badge>
+
+                    <div className="flex-shrink-0">
+                      <Target className="h-4 w-4 text-blue-600" />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {exercise.title}
+                      </p>
+                      {exercise.content?.description && (
+                        <p className="text-xs text-gray-500 line-clamp-1 mt-1">
+                          {exercise.content?.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    {exercise.time_limit && (
+                      <div className="flex items-center space-x-1 text-xs text-gray-500">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatDuration(exercise.time_limit)}</span>
+                      </div>
+                    )}
+
+                    {exercise.passing_score && (
+                      <div className="flex items-center space-x-1 text-xs text-gray-500">
+                        <Trophy className="h-3 w-3" />
+                        <span>{exercise.passing_score}%</span>
+                      </div>
+                    )}
+
+                    <Badge
+                      variant="outline"
+                      className={`text-xs ${
+                        exercise.is_active
+                          ? "bg-green-50 text-green-700 border-green-200"
+                          : "bg-gray-50 text-gray-700 border-gray-200"
+                      }`}
+                    >
+                      {exercise.is_active ? (
+                        <>
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Active
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Inactive
+                        </>
+                      )}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3">
+          <Separator />
+          <div className="mt-3 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 text-center">
+            <Target className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <p className="text-xs text-gray-500 mb-2">
+              No exercises in this lesson
+            </p>
+            {onManageExercises && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => lessonInfo && onManageExercises(lessonInfo)}
+                className="mt-2 text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add Exercises
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

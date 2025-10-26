@@ -37,7 +37,7 @@ export const updateExercise = async (
     exerciseId: string,
     lessonId: string
 ): Promise<IExercise> => {
-    const response = await api.patch(
+    const response = await api.put(
         `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}/${exerciseId}`,
         data
     )

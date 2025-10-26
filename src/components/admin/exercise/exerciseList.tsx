@@ -21,11 +21,6 @@ import {
   Target,
   Plus,
   Clock,
-  Trophy,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
 } from "lucide-react";
 
 import { ILesson } from "@/interface/lesson";
@@ -46,11 +41,14 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
   
   const queryClient = useQueryClient();
 
-  // Get exercises from lesson data (từ lessonInfo)
+  // Get exercises from lesson data and filter out deleted ones
   const exercises = lesson?.exercises || [];
+  
+  // Filter out deleted exercises
+  const activeExercises = exercises.filter(exercise => exercise.deleted == false);
 
   // Sort exercises by ordering
-  const sortedExercises = [...exercises].sort((a, b) => {
+  const sortedExercises = [...activeExercises].sort((a, b) => {
     const orderA = a.ordering ?? 999;
     const orderB = b.ordering ?? 999;
     return orderA - orderB;
@@ -105,13 +103,12 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
 
   // Delete exercise mutation
   const deleteExerciseMutation = useMutation({
-    mutationFn: (exerciseId: string) => deleteExercise(exerciseId, lesson.id),
+    mutationFn: (exerciseId: string) => deleteExercise(lesson.id, exerciseId),
     onSuccess: () => {
       toast.success("Exercise deleted successfully");
-      // Invalidate lesson data để update exercises
-      queryClient.invalidateQueries({ queryKey: ["lesson", lesson.id] });
+      queryClient.invalidateQueries({ queryKey: ["lessons", lesson.id] });
       if (sectionId) {
-        queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+        queryClient.invalidateQueries({ queryKey: ["section", sectionId] });
       }
       setDeletingExercise(null);
     },
@@ -125,9 +122,9 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
     setShowForm(false);
     setEditingExercise(null);
     // Invalidate lesson data để update exercises
-    queryClient.invalidateQueries({ queryKey: ["lesson", lesson.id] });
+    queryClient.invalidateQueries({ queryKey: ["lessons", lesson.id] });
     if (sectionId) {
-      queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+      queryClient.invalidateQueries({ queryKey: ["sections", sectionId] });
     }
   };
 
@@ -158,7 +155,9 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
           <CardTitle className="flex items-center space-x-2">
             <Target className="h-5 w-5 text-blue-600" />
             <span>Exercises</span>
-            {/* Total time badge - giống lessonList */}
+            <Badge variant="outline" className="ml-2">
+              {sortedExercises.length} exercises
+            </Badge>
             {sortedExercises.some(ex => ex.time_limit > 0) && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
                 <Clock className="h-3 w-3 mr-1" />
@@ -252,8 +251,5 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
       </AlertDialog>
     </>
   );
-};
-
-
-
+}; 
 export default ExerciseList;

@@ -30,6 +30,9 @@ import {
   GripVertical,
   Save,
   RotateCcw,
+  ArrowLeft,
+  Target,
+  Play
 } from "lucide-react";
 
 import { ISection } from "@/interface/section";
@@ -102,7 +105,7 @@ const SectionList = ({
         id: section.id,
         ordering: index + 1,
       }));
-      
+
       return reorderSections(courseId, reorderData);
     },
     onSuccess: () => {
@@ -270,15 +273,21 @@ const SectionList = ({
             onClick={handleBackFromLessonManagement}
             className="mb-4 flex items-center space-x-2"
           >
-            <span>← Back to Course Outline</span>
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Course Outline</span>
           </Button>
           <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
-            <h3 className="font-medium text-green-900 mb-1">
-              Managing lessons for: {managingLessonsForSection.title}
-            </h3>
-            <p className="text-sm text-green-700">
-              Section {managingLessonsForSection.ordering}
-            </p>
+            <div className="flex items-center space-x-3 mb-2">
+              <Play className="h-5 w-5 text-green-600" />
+              <h2 className="text-md font-semibold text-green-900">
+                Lesson Management
+              </h2>
+            </div>
+            <div>
+              <p className="text-green-900 mb-1 text-sm">
+                Section: {managingLessonsForSection.title}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -368,7 +377,6 @@ const SectionList = ({
             <div className="flex items-center space-x-2">
               <BookOpen className="h-5 w-5 text-blue-600" />
               <span>Course Outline</span>
-             
             </div>
             <div className="flex items-center space-x-2">
               {/* FIX: Reorder controls */}

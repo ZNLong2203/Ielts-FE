@@ -41,6 +41,8 @@ import {
   Save,
   RotateCcw,
   Clock,
+  Target,
+  ArrowLeft,
 } from "lucide-react";
 
 import { ILesson } from "@/interface/lesson";
@@ -48,6 +50,7 @@ import { ISection } from "@/interface/section";
 import { getLessonsBySectionId, deleteLesson, reorderLesson } from "@/api/lesson";
 import LessonForm from "./lessonForm";
 import SortableLessonItem from "./sortableLessonItem";
+import ExerciseList from "../exercise/exerciseList"; 
 
 interface LessonListProps {
   section: ISection;
@@ -61,6 +64,9 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
   const [localLessons, setLocalLessons] = useState<ILesson[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
+  // Add state for exercise management
+  const [managingExercisesForLesson, setManagingExercisesForLesson] = useState<ILesson | null>(null);
+  
   const queryClient = useQueryClient();
 
   // Fetch lessons for this section
@@ -73,7 +79,6 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
     queryFn: () => getLessonsBySectionId(section.id!),
   });
 
-  // console.log(lessons);
   const safeLessons = Array.isArray(lessons) ? lessons : (lessons?.result || []);
 
   // Update local lessons when data changes
@@ -148,6 +153,15 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
       return total + (lesson.video_duration || 0);
     }, 0);
     return formatDurationVietnamese(totalSeconds);
+  };
+
+  // Add handlers for exercise management
+  const handleManageExercises = (lesson: ILesson) => {
+    setManagingExercisesForLesson(lesson);
+  };
+
+  const handleBackFromExerciseManagement = () => {
+    setManagingExercisesForLesson(null);
   };
 
   // Reorder mutation
@@ -270,6 +284,91 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
       deleteLessonMutation.mutate(deletingLesson.id);
     }
   };
+
+  if (managingExercisesForLesson) {
+    return (
+      <div className="space-y-6">
+        {/* Back navigation */}
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="ghost"
+            onClick={handleBackFromExerciseManagement}
+            className="flex items-center space-x-2 hover:bg-gray-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back to Lessons</span>
+          </Button>
+        </div>
+
+        {/* Context header */}
+        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-3 mb-2">
+            <Target className="h-5 w-5 text-blue-600" />
+            <h2 className="text-md font-semibold text-blue-900">
+              Exercise Management
+            </h2>
+          </div>
+          <div className="text-sm text-blue-700">
+            <p className="font-medium mb-1">
+              Lesson: {managingExercisesForLesson.title}
+            </p>
+            <p>
+              Section: {section.title}
+            </p>
+            
+          </div>
+        </div>
+
+        {/* Exercise list component */}
+        <ExerciseList 
+          lesson={managingExercisesForLesson} 
+          sectionId={section.id} 
+        />
+      </div>
+    );
+  }
+
+  // Show form if editing or creating lesson
+  if (editingLesson || showForm) {
+    return (
+      <>
+        <LessonForm
+          courseId={courseId}
+          sectionId={section.id!}
+          lesson={editingLesson}
+          existingLessons={localLessons}
+          onSuccess={handleFormSuccess}
+          onCancel={handleFormCancel}
+        />
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog
+          open={!!deletingLesson}
+          onOpenChange={() => setDeletingLesson(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Lesson</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the lesson &ldquo;
+                {deletingLesson?.title}&rdquo;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={deleteLessonMutation.isPending}
+              >
+                {deleteLessonMutation.isPending ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -404,6 +503,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
                         handleDeleteLesson={handleDeleteLesson}
                         formatDuration={formatDuration}
                         hasUnsavedChanges={hasChanged}
+                        onManageExercises={handleManageExercises} // Pass the handler
                       />
                     );
                   })}
@@ -441,7 +541,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
               Are you sure you want to delete the lesson &ldquo;
               {deletingLesson?.title}&rdquo;? This action cannot be undone.
             </AlertDialogDescription>
-          </AlertDialogHeader>
+            </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
