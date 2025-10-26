@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter, useParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import SectionDetail from "../section/sectionDetail";
+import SectionDetail from "../section/sectionList";
 
 const CourseDetail = () => {
   const router = useRouter();

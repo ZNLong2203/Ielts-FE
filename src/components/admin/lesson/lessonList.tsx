@@ -74,7 +74,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
   });
 
   // console.log(lessons);
-  const safeLessons = lessons.result || [];
+  const safeLessons = Array.isArray(lessons) ? lessons : (lessons?.result || []);
 
   // Update local lessons when data changes
   useEffect(() => {
@@ -301,8 +301,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <PlayCircle className="h-5 w-5 text-green-600" />
-            <span>Lessons</span>
-            <Badge variant="outline">{localLessons.length}</Badge>
+            <span>Lesson</span>    
             {/* Total duration badge */}
             {localLessons.some(l => l.video_duration > 0) && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -341,7 +340,8 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
             
             <Button
               onClick={() => setShowForm(true)}
-              className="bg-green-600 hover:bg-green-700"
+              variant={"outline"}
+              size={"sm"}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Lesson

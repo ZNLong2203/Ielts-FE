@@ -131,7 +131,7 @@ api.interceptors.response.use(
       } else {
         // Không có refresh token, redirect về login
         clearTokens();
-        window.location.href = 'auth/login';
+        window.location.href = '/auth/login';
         return Promise.reject(error);
       }
     }

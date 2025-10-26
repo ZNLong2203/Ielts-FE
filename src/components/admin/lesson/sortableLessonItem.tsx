@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +23,19 @@ import {
   Video,
   GripVertical,
   X,
+  Target,
+  Clock,
+  Trophy,
+  CheckCircle,
+  XCircle,
+  Plus,
 } from "lucide-react";
 import { ILesson } from "@/interface/lesson";
 import { getLessonById } from "@/api/lesson";
 import HlsVideoPlayer from "@/components/modal/video-player";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import ExerciseList from "../exercise/exerciseList";
 
 const LESSON_TYPE_CONFIG = {
   video: { icon: Video, label: "Video", color: "bg-red-100 text-red-700" },
@@ -52,26 +60,11 @@ interface SortableLessonItemProps {
   handleDeleteLesson: (lesson: ILesson) => void;
   formatDuration: (seconds: number) => string;
   hasUnsavedChanges: boolean;
+  onManageExercises?: (lesson: ILesson) => void;
 }
 
 // Enhanced duration formatting functions
-const formatDurationCompact = (seconds: number) => {
-  if (!seconds || isNaN(seconds) || seconds <= 0) return "0:00";
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, "0")}:${remainingSeconds
-      .toString()
-      .padStart(2, "0")}`;
-  } else {
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  }
-};
-
-const formatDurationVietnamese = (seconds: number) => {
+const formatDuration = (seconds: number) => {
   if (!seconds || isNaN(seconds) || seconds <= 0) return "0 s";
 
   const hours = Math.floor(seconds / 3600);
@@ -99,19 +92,21 @@ const SortableLessonItem = ({
   lessonIndex,
   handleEditLesson,
   handleDeleteLesson,
-  formatDuration,
   hasUnsavedChanges,
+  onManageExercises,
 }: SortableLessonItemProps) => {
   const [showVideoPreview, setShowVideoPreview] = useState(false);
-  // Fetch lessons for this section
+
+  // Fetch lesson data
   const {
     data: lessonInfo,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["lesson"],
+    queryKey: ["lesson", lessonId],
     queryFn: () => getLessonById(sectionId, lessonId),
   });
+
   const {
     attributes,
     listeners,
@@ -123,148 +118,201 @@ const SortableLessonItem = ({
     id: lessonId,
   });
 
-  console.log("Lesson Info: ", lessonInfo);
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
-  //   console.log("Lesson fetch:", lesson);
-
   const typeConfig =
-    LESSON_TYPE_CONFIG[lessonInfo?.lesson_type as keyof typeof LESSON_TYPE_CONFIG];
+    LESSON_TYPE_CONFIG[
+      lessonInfo?.lesson_type as keyof typeof LESSON_TYPE_CONFIG
+    ];
   const Icon = typeConfig?.icon || PlayCircle;
 
+  // Get exercises from lesson data
+  const exercises = lessonInfo?.exercises || [];
+
+  if (isLoading) {
+    return (
+      <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="flex items-center space-x-4">
+          <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
+          <Badge variant="outline" className="w-16 h-6 bg-gray-200 animate-pulse" />
+          <div className="h-4 bg-gray-200 rounded w-32 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border rounded-lg p-4 bg-red-50 border-red-200">
+        <span className="text-red-600 text-sm">Error loading lesson</span>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={cn(
-          "flex items-center justify-between p-4 border rounded-lg transition-all duration-200 bg-white",
-          isDragging &&
-            "shadow-2xl border-blue-400 bg-blue-50 rotate-1 scale-105 z-50",
-          hasUnsavedChanges && !isDragging && "border-orange-300 bg-orange-50",
-          !isDragging && !hasUnsavedChanges && "hover:bg-gray-50"
-        )}
-      >
-        <div className="flex items-center space-x-4 flex-1">
-          {/* Drag handle */}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "border rounded-lg p-4 transition-all duration-200 bg-white",
+        isDragging &&
+          "shadow-2xl border-blue-400 bg-blue-50 rotate-2 scale-105",
+        hasUnsavedChanges && !isDragging && "border-orange-300 bg-orange-50",
+        !isDragging &&
+          !hasUnsavedChanges &&
+          "hover:shadow-sm hover:border-gray-300"
+      )}
+    >
+      {/* Lesson Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-3">
+          {/* Drag handle - giống SortableSectionItem */}
           <div
             {...attributes}
             {...listeners}
             className={cn(
-              "flex items-center justify-center w-6 h-6 rounded cursor-grab active:cursor-grabbing transition-all",
-              "border border-dashed hover:border-solid",
+              "flex items-center justify-center w-8 h-8 rounded-md cursor-grab active:cursor-grabbing transition-all",
+              "border-2 border-dashed hover:border-solid",
               isDragging
                 ? "bg-blue-500 text-white border-blue-600"
                 : "bg-gray-50 text-gray-400 hover:bg-blue-100 hover:text-blue-600 hover:border-blue-300"
             )}
             title="Drag to reorder"
           >
-            <GripVertical className="h-3 w-3" />
+            <GripVertical className="h-4 w-4" />
           </div>
 
-          {/* Order number */}
-          <div className="flex-shrink-0">
+          {/* Order badge */}
+          <Badge
+            variant="secondary"
+            className={cn(
+              "bg-green-100 text-green-800",
+              hasUnsavedChanges &&
+                "bg-orange-100 text-orange-800 border-orange-300"
+            )}
+          >
+            Lesson {lessonIndex + 1}
+          </Badge>
+
+          {/* Lesson title */}
+          <h4 className="font-semibold text-gray-900">
+            {lessonInfo?.title || `Untitled Lesson ${lessonIndex + 1}`}
+          </h4>
+
+          {/* Preview indicator */}
+          {lessonInfo?.is_preview && (
+            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+              <Eye className="h-3 w-3 mr-1" />
+              Preview
+            </Badge>
+          )}
+
+          {/* Moved indicator */}
+          {hasUnsavedChanges && (
             <Badge
               variant="outline"
-              className={cn(
-                "w-8 h-6 justify-center",
-                hasUnsavedChanges &&
-                  "bg-orange-100 text-orange-700 border-orange-300"
-              )}
+              className="bg-orange-100 text-orange-700 border-orange-300"
             >
-              {lessonIndex + 1}
+              Moved
             </Badge>
-          </div>
+          )}
+        </div>
 
-          {/* Lesson icon and type */}
-          <div className="flex-shrink-0">
-            <Icon className="h-5 w-5 text-gray-600" />
-          </div>
-
-          {/* Lesson info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-1">
-              <h4 className="font-medium text-gray-900 truncate">
-                {lessonInfo?.title}
-              </h4>
-              {lessonInfo?.is_preview && (
-                <Eye className="h-4 w-4 text-green-600 flex-shrink-0" />
-              )}
-              {hasUnsavedChanges && (
-                <Badge
-                  variant="outline"
-                  className="bg-orange-100 text-orange-700 border-orange-300 text-xs"
-                >
-                  Moved
-                </Badge>
-              )}
-            </div>
-            {lessonInfo?.description && (
-              <p className="text-sm text-gray-600 truncate">
-                {lessonInfo?.description}
-              </p>
-            )}
-          </div>
-
-          {/* Lesson metadata */}
-          <div className="flex items-center space-x-3 flex-shrink-0">
-            <Badge
-              className={`${
-                typeConfig?.color || "bg-gray-100 text-gray-700"
-              } px-2 py-1`}
-            >
-              {typeConfig?.label || lessonInfo?.lesson_type}
-            </Badge>
-
+        {/* Actions */}
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {/* Video preview button */}
             {lessonInfo?.lesson_type === "video" && lessonInfo?.hlsUrl && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setShowVideoPreview(!showVideoPreview)}
-                className="text-xs h-6 px-2"
+                className="h-8 px-2 text-xs hover:bg-blue-50 text-blue-700 hover:text-blue-800"
+                title="Video preview"
               >
                 <Video className="h-3 w-3 mr-1" />
                 {showVideoPreview ? "Hide" : "Watch"}
               </Button>
             )}
+
+            {/* Manage exercises button */}
+            {onManageExercises && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => lessonInfo && onManageExercises(lessonInfo)}
+                className="h-8 px-2 text-xs hover:bg-green-50 text-green-700 hover:text-green-800"
+                title="Manage exercises"
+              >
+                <Target className="h-3 w-3 mr-1" />
+                Manage Exercise
+              </Button>
+            )}
+
+            {/* Edit button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => lessonInfo && handleEditLesson(lessonInfo)}
+              className="h-8 w-8 p-0 hover:bg-blue-50"
+              title="Edit lesson"
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+
+            {/* Delete button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => lessonInfo && handleDeleteLesson(lessonInfo)}
+              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              title="Delete lesson"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
         </div>
+      </div>
 
-        {/* Actions dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => lessonInfo && handleEditLesson(lessonInfo)}
-              className="flex items-center space-x-2"
-            >
-              <Edit className="h-4 w-4" />
-              <span>Update</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => lessonInfo && handleDeleteLesson(lessonInfo)}
-              className="flex items-center space-x-2 text-red-600 focus:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {/* Lesson Description */}
+      {lessonInfo?.description && (
+        <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+          {lessonInfo.description}
+        </p>
+      )}
+
+      {/* Lesson Metadata */}
+      <div className="flex items-center space-x-3 mb-4">
+        <Badge
+          className={`${typeConfig?.color || "bg-gray-100 text-gray-700"} px-2 py-1`}
+        >
+          <Icon className="h-3 w-3 mr-1" />
+          {typeConfig?.label || lessonInfo?.lesson_type}
+        </Badge>
+
+        {lessonInfo?.video_duration && (
+          <div className="flex items-center space-x-1 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
+            <span>{formatDuration(lessonInfo.video_duration)}</span>
+          </div>
+        )}
+
+        {exercises.length > 0 && (
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            <Target className="h-3 w-3 mr-1" />
+            {exercises.length} exercise{exercises.length > 1 ? 's' : ''}
+          </Badge>
+        )}
       </div>
 
       {/* Video Preview Section */}
-       {showVideoPreview && lessonInfo?.hlsUrl && (
-        <div className="mt-3 px-4">
+      {showVideoPreview && lessonInfo?.hlsUrl && (
+        <div className="mb-4">
+          <Separator className="mb-3" />
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
@@ -274,7 +322,7 @@ const SortableLessonItem = ({
                   HLS Stream
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {formatDurationVietnamese(lessonInfo?.video_duration || 0)}
+                  {formatDuration(lessonInfo?.video_duration || 0)}
                 </Badge>
               </div>
               <Button
@@ -286,8 +334,7 @@ const SortableLessonItem = ({
                 <X className="h-3 w-3" />
               </Button>
             </div>
-            
-            {/* FIX: Use HlsVideoPlayer instead of regular VideoPlayer */}
+
             <HlsVideoPlayer
               hlsUrl={lessonInfo.hlsUrl}
               title={lessonInfo?.title}
@@ -297,7 +344,9 @@ const SortableLessonItem = ({
               autoPlay={false}
               onProgress={(current, total) => {
                 console.log(
-                  `${lessonInfo?.title} progress: ${Math.round((current / total) * 100)}%`
+                  `${lessonInfo?.title} progress: ${Math.round(
+                    (current / total) * 100
+                  )}%`
                 );
               }}
               onComplete={() => {
@@ -313,6 +362,10 @@ const SortableLessonItem = ({
           </div>
         </div>
       )}
+
+      <div>
+        {lessonInfo && <ExerciseList lesson={lessonInfo} />}
+      </div>
     </div>
   );
 };

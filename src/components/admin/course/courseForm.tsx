@@ -18,7 +18,6 @@ import Error from "@/components/ui/error";
 
 import {
   Save,
-  FileText,
   DollarSign,
   BookOpen,
   Tag,
@@ -45,7 +44,7 @@ import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { useEffect, useState } from "react";
 import { ISectionCreate } from "@/interface/section";
-import SectionDetail from "../section/sectionDetail";
+import SectionList from "../section/sectionList";
 
 const CourseForm = () => {
   const router = useRouter();
@@ -488,10 +487,9 @@ const CourseForm = () => {
             </form>
           </Form>
 
-          {/* FIX: Always show SectionDetail when editing (whether has sections or not) */}
           {isEditing && courseData && (
-            <SectionDetail
-              sections={courseData.sections || []} // FIX: Pass empty array if no sections
+            <SectionList
+              sections={courseData.sections || []} 
               isEditable
               courseId={courseData.id}
             />

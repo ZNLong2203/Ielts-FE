@@ -18,6 +18,7 @@ export const API_URL = {
   ADMIN_BLOG_CATEGORY: "/blogs/admin/category",
   COUPON: "/coupons",
   SECTIONS: "/sections",
+  EXERCISES: "/exercises",
   LESSONS: "/lessons",
   ORDERS: "/orders",
   WRITING: "/writing",

@@ -1,3 +1,5 @@
+import { IExercise } from "./exercise";
+
 export interface ILesson {
   id: string;
   title: string;
@@ -9,6 +11,7 @@ export interface ILesson {
   video_url?: string;
   document_url?: string;
   hlsUrl?: string;
+  exercises?: IExercise[];
 }
 
 export interface ILessonCreate {
