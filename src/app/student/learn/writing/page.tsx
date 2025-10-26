@@ -1,15 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { gradeWritingByGemini, GradeWritingDto, WritingGradeResponse } from '@/api/writing';
+import { 
+  gradeWritingByGemini, 
+  saveWritingAssessment,
+  GradeWritingDto, 
+  WritingGradeResponse,
+  SaveWritingAssessmentDto 
+} from '@/api/writing';
 import { Loader2, FileText, CheckCircle, AlertCircle, Lightbulb, PenTool, TrendingUp, Award, MessageSquare } from 'lucide-react';
 
 export default function WritingPage() {
+  const router = useRouter();
   const [formData, setFormData] = useState<GradeWritingDto>({
     studentAnswer: '',
     question: '',
@@ -43,10 +51,56 @@ export default function WritingPage() {
         suggestions: response.suggestions || [],
         strengths: response.strengths || [],
         weaknesses: response.weaknesses || [],
+        detailedMetrics: response.detailedMetrics || undefined,
+        upgradedEssay: response.upgradedEssay || undefined,
+        sampleAnswer: response.sampleAnswer || undefined,
       };
       
       console.log('Safe response:', safeResponse);
       setResult(safeResponse);
+      
+      // Save result to localStorage with task info
+      const resultWithTaskInfo = {
+        ...safeResponse,
+        taskType: formData.taskType,
+        question: formData.question,
+        studentAnswer: formData.studentAnswer,
+        wordLimit: formData.wordLimit,
+        additionalInstructions: formData.additionalInstructions,
+      };
+      
+      localStorage.setItem('writingResult', JSON.stringify(resultWithTaskInfo));
+      router.push('/student/learn/writing/results');
+      
+      // Save result to database in background (non-blocking)
+      try {
+        const saveData: SaveWritingAssessmentDto = {
+          taskType: formData.taskType,
+          question: formData.question,
+          studentAnswer: formData.studentAnswer,
+          wordLimit: formData.wordLimit,
+          additionalInstructions: formData.additionalInstructions,
+          overallScore: safeResponse.overallScore,
+          taskAchievementScore: safeResponse.taskAchievement,
+          coherenceCohesionScore: safeResponse.coherenceCohesion,
+          lexicalResourceScore: safeResponse.lexicalResource,
+          grammaticalRangeAccuracyScore: safeResponse.grammaticalRangeAccuracy,
+          detailedFeedback: safeResponse.detailedFeedback,
+          suggestions: safeResponse.suggestions,
+          strengths: safeResponse.strengths,
+          weaknesses: safeResponse.weaknesses,
+          detailedMetrics: safeResponse.detailedMetrics,
+          upgradedEssay: safeResponse.upgradedEssay,
+          sampleAnswer: safeResponse.sampleAnswer,
+        };
+
+        // Fire and forget - don't block UI
+        saveWritingAssessment(saveData).catch(err => {
+          console.error('Error saving assessment to database (background):', err);
+        });
+      } catch (saveError) {
+        console.error('Error preparing assessment data:', saveError);
+      }
     } catch (err) {
       console.error('Error in handleSubmit:', err);
       setError(err instanceof Error ? err.message : 'An error occurred while grading the writing');
