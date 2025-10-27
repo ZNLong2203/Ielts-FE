@@ -96,9 +96,20 @@ const LandingNavbar = () => {
                 )}
               </button>
 
-              <a href="/" className="md:max-lg:order-1">
-                <div className="mr-0 rounded-[140px] px-3 py-2.5 max-md:bg-[rgba(5,6,15,0.17)] md:mr-5 md:px-0 md:py-2.5 lg:mr-1 lg:px-5 lg:py-3">
-                  {/* SVG logo giữ nguyên */}
+              <a href="/" className="md:max-lg:order-1 flex items-center gap-2">
+                <div className="mr-0 rounded-[140px] px-3 py-2.5 max-md:bg-[rgba(5,6,15,0.17)] md:mr-5 md:px-0 md:py-2.5 lg:mr-1 lg:px-5 lg:py-3 flex items-center gap-2">
+                  <img
+                    src="/icons/logo.png" 
+                    alt="TLL Logo" 
+                    className="h-8 w-8 object-contain"
+                  />
+                  <span className="font-bold text-xl text-white">TLL</span>
+                </div>
+              </a>
+
+              <a href="/" className="md:max-lg:order-1" style={{display: 'none'}}>
+                <div style={{display: 'none'}}>
+                  {/* SVG logo đã thay thế */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="85"

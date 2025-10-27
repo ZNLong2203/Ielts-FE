@@ -22,4 +22,5 @@ export const API_URL = {
   LESSONS: "/lessons",
   ORDERS: "/orders",
   WRITING: "/writing",
+  SPEAKING: "/speaking",
 };
