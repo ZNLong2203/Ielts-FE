@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getPublicBlogBySlug, getPublicPublishedBlogs } from "@/api/blog";
-import { getBlogComments, createBlogComment, createReplyInComment } from "@/api/blogComment";
+import { getBlogComments, createBlogComment, createReplyInComment, likeComment } from "@/api/blogComment";
 import { formatDistanceToNow } from "date-fns";
 import toast from "react-hot-toast";
 
@@ -95,9 +95,19 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     },
   });
 
-  const handleLike = () => {
+  const handleLikeBlog = () => {
     setIsLiked(!isLiked);
-    // TODO: Call like API
+    // TODO: Call like API for blog
+  };
+
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      await likeComment(params.slug, commentId);
+      queryClient.invalidateQueries({ queryKey: ["blog-comments", params.slug] });
+    } catch (error) {
+      console.error("Error liking comment:", error);
+      toast.error("Failed to like comment");
+    }
   };
 
   const handleBookmark = () => {
@@ -394,7 +404,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleLike}
+                    onClick={handleLikeBlog}
                     className={`${isLiked ? "text-red-600 border-red-600" : ""}`}
                   >
                     <Heart className={`h-4 w-4 mr-2 ${isLiked ? "fill-current" : ""}`} />
@@ -506,17 +516,17 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                       <div className="flex gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage 
-                            src={comment.author?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} 
-                            alt={comment.author?.name || "User"}
+                            src={comment.user?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} 
+                            alt={comment.user?.full_name || "User"}
                           />
                           <AvatarFallback>
-                            {comment.author?.name?.split(" ").map((n: string) => n[0]).join("") || "U"}
+                            {comment.user?.full_name?.split(" ").map((n: string) => n[0]).join("") || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="font-medium text-gray-900">
-                              {comment.author?.name || "Anonymous"}
+                              {comment.user?.full_name || "Anonymous"}
                             </span>
                             <span className="text-sm text-gray-500">
                               {formatDate(comment.created_at)}
@@ -524,7 +534,12 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                           </div>
                           <p className="text-gray-700 mb-3">{comment.content}</p>
                           <div className="flex items-center gap-3 text-sm">
-                            <Button variant="ghost" size="sm" className="h-auto p-0">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-auto p-0"
+                              onClick={() => handleLikeComment(comment.id)}
+                            >
                               <ThumbsUp className="h-3 w-3 mr-1" />
                               {comment.like_count || 0}
                             </Button>
@@ -575,17 +590,17 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                                 <div key={reply.id} className="flex gap-3">
                                   <Avatar className="h-8 w-8">
                                     <AvatarImage 
-                                      src={reply.author?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} 
-                                      alt={reply.author?.name || "User"}
+                                      src={reply.user?.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI2Y5ZmFmYiIvPgogIDxjaXJjbGUgY3g9IjIwIiBjeT0iMTUiIHI9IjUiIGZpbGw9IiM5Y2EzYWYiLz4KICA8cGF0aCBkPSJNMTAgMzBjMC01LjUgNC41LTEwIDEwLTEwczEwIDQuNSAxMCAxMCIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4="} 
+                                      alt={reply.user?.full_name || "User"}
                                     />
                                     <AvatarFallback>
-                                      {reply.author?.name?.split(" ").map((n: string) => n[0]).join("") || "U"}
+                                      {reply.user?.full_name?.split(" ").map((n: string) => n[0]).join("") || "U"}
                                     </AvatarFallback>
                                   </Avatar>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className="font-medium text-gray-900 text-sm">
-                                        {reply.author?.name || "Anonymous"}
+                                        {reply.user?.full_name || "Anonymous"}
                                       </span>
                                       <span className="text-xs text-gray-500">
                                         {formatDate(reply.created_at)}

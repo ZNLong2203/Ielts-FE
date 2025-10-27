@@ -223,6 +223,11 @@ const LandingNavbar = () => {
                     </div>
                   </div>
                 </NavbarTitle>
+
+                <NavbarLink
+                  text="Blog"
+                  href="/blogs"
+                />
               </div>
             </div>
 
@@ -426,6 +431,12 @@ const LandingNavbar = () => {
               className="block py-2 text-white/70 hover:text-white"
             >
               Test Practice
+            </a>
+            <a
+              href="/blogs"
+              className="block py-2 text-white/70 hover:text-white"
+            >
+              Blog
             </a>
 
             {/* Mobile User Menu */}

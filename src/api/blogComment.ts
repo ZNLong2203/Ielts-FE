@@ -36,3 +36,9 @@ export const deleteBlogComment = async (blogId: string, commentId: string) => {
   console.log("Delete blog comment response:", response);
   return response.data;
 };
+
+export const likeComment = async (blogId: string, commentId: string) => {
+  const response = await api.post(`${BASE_URL}/blog-comments/${blogId}/comments/${commentId}/like`);
+  console.log("Like comment response:", response);
+  return response.data;
+};
