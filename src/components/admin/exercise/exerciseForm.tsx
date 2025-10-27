@@ -34,7 +34,11 @@ import {
   BookOpen,
 } from "lucide-react";
 
-import { IExercise, IExerciseCreate, IExerciseUpdate } from "@/interface/exercise";
+import {
+  IExercise,
+  IExerciseCreate,
+  IExerciseUpdate,
+} from "@/interface/exercise";
 import { createExercise, updateExercise } from "@/api/exercise";
 import { ExerciseFormSchema } from "@/validation/exercise";
 
@@ -65,7 +69,9 @@ const ExerciseForm = ({
   // Get next available ordering number
   function getNextOrdering() {
     if (existingExercises.length === 0) return 1;
-    const maxOrdering = Math.max(...existingExercises.map((ex) => ex.ordering || 0));
+    const maxOrdering = Math.max(
+      ...existingExercises.map((ex) => ex.ordering || 0)
+    );
     return maxOrdering + 1;
   }
 
@@ -106,29 +112,10 @@ const ExerciseForm = ({
     },
     onSuccess: () => {
       toast.success("Exercise created successfully! 🎯");
-      
-      // Invalidate all related queries để update ngay lập tức
-      const invalidatePromises = [
-        // Exercise-specific queries
-        queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] }),
-        queryClient.invalidateQueries({ queryKey: ["exercises"] }),
-        
-        // Lesson queries (lesson chứa exercises)
-        queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] }),
-        queryClient.invalidateQueries({ queryKey: ["lessons"] }),
-        
-        // Section queries nếu có sectionId
-        sectionId && queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] }),
-        sectionId && queryClient.invalidateQueries({ queryKey: ["section", sectionId] }),
-        
-        // Refetch specific lesson để get updated exercises
-        queryClient.refetchQueries({ queryKey: ["lesson", lessonId] }),
-      ].filter(Boolean);
-
-      // Execute all invalidations
-      Promise.all(invalidatePromises).then(() => {
-        console.log("✅ All queries invalidated successfully");
-      });
+      queryClient.invalidateQueries({
+        queryKey: ["lesson", sectionId, lessonId],
+      }),
+        queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
 
       onSuccess?.();
       form.reset();
@@ -159,31 +146,10 @@ const ExerciseForm = ({
     },
     onSuccess: () => {
       toast.success("Exercise updated successfully! ✨");
-      
-      // Invalidate all related queries để update ngay lập tức
-      const invalidatePromises = [
-        // Exercise-specific queries
-        queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] }),
-        queryClient.invalidateQueries({ queryKey: ["exercises"] }),
-        queryClient.invalidateQueries({ queryKey: ["exercise", exercise?.id] }),
-        
-        // Lesson queries (lesson chứa exercises)
-        queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] }),
-        queryClient.invalidateQueries({ queryKey: ["lessons"] }),
-        
-        // Section queries nếu có sectionId
-        sectionId && queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] }),
-        sectionId && queryClient.invalidateQueries({ queryKey: ["section", sectionId] }),
-        
-        // Refetch specific lesson để get updated exercises
-        queryClient.refetchQueries({ queryKey: ["lesson", lessonId] }),
-      ].filter(Boolean);
-
-      // Execute all invalidations
-      Promise.all(invalidatePromises).then(() => {
-        console.log("✅ All queries invalidated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["lesson", sectionId, lessonId],
       });
-
+      queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
       onSuccess?.();
     },
     onError: (error: Error) => {
@@ -196,12 +162,10 @@ const ExerciseForm = ({
   const onSubmit = async (data: ExerciseFormData) => {
     try {
       console.log("📝 Form submission:", { isEditing, data });
-      
+
       if (isEditing) {
-        console.log("🔄 Updating exercise:", exercise?.id);
         updateExerciseMutation.mutate(data);
       } else {
-        console.log("➕ Creating new exercise for lesson:", lessonId);
         createExerciseMutation.mutate(data);
       }
     } catch (error) {
@@ -212,7 +176,8 @@ const ExerciseForm = ({
   // Move ordering up/down
   const adjustOrdering = (direction: "up" | "down") => {
     const currentOrdering = form.getValues("ordering");
-    const newOrdering = direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
+    const newOrdering =
+      direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
 
     if (newOrdering >= 1) {
       form.setValue("ordering", newOrdering);
@@ -223,10 +188,11 @@ const ExerciseForm = ({
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const isLoading = createExerciseMutation.isPending || updateExerciseMutation.isPending;
+  const isLoading =
+    createExerciseMutation.isPending || updateExerciseMutation.isPending;
 
   return (
     <Card className={className}>
@@ -390,7 +356,9 @@ const ExerciseForm = ({
                             type="number"
                             min={30}
                             {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 300)}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value) || 300)
+                            }
                             className="focus:ring-2 focus:ring-blue-500"
                           />
                           {field.value && (
@@ -417,7 +385,9 @@ const ExerciseForm = ({
                           min={1}
                           max={10}
                           {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 3)}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value) || 3)
+                          }
                           className="focus:ring-2 focus:ring-blue-500"
                         />
                       </FormControl>
@@ -461,7 +431,9 @@ const ExerciseForm = ({
                             type="number"
                             min={1}
                             {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value) || 1)
+                            }
                             className="w-20 focus:ring-2 focus:ring-blue-500"
                           />
                         </FormControl>
@@ -501,7 +473,11 @@ const ExerciseForm = ({
                   <FormItem className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="flex items-center space-x-2">
-                        <CheckCircle2 className={`h-4 w-4 ${field.value ? 'text-green-600' : 'text-gray-400'}`} />
+                        <CheckCircle2
+                          className={`h-4 w-4 ${
+                            field.value ? "text-green-600" : "text-gray-400"
+                          }`}
+                        />
                         <span>Active Exercise</span>
                       </FormLabel>
                       <div className="text-sm text-gray-600">
@@ -509,7 +485,10 @@ const ExerciseForm = ({
                       </div>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}

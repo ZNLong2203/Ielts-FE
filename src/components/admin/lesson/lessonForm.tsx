@@ -45,18 +45,8 @@ import {
 import { ILesson, ILessonCreate, ILessonUpdate } from "@/interface/lesson";
 import { createLesson, updateLesson } from "@/api/lesson";
 import VideoUploadSection from "@/components/form/video-upload-field";
-
-// Validation Schema
-const LessonFormSchema = z.object({
-  title: z.string().min(1, "Title is required").max(255, "Title too long"),
-  description: z.string().min(1, "Description is required"),
-  lesson_type: z.enum(["video", "document", "quiz", "assignment"], {
-    required_error: "Please select a lesson type",
-  }),
-  is_preview: z.boolean(),
-  ordering: z.number().min(1, "Order must be at least 1"),
-  document_url: z.string().optional(),
-});
+import { LessonFormSchema } from "@/validation/lesson";
+import { LESSON_TYPES } from "@/constants/lesson";
 
 type LessonFormData = z.infer<typeof LessonFormSchema>;
 
@@ -69,13 +59,6 @@ interface LessonFormProps {
   onCancel?: () => void;
   className?: string;
 }
-
-const LESSON_TYPES = [
-  { value: "video", label: "Video", icon: Video },
-  { value: "document", label: "Document", icon: FileText },
-  { value: "quiz", label: "Quiz", icon: BookOpen },
-  { value: "assignment", label: "Assignment", icon: FileText },
-];
 
 const LessonForm = ({
   sectionId,
@@ -135,8 +118,8 @@ const LessonForm = ({
       toast.success("Lesson created successfully");
       setSavedLessonId(response.data?.id || response.id);
       queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
-      queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+      queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson?.id] });
+
 
       // Don't close form immediately for video lessons to allow upload
       if (selectedLessonType !== "video") {
@@ -166,8 +149,7 @@ const LessonForm = ({
     onSuccess: () => {
       toast.success("Lesson updated successfully");
       queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
-      queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+      queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson?.id] });
       onSuccess?.();
     },
     onError: (error: Error) => {

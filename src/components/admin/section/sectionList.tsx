@@ -32,7 +32,7 @@ import {
   RotateCcw,
   ArrowLeft,
   Target,
-  Play
+  Play,
 } from "lucide-react";
 
 import { ISection } from "@/interface/section";
@@ -231,11 +231,15 @@ const SectionList = ({
 
   // Handle manage lessons for section
   const handleManageLessons = (section: ISection) => {
+    queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
+    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
     setManagingLessonsForSection(section);
   };
 
   // Handle back from lesson management
   const handleBackFromLessonManagement = () => {
+    queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
+    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
     setManagingLessonsForSection(null);
   };
 
@@ -363,12 +367,6 @@ const SectionList = ({
     }
   };
 
-  const getTotalLessons = () => {
-    return sections.reduce(
-      (total, section) => total + (section.lessons?.length || 0),
-      0
-    );
-  };
   return (
     <>
       <Card className={className}>

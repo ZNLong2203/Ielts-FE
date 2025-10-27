@@ -106,10 +106,8 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
     mutationFn: (exerciseId: string) => deleteExercise(lesson.id, exerciseId),
     onSuccess: () => {
       toast.success("Exercise deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["lessons", lesson.id] });
-      if (sectionId) {
-        queryClient.invalidateQueries({ queryKey: ["section", sectionId] });
-      }
+      queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson.id] });
+   
       setDeletingExercise(null);
     },
     onError: (error: Error) => {
@@ -122,10 +120,8 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
     setShowForm(false);
     setEditingExercise(null);
     // Invalidate lesson data để update exercises
-    queryClient.invalidateQueries({ queryKey: ["lessons", lesson.id] });
-    if (sectionId) {
-      queryClient.invalidateQueries({ queryKey: ["sections", sectionId] });
-    }
+    queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson.id] });
+   
   };
 
   const handleFormCancel = () => {
