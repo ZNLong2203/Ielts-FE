@@ -9,7 +9,7 @@ import {
   ClipboardList, 
   Award, 
   Calendar, 
-  Settings,
+  // Settings,
   X,
   User,
 } from "lucide-react"
@@ -21,10 +21,10 @@ import LandingNavbar from "@/components/navbar"
 const navigation = [
   { name: "Dashboard", href: "/student/dashboard", icon: Home },
   { name: "My Courses", href: "/student/dashboard/my-courses", icon: BookOpen },
-  { name: "My Quizzes", href: "/student/quizzes", icon: ClipboardList },
-  { name: "Certificates", href: "/student/certificates", icon: Award },
-  { name: "Schedule", href: "/student/schedule", icon: Calendar },
-  { name: "Settings", href: "/student/settings", icon: Settings },
+  { name: "My Quizzes", href: "/student/dashboard/my-quizzes", icon: ClipboardList },
+  { name: "Certificates", href: "/student/dashboard/certificates", icon: Award },
+  { name: "Schedule", href: "/student/dashboard/schedule", icon: Calendar },
+  // { name: "Settings", href: "/student/dashboard/settings", icon: Settings },
 ]
 
 export default function StudentLayout({

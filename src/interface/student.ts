@@ -96,3 +96,13 @@ export interface IEnrolledCourse {
     completed_lessons: number;
     is_completed: boolean;
 }
+
+export interface ICertificate {
+    id: string;
+    title: string;
+    description: string;
+    certificate_url: string;
+    issued_at: Date;
+    progress: number;
+    thumbnail?: string;
+}

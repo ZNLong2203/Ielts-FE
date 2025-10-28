@@ -185,7 +185,7 @@ export default function BlogsPage() {
                       <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
                         {blog.title}
                       </h3>
-                      <p className="text-gray-600 mb-4 line-clamp-3">
+                      <p className="text-gray-600 mb-4 line-clamp-1">
                         {blog.content?.replace(/<[^>]*>/g, '').substring(0, 200) || 'No content available'}
                       </p>
 

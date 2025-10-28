@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Logout } from "@/api/auth";
+import Link from "next/link";
 
 const LandingNavbar = () => {
   const router = useRouter();
@@ -160,12 +161,12 @@ const LandingNavbar = () => {
 
               {/* Navigation Menu - giữ nguyên */}
               <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
-                <a
-                  href="/"
+                <Link
+                  href={ROUTES.HOME}
                   className="rounded-[32px] px-5 py-3 text-xs tracking-[0.06px] hover:text-white lg:max-2xl:px-3 2xl:text-sm 2xl:tracking-[0.07px] pointer-events-none bg-black bg-opacity-[0.24] text-white hover:cursor-default"
                 >
                   Home
-                </a>
+                </Link>
 
                 <NavbarTitle text="Courses">
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
@@ -173,30 +174,6 @@ const LandingNavbar = () => {
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
                         <NavbarLink text="IELTS" href="/#learning-path" />
-                        <NavbarLink text="TOEIC" href="/#learning-path" />
-                        <NavbarLink text="TOEFL" href="/#learning-path" />
-                      </div>
-                    </div>
-                  </div>
-                </NavbarTitle>
-
-                <NavbarTitle text="Placement Test">
-                  <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
-                    <div className="h-3 w-full"></div>
-                    <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
-                      <div className="flex flex-col">
-                        <NavbarLink
-                          text="IELTS Placement"
-                          href="/placement/ielts"
-                        />
-                        <NavbarLink
-                          text="TOEIC Placement"
-                          href="/placement/toeic"
-                        />
-                        <NavbarLink
-                          text="TOEFL Placement"
-                          href="/placement/toefl"
-                        />
                       </div>
                     </div>
                   </div>
@@ -211,13 +188,19 @@ const LandingNavbar = () => {
                           text="Practice IELTS"
                           href="/practice/ielts"
                         />
+                      </div>
+                    </div>
+                  </div>
+                </NavbarTitle>
+
+                <NavbarTitle text="Placement Test">
+                  <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
+                    <div className="h-3 w-full"></div>
+                    <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
+                      <div className="flex flex-col">
                         <NavbarLink
-                          text="Practice TOEIC"
-                          href="/practice/toeic"
-                        />
-                        <NavbarLink
-                          text="Practice TOEFL"
-                          href="/practice/toefl"
+                          text="IELTS Placement"
+                          href="/placement/ielts"
                         />
                       </div>
                     </div>
@@ -421,15 +404,15 @@ const LandingNavbar = () => {
               Courses
             </a>
             <a
+              href="/practice"
+              className="block py-2 text-white/70 hover:text-white"
+            >
+            <a
               href="/placement"
               className="block py-2 text-white/70 hover:text-white"
             >
               Placement Test
             </a>
-            <a
-              href="/practice"
-              className="block py-2 text-white/70 hover:text-white"
-            >
               Test Practice
             </a>
             <a
