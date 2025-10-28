@@ -89,6 +89,7 @@ export const gradeWritingByGemini = async (data: GradeWritingDto): Promise<Writi
 };
 
 export interface SaveWritingAssessmentDto {
+  exerciseId?: string;
   taskType: 'task_1' | 'task_2';
   question: string;
   studentAnswer: string;
@@ -103,7 +104,7 @@ export interface SaveWritingAssessmentDto {
   suggestions?: string[];
   strengths?: string[];
   weaknesses?: string[];
-  detailedMetrics?: any;
+  detailedMetrics?: unknown;
   upgradedEssay?: string;
   sampleAnswer?: string;
   aiModel?: string;
@@ -112,6 +113,7 @@ export interface SaveWritingAssessmentDto {
 export interface WritingAssessmentResponse {
   id: string;
   userId: string;
+  exerciseId?: string;
   taskType: string;
   question: string;
   studentAnswer: string;
@@ -126,7 +128,7 @@ export interface WritingAssessmentResponse {
   suggestions?: string[];
   strengths?: string[];
   weaknesses?: string[];
-  detailedMetrics?: any;
+  detailedMetrics?: unknown;
   upgradedEssay?: string;
   sampleAnswer?: string;
   aiModel?: string;
@@ -141,8 +143,13 @@ export const saveWritingAssessment = async (data: SaveWritingAssessmentDto): Pro
   return response.data.data;
 };
 
-export const getMyWritingAssessments = async (): Promise<WritingAssessmentResponse[]> => {
-  const response = await api.get(`${BASE_URL}${API_URL.WRITING}/my-assessments`);
+export const getMyWritingAssessments = async (exerciseId?: string, taskType?: string): Promise<WritingAssessmentResponse[]> => {
+  const params = new URLSearchParams();
+  if (exerciseId) params.append('exerciseId', exerciseId);
+  if (taskType) params.append('taskType', taskType);
+  
+  const url = `${BASE_URL}${API_URL.WRITING}/my-assessments${params.toString() ? '?' + params.toString() : ''}`;
+  const response = await api.get(url);
   return response.data.data;
 };
 
