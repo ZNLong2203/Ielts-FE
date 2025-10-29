@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,35 +17,39 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import {
-  Target,
-  Plus,
-  Clock,
-} from "lucide-react";
+import { Target, Plus, Clock } from "lucide-react";
 
-import { ILesson } from "@/interface/lesson";
 import { IExercise } from "@/interface/exercise";
-import { deleteExercise } from "@/api/exercise";
+import { deleteExercise, getExercisesByLessonId } from "@/api/exercise";
 import ExerciseForm from "./exerciseForm";
 import ExerciseItem from "./exerciseItem";
 
 interface ExerciseListProps {
-  lesson: ILesson;
+  lessonId: string;
   sectionId?: string;
 }
 
-const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
+const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
   const [showForm, setShowForm] = useState(false);
-  const [editingExercise, setEditingExercise] = useState<IExercise | null>(null);
-  const [deletingExercise, setDeletingExercise] = useState<IExercise | null>(null);
-  
-  const queryClient = useQueryClient();
+  const [editingExercise, setEditingExercise] = useState<IExercise | null>(
+    null
+  );
+  const [deletingExercise, setDeletingExercise] = useState<IExercise | null>(
+    null
+  );
 
-  // Get exercises from lesson data and filter out deleted ones
-  const exercises = lesson?.exercises || [];
-  
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["exercises", lessonId],
+    queryFn: () => getExercisesByLessonId(lessonId),
+  });
+
+  const exercises = Array.isArray(data) ? data : [];
+  console.log("Lesson ID:", lessonId);
+  console.log("Exercises fetched:", exercises);
+
   // Filter out deleted exercises
-  const activeExercises = exercises.filter(exercise => exercise.deleted == false);
+  const activeExercises = exercises.filter((exercise) => !exercise.deleted);
 
   // Sort exercises by ordering
   const sortedExercises = [...activeExercises].sort((a, b) => {
@@ -57,15 +61,19 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
   // Enhanced duration formatting
   const formatDuration = (seconds: number) => {
     if (!seconds || isNaN(seconds) || seconds <= 0) return "0:00";
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    
+
     if (hours > 0) {
-      return `${hours}h ${minutes}m${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ''}`;
+      return `${hours}h ${minutes}m${
+        remainingSeconds > 0 ? ` ${remainingSeconds}s` : ""
+      }`;
     } else if (minutes > 0) {
-      return `${minutes}m${remainingSeconds > 0 ? ` ${remainingSeconds}s` : ''}`;
+      return `${minutes}m${
+        remainingSeconds > 0 ? ` ${remainingSeconds}s` : ""
+      }`;
     } else {
       return `${remainingSeconds}s`;
     }
@@ -74,13 +82,13 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
   // Calculate total time - giống lessonList
   const formatDurationVietnamese = (seconds: number) => {
     if (!seconds || isNaN(seconds) || seconds <= 0) return "0 s";
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    
+
     const parts = [];
-    
+
     if (hours > 0) {
       parts.push(`${hours} h`);
     }
@@ -90,8 +98,8 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
     if (remainingSeconds > 0 || parts.length === 0) {
       parts.push(`${remainingSeconds} s`);
     }
-    
-    return parts.join(' ');
+
+    return parts.join(" ");
   };
 
   const getTotalTime = () => {
@@ -103,11 +111,14 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
 
   // Delete exercise mutation
   const deleteExerciseMutation = useMutation({
-    mutationFn: (exerciseId: string) => deleteExercise(lesson.id, exerciseId),
+    mutationFn: (exerciseId: string) => deleteExercise(lessonId, exerciseId),
     onSuccess: () => {
       toast.success("Exercise deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson.id] });
-   
+      queryClient.invalidateQueries({
+        queryKey: ["lesson", sectionId, lessonId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
+
       setDeletingExercise(null);
     },
     onError: (error: Error) => {
@@ -120,8 +131,9 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
     setShowForm(false);
     setEditingExercise(null);
     // Invalidate lesson data để update exercises
-    queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson.id] });
-   
+    queryClient.invalidateQueries({
+      queryKey: ["lesson", sectionId, lessonId],
+    });
   };
 
   const handleFormCancel = () => {
@@ -154,7 +166,7 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
             <Badge variant="outline" className="ml-2">
               {sortedExercises.length} exercises
             </Badge>
-            {sortedExercises.some(ex => ex.time_limit > 0) && (
+            {sortedExercises.some((ex) => ex.time_limit > 0) && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
                 <Clock className="h-3 w-3 mr-1" />
                 {getTotalTime()}
@@ -210,7 +222,7 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
         <div className="mt-6">
           <Separator className="mb-6" />
           <ExerciseForm
-            lessonId={lesson.id}
+            lessonId={lessonId}
             sectionId={sectionId}
             exercise={editingExercise}
             existingExercises={sortedExercises}
@@ -247,5 +259,5 @@ const ExerciseList = ({ lesson, sectionId = "" }: ExerciseListProps) => {
       </AlertDialog>
     </>
   );
-}; 
+};
 export default ExerciseList;

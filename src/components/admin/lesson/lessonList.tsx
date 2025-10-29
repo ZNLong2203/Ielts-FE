@@ -161,6 +161,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
   };
 
   const handleBackFromExerciseManagement = () => {
+    queryClient.invalidateQueries({ queryKey: ["lessons", section.id] });
     setManagingExercisesForLesson(null);
   };
 
@@ -321,7 +322,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
 
         {/* Exercise list component */}
         <ExerciseList 
-          lesson={managingExercisesForLesson} 
+          lessonId={managingExercisesForLesson.id}
           sectionId={section.id} 
         />
       </div>

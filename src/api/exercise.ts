@@ -9,10 +9,19 @@ import { API_URL } from "@/constants/api"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
+// Get all exercises for a specific lesson
+export const getExercisesByLessonId = async (lessonId: string): Promise<IExercise[]> => {
+    const response = await api.get(
+        `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}`
+    )
+    return response.data.data.data
+}
+
+
 // Get a exercise for a specific lesson
 export const getExerciseByLessonId = async (
     lessonId: string, exerciseId: string
-): Promise<IExercises> => {
+): Promise<IExercise> => {
     const response = await api.get(
         `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}/${exerciseId}`
     )

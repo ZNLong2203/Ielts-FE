@@ -116,6 +116,7 @@ const ExerciseForm = ({
         queryKey: ["lesson", sectionId, lessonId],
       }),
         queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
 
       onSuccess?.();
       form.reset();
@@ -149,7 +150,7 @@ const ExerciseForm = ({
       queryClient.invalidateQueries({
         queryKey: ["lesson", sectionId, lessonId],
       });
-      queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
       onSuccess?.();
     },
     onError: (error: Error) => {

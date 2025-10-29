@@ -44,14 +44,3 @@ export interface IExerciseUpdate {
   ordering?: number;
   is_active?: boolean;
 }
-
-export interface IExercises {
-  result: IExercise[];
-  meta: {
-    current: number;
-    currentSize: number;
-    total: number;
-    pageSize: number;
-    pages: number;
-  };
-}
