@@ -139,6 +139,98 @@ export default function SpeakingResultsPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Pronunciation Analysis */}
+          {result.pronunciationAnalysis && (
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="flex items-center gap-2 text-purple-700">
+                  <Award className="h-5 w-5" />
+                  Pronunciation Analysis
+                </CardTitle>
+                <CardDescription>
+                  Detailed pronunciation and stress pattern analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                {/* Pronunciation Score */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-700">Pronunciation Score</span>
+                    <Badge className="bg-purple-600 text-white font-bold text-lg px-3 py-1">
+                      {result.pronunciationAnalysis.pronunciationScore}/100
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 mt-2">
+                    <div
+                      className={`h-3 rounded-full ${result.pronunciationAnalysis.pronunciationScore >= 80 ? 'bg-green-500' : result.pronunciationAnalysis.pronunciationScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                      style={{ width: `${result.pronunciationAnalysis.pronunciationScore}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="text-xs text-gray-500 mb-1">Speech Rate</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {result.pronunciationAnalysis.metrics.speechRate} WPM
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">Words per minute</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="text-xs text-gray-500 mb-1">Pauses</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {result.pronunciationAnalysis.metrics.pauseCount}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">Estimated</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="text-xs text-gray-500 mb-1">Stress Match</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {result.pronunciationAnalysis.metrics.stressPatternMatch}%
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">Pattern accuracy</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="text-xs text-gray-500 mb-1">Avg Word Length</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {result.pronunciationAnalysis.metrics.averageWordLength}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">Phonemes</div>
+                  </div>
+                </div>
+
+                {/* Stress Feedback */}
+                {result.pronunciationAnalysis.stressFeedback.length > 0 && (
+                  <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                    <div className="flex items-center gap-2 mb-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
+                      <h4 className="font-semibold text-amber-900">Stress Pattern Feedback</h4>
+                    </div>
+                    <ul className="space-y-2">
+                      {result.pronunciationAnalysis.stressFeedback.map((feedback, index) => (
+                        <li key={index} className="text-sm text-amber-800 flex items-start gap-2">
+                          <span className="text-amber-600 mt-1">•</span>
+                          <span>{feedback}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Detailed Pronunciation Feedback */}
+                {result.pronunciationAnalysis.detailedFeedback && (
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-3">Detailed Pronunciation Analysis</h4>
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {result.pronunciationAnalysis.detailedFeedback}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}

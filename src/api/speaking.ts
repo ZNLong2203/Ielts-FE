@@ -35,10 +35,30 @@ export interface SpeakingGradeResponse {
   weaknesses?: string[];
 }
 
+export interface PronunciationAnalysis {
+  transcription: string;
+  words: Array<{
+    word: string;
+    expectedStress: number[];
+    phonemes: string[];
+    syllableCount: number;
+  }>;
+  metrics: {
+    speechRate: number;
+    pauseCount: number;
+    averageWordLength: number;
+    stressPatternMatch: number;
+  };
+  stressFeedback: string[];
+  pronunciationScore: number;
+  detailedFeedback: string;
+}
+
 export interface TranscribeAndGradeResponse {
   audioUrl: string;
   transcription: string;
   grading: SpeakingGradeResponse;
+  pronunciationAnalysis?: PronunciationAnalysis;
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -48,7 +68,7 @@ export const gradeSpeakingByGemini = async (data: GradeSpeakingDto): Promise<Spe
   return response.data.data;
 };
 
-export const uploadAndTranscribe = async (audioFile: File): Promise<{uploadResult: any; transcription: string}> => {
+export const uploadAndTranscribe = async (audioFile: File): Promise<{uploadResult: {url: string; key: string}; transcription: string}> => {
   const formData = new FormData();
   formData.append('file', audioFile);
   
