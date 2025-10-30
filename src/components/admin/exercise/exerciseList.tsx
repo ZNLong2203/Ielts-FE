@@ -45,8 +45,6 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
   });
 
   const exercises = Array.isArray(data) ? data : [];
-  console.log("Lesson ID:", lessonId);
-  console.log("Exercises fetched:", exercises);
 
   // Filter out deleted exercises
   const activeExercises = exercises.filter((exercise) => !exercise.deleted);
@@ -58,28 +56,6 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
     return orderA - orderB;
   });
 
-  // Enhanced duration formatting
-  const formatDuration = (seconds: number) => {
-    if (!seconds || isNaN(seconds) || seconds <= 0) return "0:00";
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m${
-        remainingSeconds > 0 ? ` ${remainingSeconds}s` : ""
-      }`;
-    } else if (minutes > 0) {
-      return `${minutes}m${
-        remainingSeconds > 0 ? ` ${remainingSeconds}s` : ""
-      }`;
-    } else {
-      return `${remainingSeconds}s`;
-    }
-  };
-
-  // Calculate total time - giống lessonList
   const formatDurationVietnamese = (seconds: number) => {
     if (!seconds || isNaN(seconds) || seconds <= 0) return "0 s";
 
@@ -205,11 +181,11 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
               {sortedExercises.map((exercise, exerciseIndex) => (
                 <ExerciseItem
                   key={exercise.id}
+                  lessonId={lessonId}
                   exercise={exercise}
                   exerciseIndex={exerciseIndex}
                   handleEditExercise={handleEditExercise}
                   handleDeleteExercise={handleDeleteExercise}
-                  formatDuration={formatDuration}
                 />
               ))}
             </div>

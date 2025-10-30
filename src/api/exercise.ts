@@ -2,7 +2,6 @@ import api from "@/utils/interceptor"
 import {
     IExercise,
     IExerciseCreate,
-    IExercises,
     IExerciseUpdate,
 } from "@/interface/exercise"
 import { API_URL } from "@/constants/api"
@@ -17,7 +16,6 @@ export const getExercisesByLessonId = async (lessonId: string): Promise<IExercis
     return response.data.data.data
 }
 
-
 // Get a exercise for a specific lesson
 export const getExerciseByLessonId = async (
     lessonId: string, exerciseId: string
@@ -25,7 +23,7 @@ export const getExerciseByLessonId = async (
     const response = await api.get(
         `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}/${exerciseId}`
     )
-    return response.data.data
+    return response.data.data.data
 }
 
 // Create a new exercise

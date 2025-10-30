@@ -1,4 +1,4 @@
-
+import { ICourseQuestion } from "./courseQuestion";
 
 export interface IExercise {
   id: string;
@@ -16,6 +16,7 @@ export interface IExercise {
   passing_score: string;
   ordering: number;
   is_active: boolean;
+  questions: ICourseQuestion[];
 }
 
 export interface IExerciseCreate {
