@@ -52,16 +52,18 @@ export default function CertificatesPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl Beirut-bold text-gray-900">My Certificates</h1>
+      {/* Header */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h1 className="text-3xl font-bold text-gray-900">My Certificates</h1>
         <p className="text-gray-600 mt-2">View your learning achievements</p>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4">
             <div className="bg-blue-100 rounded-full p-3">
-              <Award className="w-6 h-6 text-blue- mêmes" />
+              <Award className="w-6 h-6 text-blue-600" />
             </div>
             <div>
               <div className="text-2xl font-bold text-gray-900">{earnedCerts.length}</div>
@@ -70,7 +72,7 @@ export default function CertificatesPage() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4">
             <div className="bg-purple-100 rounded-full p-3">
               <BookOpen className="w-6 h-6 text-purple-600" />
@@ -82,7 +84,7 @@ export default function CertificatesPage() {
           </div>
         </div>
         
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-4">
             <div className="bg-emerald-100 rounded-full p-3">
               <TrendingUp className="w-6 h-6 text-emerald-600" />
@@ -99,7 +101,8 @@ export default function CertificatesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      {/* Filter Buttons */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex gap-4">
           <button
             onClick={() => setFilter('all')}
@@ -124,7 +127,7 @@ export default function CertificatesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCerts.map((cert) => (
-          <div key={cert.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={cert.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all shadow-sm">
             {cert.thumbnail && (
               <div className="relative h-48 w-full">
                 <Image src={cert.thumbnail} alt={cert.title} fill className="object-cover" />
@@ -181,7 +184,7 @@ export default function CertificatesPage() {
       </div>
 
       {filteredCerts.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200 shadow-sm">
           <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No certificates yet</h3>
           <p className="text-gray-600">Complete your learning paths to earn certificates</p>

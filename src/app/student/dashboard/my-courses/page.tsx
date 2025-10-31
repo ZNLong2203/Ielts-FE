@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
-import { Search, Grid3X3, List, Clock, Users, Play, CheckCircle } from "lucide-react"
+import { Search, Grid3X3, List, Clock, Users, Play, CheckCircle, BookOpen, TrendingUp } from "lucide-react"
 import { getStudentComboEnrollments } from "@/api/student"
 import { IComboEnrollment } from "@/interface/student"
 import { selectUserId } from "@/redux/features/user/userSlice"
@@ -119,15 +119,55 @@ export default function MyCoursesPage() {
   const getSkillColor = (skill: string | undefined) => {
     switch (skill?.toLowerCase()) {
       case "listening":
-        return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" }
+        return { 
+          bg: "bg-blue-50", 
+          text: "text-blue-700", 
+          border: "border-blue-300",
+          iconBg: "bg-blue-100",
+          iconColor: "text-blue-600",
+          progressColor: "bg-blue-500",
+          buttonColor: "bg-blue-600 hover:bg-blue-700"
+        }
       case "reading":
-        return { bg: "bg-green-50", text: "text-green-700", border: "border-green-200" }
+        return { 
+          bg: "bg-emerald-50", 
+          text: "text-emerald-700", 
+          border: "border-emerald-300",
+          iconBg: "bg-emerald-100",
+          iconColor: "text-emerald-600",
+          progressColor: "bg-emerald-500",
+          buttonColor: "bg-emerald-600 hover:bg-emerald-700"
+        }
       case "writing":
-        return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" }
+        return { 
+          bg: "bg-purple-50", 
+          text: "text-purple-700", 
+          border: "border-purple-300",
+          iconBg: "bg-purple-100",
+          iconColor: "text-purple-600",
+          progressColor: "bg-purple-500",
+          buttonColor: "bg-purple-600 hover:bg-purple-700"
+        }
       case "speaking":
-        return { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200" }
+        return { 
+          bg: "bg-orange-50", 
+          text: "text-orange-700", 
+          border: "border-orange-300",
+          iconBg: "bg-orange-100",
+          iconColor: "text-orange-600",
+          progressColor: "bg-orange-500",
+          buttonColor: "bg-orange-600 hover:bg-orange-700"
+        }
       default:
-        return { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" }
+        return { 
+          bg: "bg-gray-50", 
+          text: "text-gray-700", 
+          border: "border-gray-300",
+          iconBg: "bg-gray-100",
+          iconColor: "text-gray-600",
+          progressColor: "bg-gray-500",
+          buttonColor: "bg-gray-600 hover:bg-gray-700"
+        }
     }
   }
 
@@ -164,33 +204,70 @@ export default function MyCoursesPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Courses</h1>
-        <p className="text-gray-600 mt-2">Access and continue your individual course purchases</p>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-blue-100 rounded-lg p-2">
+                <BookOpen className="w-6 h-6 text-blue-600" />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">My Courses</h1>
+            </div>
+            <p className="text-gray-600 mt-2 ml-11">Access and continue your individual course purchases</p>
+          </div>
+        </div>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-          <div className="text-sm text-gray-600">Total Courses</div>
+        <div className="bg-white rounded-xl border-l-4 border-l-blue-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</div>
+              <div className="text-sm font-medium text-gray-600">Total Courses</div>
+            </div>
+            <div className="bg-blue-100 rounded-xl p-4">
+              <BookOpen className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border border-emerald-200 p-6 bg-emerald-50">
-          <div className="text-2xl font-bold text-emerald-600">{stats.completed}</div>
-          <div className="text-sm text-gray-600">Completed</div>
+        <div className="bg-white rounded-xl border-l-4 border-l-emerald-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.completed}</div>
+              <div className="text-sm font-medium text-gray-600">Completed</div>
+            </div>
+            <div className="bg-emerald-100 rounded-xl p-4">
+              <CheckCircle className="w-8 h-8 text-emerald-600" />
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border border-blue-200 p-6 bg-blue-50">
-          <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
-          <div className="text-sm text-gray-600">In Progress</div>
+        <div className="bg-white rounded-xl border-l-4 border-l-orange-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.inProgress}</div>
+              <div className="text-sm font-medium text-gray-600">In Progress</div>
+            </div>
+            <div className="bg-orange-100 rounded-xl p-4">
+              <Play className="w-8 h-8 text-orange-600" />
+            </div>
+          </div>
         </div>
-        <div className="rounded-lg border border-purple-200 p-6 bg-purple-50">
-          <div className="text-2xl font-bold text-purple-600">{stats.averageProgress}%</div>
-          <div className="text-sm text-gray-600">Average Progress</div>
+        <div className="bg-white rounded-xl border-l-4 border-l-purple-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.averageProgress}%</div>
+              <div className="text-sm font-medium text-gray-600">Average Progress</div>
+            </div>
+            <div className="bg-purple-100 rounded-xl p-4">
+              <TrendingUp className="w-8 h-8 text-purple-600" />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -256,9 +333,10 @@ export default function MyCoursesPage() {
             return (
               <div
                 key={course.id}
-                className={`bg-white rounded-lg border ${skillColors.border} overflow-hidden hover:shadow-lg transition-shadow duration-200`}
+                className={`bg-white rounded-xl border-2 ${skillColors.border} overflow-hidden hover:shadow-xl transition-all duration-300 shadow-md group`}
               >
                 <div className="relative">
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-5 transition-opacity z-10"></div>
                   <Image
                     src={course.thumbnail || "/placeholder.svg"}
                     alt={course.title}
@@ -266,76 +344,91 @@ export default function MyCoursesPage() {
                     height={200}
                     className="w-full h-48 object-cover"
                   />
-                  <div className="absolute top-4 left-4">
+                  <div className="absolute top-4 left-4 z-20">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${skillColors.bg} ${skillColors.text}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${skillColors.bg} ${skillColors.text} shadow-sm border ${skillColors.border}`}
                     >
                       {course.skill_focus || "General"}
                     </span>
                   </div>
-                  <div className="absolute top-4 right-4">
+                  <div className="absolute top-4 right-4 z-20">
                     {isCompleted ? (
-                      <CheckCircle className="w-6 h-6 text-emerald-600 bg-white rounded-full" />
+                      <div className="bg-emerald-500 text-white rounded-full p-2 shadow-lg">
+                        <CheckCircle className="w-5 h-5" />
+                      </div>
                     ) : (
-                      <Play className="w-6 h-6 text-white bg-black bg-opacity-50 rounded-full p-1" />
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                        <Play className="w-5 h-5 text-blue-600" />
+                      </div>
                     )}
                   </div>
+                  {progress > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200/50">
+                      <div
+                        className={`h-full ${skillColors.progressColor} transition-all duration-500`}
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-gray-900 text-lg line-clamp-2">
+                    <h3 className="font-bold text-gray-900 text-lg line-clamp-2 flex-1">
                       {course.title}
                     </h3>
                   </div>
 
-                  <p className="text-gray-600 text-sm mb-2">by {course.teacher || "Unknown"}</p>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>
-                        {course.completed_lessons} of {course.total_lessons} lessons
-                      </span>
-                      <span>{progress}%</span>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium">{course.estimated_duration || 0}h</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full ${isCompleted ? "bg-emerald-500" : "bg-blue-500"} transition-all duration-300`}
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {course.estimated_duration || 0}h
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {course.enrollment_count?.toLocaleString() || 0}
-                      </div>
+                    <span className="text-gray-300">•</span>
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span>{course.enrollment_count?.toLocaleString() || 0} students</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
+                  <p className="text-gray-500 text-sm mb-4">by {course.teacher || "Unknown"}</p>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600 font-medium">
+                        {course.completed_lessons} of {course.total_lessons} lessons
+                      </span>
+                      <span className={`font-bold ${isCompleted ? "text-emerald-600" : skillColors.text}`}>
+                        {progress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className={`h-full ${isCompleted ? "bg-emerald-500" : skillColors.progressColor} transition-all duration-500 rounded-full`}
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="text-xs text-gray-500">
-                        <div>Enrolled: {new Date(course.enrollment_date).toLocaleDateString()}</div>
+                        <div className="font-medium">Enrolled: {new Date(course.enrollment_date).toLocaleDateString()}</div>
                         <div className="text-gray-400 mt-1">From: {course.comboName}</div>
                       </div>
-                      <button
-                        onClick={() => handleCourseClick(course.id)}
-                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                          progress === 0
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : isCompleted
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                              : "bg-gray-900 text-white hover:bg-gray-800"
-                        }`}
-                      >
-                        {progress === 0 ? "Start" : isCompleted ? "Review" : "Continue"}
-                      </button>
                     </div>
+                    <button
+                      onClick={() => handleCourseClick(course.id)}
+                      className={`w-full px-4 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md ${
+                        progress === 0
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : isCompleted
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : `${skillColors.buttonColor} text-white`
+                      }`}
+                    >
+                      {progress === 0 ? "Start Learning" : isCompleted ? "Review Course" : "Continue Learning"}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -352,79 +445,90 @@ export default function MyCoursesPage() {
             return (
               <div
                 key={course.id}
-                className={`bg-white rounded-lg border ${skillColors.border} p-6 hover:shadow-md transition-shadow duration-200`}
+                className={`bg-white rounded-xl border-2 ${skillColors.border} p-6 hover:shadow-lg transition-all duration-300 shadow-md group`}
               >
                 <div className="flex items-center gap-6">
                   <div className="relative flex-shrink-0">
                     <Image
                       src={course.thumbnail || "/placeholder.svg"}
                       alt={course.title}
-                      width={96}
-                      height={96}
-                      className="w-24 h-24 object-cover rounded-lg"
+                      width={120}
+                      height={120}
+                      className="w-28 h-28 object-cover rounded-xl shadow-sm"
                     />
-                    <div className="absolute -top-2 -right-2">
+                    <div className="absolute -top-2 -right-2 z-10">
                       {isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-emerald-600 bg-white rounded-full" />
+                        <div className="bg-emerald-500 text-white rounded-full p-2 shadow-lg">
+                          <CheckCircle className="w-5 h-5" />
+                        </div>
                       ) : (
-                        <Play className="w-6 h-6 text-blue-600 bg-blue-50 rounded-full p-1" />
+                        <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
+                          <Play className="w-5 h-5 text-blue-600" />
+                        </div>
                       )}
                     </div>
                   </div>
 
                   <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-xl">{course.title}</h3>
-                        <p className="text-gray-600 text-sm">by {course.teacher || "Unknown"}</p>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900 text-xl mb-1">{course.title}</h3>
+                        <p className="text-gray-500 text-sm">by {course.teacher || "Unknown"}</p>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <div className="ml-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${skillColors.bg} ${skillColors.text}`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${skillColors.bg} ${skillColors.text} shadow-sm border ${skillColors.border}`}
                         >
                           {course.skill_focus || "General"}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600 mb-4">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
                       <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {course.estimated_duration || 0}h
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium">{course.estimated_duration || 0}h</span>
                       </div>
+                      <span className="text-gray-300">•</span>
                       <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {course.enrollment_count?.toLocaleString() || 0}
+                        <Users className="w-4 h-4 text-gray-400" />
+                        <span>{course.enrollment_count?.toLocaleString() || 0} students</span>
                       </div>
-                      <div>
+                      <span className="text-gray-300">•</span>
+                      <div className="text-gray-600">
                         {course.completed_lessons} of {course.total_lessons} lessons
                       </div>
-                      <div>Enrolled: {new Date(course.enrollment_date).toLocaleDateString()}</div>
-                      <div className="text-gray-400">From: {course.comboName}</div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 mr-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>Progress</span>
-                          <span>{progress}%</span>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center text-sm mb-2">
+                          <span className="text-gray-600 font-medium">Progress</span>
+                          <span className={`font-bold ${isCompleted ? "text-emerald-600" : skillColors.text}`}>
+                            {progress}%
+                          </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
                           <div
-                            className={`h-2 rounded-full ${isCompleted ? "bg-emerald-500" : "bg-blue-500"} transition-all duration-300`}
+                            className={`h-full ${isCompleted ? "bg-emerald-500" : skillColors.progressColor} transition-all duration-500 rounded-full`}
                             style={{ width: `${progress}%` }}
                           />
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          <span>Enrolled: {new Date(course.enrollment_date).toLocaleDateString()}</span>
+                          <span>•</span>
+                          <span>From: {course.comboName}</span>
                         </div>
                       </div>
 
                       <button
                         onClick={() => handleCourseClick(course.id)}
-                        className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                        className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow-md whitespace-nowrap ${
                           progress === 0
                             ? "bg-blue-600 text-white hover:bg-blue-700"
                             : isCompleted
                               ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                              : "bg-gray-900 text-white hover:bg-gray-800"
+                              : `${skillColors.buttonColor} text-white`
                         }`}
                       >
                         {progress === 0 ? "Start" : isCompleted ? "Review" : "Continue"}
@@ -440,12 +544,12 @@ export default function MyCoursesPage() {
 
       {/* Empty State */}
       {filteredCourses.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search className="w-8 h-8 text-gray-400" />
+        <div className="text-center py-16 bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="w-10 h-10 text-blue-600" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
-          <p className="text-gray-600">Try adjusting your search or filter criteria</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No courses found</h3>
+          <p className="text-gray-600 max-w-md mx-auto">Try adjusting your search or filter criteria to find what you&apos;re looking for</p>
         </div>
       )}
     </div>
