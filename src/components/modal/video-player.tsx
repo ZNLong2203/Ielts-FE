@@ -119,7 +119,7 @@ const HlsVideoPlayer = ({
     const initializeHlsPlayer = () => {
       // Check if browser supports HLS natively (Safari)
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        console.log("🍎 Using native HLS support (Safari)");
+        console.log(" Using native HLS support (Safari)");
         video.src = hlsUrl;
         setIsLoading(false);
         return;
@@ -127,7 +127,7 @@ const HlsVideoPlayer = ({
 
       // Use HLS.js for other browsers
       if (typeof window !== 'undefined' && window.Hls && window.Hls.isSupported()) {
-        console.log("🔧 Initializing HLS.js player");
+        console.log(" Initializing HLS.js player");
         
         // Destroy existing instance
         if (hlsRef.current) {
@@ -149,7 +149,7 @@ const HlsVideoPlayer = ({
 
         // Event listeners
         hls.on(window.Hls.Events.MANIFEST_PARSED, (event: any, data: any) => {
-          console.log("✅ HLS manifest loaded, found levels:", data.levels.length);
+          console.log(" HLS manifest loaded, found levels:", data.levels.length);
           setQualityLevels(data.levels);
           setIsLoading(false);
           
@@ -159,12 +159,12 @@ const HlsVideoPlayer = ({
         });
 
         hls.on(window.Hls.Events.LEVEL_SWITCHED, (event: any, data: any) => {
-          console.log("📊 Quality switched to level:", data.level);
+          console.log(" Quality switched to level:", data.level);
           setCurrentQuality(data.level);
         });
 
         hls.on(window.Hls.Events.ERROR, (event: any, data: any) => {
-          console.error("❌ HLS Error:", data);
+          console.error(" HLS Error:", data);
           
           if (data.fatal) {
             switch (data.type) {
@@ -196,7 +196,7 @@ const HlsVideoPlayer = ({
           hls.destroy();
         };
       } else {
-        console.error("❌ HLS not supported in this browser");
+        console.error(" HLS not supported in this browser");
         setError("HLS streaming not supported in this browser. Please use a modern browser.");
         setIsLoading(false);
       }

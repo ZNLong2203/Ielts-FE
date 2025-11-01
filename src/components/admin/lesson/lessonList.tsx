@@ -173,7 +173,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
         ordering: index + 1,
       }));
       
-      console.log("💾 Sending lesson reorder data:", reorderData);
+      console.log(" Sending lesson reorder data:", reorderData);
       return reorderLesson(section.id!, reorderData);
     },
     onSuccess: () => {
@@ -186,7 +186,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
       }
     },
     onError: (error: any) => {
-      console.error("❌ Reorder error:", error);
+      console.error(" Reorder error:", error);
       toast.error(error?.message || "Failed to reorder lessons");
       // Revert to original order
       const sortedLessons = [...safeLessons].sort((a, b) => {
@@ -220,7 +220,7 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    console.log("🔄 Lesson Drag End - Active:", active.id, "Over:", over?.id);
+    console.log(" Lesson Drag End - Active:", active.id, "Over:", over?.id);
 
     if (active.id !== over?.id && over?.id) {
       setLocalLessons((items) => {

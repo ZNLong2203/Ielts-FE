@@ -123,6 +123,7 @@ const ExerciseForm = ({
     },
     onError: (error: Error) => {
       console.error("❌ Create exercise error:", error);
+      console.error(" Create exercise error:", error);
       toast.error(error?.message || "Failed to create exercise");
     },
   });
@@ -154,7 +155,7 @@ const ExerciseForm = ({
       onSuccess?.();
     },
     onError: (error: Error) => {
-      console.error("❌ Update exercise error:", error);
+      console.error(" Update exercise error:", error);
       toast.error(error?.message || "Failed to update exercise");
     },
   });
@@ -163,6 +164,7 @@ const ExerciseForm = ({
   const onSubmit = async (data: ExerciseFormData) => {
     try {
       console.log("📝 Form submission:", { isEditing, data });
+      console.log(" Form submission:", { isEditing, data });
 
       if (isEditing) {
         updateExerciseMutation.mutate(data);
@@ -170,7 +172,7 @@ const ExerciseForm = ({
         createExerciseMutation.mutate(data);
       }
     } catch (error) {
-      console.error("❌ Form submission error:", error);
+      console.error(" Form submission error:", error);
     }
   };
 

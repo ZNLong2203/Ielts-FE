@@ -60,7 +60,7 @@ const VideoUploadSection = ({
         throw new Error("Lesson must be created before uploading video");
       }
       
-      console.log("🎬 Starting video upload:", {
+      console.log(" Starting video upload:", {
         lessonId,
         sectionId,
         fileName: file.name,
@@ -75,7 +75,7 @@ const VideoUploadSection = ({
       setUploadProgress(0);
     },
     onSuccess: (data) => {
-      console.log("✅ Video upload successful:", data);
+      console.log(" Video upload successful:", data);
       
       const videoData: UploadedVideoData = {
         videoUrl: data.videoUrl || data.video_url,
@@ -93,7 +93,7 @@ const VideoUploadSection = ({
       onUploadSuccess?.(videoData);
     },
     onError: (error: any) => {
-      console.error("❌ Video upload error:", error);
+      console.error(" Video upload error:", error);
       
       const errorMessage = error?.message || error?.response?.data?.message || "Failed to upload video";
       setUploadError(errorMessage);
