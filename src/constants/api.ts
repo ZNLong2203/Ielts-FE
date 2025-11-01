@@ -24,4 +24,5 @@ export const API_URL = {
   WRITING: "/writing",
   SPEAKING: "/speaking",
   CERTIFICATES: "/certificates",
+  STUDY_SCHEDULE: "/study-schedule",
 };

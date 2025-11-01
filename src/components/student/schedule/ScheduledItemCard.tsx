@@ -22,12 +22,44 @@ export function ScheduledItemCard({
 
   // Check if title needs truncation (more than ~30 chars)
   const needsTruncation = course.title.length > 30
+  
+  // Check if this is a pending schedule
+  const isPending = (item as any).isPending || item.id.startsWith("pending-")
+  
+  // Format time display
+  const formatTime = (time?: string | Date) => {
+    if (!time) return ""
+    if (typeof time === 'string') {
+      // If it's already in HH:mm format, return as is
+      if (/^\d{2}:\d{2}$/.test(time)) return time
+      // If it's ISO string, parse it
+      if (time.includes('T')) {
+        try {
+          const date = new Date(time)
+          return date.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false 
+          })
+        } catch {
+          return time
+        }
+      }
+      return time
+    }
+    // If it's a Date object
+    return time.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    })
+  }
 
   return (
     <div
       className={`${course.color} text-white text-xs p-2.5 rounded-lg group hover:scale-[1.02] transition-all shadow-md hover:shadow-lg relative ${
         item.isCompleted ? "opacity-60 line-through" : ""
-      }`}
+      } ${isPending ? "opacity-75 border-2 border-dashed border-white/50" : ""}`}
       onMouseEnter={() => setShowFullTitle(true)}
       onMouseLeave={() => setShowFullTitle(false)}
     >
@@ -37,7 +69,12 @@ export function ScheduledItemCard({
             {course.title}
           </div>
           {item.time && (
-            <div className="text-[9px] opacity-90 mt-1 font-medium">{item.time}</div>
+            <div className="text-[9px] opacity-90 mt-1 font-medium">
+              {formatTime(item.time)}
+            </div>
+          )}
+          {isPending && (
+            <div className="text-[8px] opacity-75 mt-0.5 italic">Pending</div>
           )}
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1">
