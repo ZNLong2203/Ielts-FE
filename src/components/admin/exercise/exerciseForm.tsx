@@ -122,7 +122,6 @@ const ExerciseForm = ({
       form.reset();
     },
     onError: (error: Error) => {
-      console.error("❌ Create exercise error:", error);
       console.error(" Create exercise error:", error);
       toast.error(error?.message || "Failed to create exercise");
     },
@@ -163,7 +162,6 @@ const ExerciseForm = ({
   // Submit handler
   const onSubmit = async (data: ExerciseFormData) => {
     try {
-      console.log("📝 Form submission:", { isEditing, data });
       console.log(" Form submission:", { isEditing, data });
 
       if (isEditing) {
