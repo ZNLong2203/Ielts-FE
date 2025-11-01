@@ -3,14 +3,18 @@ export interface ICourseQuestionCreate {
     question_type: string;
     options: string[];
     correct_answer: string;
-    points: number;
+    points: string;
     order_index: number;
+    media_url: File
 }
 
 export interface ICourseQuestionUpdate {
     question_text?: string;
     question_type?: string;
-    points?: number;
+    points?: string;
+    options?: string[];
+    correct_answer?: string;
+    media_url?: File;
 }
 
 export interface ICourseQuestion {
@@ -20,6 +24,7 @@ export interface ICourseQuestion {
     question_type: string;
     image_url?: string;
     audio_url?: string;
+    explanation?: string;
     audio_duration?: number;
     deleted: boolean;
     difficulty_level: string;
@@ -28,7 +33,7 @@ export interface ICourseQuestion {
     question_group_id: string;
     question_options: string[];
     correct_answer: string;
-    points: number;
+    points: string;
     ordering: number;
     created_at: Date;
     updated_at: Date;
