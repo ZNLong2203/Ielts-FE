@@ -1,10 +1,12 @@
 export interface ICourseQuestionCreate {
     question_text: string;
     question_type: string;
-    options: string[];
+    options: ICourseQuestionOption[];
+    difficulty_level: number;
+    explanation: string;
     correct_answer: string;
     points: string;
-    order_index: number;
+    ordering: number;
     media_url: File
 }
 
@@ -12,8 +14,11 @@ export interface ICourseQuestionUpdate {
     question_text?: string;
     question_type?: string;
     points?: string;
-    options?: string[];
+    difficulty_level?: number;
+    explanation?: string;
+    options?: ICourseQuestionOption[];
     correct_answer?: string;
+    ordering?: number;
     media_url?: File;
 }
 
@@ -31,10 +36,20 @@ export interface ICourseQuestion {
     reading_passage: string;
     question_group: string;
     question_group_id: string;
-    question_options: string[];
+    question_options: ICourseQuestionOption[];
     correct_answer: string;
     points: string;
     ordering: number;
     created_at: Date;
     updated_at: Date;
+}
+
+export interface ICourseQuestionOption {
+    deleted?: boolean;
+    explanation?: string;
+    id?: string;
+    is_correct?: boolean;    
+    option_text?: string;
+    ordering?: number;
+    point?: string;
 }

@@ -280,15 +280,15 @@ const SectionList = ({
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Course Outline</span>
           </Button>
-          <div className="mb-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div className="p-6 bg-green-50 rounded-xl border border-green-200">
             <div className="flex items-center space-x-3 mb-2">
               <Play className="h-5 w-5 text-green-600" />
-              <h2 className="text-md font-semibold text-green-900">
+              <h2 className="text-md font-bold text-green-900">
                 Lesson Management
               </h2>
             </div>
             <div>
-              <p className="text-green-900 mb-1 text-sm">
+              <p className="text-green-900 mb-1 text-sm font-medium">
                 Section: {managingLessonsForSection.title}
               </p>
             </div>

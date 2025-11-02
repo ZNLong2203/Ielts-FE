@@ -35,7 +35,6 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
   const [editingExercise, setEditingExercise] = useState<IExercise | null>(null);
   const [deletingExercise, setDeletingExercise] = useState<IExercise | null>(null);
   
-  // UPDATED: State for managing questions with CourseQuestionList
   const [managingQuestionsForExercise, setManagingQuestionsForExercise] = useState<IExercise | null>(null);
 
   const queryClient = useQueryClient();
@@ -43,7 +42,6 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["exercises", lessonId],
     queryFn: () => getExercisesByLessonId(lessonId),
-    staleTime: 1 * 60 * 1000,
   });
 
   // Safely extract exercises array from response
@@ -99,7 +97,6 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
       return deleteExercise(lessonId, exerciseId);
     },
     onSuccess: () => {
-      console.log("✅ Exercise deleted successfully");
       toast.success("Exercise deleted successfully");
       
       // Enhanced invalidation
@@ -132,47 +129,32 @@ const ExerciseList = ({ lessonId, sectionId = "" }: ExerciseListProps) => {
   };
 
   const handleFormCancel = () => {
-    console.log("❌ Exercise form cancelled");
     setShowForm(false);
     setEditingExercise(null);
   };
 
   const handleEditExercise = (exercise: IExercise) => {
-    console.log("✏️ Editing exercise:", exercise.title);
     setEditingExercise(exercise);
     setShowForm(true);
   };
 
   const handleDeleteExercise = (exercise: IExercise) => {
-    console.log("🗑️ Requesting deletion of exercise:", exercise.title);
     setDeletingExercise(exercise);
   };
 
-  // UPDATED: CourseQuestion management handlers
   const handleManageQuestions = (exercise: IExercise) => {
-    console.log("🎯 Managing course questions for exercise:", exercise.title);
     
-    // Pre-fetch exercise data to ensure latest question data
     queryClient.prefetchQuery({
       queryKey: ["exercise", lessonId, exercise.id],
-      staleTime: 0, // Always fetch fresh data
     });
     
     setManagingQuestionsForExercise(exercise);
   };
 
   const handleBackFromQuestionManagement = () => {
-    console.log("🔙 Back from course question management - Refreshing data");
-    
-    // Force refresh to ensure latest question data reflects in exercise list
     queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
     queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
     queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lessonId] });
-    
-    if (sectionId) {
-      queryClient.invalidateQueries({ queryKey: ["sections", sectionId] });
-    }
-    
     setManagingQuestionsForExercise(null);
   };
 

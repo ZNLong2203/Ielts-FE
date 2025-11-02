@@ -5,7 +5,6 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  XCircle,
   HelpCircle,
   BarChart3,
   FileText,
@@ -43,9 +42,7 @@ const CourseQuestionItem = ({
 
           <h4 className="font-semibold text-gray-900">
             {question.question_text || `Question ${questionIndex + 1}`}
-          </h4>
-
-         
+          </h4>         
         </div>
 
         {/* Actions */}

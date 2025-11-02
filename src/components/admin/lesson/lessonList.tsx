@@ -302,10 +302,10 @@ const LessonList = ({ section, courseId = "" }: LessonListProps) => {
         </div>
 
         {/* Context header */}
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
           <div className="flex items-center space-x-3 mb-2">
-            <Target className="h-5 w-5 text-blue-600" />
-            <h2 className="text-md font-semibold text-blue-900">
+            <Target className="h-6 w-6 text-blue-600" />
+            <h2 className="text-md font-bold text-blue-900">
               Exercise Management
             </h2>
           </div>

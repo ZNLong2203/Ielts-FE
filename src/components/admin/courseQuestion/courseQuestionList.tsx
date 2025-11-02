@@ -6,6 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +25,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { HelpCircle, Plus, BarChart3, ArrowLeft } from "lucide-react";
-
 import {
-  ICourseQuestion,
-  ICourseQuestionUpdate,
-} from "@/interface/courseQuestion";
+  HelpCircle,
+  Plus,
+  BarChart3,
+  ArrowLeft,
+  Search,
+  Target,
+} from "lucide-react";
+
+import { ICourseQuestion } from "@/interface/courseQuestion";
 import { IExercise } from "@/interface/exercise";
 import { deleteCourseQuestion } from "@/api/courseQuestion";
 import CourseQuestionForm from "./courseQuestionForm";
@@ -36,6 +48,17 @@ interface QuestionListProps {
   onBack?: () => void;
 }
 
+type FilterType =
+  | "all"
+  | "multiple_choice"
+  | "single_choice"
+  | "true_false"
+  | "essay"
+  | "fill_blank"
+  | "listening"
+  | "reading";
+type SortType = "ordering" | "points" | "difficulty" | "type" | "created_at";
+
 const QuestionList = ({
   exercise,
   lessonId,
@@ -48,16 +71,22 @@ const QuestionList = ({
   const [deletingQuestion, setDeletingQuestion] =
     useState<ICourseQuestion | null>(null);
 
+  // Enhanced state management
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<FilterType>("all");
+  const [sortBy, setSortBy] = useState<SortType>("ordering");
+
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["exercise", lessonId, exercise.id],
     queryFn: () => getExerciseByLessonId(lessonId, exercise.id),
+    refetchOnWindowFocus: false,
   });
 
-  console.log("Questions API Response:", data);
+  console.log("📊 Questions API Response:", data);
 
-  // Safely extract questions array from response
+  // Enhanced data processing
   const getQuestionsArray = (): ICourseQuestion[] => {
     if (!data) return [];
 
@@ -70,30 +99,101 @@ const QuestionList = ({
 
   const questions = getQuestionsArray();
 
-  // Sort questions by ordering
-  const sortedQuestions = [...questions].sort((a, b) => {
-    const orderA = a.ordering ?? 999;
-    const orderB = b.ordering ?? 999;
-    return orderA - orderB;
-  });
+  // Enhanced filtering and sorting
+  const getFilteredAndSortedQuestions = () => {
+    let filtered = questions;
 
-  // Calculate total points
-  const getTotalPoints = () => {
-    return sortedQuestions.reduce((total, question) => {
-      return total + (Number(question.points) || 0);
-    }, 0);
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (q) =>
+          q.question_text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          q.explanation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          q.question_group?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply type filter
+    if (filterType !== "all") {
+      filtered = filtered.filter((q) => q.question_type === filterType);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "ordering":
+          return (a.ordering ?? 999) - (b.ordering ?? 999);
+        case "points":
+          return Number(b.points || 0) - Number(a.points || 0);
+        case "difficulty":
+          const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
+          return (
+            (difficultyOrder[
+              a.difficulty_level as keyof typeof difficultyOrder
+            ] || 2) -
+            (difficultyOrder[
+              b.difficulty_level as keyof typeof difficultyOrder
+            ] || 2)
+          );
+        case "type":
+          return (a.question_type || "").localeCompare(b.question_type || "");
+        case "created_at":
+          return (
+            new Date(b.created_at || 0).getTime() -
+            new Date(a.created_at || 0).getTime()
+          );
+        default:
+          return (a.ordering ?? 999) - (b.ordering ?? 999);
+      }
+    });
+
+    return filtered;
   };
 
+  const sortedQuestions = getFilteredAndSortedQuestions();
+
+  // Enhanced statistics
+  const getStatistics = () => {
+    const totalPoints = questions.reduce(
+      (total, q) => total + (Number(q.points) || 0),
+      0
+    );
+    const avgPoints =
+      questions.length > 0 ? (totalPoints / questions.length).toFixed(1) : "0";
+
+    const typeStats = questions.reduce((acc, q) => {
+      const type = q.question_type || "unknown";
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const difficultyStats = questions.reduce((acc, q) => {
+      const difficulty = q.difficulty_level || "medium";
+      acc[difficulty] = (acc[difficulty] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      total: questions.length,
+      totalPoints,
+      avgPoints,
+      typeStats,
+      difficultyStats,
+    };
+  };
+
+  const stats = getStatistics();
+
+  // Enhanced mutations
   const deleteQuestionMutation = useMutation({
     mutationFn: (questionId: string) => {
       return deleteCourseQuestion(lessonId, exercise.id, questionId);
     },
     onSuccess: () => {
-      toast.success("Question deleted successfully");
+      toast.success("Question deleted successfully! 🗑️");
       queryClient.invalidateQueries({
         queryKey: ["exercise", lessonId, exercise.id],
       });
-
       setDeletingQuestion(null);
     },
     onError: (error: Error) => {
@@ -101,18 +201,19 @@ const QuestionList = ({
     },
   });
 
-  // Form handlers
+  // Enhanced form handlers
   const handleFormSuccess = () => {
     console.log("📝 Question form success - refreshing data");
     setShowForm(false);
     setEditingQuestion(null);
 
-    // Enhanced invalidation
-    queryClient.invalidateQueries({ queryKey: ["exercise", lessonId, exercise.id] });
+    // Comprehensive invalidation
+    queryClient.invalidateQueries({
+      queryKey: ["exercise", lessonId, exercise.id],
+    });
   };
 
   const handleFormCancel = () => {
-    console.log("❌ Question form cancelled");
     setShowForm(false);
     setEditingQuestion(null);
   };
@@ -143,9 +244,14 @@ const QuestionList = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-500">Loading questions...</p>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-lg font-medium text-gray-600">
+              Loading questions...
+            </p>
+            <p className="text-sm text-gray-500">
+              Please wait while we fetch the data
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -154,7 +260,7 @@ const QuestionList = ({
 
   // Handle error state
   if (error) {
-    console.error("Error loading questions:", error);
+    console.error("❌ Error loading questions:", error);
     return (
       <Card>
         <CardHeader>
@@ -164,23 +270,26 @@ const QuestionList = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-red-500">
-            <p className="text-lg font-medium mb-2">Error loading questions</p>
-            <p className="text-sm mb-4">
+          <div className="text-center py-12">
+            <div className="bg-red-50 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <HelpCircle className="h-8 w-8 text-red-500" />
+            </div>
+            <p className="text-xl font-semibold text-red-600 mb-2">
+              Error loading questions
+            </p>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               {error instanceof Error
                 ? error.message
-                : "An unknown error occurred"}
+                : "An unexpected error occurred while loading the questions."}
             </p>
-            <Button
-              onClick={() =>
-                queryClient.invalidateQueries({
-                  queryKey: ["questions", exercise.id],
-                })
-              }
-              variant="outline"
-            >
-              Try Again
-            </Button>
+            <div className="flex items-center justify-center space-x-3">
+              <Button onClick={() => refetch()} variant="outline">
+                Try Again
+              </Button>
+              <Button onClick={() => window.location.reload()}>
+                Refresh Page
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -189,97 +298,213 @@ const QuestionList = ({
 
   return (
     <div className="space-y-6">
-      {/* Back navigation */}
+      {/* Enhanced Back Navigation */}
       {onBack && (
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={onBack}
-            className="flex items-center space-x-2 hover:bg-gray-100"
+            className="flex items-center space-x-2 hover:bg-gray-100 px-2"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to Exercises</span>
           </Button>
+
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+              <Target className="h-3 w-3 mr-1" />
+              {stats.total} Questions
+            </Badge>
+            <Badge variant="outline" className="bg-green-50 text-green-700">
+              <BarChart3 className="h-3 w-3 mr-1" />
+              {stats.totalPoints} Points
+            </Badge>
+          </div>
         </div>
       )}
 
-      {/* Context header */}
-      <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-        <div className="flex items-center space-x-3 mb-2">
-          <HelpCircle className="h-5 w-5 text-green-600" />
-          <h2 className="text-md font-semibold text-green-900">
+      {/* Enhanced Context Header */}
+      <div className="p-6 bg-gradient-to-r from-green-50 via-emerald-50 to-blue-50 rounded-xl border border-green-200 shadow-sm">
+        <div className="flex items-center space-x-3 mb-3">
+          <HelpCircle className="h-6 w-6 text-green-600" />
+          <h2 className="text-md font-bold text-green-900">
             Question Management
           </h2>
         </div>
-        <div className="text-sm text-green-700">
-          <p className="font-medium mb-1">Exercise: {exercise.title}</p>
+        <div className="space-y-1">
+          <p className="text-green-800 font-medium text-sm">
+            Exercise: {exercise.title}
+          </p>
         </div>
       </div>
 
-      {/* Questions Card */}
+      {/* Enhanced Toolbar */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center space-x-2">
-            <HelpCircle className="h-5 w-5 text-blue-600" />
-            <span>Questions</span>
-            <Badge variant="outline" className="ml-2">
-              {sortedQuestions.length} questions
-            </Badge>
+        <CardContent className="p-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            {/* Search and filters */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search questions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
 
-            {getTotalPoints() > 0 && (
-              <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                <BarChart3 className="h-3 w-3 mr-1" />
-                {getTotalPoints()} pts
+              <div className="flex items-center space-x-2">
+                <Select
+                  value={filterType}
+                  onValueChange={(value: FilterType) => setFilterType(value)}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="multiple_choice">
+                      Multiple Choice
+                    </SelectItem>
+                    <SelectItem value="single_choice">Single Choice</SelectItem>
+                    <SelectItem value="true_false">True/False</SelectItem>
+                    <SelectItem value="essay">Essay</SelectItem>
+                    <SelectItem value="fill_blank">Fill Blank</SelectItem>
+                    <SelectItem value="listening">Listening</SelectItem>
+                    <SelectItem value="reading">Reading</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={sortBy}
+                  onValueChange={(value: SortType) => setSortBy(value)}
+                >
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ordering">Order</SelectItem>
+                    <SelectItem value="points">Points</SelectItem>
+                    <SelectItem value="difficulty">Difficulty</SelectItem>
+                    <SelectItem value="type">Type</SelectItem>
+                    <SelectItem value="created_at">Created</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* View controls and actions */}
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={() => setShowForm(true)}
+                className="bg-green-600 hover:bg-green-700"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Question
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Questions Display */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <HelpCircle className="h-5 w-5 text-blue-600" />
+              <span>Questions</span>
+              <Badge variant="outline" className="ml-2">
+                {sortedQuestions.length} of {stats.total}
               </Badge>
+            </CardTitle>
+
+            {searchTerm && (
+              <Badge variant="secondary">Filtered: "{searchTerm}"</Badge>
             )}
-          </CardTitle>
-          <div className="flex items-center space-x-2">
-            <Button
-              onClick={() => setShowForm(true)}
-              variant="outline"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Question
-            </Button>
           </div>
         </CardHeader>
 
         <CardContent>
           {sortedQuestions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <HelpCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No questions yet</p>
-              <p className="text-sm">
-                Add your first question to this exercise
-              </p>
-              <Button
-                onClick={() => setShowForm(true)}
-                variant="outline"
-                className="mt-4"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Question
-              </Button>
+            <div className="text-center py-16">
+              {questions.length === 0 ? (
+                <>
+                  <div className="bg-gray-50 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <HelpCircle className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                    No questions yet
+                  </h3>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Get started by creating your first question for this
+                    exercise.
+                  </p>
+                  <Button
+                    onClick={() => setShowForm(true)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Question
+                  </Button>
+                </>
+              ) : (
+                // No questions match filter
+                <>
+                  <div className="bg-yellow-50 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                    <Search className="h-12 w-12 text-yellow-500" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                    No matching questions
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    No questions found matching your current filters. Try
+                    adjusting your search or filter criteria.
+                  </p>
+                  <div className="flex items-center justify-center space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setFilterType("all");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                    <Button
+                      onClick={() => setShowForm(true)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Question
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div>
               {sortedQuestions.map((question, questionIndex) => (
-                <CourseQuestionItem
+                <div
                   key={`${question.id}-${question.ordering || questionIndex}`}
-                  question={question}
-                  questionIndex={questionIndex}
-                  exerciseId={exercise.id}
-                  handleEditQuestion={handleEditQuestion}
-                  handleDeleteQuestion={handleDeleteQuestion}
-                />
+                >
+                  <CourseQuestionItem
+                    question={question}
+                    questionIndex={questionIndex}
+                    exerciseId={exercise.id}
+                    handleEditQuestion={handleEditQuestion}
+                    handleDeleteQuestion={handleDeleteQuestion}
+                  />
+                </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Question form modal/section */}
+      {/* Enhanced Question Form */}
       {showForm && (
         <div className="mt-6">
           <Separator className="mb-6" />
@@ -295,28 +520,53 @@ const QuestionList = ({
         </div>
       )}
 
-      {/* Delete confirmation dialog */}
+      {/* Enhanced Delete Confirmation */}
       <AlertDialog
         open={!!deletingQuestion}
         onOpenChange={() => setDeletingQuestion(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Question</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the question &ldquo;
-              {deletingQuestion?.question_text}&rdquo;? This action cannot be
-              undone.
+            <AlertDialogTitle className="flex items-center space-x-2">
+              <HelpCircle className="h-5 w-5 text-red-600" />
+              <span>Delete Question</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Are you sure you want to delete this question? This action
+                cannot be undone.
+              </p>
+              {deletingQuestion && (
+                <div className="p-3 bg-gray-50 rounded-lg border">
+                  <p className="font-medium text-sm text-gray-800">
+                    "{deletingQuestion.question_text}"
+                  </p>
+                  <div className="flex items-center space-x-4 mt-2 text-xs text-gray-600">
+                    <span>Type: {deletingQuestion.question_type}</span>
+                    <span>Points: {deletingQuestion.points}</span>
+                    <span>Order: {deletingQuestion.ordering}</span>
+                  </div>
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteQuestionMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-red-600 hover:bg-red-700"
               disabled={deleteQuestionMutation.isPending}
             >
-              {deleteQuestionMutation.isPending ? "Deleting..." : "Delete"}
+              {deleteQuestionMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Deleting...
+                </>
+              ) : (
+                "Delete Question"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

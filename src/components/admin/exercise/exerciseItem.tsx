@@ -108,7 +108,6 @@ const ExerciseItem = ({
             <Target className="h-4 w-4" />
           </div>
 
-          {/* Order badge - giống style */}
           <Badge
             variant="secondary"
             className="bg-blue-100 text-blue-800"
