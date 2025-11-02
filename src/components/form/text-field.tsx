@@ -30,6 +30,9 @@ interface TextFieldProps {
   required?: boolean;
   showPasswordToggle?: boolean;
   onValueChange?: (value: string) => void;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 const TextField = ({
@@ -43,6 +46,9 @@ const TextField = ({
   inputMode,
   showPasswordToggle = false,
   onValueChange,
+  min,
+  max,
+  step,
 }: TextFieldProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const actualType =
@@ -71,6 +77,9 @@ const TextField = ({
                 {...field}
                 value={field.value ?? ""}
                 required={required}
+                min={min}
+                max={max}
+                step={step}
                 onChange={(e) => {
                   let value: any = e.target.value;
 
@@ -78,11 +87,19 @@ const TextField = ({
                   if (type === "number") {
                     // Allow empty string for clearing the field
                     if (value === "") {
-                      value = 0; // or undefined depending on your schema
+                      value = undefined;
                     } else {
                       value = parseFloat(value);
                       if (isNaN(value)) {
-                        value = 0; // or handle as needed
+                        value = undefined;
+                      } else {
+                        // Enforce min/max constraints
+                        if (min !== undefined && value < min) {
+                          value = min;
+                        }
+                        if (max !== undefined && value > max) {
+                          value = max;
+                        }
                       }
                     }
                   }

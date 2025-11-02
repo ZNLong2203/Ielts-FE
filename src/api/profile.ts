@@ -1,6 +1,7 @@
 import api from "@/utils/interceptor";
 import { API_URL } from "@/constants/api";
 import { IUserUpdate } from "@/interface/user";
+import { IStudentUpdate } from "@/interface/student";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -11,12 +12,12 @@ export const updateProfile = async (id: string, data: IUserUpdate) => {
 };
 
 export const getProfile = async () => {
-  const response = await api.get(`${BASE_URL}${API_URL.PROFILE}/me`);
+  const response = await api.get(`${BASE_URL}${API_URL.OWN_PROFILE}`);
   console.log(response);
   return response;
 };
 
-export const updateOwnStudentProfile = async (data: IUserUpdate) => {
+export const updateOwnStudentProfile = async (data: IStudentUpdate) => {
   const response = await api.patch(
     `${BASE_URL}${API_URL.OWN_PROFILE}/student/me`,
     data
