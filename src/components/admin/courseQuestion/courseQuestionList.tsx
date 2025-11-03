@@ -511,7 +511,6 @@ const QuestionList = ({
           <CourseQuestionForm
             exerciseId={exercise.id}
             lessonId={lessonId}
-            sectionId={sectionId}
             question={editingQuestion}
             existingQuestions={sortedQuestions}
             onSuccess={handleFormSuccess}

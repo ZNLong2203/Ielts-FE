@@ -6,27 +6,11 @@ import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   Save,
@@ -35,12 +19,13 @@ import {
   FileText,
   ArrowUp,
   ArrowDown,
-  Video,
   Eye,
   EyeOff,
   BookOpen,
   CheckCircle2,
 } from "lucide-react";
+import TextField from "@/components/form/text-field";
+import SelectField from "@/components/form/select-field";
 
 import { ILesson, ILessonCreate, ILessonUpdate } from "@/interface/lesson";
 import { createLesson, updateLesson } from "@/api/lesson";
@@ -75,15 +60,19 @@ const LessonForm = ({
     lesson?.id || null
   );
 
+  // Helper function
+  const getNextOrdering = () => {
+    if (!existingLessons.length) return 1;
+    return Math.max(...existingLessons.map((l) => l.ordering || 0)) + 1;
+  };
+
   // Form setup
   const form = useForm<LessonFormData>({
     resolver: zodResolver(LessonFormSchema),
     defaultValues: {
       title: lesson?.title || "",
       description: lesson?.description || "",
-      lesson_type:
-        (lesson?.lesson_type as "video" | "document" | "quiz" | "assignment") ||
-        "video",
+      lesson_type: lesson?.lesson_type || "video",
       is_preview: lesson?.is_preview || false,
       ordering: lesson?.ordering || getNextOrdering(),
       document_url: lesson?.document_url || "",
@@ -92,14 +81,11 @@ const LessonForm = ({
 
   const selectedLessonType = form.watch("lesson_type");
 
-  // Get next available ordering number
-  function getNextOrdering() {
-    if (existingLessons.length === 0) return 1;
-    const maxOrdering = Math.max(
-      ...existingLessons.map((l) => l.ordering || 0)
-    );
-    return maxOrdering + 1;
-  }
+  const invalidateQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+    queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson?.id] });
+    queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
+  };
 
   // Create lesson mutation
   const createLessonMutation = useMutation({
@@ -115,11 +101,9 @@ const LessonForm = ({
       return createLesson(lessonData, sectionId);
     },
     onSuccess: (response) => {
-      toast.success("Lesson created successfully");
+      toast.success("Lesson created successfully! 📚");
       setSavedLessonId(response.data?.id || response.id);
-      queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson?.id] });
-
+      invalidateQueries();
 
       // Don't close form immediately for video lessons to allow upload
       if (selectedLessonType !== "video") {
@@ -147,9 +131,8 @@ const LessonForm = ({
       return updateLesson(updateData, lesson.id, sectionId);
     },
     onSuccess: () => {
-      toast.success("Lesson updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson?.id] });
+      toast.success("Lesson updated successfully! ✨");
+      invalidateQueries();
       onSuccess?.();
     },
     onError: (error: Error) => {
@@ -157,20 +140,15 @@ const LessonForm = ({
     },
   });
 
-  // Submit handler
+  // Event handlers
   const handleSubmit = async (data: LessonFormData) => {
-    try {
-      if (isEditing) {
-        updateLessonMutation.mutate(data);
-      } else {
-        createLessonMutation.mutate(data);
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
+    if (isEditing) {
+      updateLessonMutation.mutate(data);
+    } else {
+      createLessonMutation.mutate(data);
     }
   };
 
-  // Handle form submission programmatically
   const onSubmitClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -182,37 +160,25 @@ const LessonForm = ({
     }
   };
 
-  // Move ordering up/down
   const adjustOrdering = (direction: "up" | "down") => {
     const currentOrdering = form.getValues("ordering");
-    const newOrdering =
-      direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
-
+    const newOrdering = direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
     if (newOrdering >= 1) {
       form.setValue("ordering", newOrdering);
     }
   };
 
-  // Handle video upload success
   const handleVideoUploadSuccess = (videoData: any) => {
     console.log("Video uploaded successfully:", videoData);
-
-    // Invalidate queries to refresh lesson data
-    queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-    queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
-    queryClient.invalidateQueries({ queryKey: ["course", courseId] });
-
+    invalidateQueries();
     toast.success("Video is ready for streaming! 🎬");
   };
 
-  // Handle video upload error
   const handleVideoUploadError = (error: string) => {
     console.error("Video upload error:", error);
-    // Error is already shown by VideoUploadSection, just log it
   };
 
-  const isLoading =
-    createLessonMutation.isPending || updateLessonMutation.isPending;
+  const isLoading = createLessonMutation.isPending || updateLessonMutation.isPending;
 
   return (
     <Card className={className}>
@@ -246,163 +212,114 @@ const LessonForm = ({
           <div className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <FormField
+              <TextField
                 control={form.control}
                 name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <BookOpen className="h-4 w-4" />
-                      <span>Lesson Title</span>
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter lesson title..."
-                        {...field}
-                        className="focus:ring-2 focus:ring-green-500"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            onSubmitClick(e as unknown as React.MouseEvent);
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={
+                  <div className="flex items-center space-x-1">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Lesson Title</span>
+                    <span className="text-red-500">*</span>
+                  </div>
+                }
+                placeholder="Enter lesson title..."
+                required
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onSubmitClick(e as unknown as React.MouseEvent);
+                  }
+                }}
               />
 
-              <FormField
+              <TextField
                 control={form.control}
                 name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter lesson description..."
-                        rows={3}
-                        {...field}
-                        className="focus:ring-2 focus:ring-green-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={
+                  <div>
+                    Description <span className="text-red-500">*</span>
+                  </div>
+                }
+                placeholder="Enter lesson description..."
+                required
+                multiline
+                rows={3}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
+                <SelectField
                   control={form.control}
                   name="lesson_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lesson Type *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="focus:ring-2 focus:ring-green-500">
-                            <SelectValue placeholder="Select lesson type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {LESSON_TYPES.map((type) => {
-                            const Icon = type.icon;
-                            return (
-                              <SelectItem key={type.value} value={type.value}>
-                                <div className="flex items-center space-x-2">
-                                  <Icon className="h-4 w-4" />
-                                  <span>{type.label}</span>
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label={
+                    <div>
+                      Lesson Type <span className="text-red-500">*</span>
+                    </div>
+                  }
+                  placeholder="Select lesson type"
+                  options={LESSON_TYPES.map(type => ({
+                    value: type.value,
+                    label: type.label,
+                    icon: type.icon,
+                  }))}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="ordering"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lesson Order</FormLabel>
-                      <div className="flex items-center space-x-2">
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseInt(e.target.value) || 1)
-                            }
-                            className="w-24 focus:ring-2 focus:ring-green-500"
-                          />
-                        </FormControl>
-                        <div className="flex flex-col space-y-1">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustOrdering("up")}
-                            className="h-6 w-6 p-0"
-                            disabled={field.value <= 1}
-                          >
-                            <ArrowUp className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustOrdering("down")}
-                            className="h-6 w-6 p-0"
-                          >
-                            <ArrowDown className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Lesson Order</label>
+                  <div className="flex items-center space-x-2">
+                    <TextField
+                      control={form.control}
+                      name="ordering"
+                      label=""
+                      type="number"
+                      min={1}
+                      className="w-24"
+                    />
+                    <div className="flex flex-col space-y-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => adjustOrdering("up")}
+                        className="h-6 w-6 p-0"
+                        disabled={form.getValues("ordering") <= 1}
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => adjustOrdering("down")}
+                        className="h-6 w-6 p-0"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Preview Setting */}
-            <FormField
-              control={form.control}
-              name="is_preview"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="flex items-center space-x-2">
-                      {field.value ? (
-                        <Eye className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      )}
-                      <span>Preview Lesson</span>
-                    </FormLabel>
-                    <div className="text-sm text-gray-600">
-                      Allow users to preview this lesson without enrollment
-                    </div>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <div className="flex items-center space-x-2">
+                  {form.watch("is_preview") ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  )}
+                  <label className="text-sm font-semibold">Preview Lesson</label>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Allow users to preview this lesson without enrollment
+                </div>
+              </div>
+              <Switch
+                checked={form.watch("is_preview")}
+                onCheckedChange={(checked) => form.setValue("is_preview", checked)}
+              />
+            </div>
 
             {/* Content Section */}
             <div className="space-y-4">
@@ -415,25 +332,17 @@ const LessonForm = ({
                   onUploadError={handleVideoUploadError}
                 />
               ) : (
-                <FormField
+                <TextField
                   control={form.control}
                   name="document_url"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center space-x-1">
-                        <FileText className="h-4 w-4" />
-                        <span>Document URL</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://example.com/document.pdf"
-                          {...field}
-                          className="focus:ring-2 focus:ring-green-500"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  label={
+                    <div className="flex items-center space-x-1">
+                      <FileText className="h-4 w-4" />
+                      <span>Document URL</span>
+                    </div>
+                  }
+                  placeholder="https://example.com/document.pdf"
+                  type="url"
                 />
               )}
             </div>

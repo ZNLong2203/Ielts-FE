@@ -1,12 +1,8 @@
 // Question type options
   export const QUESTION_TYPES = [
     { value: "multiple_choice", label: "Multiple Choice" },
-    { value: "true_false", label: "True/False" },
     { value: "droplist", label: "Drop List" },
-    { value: "essay", label: "Essay" },
     { value: "fill_blank", label: "Fill in the Blank" },
-    { value: "matching", label: "Matching" },
-    { value: "speaking", label: "Speaking" },
   ];
 
   export const DIFFICULTY_LEVELS = [

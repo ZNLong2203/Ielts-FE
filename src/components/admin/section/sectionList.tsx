@@ -4,8 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
-// FIX: Import DnD kit properly
 import {
   DndContext,
   closestCenter,
@@ -31,7 +29,6 @@ import {
   Save,
   RotateCcw,
   ArrowLeft,
-  Target,
   Play,
 } from "lucide-react";
 

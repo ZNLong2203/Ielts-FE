@@ -6,16 +6,7 @@ import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +24,9 @@ import {
   Image,
   BookOpen,
 } from "lucide-react";
+
+// Import reusable components
+import TextField from "@/components/form/text-field";
 
 import {
   IExercise,
@@ -66,16 +60,13 @@ const ExerciseForm = ({
   const queryClient = useQueryClient();
   const isEditing = !!exercise;
 
-  // Get next available ordering number
-  function getNextOrdering() {
-    if (existingExercises.length === 0) return 1;
-    const maxOrdering = Math.max(
-      ...existingExercises.map((ex) => ex.ordering || 0)
-    );
-    return maxOrdering + 1;
-  }
+  // Helper function
+  const getNextOrdering = () => {
+    if (!existingExercises.length) return 1;
+    return Math.max(...existingExercises.map((ex) => ex.ordering || 0)) + 1;
+  };
 
-  // Form setup with actual interface structure
+  // Form setup
   const form = useForm<ExerciseFormData>({
     resolver: zodResolver(ExerciseFormSchema),
     defaultValues: {
@@ -84,7 +75,7 @@ const ExerciseForm = ({
       instruction: exercise?.instruction || "",
       content: exercise?.content.main_content || "",
       media_url: exercise?.media_url || "",
-      time_limit: exercise?.time_limit || 300, // 5 minutes default
+      time_limit: exercise?.time_limit || 300,
       max_attempts: exercise?.max_attempts || 3,
       passing_score: exercise?.passing_score || "",
       ordering: exercise?.ordering || getNextOrdering(),
@@ -92,7 +83,13 @@ const ExerciseForm = ({
     },
   });
 
-  // Create exercise mutation với comprehensive invalidation
+  const invalidateQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lessonId] });
+    queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+    queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
+  };
+
+  // Create exercise mutation
   const createExerciseMutation = useMutation({
     mutationFn: async (data: ExerciseFormData) => {
       const exerciseData: IExerciseCreate = {
@@ -112,22 +109,16 @@ const ExerciseForm = ({
     },
     onSuccess: () => {
       toast.success("Exercise created successfully! 🎯");
-      queryClient.invalidateQueries({
-        queryKey: ["lesson", sectionId, lessonId],
-      }),
-        queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
-
+      invalidateQueries();
       onSuccess?.();
       form.reset();
     },
     onError: (error: Error) => {
-      console.error(" Create exercise error:", error);
       toast.error(error?.message || "Failed to create exercise");
     },
   });
 
-  // Update exercise mutation với comprehensive invalidation
+  // Update exercise mutation
   const updateExerciseMutation = useMutation({
     mutationFn: async (data: ExerciseFormData) => {
       if (!exercise?.id) throw new Error("Exercise ID is required");
@@ -147,53 +138,38 @@ const ExerciseForm = ({
     },
     onSuccess: () => {
       toast.success("Exercise updated successfully! ✨");
-      queryClient.invalidateQueries({
-        queryKey: ["lesson", sectionId, lessonId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
+      invalidateQueries();
       onSuccess?.();
     },
     onError: (error: Error) => {
-      console.error(" Update exercise error:", error);
       toast.error(error?.message || "Failed to update exercise");
     },
   });
 
-  // Submit handler
+  // Event handlers
   const onSubmit = async (data: ExerciseFormData) => {
-    try {
-      console.log(" Form submission:", { isEditing, data });
-
-      if (isEditing) {
-        updateExerciseMutation.mutate(data);
-      } else {
-        createExerciseMutation.mutate(data);
-      }
-    } catch (error) {
-      console.error(" Form submission error:", error);
+    if (isEditing) {
+      updateExerciseMutation.mutate(data);
+    } else {
+      createExerciseMutation.mutate(data);
     }
   };
 
-  // Move ordering up/down
   const adjustOrdering = (direction: "up" | "down") => {
     const currentOrdering = form.getValues("ordering");
-    const newOrdering =
-      direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
-
+    const newOrdering = direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
     if (newOrdering >= 1) {
       form.setValue("ordering", newOrdering);
     }
   };
 
-  // Format time display
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const isLoading =
-    createExerciseMutation.isPending || updateExerciseMutation.isPending;
+  const isLoading = createExerciseMutation.isPending || updateExerciseMutation.isPending;
 
   return (
     <Card className={className}>
@@ -227,274 +203,244 @@ const ExerciseForm = ({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <FormField
+              <TextField
                 control={form.control}
                 name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <Target className="h-4 w-4" />
-                      <span>Exercise Title</span>
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter exercise title..."
-                        {...field}
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={
+                  <div className="flex items-center space-x-1">
+                    <Target className="h-4 w-4" />
+                    <span>Exercise Title</span>
+                    <span className="text-red-500">*</span>
+                  </div>
+                }
+                placeholder="Enter exercise title..."
+                required
               />
 
-              <FormField
+              <TextField
                 control={form.control}
                 name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <BookOpen className="h-4 w-4" />
-                      <span>Description</span>
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter exercise description..."
-                        rows={3}
-                        {...field}
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={
+                  <div className="flex items-center space-x-1">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Description</span>
+                    <span className="text-red-500">*</span>
+                  </div>
+                }
+                placeholder="Enter exercise description..."
+                required
+                multiline
+                rows={3}
               />
 
-              <FormField
+              <TextField
                 control={form.control}
                 name="instruction"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <Lightbulb className="h-4 w-4" />
-                      <span>Instructions</span>
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter specific instructions for this exercise..."
-                        rows={3}
-                        {...field}
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={
+                  <div className="flex items-center space-x-1">
+                    <Lightbulb className="h-4 w-4" />
+                    <span>Instructions</span>
+                    <span className="text-red-500">*</span>
+                  </div>
+                }
+                placeholder="Enter specific instructions for this exercise..."
+                required
+                multiline
+                rows={3}
               />
 
-              <FormField
+              <TextField
                 control={form.control}
                 name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <BookOpen className="h-4 w-4" />
-                      <span>Content</span>
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter exercise content (questions, materials, etc.)..."
-                        rows={4}
-                        {...field}
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                label={
+                  <div className="flex items-center space-x-1">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Content</span>
+                    <span className="text-red-500">*</span>
+                  </div>
+                }
+                placeholder="Enter exercise content (questions, materials, etc.)..."
+                required
+                multiline
+                rows={4}
               />
 
-              {/* Media URL */}
-              <FormField
+              <TextField
                 control={form.control}
                 name="media_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center space-x-1">
-                      <Image className="h-4 w-4" />
-                      <span>Media URL (Optional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://example.com/audio.mp3"
-                        {...field}
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Exercise Settings */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="time_limit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>Time Limit (seconds)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="space-y-2">
-                          <Input
-                            type="number"
-                            min={30}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseInt(e.target.value) || 300)
-                            }
-                            className="focus:ring-2 focus:ring-blue-500"
-                          />
-                          {field.value && (
-                            <div className="text-sm text-gray-500">
-                              Duration: {formatTime(field.value)}
-                            </div>
-                          )}
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="max_attempts"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Attempts</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={10}
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 3)
-                          }
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="passing_score"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center space-x-1">
-                        <Trophy className="h-4 w-4" />
-                        <span>Passing Score (%)</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          min={0}
-                          max={100}
-                          {...field}
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="ordering"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Exercise Order</FormLabel>
-                      <div className="flex items-center space-x-2">
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(parseInt(e.target.value) || 1)
-                            }
-                            className="w-20 focus:ring-2 focus:ring-blue-500"
-                          />
-                        </FormControl>
-                        <div className="flex flex-col space-y-1">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustOrdering("up")}
-                            className="h-6 w-6 p-0"
-                            disabled={field.value <= 1}
-                          >
-                            <ArrowUp className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => adjustOrdering("down")}
-                            className="h-6 w-6 p-0"
-                          >
-                            <ArrowDown className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* Active Setting */}
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="flex items-center space-x-2">
-                        <CheckCircle2
-                          className={`h-4 w-4 ${
-                            field.value ? "text-green-600" : "text-gray-400"
-                          }`}
-                        />
-                        <span>Active Exercise</span>
-                      </FormLabel>
-                      <div className="text-sm text-gray-600">
-                        Exercise is visible and available to students
-                      </div>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                label={
+                  <div className="flex items-center space-x-1">
+                    <Image className="h-4 w-4" />
+                    <span>Media URL (Optional)</span>
+                  </div>
+                }
+                placeholder="https://example.com/audio.mp3"
+                type="url"
               />
             </div>
+
+            {/* Exercise Settings Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Time Limit with Display */}
+              <div className="space-y-2">
+                <TextField
+                  control={form.control}
+                  name="time_limit"
+                  label={
+                    <div className="flex items-center space-x-1">
+                      <Clock className="h-4 w-4" />
+                      <span>Time Limit (seconds)</span>
+                    </div>
+                  }
+                  type="number"
+                  min={30}
+                />
+                {form.watch("time_limit") && (
+                  <div className="text-sm text-gray-500">
+                    Duration: {formatTime(form.watch("time_limit"))}
+                  </div>
+                )}
+              </div>
+
+              <TextField
+                control={form.control}
+                name="max_attempts"
+                label="Max Attempts"
+                type="number"
+                min={1}
+                max={10}
+              />
+
+              <TextField
+                control={form.control}
+                name="passing_score"
+                label={
+                  <div className="flex items-center space-x-1">
+                    <Trophy className="h-4 w-4" />
+                    <span>Passing Score (%)</span>
+                  </div>
+                }
+                type="text"
+                min={0}
+                max={100}
+              />
+
+              {/* Exercise Order with Controls */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">Exercise Order</label>
+                <div className="flex items-center space-x-2">
+                  <TextField
+                    control={form.control}
+                    name="ordering"
+                    label=""
+                    type="number"
+                    min={1}
+                    className="w-20"
+                  />
+                  <div className="flex flex-col space-y-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustOrdering("up")}
+                      className="h-6 w-6 p-0"
+                      disabled={form.getValues("ordering") <= 1}
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => adjustOrdering("down")}
+                      className="h-6 w-6 p-0"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Setting */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2
+                    className={`h-4 w-4 ${
+                      form.watch("is_active") ? "text-green-600" : "text-gray-400"
+                    }`}
+                  />
+                  <label className="text-sm font-semibold">Active Exercise</label>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Exercise is visible and available to students
+                </div>
+              </div>
+              <Switch
+                checked={form.watch("is_active")}
+                onCheckedChange={(checked) => form.setValue("is_active", checked)}
+              />
+            </div>
+
+            {/* Existing Exercises Preview */}
+            {existingExercises.length > 0 && (
+              <>
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-medium text-gray-700 flex items-center space-x-2 mb-3">
+                    <Target className="h-4 w-4" />
+                    <span>Current Exercises</span>
+                    <Badge variant="outline">{existingExercises.length}</Badge>
+                  </h4>
+
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {existingExercises
+                      .sort((a, b) => (a.ordering || 999) - (b.ordering || 999))
+                      .map((existingExercise) => (
+                        <div
+                          key={existingExercise.id}
+                          className={`flex items-center justify-between p-2 rounded text-xs border ${
+                            existingExercise.id === exercise?.id
+                              ? "bg-blue-50 border-blue-200"
+                              : "bg-gray-50 border-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <Badge
+                              variant="outline"
+                              className={`w-6 h-5 text-xs justify-center ${
+                                existingExercise.id === exercise?.id
+                                  ? "bg-blue-100 text-blue-700"
+                                  : ""
+                              }`}
+                            >
+                              {existingExercise.ordering}
+                            </Badge>
+                            <span
+                              className={`truncate max-w-32 ${
+                                existingExercise.id === exercise?.id
+                                  ? "font-medium text-blue-900"
+                                  : "text-gray-700"
+                              }`}
+                            >
+                              {existingExercise.title}
+                            </span>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="h-3 w-3 text-gray-400" />
+                              <span className="text-xs text-gray-500">
+                                {formatTime(existingExercise.time_limit || 300)}
+                              </span>
+                            </div>
+                            {existingExercise.is_active && (
+                              <CheckCircle2 className="h-3 w-3 text-green-600" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Form Actions */}
             <div className="flex items-center justify-end space-x-3 pt-4 border-t">
