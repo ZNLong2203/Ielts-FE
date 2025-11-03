@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import { ArrowLeft, Clock, PlayCircle, CheckCircle, FileText, Video, Download, BookOpen } from "lucide-react"
+import { ArrowLeft, Clock, PlayCircle, CheckCircle, FileText, Video, Download, BookOpen, PenTool } from "lucide-react"
 import { getAdminCourseDetail } from "@/api/course"
 import { ICourse } from "@/interface/course"
 import { ILesson } from "@/interface/lesson"
+import { IExercise } from "@/interface/exercise"
 import { selectUserId } from "@/redux/features/user/userSlice"
 import Link from "next/link"
+import { mockExercises } from "@/data/mockExercises"
 
 // Extended lesson interface for API data
 interface ILessonExtended extends ILesson {
@@ -52,6 +54,7 @@ export default function LessonDetailPage() {
   } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [exercises, setExercises] = useState<IExercise[]>([])
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -81,6 +84,10 @@ export default function LessonDetailPage() {
             setError("Lesson not found")
           } else {
             setCurrentLesson(lesson)
+            
+            // Load mock exercises (tạm thời dùng tất cả mock exercises để test)
+            // TODO: Khi có API thật, sẽ filter theo lessonId
+            setExercises(mockExercises)
           }
         }
       } catch (err) {
@@ -122,6 +129,7 @@ export default function LessonDetailPage() {
         return <PlayCircle className="w-6 h-6 text-gray-600" />
     }
   }
+
 
   if (loading) {
     return (
@@ -224,6 +232,36 @@ export default function LessonDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Exercise Button - Start exercises */}
+      {exercises.length > 0 && (
+        <div className="mb-8">
+          <button
+            onClick={() => router.push(`/student/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/exercises/${exercises[0].id}`)}
+            className="w-full bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-slate-200 hover:border-blue-300 group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center border-2 border-blue-100 group-hover:bg-blue-100 group-hover:border-blue-200 transition-all">
+                  <PenTool className="w-8 h-8 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-2xl font-bold text-slate-800 mb-1 group-hover:text-blue-600 transition-colors">
+                    Start Exercises
+                  </h3>
+                  <p className="text-slate-600 font-medium">
+                    {exercises.length} exercises available • Click to start
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-3 bg-slate-50 rounded-xl font-semibold text-slate-700 group-hover:bg-blue-50 group-hover:text-blue-700 transition-all flex items-center gap-2">
+                <span>Start</span>
+                <ArrowLeft className="w-5 h-5 rotate-180" />
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Lesson Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
