@@ -101,14 +101,20 @@ export default function CourseDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <button
-        onClick={() => router.push("/student/dashboard")}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back to Dashboard</span>
-      </button>
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-2 text-sm mb-4">
+        <button
+          onClick={() => router.push("/student/dashboard")}
+          className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Dashboard</span>
+        </button>
+        <span className="text-slate-300">/</span>
+        <span className="text-slate-700 font-semibold px-3 py-1.5 bg-slate-50 rounded-lg">
+          {course.title}
+        </span>
+      </nav>
 
       {/* Course Header - Clean Professional Design */}
       <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200">

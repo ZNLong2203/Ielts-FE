@@ -14,6 +14,37 @@ export const getSectionsByCourseId = async (
   return response.data.data;
 };
 
+// Get section progress
+export const getSectionProgress = async (
+  courseId: string,
+  sectionId: string
+) => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}/${sectionId}/progress`
+  );
+  if (response.data.data?.data) {
+    return response.data.data.data;
+  }
+  if (response.data.data) {
+    return response.data.data;
+  }
+  return response.data;
+};
+
+// Get course progress
+export const getCourseProgress = async (courseId: string) => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}${API_URL.SECTIONS}/progress`
+  );
+  if (response.data.data?.data) {
+    return response.data.data.data;
+  }
+  if (response.data.data) {
+    return response.data.data;
+  }
+  return response.data;
+};
+
 // Create a new section
 export const createSection = async (data: ISectionCreate, courseId: string) => {
   const response = await api.post(

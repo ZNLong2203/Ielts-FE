@@ -1,3 +1,4 @@
+    // eslint-disable-next-line react-hooks/exhaustive-deps
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react"
@@ -47,7 +48,6 @@ export function StudentProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchStudentData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
 
   return (

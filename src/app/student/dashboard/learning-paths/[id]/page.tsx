@@ -22,35 +22,61 @@ export default function LearningPathDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchComboEnrollment = async () => {
-      try {
-        setLoading(true)
-        
-        // Check if user is authenticated
-        if (!userId) {
-          setError("Please login to view your learning paths")
-          setLoading(false)
-          return
-        }
-        
-        const data = await getStudentComboEnrollments(userId)
-        const combo = data.find((c: IComboEnrollment) => c.id === pathId)
-        if (!combo) {
-          setError("Learning path not found")
-        } else {
-          setComboEnrollment(combo)
-        }
-      } catch (err) {
-        console.error("Error fetching combo enrollment:", err)
-        setError("Failed to load learning path")
-      } finally {
+  const fetchComboEnrollment = async () => {
+    try {
+      setLoading(true)
+      
+      // Check if user is authenticated
+      if (!userId) {
+        setError("Please login to view your learning paths")
         setLoading(false)
+        return
+      }
+      
+      const data = await getStudentComboEnrollments(userId)
+      const combo = data.find((c: IComboEnrollment) => c.id === pathId)
+      if (!combo) {
+        setError("Learning path not found")
+      } else {
+        setComboEnrollment(combo)
+      }
+    } catch (err) {
+      console.error("Error fetching combo enrollment:", err)
+      setError("Failed to load learning path")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchComboEnrollment()
+  }, [pathId, userId])
+
+  // Refresh data when page becomes visible (user navigates back)
+  useEffect(() => {
+    if (!userId || !pathId) return
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchComboEnrollment()
       }
     }
 
-    fetchComboEnrollment()
-  }, [pathId, userId])
+    const handleFocus = () => {
+      fetchComboEnrollment()
+    }
+
+    // Refresh when page becomes visible
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    // Refresh when window gains focus
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, pathId])
 
   const getSkillColor = (skill: string | undefined) => {
     switch (skill?.toLowerCase()) {

@@ -100,3 +100,35 @@ export const reorderLesson = async (
   return response.data;
 };
 
+// Get lesson progress
+export const getLessonProgress = async (
+  sectionId: string,
+  lessonId: string
+) => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/progress`
+  );
+  if (response.data.data?.data) {
+    return response.data.data.data;
+  }
+  if (response.data.data) {
+    return response.data.data;
+  }
+  return response.data;
+};
+
+// Mark lesson as completed
+export const markLessonComplete = async (
+  sectionId: string,
+  lessonId: string,
+  courseId: string
+) => {
+  const response = await api.post(
+    `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}/${lessonId}/complete`,
+    {
+      course_id: courseId,
+    }
+  );
+  return response.data;
+};
+

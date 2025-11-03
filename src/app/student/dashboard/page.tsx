@@ -1,12 +1,25 @@
 "use client"
 
+import { useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { DashboardStats } from "@/components/student/dashboard/DashboardStats"
 import { LearningPathCard } from "@/components/student/dashboard/LearningPathCard"
 import { StudyTips } from "@/components/student/dashboard/StudyTips"
 import { useStudent } from "@/context/StudentContext"
 
 export default function DashboardPage() {
-  const { studentData, loading, error } = useStudent()
+  const { studentData, loading, error, refetch } = useStudent()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    const lastPathname = sessionStorage.getItem('lastPathname')
+    
+    if (lastPathname && lastPathname !== pathname) {
+      refetch()
+    }
+
+    sessionStorage.setItem('lastPathname', pathname || '')
+  }, [pathname, refetch])
 
   if (loading) {
     return (

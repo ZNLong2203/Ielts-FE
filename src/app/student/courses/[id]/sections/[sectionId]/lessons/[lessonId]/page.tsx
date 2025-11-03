@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { ArrowLeft, Clock, PlayCircle, CheckCircle, FileText, Video, Download, BookOpen, PenTool } from "lucide-react"
 import { getAdminCourseDetail } from "@/api/course"
+import { getLessonProgress, markLessonComplete } from "@/api/lesson"
 import { ICourse } from "@/interface/course"
 import { ILesson } from "@/interface/lesson"
 import { IExercise } from "@/interface/exercise"
@@ -55,6 +56,9 @@ export default function LessonDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [exercises, setExercises] = useState<IExercise[]>([])
+  const [lessonProgress, setLessonProgress] = useState(0)
+  const [isCompleted, setIsCompleted] = useState(false)
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false)
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -98,7 +102,24 @@ export default function LessonDetailPage() {
       }
     }
 
+    const fetchProgress = async () => {
+      if (!userId) return
+
+      try {
+        console.log("Fetching lesson progress for:", { sectionId, lessonId, userId })
+        const progressData = await getLessonProgress(sectionId, lessonId)
+        console.log("Progress data received:", progressData)
+        if (progressData) {
+          setLessonProgress(progressData.progress_percentage || 0)
+          setIsCompleted(progressData.is_completed || false)
+        }
+      } catch (err) {
+        console.error("Error fetching lesson progress:", err)
+      }
+    }
+
     fetchCourse()
+    fetchProgress()
   }, [courseId, sectionId, lessonId, userId])
 
   const formatDuration = (seconds: number | null) => {
@@ -127,6 +148,29 @@ export default function LessonDetailPage() {
         return <FileText className="w-6 h-6 text-orange-600" />
       default:
         return <PlayCircle className="w-6 h-6 text-gray-600" />
+    }
+  }
+
+  const handleMarkComplete = async () => {
+    if (!userId || isCompleted || isMarkingComplete) return
+
+    try {
+      setIsMarkingComplete(true)
+      await markLessonComplete(sectionId, lessonId, courseId)
+      // Refresh progress after marking complete
+      const progressData = await getLessonProgress(sectionId, lessonId)
+      if (progressData) {
+        setLessonProgress(progressData.progress_percentage || 100)
+        setIsCompleted(progressData.is_completed || true)
+      } else {
+        setLessonProgress(100)
+        setIsCompleted(true)
+      }
+    } catch (err) {
+      console.error("Error marking lesson as completed:", err)
+      setError("Failed to mark lesson as completed. Please try again.")
+    } finally {
+      setIsMarkingComplete(false)
     }
   }
 
@@ -160,14 +204,34 @@ export default function LessonDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <button
-        onClick={() => router.push(`/student/courses/${courseId}/sections/${sectionId}`)}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back to Section</span>
-      </button>
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-2 text-sm mb-4 flex-wrap">
+        <button
+          onClick={() => router.push("/student/dashboard")}
+          className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Dashboard</span>
+        </button>
+        <span className="text-slate-300">/</span>
+        <button
+          onClick={() => router.push(`/student/courses/${courseId}`)}
+          className="text-slate-500 hover:text-slate-700 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50"
+        >
+          {course?.title || "Course"}
+        </button>
+        <span className="text-slate-300">/</span>
+        <button
+          onClick={() => router.push(`/student/courses/${courseId}/sections/${sectionId}`)}
+          className="text-slate-500 hover:text-slate-700 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50"
+        >
+          {currentSection?.title || "Section"}
+        </button>
+        <span className="text-slate-300">/</span>
+        <span className="text-slate-700 font-semibold px-3 py-1.5 bg-slate-50 rounded-lg">
+          {currentLesson?.title || "Lesson"}
+        </span>
+      </nav>
 
       {/* Lesson Header - Modern Design */}
       <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
@@ -397,17 +461,52 @@ export default function LessonDetailPage() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <span className="text-slate-600 font-medium">Lesson Progress</span>
-                <span className="font-bold text-slate-800">0%</span>
+                <span className="font-bold text-slate-800">{lessonProgress}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-3">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full" style={{ width: "0%" }}></div>
+                <div className={`h-3 rounded-full transition-all duration-300 ${
+                  isCompleted 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                    : 'bg-gradient-to-r from-blue-500 to-purple-600'
+                }`} style={{ width: `${lessonProgress}%` }}></div>
               </div>
-              <div className="text-sm text-slate-500 font-medium">
-                Mark as completed when finished
-              </div>
-              <button className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300">
-                <CheckCircle className="w-5 h-5 inline mr-2" />
-                Mark as Completed
+              {isCompleted ? (
+                <div className="text-sm text-green-600 font-medium flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" />
+                  Lesson completed!
+                </div>
+              ) : (
+                <div className="text-sm text-slate-500 font-medium">
+                  Mark as completed when finished
+                </div>
+              )}
+              <button
+                onClick={handleMarkComplete}
+                disabled={isCompleted || isMarkingComplete}
+                className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  isCompleted
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    : isMarkingComplete
+                    ? 'bg-slate-400 text-white cursor-wait'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg transform hover:-translate-y-0.5'
+                }`}
+              >
+                {isMarkingComplete ? (
+                  <>
+                    <div className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Marking...
+                  </>
+                ) : isCompleted ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 inline mr-2" />
+                    Completed
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5 inline mr-2" />
+                    Mark as Completed
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
 import { ArrowLeft, Clock, PlayCircle, CheckCircle, Lock, FileText, Video, BookOpen } from "lucide-react"
 import { getAdminCourseDetail } from "@/api/course"
+import { getSectionProgress, getCourseProgress } from "@/api/section"
 import { ICourse } from "@/interface/course"
 import { selectUserId } from "@/redux/features/user/userSlice"
 import Link from "next/link"
@@ -35,6 +36,16 @@ export default function SectionDetailPage() {
   } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [sectionProgress, setSectionProgress] = useState({
+    progress_percentage: 0,
+    completed_lessons: 0,
+    total_lessons: 0,
+  })
+  const [courseProgress, setCourseProgress] = useState({
+    progress_percentage: 0,
+    completed_lessons: 0,
+    total_lessons: 0,
+  })
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -66,7 +77,37 @@ export default function SectionDetailPage() {
       }
     }
 
+    const fetchProgress = async () => {
+      if (!userId) return
+
+      try {
+        // Fetch section progress
+        const sectionProgressData = await getSectionProgress(courseId, sectionId)
+        if (sectionProgressData) {
+          setSectionProgress({
+            progress_percentage: sectionProgressData.progress_percentage || 0,
+            completed_lessons: sectionProgressData.completed_lessons || 0,
+            total_lessons: sectionProgressData.total_lessons || 0,
+          })
+        }
+
+        // Fetch course progress
+        const courseProgressData = await getCourseProgress(courseId)
+        if (courseProgressData) {
+          setCourseProgress({
+            progress_percentage: courseProgressData.progress_percentage || 0,
+            completed_lessons: courseProgressData.completed_lessons || 0,
+            total_lessons: courseProgressData.total_lessons || 0,
+          })
+        }
+      } catch (err) {
+        console.error("Error fetching progress:", err)
+        // Don't set error, just use default values
+      }
+    }
+
     fetchCourse()
+    fetchProgress()
   }, [courseId, sectionId, userId])
 
   const getLessonIcon = (lessonType: string) => {
@@ -127,14 +168,27 @@ export default function SectionDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <button
-        onClick={() => router.push(`/student/courses/${courseId}`)}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back to Course</span>
-      </button>
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center gap-2 text-sm mb-4 flex-wrap">
+        <button
+          onClick={() => router.push("/student/dashboard")}
+          className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Dashboard</span>
+        </button>
+        <span className="text-slate-300">/</span>
+        <button
+          onClick={() => router.push(`/student/courses/${courseId}`)}
+          className="text-slate-500 hover:text-slate-700 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-slate-50"
+        >
+          {course?.title || "Course"}
+        </button>
+        <span className="text-slate-300">/</span>
+        <span className="text-slate-700 font-semibold px-3 py-1.5 bg-slate-50 rounded-lg">
+          {currentSection.title}
+        </span>
+      </nav>
 
       {/* Section Header - Modern Design */}
       <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
@@ -321,20 +375,27 @@ export default function SectionDetailPage() {
         </div>
       </div>
 
-      {/* Course Progress */}
+      {/* Section Progress */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">Section Progress</h3>
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Overall Progress</span>
-            <span className="font-semibold text-gray-900">0%</span>
+            <span className="font-semibold text-gray-900">{Math.round(sectionProgress.progress_percentage)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
-            <div className="bg-blue-500 h-3 rounded-full" style={{ width: "0%" }}></div>
+            <div 
+              className={`h-3 rounded-full transition-all duration-300 ${
+                sectionProgress.progress_percentage === 100 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                  : 'bg-blue-500'
+              }`}
+              style={{ width: `${sectionProgress.progress_percentage}%` }}
+            ></div>
           </div>
           <div className="flex justify-between text-sm text-gray-500">
-            <span>0 of {currentSection.lessons?.length || 0} lessons completed</span>
-            <span>Estimated time remaining: ~{Math.ceil((currentSection.lessons?.length || 0) * 0.5)}h</span>
+            <span>{sectionProgress.completed_lessons} of {sectionProgress.total_lessons || currentSection.lessons?.length || 0} lessons completed</span>
+            <span>Estimated time remaining: ~{Math.ceil(((sectionProgress.total_lessons || currentSection.lessons?.length || 0) - sectionProgress.completed_lessons) * 0.5)}h</span>
           </div>
         </div>
       </div>
