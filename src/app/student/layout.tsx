@@ -43,36 +43,51 @@ export default function StudentLayout({
         <LandingNavbar />
         
         {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white shadow-xl">
-          <div className="flex h-16 items-center justify-between px-4">
+      <div className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'block opacity-100' : 'hidden opacity-0'}`}>
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className={`fixed inset-y-0 left-0 flex w-72 flex-col bg-gradient-to-b from-white via-white to-slate-50 shadow-2xl transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="flex h-20 items-center justify-between px-6 border-b border-slate-200 bg-white">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <BookOpen className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">IELTS Academy</span>
+              <div>
+                <span className="text-xl font-bold text-slate-900">IELTS Academy</span>
+                <p className="text-xs text-slate-500 font-medium">Learning Platform</p>
+              </div>
             </div>
-            <button onClick={() => setSidebarOpen(false)}>
-              <X className="w-6 h-6 text-gray-500" />
+            <button 
+              onClick={() => setSidebarOpen(false)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-6 h-6 text-slate-600" />
             </button>
           </div>
-          <nav className="flex-1 px-4 py-4 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {navigation.map((item) => {
-              const isActive = pathname === item.href
+              // Check exact match first
+              // For Dashboard, only match if pathname is exactly "/student/dashboard"
+              // For other routes, match if pathname starts with the href (to include sub-routes)
+              const isActive = item.href === "/student/dashboard" 
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(item.href + "/")
+              
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     isActive
-                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
+                  <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-blue-600'}`} />
+                  <span className="flex-1">{item.name}</span>
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                  )}
                 </Link>
               )
             })}
@@ -81,56 +96,64 @@ export default function StudentLayout({
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col pt-20">
-        <div className="flex flex-col flex-grow bg-white border-r border-gray-200 shadow-sm">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col pt-20">
+        <div className="flex flex-col flex-grow bg-gradient-to-b from-white via-white to-slate-50 border-r border-slate-200 shadow-lg">
           {/* Logo */}
-          <div className="flex h-16 items-center px-6 border-b border-gray-200">
+          <div className="flex h-20 items-center px-6 border-b border-slate-200 bg-white">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                <BookOpen className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">IELTS Academy</span>
+              <div>
+                <span className="text-xl font-bold text-slate-900">IELTS Academy</span>
+                <p className="text-xs text-slate-500 font-medium">Learning Platform</p>
+              </div>
             </div>
           </div>
 
-          {/* User Profile */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Student Portal</p>
-                <p className="text-xs text-gray-500">Welcome back!</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                <span>Target: Band 7.5</span>
-                <span>65%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: "65%" }}></div>
+          {/* User Profile Card */}
+          <div className="px-5 py-6 border-b border-slate-200 bg-gradient-to-br from-blue-50 via-white to-blue-50/30">
+            <div className="bg-white rounded-2xl p-5 shadow-md border border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <User className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-bold text-slate-900 truncate">Student Portal</p>
+                  <p className="text-sm text-slate-600 font-medium">Welcome back!</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-1">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <div className="px-2 mb-2">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu</p>
+            </div>
             {navigation.map((item) => {
-              const isActive = pathname === item.href
+              const isActive = item.href === "/student/dashboard" 
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(item.href + "/")
+              
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`group flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
                     isActive
-                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30 transform scale-[1.02]"
+                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
+                  <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-white' : 'text-slate-600 group-hover:text-blue-600 group-hover:scale-110'}`} />
+                  <span className="flex-1">{item.name}</span>
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                  )}
                 </Link>
               )
             })}
@@ -139,7 +162,7 @@ export default function StudentLayout({
       </div>
 
         {/* Main content */}
-        <div className="lg:pl-64 pt-16">
+        <div className="lg:pl-72 pt-16">
           {/* Page content */}
           <main className="flex-1">
             <div className="py-6">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import { ArrowLeft, Clock, PlayCircle, CheckCircle, FileText, Video, Download, BookOpen, PenTool } from "lucide-react"
+import { ArrowLeft, Clock, PlayCircle, CheckCircle, FileText, Video, Download, BookOpen, PenTool, Save, Edit2 } from "lucide-react"
 import { getAdminCourseDetail } from "@/api/course"
 import { getLessonProgress, markLessonComplete } from "@/api/lesson"
 import { ICourse } from "@/interface/course"
@@ -12,8 +12,6 @@ import { IExercise } from "@/interface/exercise"
 import { selectUserId } from "@/redux/features/user/userSlice"
 import Link from "next/link"
 import { mockExercises } from "@/data/mockExercises"
-
-// Extended lesson interface for API data
 interface ILessonExtended extends ILesson {
   video_url?: string
   document_url?: string
@@ -26,7 +24,6 @@ export default function LessonDetailPage() {
   const sectionId = params.sectionId as string
   const lessonId = params.lessonId as string
   
-  // Get userId from Redux store
   const userId = useSelector(selectUserId)
 
   const [course, setCourse] = useState<ICourse | null>(null)
@@ -59,6 +56,9 @@ export default function LessonDetailPage() {
   const [lessonProgress, setLessonProgress] = useState(0)
   const [isCompleted, setIsCompleted] = useState(false)
   const [isMarkingComplete, setIsMarkingComplete] = useState(false)
+  const [lessonNote, setLessonNote] = useState<string>("")
+  const [isEditingNote, setIsEditingNote] = useState(false)
+  const [isSavingNote, setIsSavingNote] = useState(false)
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -120,7 +120,47 @@ export default function LessonDetailPage() {
 
     fetchCourse()
     fetchProgress()
+    
+    // Load lesson note from localStorage
+    if (userId && lessonId) {
+      const savedNote = localStorage.getItem(`lesson_note_${userId}_${lessonId}`)
+      if (savedNote) {
+        setLessonNote(savedNote)
+      }
+    }
   }, [courseId, sectionId, lessonId, userId])
+
+  // Load lesson note from localStorage
+  const loadLessonNote = () => {
+    if (!userId || !lessonId) return
+    const savedNote = localStorage.getItem(`lesson_note_${userId}_${lessonId}`)
+    if (savedNote) {
+      setLessonNote(savedNote)
+    }
+  }
+
+  // Save lesson note to localStorage (can be replaced with API call later)
+  const saveLessonNote = async () => {
+    if (!userId || !lessonId) return
+    
+    setIsSavingNote(true)
+    try {
+      // Save to localStorage (temporary solution)
+      // TODO: Replace with API call to backend
+      localStorage.setItem(`lesson_note_${userId}_${lessonId}`, lessonNote)
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      setIsEditingNote(false)
+      console.log("Lesson note saved successfully")
+    } catch (err) {
+      console.error("Error saving lesson note:", err)
+      setError("Failed to save note. Please try again.")
+    } finally {
+      setIsSavingNote(false)
+    }
+  }
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "0:00"
@@ -336,22 +376,113 @@ export default function LessonDetailPage() {
             
             {currentLesson.lesson_type === "video" && (currentLesson as ILessonExtended).video_url ? (
               <div className="mb-8">
-                <div className="relative w-full h-96 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-2xl">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                        <PlayCircle className="w-10 h-10" />
-                      </div>
-                      <p className="text-xl font-semibold mb-2">Video Player</p>
-                      <p className="text-sm opacity-70">Click to play video content</p>
+                <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-black">
+                  <video
+                    className="w-full aspect-video"
+                    controls
+                    controlsList="nodownload"
+                    preload="auto"
+                    playsInline
+                    crossOrigin="anonymous"
+                    onLoadedData={() => {
+                      console.log("Video loaded successfully");
+                    }}
+                    onError={(e) => {
+                      console.error("Video loading error:", e);
+                    }}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      maxHeight: "600px",
+                      objectFit: "contain"
+                    }}
+                  >
+                    <source src={(currentLesson as ILessonExtended).video_url} type="video/mp4" />
+                    <source src={(currentLesson as ILessonExtended).video_url} type="video/webm" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </div>
+            ) : null}
+
+            {/* Lesson Notes Section - Phía dưới video */}
+            {currentLesson.lesson_type === "video" && (
+              <div className="mt-8 bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <Edit2 className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800">My Notes</h3>
+                  </div>
+                  {!isEditingNote && (
+                    <button
+                      onClick={() => setIsEditingNote(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      {lessonNote ? "Edit Note" : "Add Note"}
+                    </button>
+                  )}
+                </div>
+
+                {isEditingNote ? (
+                  <div className="space-y-4">
+                    <textarea
+                      value={lessonNote}
+                      onChange={(e) => setLessonNote(e.target.value)}
+                      placeholder="Write your notes here... You can add key points, important concepts, or questions about this lesson."
+                      className="w-full h-48 p-4 border-2 border-slate-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none text-slate-700 font-medium"
+                    />
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={saveLessonNote}
+                        disabled={isSavingNote}
+                        className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isSavingNote ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            Save Note
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingNote(false)
+                          loadLessonNote() // Reload saved note
+                        }}
+                        className="px-6 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-semibold"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
-                </div>
-                <p className="text-sm text-gray-500 mt-3 font-medium">
-                  Video URL: {(currentLesson as ILessonExtended).video_url}
-                </p>
+                ) : (
+                  <div className="bg-slate-50 rounded-xl p-4 min-h-[120px]">
+                    {lessonNote ? (
+                      <p className="text-slate-700 whitespace-pre-wrap leading-relaxed font-medium">
+                        {lessonNote}
+                      </p>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-32 text-center">
+                        <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-3">
+                          <Edit2 className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <p className="text-slate-500 font-medium">No notes yet. Click &quot;Add Note&quot; to start writing.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ) : currentLesson.lesson_type === "document" && (currentLesson as ILessonExtended).document_url ? (
+            )}
+
+            {currentLesson.lesson_type === "document" && (currentLesson as ILessonExtended).document_url ? (
               <div className="mb-8">
                 <div className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center bg-gradient-to-br from-slate-50 to-blue-50">
                   <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
@@ -368,7 +499,7 @@ export default function LessonDetailPage() {
                   Document URL: {(currentLesson as ILessonExtended).document_url}
                 </p>
               </div>
-            ) : (
+            ) : currentLesson.lesson_type === "video" && !(currentLesson as ILessonExtended).video_url ? (
               <div className="mb-8">
                 <div className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center bg-gradient-to-br from-slate-50 to-purple-50">
                   <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
@@ -378,11 +509,21 @@ export default function LessonDetailPage() {
                   <p className="text-slate-600 font-medium">This lesson content is being prepared</p>
                 </div>
               </div>
-            )}
+            ) : currentLesson.lesson_type !== "video" && currentLesson.lesson_type !== "document" ? (
+              <div className="mb-8">
+                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center bg-gradient-to-br from-slate-50 to-purple-50">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <PlayCircle className="w-10 h-10 text-white" />
+                  </div>
+                  <p className="text-xl font-semibold text-slate-700 mb-3">Content Coming Soon</p>
+                  <p className="text-slate-600 font-medium">This lesson content is being prepared</p>
+                </div>
+              </div>
+            ) : null}
 
             {/* Lesson Description */}
             {currentLesson.description && (
-              <div className="prose max-w-none">
+              <div className="prose max-w-none mt-8">
                 <h3 className="text-xl font-bold text-slate-800 mb-4">About This Lesson</h3>
                 <p className="text-slate-600 leading-relaxed font-medium">
                   {currentLesson.description}
@@ -410,12 +551,12 @@ export default function LessonDetailPage() {
                   {formatDuration(currentLesson.video_duration || null)}
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+              {/* <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
                 <span className="text-slate-600 font-medium">Order</span>
                 <span className="font-bold text-slate-800">
                   {currentLesson.ordering}
                 </span>
-              </div>
+              </div> */}
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
                 <span className="text-slate-600 font-medium">Status</span>
                 <span className="font-bold text-slate-800">
