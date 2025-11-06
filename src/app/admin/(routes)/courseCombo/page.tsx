@@ -1,6 +1,6 @@
 import CourseComboTable from "@/components/admin/courseCombo/courseComboTable";
 
-const CourseComboAdmonPage = () => {
+const CourseComboAdminPage = () => {
     return (
         <div className="flex-1 space-y-4 p-10 pt-6 h-full bg-white">
             <CourseComboTable />
@@ -8,4 +8,4 @@ const CourseComboAdmonPage = () => {
     )
 }
     
-export default CourseComboAdmonPage;
+export default CourseComboAdminPage;

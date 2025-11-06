@@ -18,6 +18,7 @@ const ROUTES = {
   ADMIN_COUPONS: "/admin/coupon",
   ADMIN_COURSE_COMBO: "/admin/courseCombo",
   ADMIN_ORDERS: "/admin/order",
+  ADMIN_MOCK_TESTS: "/admin/mockTest",
 
   TEACHER: "/teacher/dashboard",
   TEACHER_BLOGS: "/teacher/dashboard/blog",

@@ -35,7 +35,6 @@ export interface ICourseQuestion {
     difficulty_level: string;
     reading_passage: string;
     question_group: string;
-    question_group_id: string;
     question_options: ICourseQuestionOption[];
     correct_answer: string;
     points: string;

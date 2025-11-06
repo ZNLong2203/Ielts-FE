@@ -1,12 +1,10 @@
 "use client";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import ROUTES from "@/constants/route";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  Menu,
   X,
   LayoutDashboard,
   Users,
@@ -21,6 +19,7 @@ import {
   BookOpen,
   Package,
   NotepadText,
+  BookCheck,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -93,6 +92,12 @@ const AdminSidebar = ({ isOpen, onToggle, isCollapsed, onCollapse }: AdminSideba
       label: "Orders",
       icon: NotepadText,
       active: pathName === ROUTES.ADMIN_ORDERS,
+    },
+    {
+      href: ROUTES.ADMIN_MOCK_TESTS,
+      label: "Mock Tests",
+      icon: BookCheck,
+      active: pathName === ROUTES.ADMIN_MOCK_TESTS,
     }
   ];
 

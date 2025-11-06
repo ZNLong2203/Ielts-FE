@@ -138,9 +138,9 @@ const CourseQuestionItem = ({
           <Badge 
             variant="outline" 
             className={`${
-              question.difficulty_level === 1 
+              Number(question.difficulty_level) === 1 
                 ? "bg-green-50 text-green-700" 
-                : question.difficulty_level === 2
+                : Number(question.difficulty_level) === 2
                 ? "bg-yellow-50 text-yellow-700"
                 : "bg-red-50 text-red-700"
             }`}
