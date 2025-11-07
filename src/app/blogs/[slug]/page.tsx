@@ -143,8 +143,10 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+  const formatDate = (dateString: string | Date | undefined) => {
+    if (!dateString) return "Unknown date";
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return formatDistanceToNow(date, { addSuffix: true });
   };
 
   if (isBlogLoading) {
@@ -362,7 +364,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-6">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{formatDate(blogData.created_at)}</span>
+                    <span>{formatDate(blogData?.created_at)}</span>
                   </div>
                   {blogData.reading_time && (
                     <div className="flex items-center gap-1">
@@ -729,9 +731,9 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                         </div>
                       ))}
                     </div>
-                  ) : relatedBlogs?.result && relatedBlogs.result.length > 0 ? (
+                  ) : (Array.isArray(relatedBlogs) ? relatedBlogs.length > 0 : relatedBlogs?.result && relatedBlogs.result.length > 0) ? (
                     <div className="space-y-4">
-                      {relatedBlogs.result.slice(0, 4).map((post: any) => (
+                      {(Array.isArray(relatedBlogs) ? relatedBlogs : relatedBlogs.result || []).slice(0, 4).map((post: any) => (
                         <Link 
                           key={post.id} 
                           href={`/blogs/${post.id}`}

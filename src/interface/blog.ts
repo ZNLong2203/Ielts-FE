@@ -20,7 +20,7 @@ export interface IBlog {
     email?: string;
     role?: string;
   };
-  category?: string;
+  category?: IBlogCategory;
   created_at?: Date | string;
   updated_at?: Date | string;
 }

@@ -7,7 +7,7 @@ export interface ICourseQuestionCreate {
     correct_answer: string;
     points: string;
     ordering: number;
-    media_url: File
+    media_url?: File | null | undefined;
 }
 
 export interface ICourseQuestionUpdate {

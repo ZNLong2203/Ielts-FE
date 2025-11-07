@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,6 +93,14 @@ const CourseQuestionForm = ({
     return Math.max(...existingQuestions.map((q) => q.ordering || 0)) + 1;
   };
 
+  // Helper function to determine file type
+  const getFileType = (file: File): 'image' | 'audio' | 'unknown' => {
+    const type = file.type.toLowerCase();
+    if (type.startsWith('image/')) return 'image';
+    if (type.startsWith('audio/')) return 'audio';
+    return 'unknown';
+  };
+
   const form = useForm<CourseQuestionFormData>({
     resolver: zodResolver(CourseQuestionFormSchema),
     defaultValues: {
@@ -105,51 +112,44 @@ const CourseQuestionForm = ({
       points: question?.points || "1",
       ordering: question?.ordering || getNextOrdering(),
       question_options: getQuestionOptions(question),
-      image_file: undefined,
-      audio_file: undefined,
+      media_url: undefined, // Changed from image_file and audio_file
     },
   });
 
   const questionType = form.watch("question_type");
   const questionOptions = form.watch("question_options") || [];
-  const imageFile = form.watch("image_file");
-  const audioFile = form.watch("audio_file");
+  const mediaFile = form.watch("media_url" as any) as File | undefined; // Watch media_url instead
 
   const invalidateQueries = () => {
     queryClient.invalidateQueries({ queryKey: ["exercise", lessonId, exerciseId] });
     queryClient.refetchQueries({ queryKey: ["exercise", lessonId, exerciseId] });
   };
 
-  // File upload mutation
+  // File upload mutation - automatically detects file type
   const uploadFileMutation = useMutation({
-    mutationFn: async ({ questionId, imageFile, audioFile }: { 
+    mutationFn: async ({ questionId, mediaFile }: { 
       questionId: string; 
-      imageFile?: File; 
-      audioFile?: File; 
+      mediaFile: File; 
     }) => {
-      const uploads = [];
+      const fileType = getFileType(mediaFile);
+      const formData = new FormData();
+      formData.append('file', mediaFile);
       
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        uploads.push(uploadCourseQuestionImage(lessonId, exerciseId, questionId, formData));
+      if (fileType === 'image') {
+        return uploadCourseQuestionImage(lessonId, exerciseId, questionId, formData);
+      } else if (fileType === 'audio') {
+        return uploadCourseQuestionAudio(lessonId, exerciseId, questionId, formData);
+      } else {
+        throw new Error('Unsupported file type. Please upload an image or audio file.');
       }
-      
-      if (audioFile) {
-        const formData = new FormData();
-        formData.append('file', audioFile);
-        uploads.push(uploadCourseQuestionAudio(lessonId, exerciseId, questionId, formData));
-      }
-      
-      return Promise.all(uploads);
     },
     onSuccess: () => {
-      toast.success("Files uploaded successfully! 📁");
+      toast.success("Media file uploaded successfully! 📁");
       setUploadingFiles(false);
       invalidateQueries();
     },
     onError: (error: Error) => {
-      toast.error(`Failed to upload files: ${error.message}`);
+      toast.error(`Failed to upload media file: ${error.message}`);
       setUploadingFiles(false);
     },
   });
@@ -176,6 +176,7 @@ const CourseQuestionForm = ({
         points: data.points,
         ordering: data.ordering,
         options: validOptions,
+        media_url: undefined,
       };
 
       return createCourseQuestion(lessonId, exerciseId, questionData);
@@ -183,13 +184,12 @@ const CourseQuestionForm = ({
     onSuccess: async (data) => {
       toast.success("Question created successfully! 🎯");
       
-      // Upload files if any
-      if (imageFile || audioFile) {
+      // Upload media file if exists
+      if (mediaFile) {
         setUploadingFiles(true);
         uploadFileMutation.mutate({ 
           questionId: data.id, 
-          imageFile: imageFile || undefined, 
-          audioFile: audioFile || undefined 
+          mediaFile 
         });
       }
       
@@ -233,13 +233,12 @@ const CourseQuestionForm = ({
     onSuccess: async () => {
       toast.success("Question updated successfully! ✨");
       
-      // Upload files if any
-      if (imageFile || audioFile) {
+      // Upload media file if exists
+      if (mediaFile) {
         setUploadingFiles(true);
         uploadFileMutation.mutate({ 
           questionId: question!.id, 
-          imageFile: imageFile || undefined, 
-          audioFile: audioFile || undefined 
+          mediaFile 
         });
       }
       
@@ -371,13 +370,7 @@ const CourseQuestionForm = ({
               <SelectField
                 control={form.control}
                 name="question_type"
-                label={
-                  <div className="flex items-center space-x-1">
-                    <List className="h-4 w-4" />
-                    <span>Type</span>
-                    <span className="text-red-500">*</span>
-                  </div>
-                }
+                label="Question Type"
                 placeholder="Select type"
                 options={QUESTION_TYPES}
               />
@@ -385,11 +378,7 @@ const CourseQuestionForm = ({
               <SelectField
                 control={form.control}
                 name="difficulty_level"
-                label={
-                  <div>
-                    Difficulty <span className="text-red-500">*</span>
-                  </div>
-                }
+                label="Difficulty Level"
                 placeholder="Select level"
                 options={DIFFICULTY_LEVELS}
               />
@@ -456,29 +445,28 @@ const CourseQuestionForm = ({
               placeholder="Provide an explanation for the correct answer..."
             />
 
-            {/* Media Upload Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FileUploadField
-                control={form.control}
-                name="image_file"
-                label="Image Upload"
-                accept="image/*"
-                maxSize={5}
-                placeholder="Upload question image"
-                description="Images up to 5MB (JPEG, PNG, GIF, WebP)"
-                currentImage={question?.image_url}
-              />
+            {/* Media Upload Section - Combined */}
+            <FileUploadField
+              control={form.control}
+              name="media_url"
+              label="Media Upload"
+              accept="image/*,audio/*"
+              maxSize={10}
+              placeholder="Upload image or audio file"
+              description="Images up to 5MB (JPEG, PNG, GIF, WebP) or Audio files up to 10MB (MP3, WAV, OGG, M4A)"
+              currentImage={question?.image_url}
+            />
 
-              <FileUploadField
-                control={form.control}
-                name="audio_file"
-                label="Audio Upload"
-                accept="audio/*"
-                maxSize={10}
-                placeholder="Upload question audio"
-                description="Audio files up to 10MB (MP3, WAV, OGG, M4A)"
-              />
-            </div>
+            {/* Show file type indicator */}
+            {mediaFile && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center space-x-2 text-blue-800">
+                  <span className="text-sm font-medium">
+                    File type detected: {getFileType(mediaFile)} file
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Question Options */}
             {(questionType === "multiple_choice" || questionType === "droplist" || questionType === "true_false") && (
@@ -600,7 +588,7 @@ const CourseQuestionForm = ({
                 <div className="flex items-center space-x-3">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                   <span className="text-sm font-medium text-blue-800">
-                    Uploading files...
+                    Uploading media file...
                   </span>
                 </div>
               </div>

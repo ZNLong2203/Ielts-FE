@@ -319,19 +319,6 @@ const CourseQuestionItem = ({
           </p>
         </div>
       )}
-
-      {/* Media URLs for debugging (only in development) */}
-      {process.env.NODE_ENV === 'development' && hasMedia && (
-        <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
-          <div className="text-gray-600 font-medium mb-1">Media URLs (Dev):</div>
-          {question.image_url && (
-            <div className="text-gray-500 break-all">Image: {question.image_url}</div>
-          )}
-          {question.audio_url && (
-            <div className="text-gray-500 break-all">Audio: {question.audio_url}</div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

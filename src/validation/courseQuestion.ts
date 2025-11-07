@@ -20,6 +20,6 @@ export const CourseQuestionFormSchema = z.object({
   points: z.string().min(1, "Points is required"),
   ordering: z.number().min(1, "Order must be at least 1"),
   question_options: z.array(CourseQuestionOptionSchema).optional(),
-  media_url: z.any().optional(), // File
+  media_url: z.any().optional(), // Fileimpor
   reading_passage: z.string().optional(),
 });

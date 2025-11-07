@@ -13,7 +13,7 @@ export interface IMockTestCreate {
     instructions: string;
     time_limit: number; // in minutes
     is_active: boolean;
-    difficulty_level: number;
+    difficulty_level: string;
     description: string;
     sections: IMockTestSection[];
 }
@@ -25,7 +25,7 @@ export interface IMockTestUpdate {
     instructions?: string;
     time_limit?: number; // in minutes
     is_active?: boolean;
-    difficulty_level?: number;
+    difficulty_level?: string;
     description?: string;
     sections?: IMockTestSection[];
 }
@@ -39,7 +39,7 @@ export interface IMockTest {
     duration: number; // in minutes
     time_limit: number; // in minutes
     is_active: boolean;
-    difficulty_level: number;
+    difficulty_level: string;
     description: string;
     sections: IMockTestSection[];
     created_at: Date;
