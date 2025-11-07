@@ -65,9 +65,6 @@ export default function StudentLayout({
           </div>
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {navigation.map((item) => {
-              // Check exact match first
-              // For Dashboard, only match if pathname is exactly "/student/dashboard"
-              // For other routes, match if pathname starts with the href (to include sub-routes)
               const isActive = item.href === "/student/dashboard" 
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(item.href + "/")

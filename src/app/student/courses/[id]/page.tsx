@@ -15,7 +15,6 @@ export default function CourseDetailPage() {
   const router = useRouter()
   const courseId = params.id as string
   
-  // Get userId from Redux store
   const userId = useSelector(selectUserId)
 
   const [course, setCourse] = useState<ICourse | null>(null)
@@ -27,7 +26,6 @@ export default function CourseDetailPage() {
       try {
         setLoading(true)
         
-        // Check if user is authenticated
         if (!userId) {
           setError("Please login to view course details")
           setLoading(false)

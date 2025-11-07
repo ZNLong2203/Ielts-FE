@@ -16,7 +16,6 @@ export default function SectionDetailPage() {
   const courseId = params.id as string
   const sectionId = params.sectionId as string
   
-  // Get userId from Redux store
   const userId = useSelector(selectUserId)
 
   const [course, setCourse] = useState<ICourse | null>(null)
@@ -52,7 +51,6 @@ export default function SectionDetailPage() {
       try {
         setLoading(true)
         
-        // Check if user is authenticated
         if (!userId) {
           setError("Please login to view course details")
           setLoading(false)
@@ -62,7 +60,6 @@ export default function SectionDetailPage() {
         const data = await getAdminCourseDetail(courseId)
         setCourse(data)
         
-        // Find the current section
         const section = data.sections?.find(s => s.id === sectionId)
         if (!section) {
           setError("Section not found")
@@ -81,7 +78,6 @@ export default function SectionDetailPage() {
       if (!userId) return
 
       try {
-        // Fetch section progress
         const sectionProgressData = await getSectionProgress(courseId, sectionId)
         if (sectionProgressData) {
           setSectionProgress({
@@ -91,7 +87,6 @@ export default function SectionDetailPage() {
           })
         }
 
-        // Fetch course progress
         const courseProgressData = await getCourseProgress(courseId)
         if (courseProgressData) {
           setCourseProgress({
@@ -102,7 +97,6 @@ export default function SectionDetailPage() {
         }
       } catch (err) {
         console.error("Error fetching progress:", err)
-        // Don't set error, just use default values
       }
     }
 

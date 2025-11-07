@@ -65,7 +65,6 @@ export default function LessonDetailPage() {
       try {
         setLoading(true)
         
-        // Check if user is authenticated
         if (!userId) {
           setError("Please login to view lesson details")
           setLoading(false)
@@ -75,22 +74,17 @@ export default function LessonDetailPage() {
         const data = await getAdminCourseDetail(courseId)
         setCourse(data)
         
-        // Find the current section
         const section = data.sections?.find(s => s.id === sectionId)
         if (!section) {
           setError("Section not found")
         } else {
           setCurrentSection(section)
           
-          // Find the current lesson
           const lesson = section.lessons?.find((l: ILessonExtended) => l.id === lessonId)
           if (!lesson) {
             setError("Lesson not found")
           } else {
             setCurrentLesson(lesson)
-            
-            // Load mock exercises (tạm thời dùng tất cả mock exercises để test)
-            // TODO: Khi có API thật, sẽ filter theo lessonId
             setExercises(mockExercises)
           }
         }
@@ -121,7 +115,6 @@ export default function LessonDetailPage() {
     fetchCourse()
     fetchProgress()
     
-    // Load lesson note from localStorage
     if (userId && lessonId) {
       const savedNote = localStorage.getItem(`lesson_note_${userId}_${lessonId}`)
       if (savedNote) {
@@ -130,7 +123,6 @@ export default function LessonDetailPage() {
     }
   }, [courseId, sectionId, lessonId, userId])
 
-  // Load lesson note from localStorage
   const loadLessonNote = () => {
     if (!userId || !lessonId) return
     const savedNote = localStorage.getItem(`lesson_note_${userId}_${lessonId}`)
@@ -139,17 +131,13 @@ export default function LessonDetailPage() {
     }
   }
 
-  // Save lesson note to localStorage (can be replaced with API call later)
   const saveLessonNote = async () => {
     if (!userId || !lessonId) return
     
     setIsSavingNote(true)
     try {
-      // Save to localStorage (temporary solution)
-      // TODO: Replace with API call to backend
       localStorage.setItem(`lesson_note_${userId}_${lessonId}`, lessonNote)
       
-      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 300))
       
       setIsEditingNote(false)
@@ -197,8 +185,8 @@ export default function LessonDetailPage() {
     try {
       setIsMarkingComplete(true)
       await markLessonComplete(sectionId, lessonId, courseId)
-      // Refresh progress after marking complete
       const progressData = await getLessonProgress(sectionId, lessonId)
+      
       if (progressData) {
         setLessonProgress(progressData.progress_percentage || 100)
         setIsCompleted(progressData.is_completed || true)

@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Play, Pause, Rewind, FastForward, Volume2, Settings, ChevronDown, ChevronUp, Star, ArrowLeft, CheckCircle2, XCircle } from "lucide-react"
+import { Play, Pause, Rewind, FastForward, Volume2, VolumeX, Settings, ChevronDown, ChevronUp, Star, ArrowLeft, CheckCircle2, XCircle, Pin, PinOff } from "lucide-react"
 import { IExercise } from "@/interface/exercise"
 import { ICourseQuestion } from "@/interface/courseQuestion"
 import { mockExercises } from "@/data/mockExercises"
+import { DragDropExercise } from "@/components/exercise/DragDropExercise"
+import { MatchingHeadingExercise } from "@/components/exercise/MatchingHeadingExercise"
+import { useTextHighlight } from "@/hooks/useTextHighlight"
 
 interface UserAnswer {
   questionId: string
@@ -25,31 +28,33 @@ export default function ExercisePage() {
   const [userAnswers, setUserAnswers] = useState<Record<string, UserAnswer>>({})
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
+  const [isMuted, setIsMuted] = useState(false)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [isImagePinned, setIsImagePinned] = useState(false)
   const [expandedExplanations, setExpandedExplanations] = useState<Record<string, boolean>>({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState({ correct: 0, total: 0 })
   const [questionResults, setQuestionResults] = useState<Record<string, boolean>>({})
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
-    // Load all mock exercises
     setAllExercises(mockExercises)
     
-    // Find current exercise index
     const foundIndex = mockExercises.findIndex((ex) => ex.id === exerciseId)
     if (foundIndex >= 0) {
       setCurrentExerciseIndex(foundIndex)
     }
   }, [exerciseId])
 
-  // Initialize answers when exercise changes
   useEffect(() => {
     const currentExercise = allExercises[currentExerciseIndex]
     if (currentExercise) {
       const initialAnswers: Record<string, UserAnswer> = {}
-      currentExercise.questions?.forEach((q) => {
+      const allQuestions = currentExercise.question_groups?.flatMap(group => group.questions || []) || currentExercise.questions || []
+      allQuestions.forEach((q) => {
         initialAnswers[q.id] = {
           questionId: q.id,
-          answer: q.question_type === 'multiple_choice' ? null : q.question_type === 'fill_blank' ? '' : null,
+          answer: q.question_type === 'multiple_choice' ? null : q.question_type === 'fill_blank' ? '' : q.question_type === 'drag_drop' ? null : null,
         }
       })
       setUserAnswers(initialAnswers)
@@ -66,8 +71,70 @@ export default function ExercisePage() {
   }
 
   const exercise = allExercises[currentExerciseIndex] || null
-  const questions = exercise?.questions || []
+  const questionGroups = exercise?.question_groups || []
+  const questions = questionGroups.length > 0 
+    ? questionGroups.flatMap(group => group.questions || [])
+    : (exercise?.questions || [])
   const skillType = (exercise as any)?.skill_type || 'general'
+  const sharedAudioUrl = (exercise as any)?.audio_url
+  const displayDuration = audioDuration > 0 ? audioDuration : (exercise as any)?.audio_duration || 180
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime)
+    }
+
+    const handleEnded = () => {
+      setIsPlaying(false)
+      setCurrentTime(0)
+    }
+
+    const handleLoadedMetadata = () => {
+      if (audio.duration) {
+        setAudioDuration(audio.duration)
+      }
+    }
+
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+
+    // Set muted state
+    audio.muted = isMuted
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+    }
+  }, [sharedAudioUrl, isMuted])
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (isPlaying) {
+      audio.play().catch(err => console.error("Error playing audio:", err))
+    } else {
+      audio.pause()
+    }
+  }, [isPlaying])
+
+  const handleSeek = (seconds: number) => {
+    const audio = audioRef.current
+    if (audio) {
+      const duration = audio.duration || displayDuration
+      audio.currentTime = Math.max(0, Math.min(seconds, duration))
+      setCurrentTime(audio.currentTime)
+    }
+  }
+
+  const handleToggleMute = () => {
+    setIsMuted(!isMuted)
+  }
 
   const handleAnswerChange = (questionId: string, answer: string | string[]) => {
     setUserAnswers((prev) => ({
@@ -98,6 +165,9 @@ export default function ExercisePage() {
       } else if (q.question_type === 'fill_blank') {
         const correctAnswer = (q as any).correct_answer || ''
         isCorrect = userAnswer?.toString().toLowerCase().trim() === correctAnswer.toLowerCase().trim()
+      } else if (q.question_type === 'drag_drop') {
+        const correctOption = q.question_options?.find((opt) => opt.is_correct)
+        isCorrect = correctOption ? userAnswer === correctOption.id : false
       }
       
       results[q.id] = isCorrect
@@ -112,6 +182,140 @@ export default function ExercisePage() {
   const getQuestionResult = (questionId: string): boolean | null => {
     if (!showResults) return null
     return questionResults[questionId] ?? null
+  }
+
+  const QuestionGroupContent = ({ group, groupImageUrl, combinedPassage, renderQuestion }: {
+    group: { id: string; question_type?: string; questions?: ICourseQuestion[]; group_title?: string; group_instruction?: string; passage_reference?: string; ordering: number; image_url?: string }
+    groupImageUrl?: string
+    combinedPassage: string | null
+    renderQuestion: (question: ICourseQuestion, index: number) => React.ReactNode
+  }) => {
+    const passageId = `group-passage-${group.id}`
+    const { highlights, toggleHighlight, clearAllHighlights, renderHighlightedText } = useTextHighlight(passageId)
+    
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        {/* Group Header with Image */}
+        {groupImageUrl && (
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 border-b border-slate-200 relative">
+            <div className="flex items-center justify-between mb-4">
+              {group.group_title && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-sm">{group.ordering}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800">{group.group_title}</h3>
+                </div>
+              )}
+              {groupImageUrl && (
+                <button
+                  onClick={() => setIsImagePinned(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                >
+                  <Pin className="w-3.5 h-3.5" />
+                  <span>Pin</span>
+                </button>
+              )}
+            </div>
+            {group.group_instruction && (
+              <p className="text-slate-700 font-medium mb-4 leading-relaxed">{group.group_instruction}</p>
+            )}
+            {group.passage_reference && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
+                <p className="text-slate-700 font-medium text-sm">{group.passage_reference}</p>
+              </div>
+            )}
+            <div className="rounded-xl overflow-hidden border-2 border-slate-200 shadow-sm">
+              <img src={groupImageUrl} alt={group.group_title || "Question Group Image"} className="w-full h-auto" />
+            </div>
+          </div>
+        )}
+
+        {/* Group Content */}
+        <div className="p-6">
+          {!groupImageUrl && (
+            <div className="mb-6">
+              {group.group_title && (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-sm">{group.ordering}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800">{group.group_title}</h3>
+                </div>
+              )}
+              {group.group_instruction && (
+                <p className="text-slate-700 font-medium mb-4 leading-relaxed">{group.group_instruction}</p>
+              )}
+              {group.passage_reference && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                  <p className="text-slate-700 font-medium text-sm">{group.passage_reference}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Combined Reading Passage for Drag Drop Groups */}
+          {combinedPassage && (
+            <div className="mb-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-800">Reading Passage</h3>
+                <button
+                  onClick={clearAllHighlights}
+                  className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
+                >
+                  Clear Highlights
+                </button>
+              </div>
+              <div
+                id={passageId}
+                onMouseUp={toggleHighlight}
+                className="text-slate-700 leading-relaxed select-text cursor-text"
+                style={{ userSelect: 'text' }}
+              >
+                {combinedPassage.split('\n\n').map((paragraph, index) => {
+                  if (!paragraph.trim()) return null
+                  return (
+                    <div key={index} className="mb-8 last:mb-0">
+                      <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {renderHighlightedText(paragraph)}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+              {highlights.length > 0 && (
+                <p className="mt-2 text-sm text-slate-500">
+                  {highlights.length} highlight{highlights.length > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Questions in Group */}
+          {group.question_type === 'drag_drop' && group.questions ? (
+            <div className="mt-6">
+              <MatchingHeadingExercise
+                questions={group.questions}
+                userAnswers={Object.fromEntries(
+                  group.questions.map(q => [q.id, userAnswers[q.id]?.answer?.toString() || null])
+                )}
+                onAnswerChange={(questionId, answer) => handleAnswerChange(questionId, answer)}
+                showResults={showResults}
+                questionResults={questionResults}
+              />
+            </div>
+          ) : (
+            <div className="space-y-6 mt-6">
+              {group.questions?.map((question, qIndex) => (
+                <div key={question.id}>
+                  {renderQuestion(question, qIndex)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    )
   }
 
   const renderQuestion = (question: ICourseQuestion, index: number) => {
@@ -159,12 +363,6 @@ export default function ExercisePage() {
                   </div>
                 )}
               </div>
-
-              {question.image_url && (
-                <div className="mb-8 rounded-xl overflow-hidden border border-slate-200">
-                  <img src={question.image_url} alt="Question" className="w-full h-auto rounded-xl" />
-                </div>
-              )}
 
               <div className="space-y-3">
                 {question.question_options?.map((option, index) => {
@@ -228,7 +426,7 @@ export default function ExercisePage() {
                 })}
               </div>
 
-              {/* Explanation Section - Chỉ hiển thị sau khi submit */}
+              {/* Explanation Section */}
               {showResults && question.explanation && (
                 <div className="mt-6">
                   <button
@@ -328,13 +526,7 @@ export default function ExercisePage() {
                 )}
               </div>
 
-              {question.image_url && (
-                <div className="mb-8 rounded-xl overflow-hidden border border-slate-200">
-                  <img src={question.image_url} alt="Question" className="w-full h-auto rounded-xl" />
-                </div>
-              )}
-
-              {/* Explanation Section - Chỉ hiển thị sau khi submit */}
+              {/* Explanation Section */}
               {showResults && question.explanation && (
                 <div className="mt-6">
                   <button
@@ -367,6 +559,19 @@ export default function ExercisePage() {
           </div>
         )
 
+      case 'drag_drop':
+        return (
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+            <DragDropExercise
+              question={question}
+              userAnswer={userAnswer?.toString() || null}
+              onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
+              showResults={showResults}
+              isCorrect={isCorrect}
+            />
+          </div>
+        )
+
       default:
         return (
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
@@ -377,23 +582,32 @@ export default function ExercisePage() {
   }
 
   const renderAudioPlayer = () => {
-    const audioUrl = (exercise as any)?.audio_url || questions.find(q => q.audio_url)?.audio_url
-    if (!audioUrl) return null
-    
-    // Get audio duration from first question with audio
-    const audioQuestion = questions.find(q => q.audio_url)
-    const audioDuration = audioQuestion?.audio_duration || 60
+    if (!sharedAudioUrl) return null
 
     return (
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200 mb-6">
         <div className="flex flex-col items-center">
-          <div className="flex items-center gap-6 mb-6">
+          {/* Hidden audio element */}
+          <audio
+            ref={audioRef}
+            src={sharedAudioUrl}
+            preload="metadata"
+            muted={isMuted}
+            onLoadedMetadata={() => {
+              if (audioRef.current && audioRef.current.duration) {
+                setAudioDuration(audioRef.current.duration)
+                setCurrentTime(0)
+              }
+            }}
+          />
+
+          <div className="flex items-center justify-center gap-8 mb-6">
             <button
-              onClick={() => setCurrentTime(Math.max(0, currentTime - 10))}
-              className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 transition-all flex items-center justify-center relative"
+              onClick={() => handleSeek(currentTime - 10)}
+              className="w-16 h-16 rounded-full bg-slate-100 hover:bg-slate-200 transition-all flex flex-col items-center justify-center relative shadow-sm hover:shadow-md group"
             >
-              <Rewind className="w-5 h-5 text-slate-700" />
-              <span className="absolute text-xs text-slate-600 mt-12">10</span>
+              <Rewind className="w-6 h-6 text-slate-700 group-hover:text-slate-900" />
+              <span className="text-xs text-slate-600 mt-1 font-medium">10</span>
             </button>
             
             <button
@@ -408,28 +622,42 @@ export default function ExercisePage() {
             </button>
 
             <button
-              onClick={() => setCurrentTime(currentTime + 10)}
-              className="w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 transition-all flex items-center justify-center relative"
+              onClick={() => handleSeek(currentTime + 10)}
+              className="w-16 h-16 rounded-full bg-slate-100 hover:bg-slate-200 transition-all flex flex-col items-center justify-center relative shadow-sm hover:shadow-md group"
             >
-              <FastForward className="w-5 h-5 text-slate-700" />
-              <span className="absolute text-xs text-slate-600 mt-12">10</span>
+              <FastForward className="w-6 h-6 text-slate-700 group-hover:text-slate-900" />
+              <span className="text-xs text-slate-600 mt-1 font-medium">10</span>
             </button>
           </div>
 
           <div className="w-full space-y-3">
-            <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden cursor-pointer" onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              const percent = (e.clientX - rect.left) / rect.width
+              const newTime = percent * displayDuration
+              handleSeek(newTime)
+            }}>
               <div 
                 className="bg-blue-600 h-full rounded-full transition-all duration-300"
-                style={{ width: `${(currentTime / audioDuration) * 100}%` }}
+                style={{ width: `${(currentTime / displayDuration) * 100}%` }}
               />
             </div>
             <div className="flex justify-between items-center text-slate-700 w-full">
               <span className="text-sm font-medium">{formatTime(currentTime)}</span>
               <div className="flex items-center gap-4">
-                <Volume2 className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform text-slate-600" />
+                <button
+                  onClick={handleToggleMute}
+                  className="cursor-pointer hover:scale-110 transition-transform text-slate-600 hover:text-slate-800"
+                >
+                  {isMuted ? (
+                    <VolumeX className="w-5 h-5" />
+                  ) : (
+                    <Volume2 className="w-5 h-5" />
+                  )}
+                </button>
                 <Settings className="w-5 h-5 cursor-pointer hover:scale-110 transition-transform text-slate-600" />
               </div>
-              <span className="text-sm font-medium">{formatTime(audioDuration)}</span>
+              <span className="text-sm font-medium">{formatTime(displayDuration)}</span>
             </div>
           </div>
         </div>
@@ -456,10 +684,10 @@ export default function ExercisePage() {
 
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className={`min-h-screen bg-slate-50 ${isImagePinned ? 'fixed inset-0 z-50 lg:!ml-0' : ''}`}>
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-slate-200 shadow-sm z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className={`sticky top-0 bg-white border-b border-slate-200 shadow-sm z-10 ${isImagePinned ? 'lg:!ml-0' : ''}`}>
+        <div className={`${isImagePinned ? 'w-full' : 'max-w-7xl'} mx-auto px-4 sm:px-6 lg:px-8 py-4`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -498,7 +726,7 @@ export default function ExercisePage() {
         </div>
       </div>
 
-      {/* Score Summary - Hiển thị khi đã submit */}
+      {/* Score Summary */}
       {showResults && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
           <div className="bg-white rounded-xl p-6 shadow-md border border-slate-200 mb-6">
@@ -575,20 +803,177 @@ export default function ExercisePage() {
       )}
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Audio Player for Listening */}
-        {skillType === 'listening' && (exercise as any)?.audio_url && renderAudioPlayer()}
-
-        {/* All Questions - Hiển thị tất cả questions theo dạng dọc */}
-        <div className="space-y-6">
-          {questions.map((question, index) => (
-            <div key={question.id}>
-              {renderQuestion(question, index)}
+      {isImagePinned ? (() => {
+        const pinnedGroup = questionGroups.find(g => g.image_url)
+        const pinnedImageUrl = pinnedGroup?.image_url
+        if (!pinnedImageUrl) return null
+        return (
+          <div className="flex h-[calc(100vh-80px)] lg:pl-0">
+            {/* Pinned Image - Left Side */}
+            <div className="hidden lg:flex lg:w-1/2 bg-white border-r border-slate-200 overflow-y-auto">
+              <div className="w-full p-6">
+                <div className="sticky top-0 bg-white pb-4 mb-4 border-b border-slate-200 flex items-center justify-between z-10">
+                  <h3 className="text-lg font-bold text-slate-800">{pinnedGroup?.group_title || "Question Image"}</h3>
+                  <button
+                    onClick={() => setIsImagePinned(false)}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <PinOff className="w-4 h-4" />
+                    <span>Unpin</span>
+                  </button>
+                </div>
+                {pinnedGroup?.group_instruction && (
+                  <p className="text-slate-700 font-medium mb-4 leading-relaxed">{pinnedGroup.group_instruction}</p>
+                )}
+                <div className="rounded-xl overflow-hidden border border-slate-200">
+                  <img src={pinnedImageUrl} alt="Exercise Image" className="w-full h-auto rounded-xl" />
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
 
-        {/* Submit Button - Chỉ hiển thị khi chưa submit */}
+            {/* Questions - Right Side */}
+            <div className="flex-1 lg:w-1/2 overflow-y-auto">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* Audio Player for Listening */}
+                {skillType === 'listening' && sharedAudioUrl && renderAudioPlayer()}
+
+                {/* Question Groups */}
+                {questionGroups.length > 0 ? (
+                  <div className="space-y-8">
+                    {questionGroups.map((group) => (
+                      <div key={group.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        {/* Group Header without Image (since it's pinned) */}
+                        <div className="p-6">
+                          {group.group_title && (
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <span className="text-white font-bold text-sm">{group.ordering}</span>
+                              </div>
+                              <h3 className="text-xl font-bold text-slate-800">{group.group_title}</h3>
+                            </div>
+                          )}
+                          {group.group_instruction && (
+                            <p className="text-slate-700 font-medium mb-4 leading-relaxed">{group.group_instruction}</p>
+                          )}
+                          {group.passage_reference && (
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
+                              <p className="text-slate-700 font-medium text-sm">{group.passage_reference}</p>
+                            </div>
+                          )}
+
+                          {/* Questions in Group */}
+                          <div className="space-y-6 mt-6">
+                            {group.questions?.map((question, qIndex) => (
+                              <div key={question.id}>
+                                {renderQuestion(question, qIndex)}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {questions.map((question, index) => (
+                      <div key={question.id}>
+                        {renderQuestion(question, index)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                {!showResults && (
+                  <div className="mt-12 flex flex-col items-center gap-4 pb-8">
+                    <button
+                      onClick={handleSubmit}
+                      className="px-10 py-4 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 hover:shadow-xl transition-all transform hover:scale-105"
+                    >
+                      Submit Answers
+                    </button>
+                    <p className="text-sm text-slate-500 font-medium">
+                      Review your answers before submitting. After submission, correct answers and explanations will be shown.
+                    </p>
+                  </div>
+                )}
+
+                {/* Exercise Selector */}
+                {allExercises.length > 1 && (
+                  <div className="mt-8 pt-8 border-t border-slate-200">
+                    <div className="flex flex-col items-center gap-4">
+                      <p className="text-slate-600 font-medium text-sm">Select Exercise</p>
+                      <div className="flex items-center gap-3 flex-wrap justify-center">
+                        {allExercises.map((ex, index) => {
+                          const isActive = index === currentExerciseIndex
+                          const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer) || ex.question_groups?.some((g) => g.questions?.some((q) => userAnswers[q.id]?.answer))
+                          
+                          return (
+                            <button
+                              key={ex.id}
+                              onClick={() => handleExerciseChange(index)}
+                              className={`w-12 h-12 rounded-xl font-bold text-lg transition-all duration-200 ${
+                                isActive
+                                  ? 'bg-blue-600 text-white shadow-lg scale-110'
+                                  : hasAnswer
+                                  ? 'bg-green-100 text-green-700 border-2 border-green-300 hover:bg-green-200'
+                                  : 'bg-slate-100 text-slate-600 border-2 border-slate-200 hover:bg-slate-200'
+                              }`}
+                            >
+                              {index + 1}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })() : (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Audio Player for Listening */}
+        {skillType === 'listening' && sharedAudioUrl && renderAudioPlayer()}
+
+        {/* Question Groups or Direct Questions */}
+        {questionGroups.length > 0 ? (
+          <div className="space-y-8">
+            {questionGroups.map((group) => {
+              // Check if this group has image for pinning
+              const groupImageUrl = group.image_url
+              
+              // Combine reading passages for drag_drop groups
+              const combinedPassage = group.question_type === 'drag_drop' && group.questions
+                ? group.questions
+                    .map(q => q.reading_passage || '')
+                    .filter(p => p.trim().length > 0)
+                    .join('\n\n')
+                : null
+              
+              return (
+                <QuestionGroupContent
+                  key={group.id}
+                  group={group}
+                  groupImageUrl={groupImageUrl}
+                  combinedPassage={combinedPassage}
+                  renderQuestion={renderQuestion}
+                />
+              )
+            })}
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {questions.map((question, index) => (
+              <div key={question.id}>
+                {renderQuestion(question, index)}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Submit Button */}
         {!showResults && (
           <div className="mt-12 flex flex-col items-center gap-4 pb-8">
             <button
@@ -603,8 +988,7 @@ export default function ExercisePage() {
           </div>
         )}
 
-
-        {/* Exercise Selector - Thanh chọn 1, 2, 3, 4... */}
+        {/* Exercise Selector */}
         {allExercises.length > 1 && (
           <div className="mt-8 pt-8 border-t border-slate-200">
             <div className="flex flex-col items-center gap-4">
@@ -612,7 +996,7 @@ export default function ExercisePage() {
               <div className="flex items-center gap-3 flex-wrap justify-center">
                 {allExercises.map((ex, index) => {
                   const isActive = index === currentExerciseIndex
-                  const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer)
+                  const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer) || ex.question_groups?.some((g) => g.questions?.some((q) => userAnswers[q.id]?.answer))
                   
                   return (
                     <button
@@ -634,7 +1018,8 @@ export default function ExercisePage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
