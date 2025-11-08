@@ -21,7 +21,7 @@ export const createMockTest = async (data: IMockTestCreate): Promise<IMockTest> 
 
 export const getMockTest = async (id: string): Promise<IMockTest> => {
     const response = await api.get(`${BASE_URL}${API_URL.MOCK_TESTS}/${id}`);
-    return response.data.data;
+    return response.data.data.data;
 }
 
 export const updateMockTest = async (id: string, data: IMockTestUpdate): Promise<IMockTest> => {

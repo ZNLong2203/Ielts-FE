@@ -34,11 +34,6 @@ export const TEST_TYPE_OPTIONS = [
   },
 ];
 
-export const TEST_LEVEL_OPTIONS = [
-  { label: "Academic", value: "academic" },
-  { label: "General", value: "general" },
-];
-
 export const DIFFICULTY_LEVEL_OPTIONS = [
   { label: "Level 1 (Easy)", value: "1" },
   { label: "Level 2 (Medium)", value: "2" },

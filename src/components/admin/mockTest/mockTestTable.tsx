@@ -72,10 +72,6 @@ const MockTestTable = () => {
   ).length;
   const filteredCount = filteredData.length;
 
-  // Calculate mock test statistics
-  const activeTests = filteredData.filter((test) => test.is_active).length;
-  const inactiveTests = filteredData.filter((test) => !test.is_active).length;
-
   // Calculate tests by type
   const listeningTests = filteredData.filter(
     (test) => test.test_type === "listening"
@@ -254,79 +250,6 @@ const MockTestTable = () => {
             Create Test
           </Button>
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              {hasActiveFilters ? "Filtered Tests" : "Total Tests"}
-            </p>
-            <FileText className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {hasActiveFilters ? filteredCount : totalItems}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {hasActiveFilters
-                ? `of ${totalItems} total`
-                : `${pageSize} per page`}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Active Tests
-            </p>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {activeTests}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Available for students
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Inactive Tests
-            </p>
-            <XCircle className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {inactiveTests}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Currently disabled
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              Full Tests
-            </p>
-            <Target className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {fullTests}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Complete IELTS tests
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Test Type Distribution Cards */}

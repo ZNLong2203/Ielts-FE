@@ -206,14 +206,6 @@ const OrderForm = () => {
     setTimeout(calculateTotals, 100);
   };
 
-  // Handle coupon selection
-  const handleCouponChange = (couponId: string) => {
-    orderForm.setValue("couponId", couponId);
-    const coupon = couponOptions.find((c) => c.value === couponId);
-    setSelectedCoupon(coupon);
-    setTimeout(calculateTotals, 100);
-  };
-
   // Pagination handlers
   const handleNextPage = () => {
     if (hasNextPage) {

@@ -9,10 +9,9 @@ export interface IMockTestSection {
 export interface IMockTestCreate {
     title: string;
     test_type: string;
-    test_level: string;
     instructions: string;
     time_limit: number; // in minutes
-    is_active: boolean;
+    deleted: boolean;
     difficulty_level: string;
     description: string;
     sections: IMockTestSection[];
@@ -21,10 +20,9 @@ export interface IMockTestCreate {
 export interface IMockTestUpdate {
     title?: string;
     test_type?: string;
-    test_level?: string;
     instructions?: string;
     time_limit?: number; // in minutes
-    is_active?: boolean;
+    deleted?: boolean;
     difficulty_level?: string;
     description?: string;
     sections?: IMockTestSection[];
@@ -34,14 +32,13 @@ export interface IMockTest {
     id: string;
     title: string;
     test_type: string;
-    test_level: string;
     instructions: string;
     duration: number; // in minutes
     time_limit: number; // in minutes
-    is_active: boolean;
+    deleted: boolean;
     difficulty_level: string;
     description: string;
-    sections: IMockTestSection[];
+    test_sections: IMockTestSection[];
     created_at: Date;
     updated_at: Date;
 }

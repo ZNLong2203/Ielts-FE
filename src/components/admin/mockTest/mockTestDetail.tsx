@@ -50,12 +50,10 @@ import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 
 const MockTestDetail = () => {
   const router = useRouter();
-  const params = useParams();
+  const param = useParams();
   const queryClient = useQueryClient();
 
-  const mockTestId = Array.isArray(params.mockTestId)
-    ? params.mockTestId[0]
-    : params.mockTestId;
+  const mockTestId = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
   // Queries
   const {
@@ -86,12 +84,12 @@ const MockTestDetail = () => {
 
   const toggleActiveMutation = useMutation({
     mutationFn: (isActive: boolean) =>
-      updateMockTest(mockTestId, { is_active: isActive }),
+      updateMockTest(mockTestId, { deleted: isActive }),
     onSuccess: (data) => {
       toast.success(
-        `Mock test ${
-          data.is_active ? "activated" : "deactivated"
-        } successfully! ${data.is_active ? "✅" : "⏸️"}`
+        `Mock test ${data.deleted ? "deleted" : "activated"} successfully! ${
+          data.deleted ? "🗑️" : "✅"
+        }`
       );
       queryClient.invalidateQueries({ queryKey: ["mockTest", mockTestId] });
       queryClient.invalidateQueries({ queryKey: ["mockTests"] });
@@ -164,12 +162,9 @@ const MockTestDetail = () => {
         return <Volume2 className="h-4 w-4 text-blue-600" />;
       case "reading":
         return <BookOpen className="h-4 w-4 text-green-600" />;
-      case "writing_task1":
-      case "writing_task2":
+      case "writing":
         return <PenTool className="h-4 w-4 text-purple-600" />;
-      case "speaking_part1":
-      case "speaking_part2":
-      case "speaking_part3":
+      case "speaking":
         return <Mic className="h-4 w-4 text-orange-600" />;
       default:
         return <FileText className="h-4 w-4 text-gray-600" />;
@@ -178,7 +173,7 @@ const MockTestDetail = () => {
 
   const handleToggleActive = () => {
     if (mockTest) {
-      toggleActiveMutation.mutate(!mockTest.is_active);
+      toggleActiveMutation.mutate(!mockTest.deleted);
     }
   };
 
@@ -187,7 +182,7 @@ const MockTestDetail = () => {
   };
 
   const handleEdit = () => {
-    router.push(`${ROUTES.ADMIN_MOCK_TESTS}/edit/${mockTestId}`);
+    router.push(`${ROUTES.ADMIN_MOCK_TESTS}/update/${mockTestId}`);
   };
 
   const handlePreview = () => {
@@ -200,9 +195,6 @@ const MockTestDetail = () => {
     navigator.clipboard.writeText(link);
     toast.success("Test link copied to clipboard! 📋");
   };
-
-  const isLoading_ =
-    isLoading || deleteMutation.isPending || toggleActiveMutation.isPending;
 
   if (isLoading && !mockTest) {
     return <Loading />;
@@ -226,13 +218,13 @@ const MockTestDetail = () => {
   }
 
   const totalDuration =
-    mockTest.sections?.reduce(
+    mockTest.test_sections?.reduce(
       (total, section) => total + section.time_limit,
       0
     ) || 0;
 
   const sectionsByType =
-    mockTest.sections?.reduce((acc, section) => {
+    mockTest.test_sections?.reduce((acc, section) => {
       const type = section.section_type.split("_")[0]; // listening, reading, writing, speaking
       if (!acc[type]) acc[type] = [];
       acc[type].push(section);
@@ -266,19 +258,19 @@ const MockTestDetail = () => {
 
             <div className="flex items-center space-x-3">
               <Badge
-                variant={mockTest.is_active ? "default" : "secondary"}
+                variant={mockTest.deleted ? "default" : "secondary"}
                 className={
-                  mockTest.is_active
+                  mockTest.deleted
                     ? "bg-green-100 text-green-800 hover:bg-green-100"
                     : "bg-red-100 text-red-800 hover:bg-red-100"
                 }
               >
-                {mockTest.is_active ? (
+                {mockTest.deleted ? (
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                 ) : (
                   <XCircle className="h-3 w-3 mr-1" />
                 )}
-                {mockTest.is_active ? "Active" : "Inactive"}
+                {mockTest.deleted ? "Deleted" : "Active"}
               </Badge>
 
               <Button
@@ -392,14 +384,14 @@ const MockTestDetail = () => {
                     <Settings className="h-5 w-5 text-green-600" />
                     <span>Test Sections</span>
                     <Badge variant="outline">
-                      {mockTest.sections?.length || 0} sections
+                      {mockTest.test_sections?.length || 0} sections
                     </Badge>
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockTest.sections?.map((section, index) => (
+                  {mockTest.test_sections?.map((section, index) => (
                     <div
                       key={section.ordering || index}
                       className="border rounded-lg p-4 bg-gray-50"
@@ -558,23 +550,23 @@ const MockTestDetail = () => {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <div className="flex items-center space-x-2">
-                      {mockTest.is_active ? (
+                      {mockTest.deleted ? (
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                       ) : (
                         <XCircle className="h-4 w-4 text-red-600" />
                       )}
                       <label className="text-sm font-medium">
-                        {mockTest.is_active ? "Active" : "Inactive"}
+                        {mockTest.deleted ? "Deleted" : "Active"}
                       </label>
                     </div>
                     <div className="text-sm text-gray-600">
-                      {mockTest.is_active
-                        ? "Test is visible to students"
+                      {mockTest.deleted
+                        ? "Test is deleted and not visible to students"
                         : "Test is hidden from students"}
                     </div>
                   </div>
                   <Switch
-                    checked={mockTest.is_active}
+                    checked={mockTest.deleted}
                     onCheckedChange={handleToggleActive}
                     disabled={toggleActiveMutation.isPending}
                   />
@@ -600,16 +592,9 @@ const MockTestDetail = () => {
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Test Level:</span>
-                    <Badge variant="outline" className="capitalize">
-                      {mockTest.test_level}
-                    </Badge>
-                  </div>
-
-                  <div className="flex justify-between">
                     <span className="text-gray-600">Total Sections:</span>
                     <span className="font-medium">
-                      {mockTest.sections?.length || 0}
+                      {mockTest.test_sections?.length || 0}
                     </span>
                   </div>
 

@@ -1,7 +1,5 @@
 "use client";
-import {
-  Form,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
@@ -14,7 +12,6 @@ import { Switch } from "@/components/ui/switch";
 import {
   Save,
   Target,
-  Clock,
   FileText,
   Star,
   ArrowRight,
@@ -25,6 +22,7 @@ import {
   Award,
   CheckCircle,
   XCircle,
+  Clock,
 } from "lucide-react";
 
 import { z } from "zod";
@@ -32,17 +30,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MockTestFormSchema } from "@/validation/mockTest";
-import { createMockTest, getMockTest } from "@/api/mockTest";
+import {
+  MockTestFormSchema,
+  MockTestFormUpdateSchema,
+} from "@/validation/mockTest";
+import { createMockTest, getMockTest, updateMockTest } from "@/api/mockTest";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { useEffect, useState } from "react";
 import { IMockTestSection } from "@/interface/mockTest";
-import { 
-  TEST_TYPE_OPTIONS as testTypeOptions,
-  TEST_LEVEL_OPTIONS as testLevelOptions,
-  DIFFICULTY_LEVEL_OPTIONS as difficultyLevelOptions,
-  SECTION_TYPE_OPTIONS as sectionTypeOptions,
+import {
+  TEST_TYPE_OPTIONS,
+  DIFFICULTY_LEVEL_OPTIONS,
+  SECTION_TYPE_OPTIONS,
 } from "@/constants/mockTest";
 
 const MockTestForm = () => {
@@ -50,22 +50,14 @@ const MockTestForm = () => {
   const param = useParams();
   const queryClient = useQueryClient();
 
-  const mockTestId = Array.isArray(param.mockTestId)
-    ? param.mockTestId[0]
-    : param.mockTestId;
+  const mockTestId = Array.isArray(param.slug) ? param.slug[0] : param.slug;
+  const isEditing = !!mockTestId;
 
-  let title = "";
-  let description = "";
-  if (mockTestId === undefined || param.mockTestId === "") {
-    title = "Create New Mock Test";
-    description =
-      "Create a comprehensive IELTS mock test with multiple sections";
-  } else {
-    title = "Edit Mock Test";
-    description = "Update mock test information and sections";
-  }
+  const title = isEditing ? "Update Mock Test" : "Create New Mock Test";
+  const description = isEditing
+    ? "Update mock test information and sections"
+    : "Create a comprehensive IELTS mock test with multiple sections";
 
-  // State for sections management
   const [sections, setSections] = useState<IMockTestSection[]>([]);
   const [totalDuration, setTotalDuration] = useState(0);
 
@@ -78,51 +70,88 @@ const MockTestForm = () => {
   } = useQuery({
     queryKey: ["mockTest", mockTestId],
     queryFn: () => getMockTest(mockTestId),
-    enabled: mockTestId !== undefined && mockTestId !== "",
+    enabled: !!mockTestId,
   });
+
+  console.log("Mock Test Data:", mockTestData);
+
+  // Form setup - Use different schemas based on mode
+  const schema = isEditing ? MockTestFormUpdateSchema : MockTestFormSchema;
+
+  const mockTestForm = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: "",
+      test_type: "full_test",
+      instructions: "",
+      time_limit: 180,
+      deleted: false,
+      difficulty_level: "2",
+      description: "",
+      sections: [],
+      test_level: "academic",
+    },
+  });
+
+  const selectedTestType = mockTestForm.watch("test_type");
 
   // Mutations
   const createMockTestMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof MockTestFormSchema>) => {
-      return createMockTest({
+      const payload = {
         ...formData,
-        instructions: formData.instructions || "",
-        description: formData.description || "",
-        sections: sections,
+        sections,
         time_limit: totalDuration,
-        is_active: formData.is_active ?? true,
-        difficulty_level: formData.difficulty_level ?? "2",
-      });
+        instructions: formData.instructions || "",
+        deleted: formData.deleted || false,
+        difficulty_level: formData.difficulty_level || "1",
+        description: formData.description || "",
+      };
+      console.log("Creating with payload:", payload);
+      return createMockTest(payload);
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Mock test created successfully");
       queryClient.invalidateQueries({ queryKey: ["mockTests"] });
       router.push(ROUTES.ADMIN_MOCK_TESTS);
     },
     onError: (error: any) => {
+      console.error("Create error:", error);
       toast.error(
         error?.response?.data?.message || "Failed to create mock test"
       );
     },
   });
 
-  // Form setup
-  const mockTestForm = useForm<z.infer<typeof MockTestFormSchema>>({
-    resolver: zodResolver(MockTestFormSchema),
-    defaultValues: {
-      title: "",
-      test_type: "full_test",
-      test_level: "intermediate",
-      instructions: "",
-      time_limit: 180, // 3 hours default
-      is_active: true,
-      difficulty_level: "2",
-      description: "",
-      sections: [],
+  const updateMockTestMutation = useMutation({
+    mutationFn: async (formData: z.infer<typeof MockTestFormUpdateSchema>) => {
+      const payload = {
+        ...formData,
+        sections,
+        time_limit: totalDuration,
+        instructions: formData.instructions || "",
+        deleted: formData.deleted || false,
+        difficulty_level: formData.difficulty_level || "1",
+        description: formData.description || "",
+      };
+      console.log("Updating with payload:", payload);
+      console.log("Update ID:", mockTestId);
+      return updateMockTest(mockTestId!, payload);
+    },
+    onSuccess: (data) => {
+      console.log("Update success:", data);
+      toast.success("Mock test updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["mockTests"] });
+      queryClient.invalidateQueries({ queryKey: ["mockTest", mockTestId] });
+      router.push(ROUTES.ADMIN_MOCK_TESTS);
+    },
+    onError: (error: any) => {
+      console.error("Update error:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to update mock test"
+      );
     },
   });
-
-  const selectedTestType = mockTestForm.watch("test_type");
 
   // Section management functions
   const addSection = () => {
@@ -139,7 +168,6 @@ const MockTestForm = () => {
   const removeSection = (index: number) => {
     if (sections.length > 1) {
       const newSections = sections.filter((_, i) => i !== index);
-      // Update ordering
       const updatedSections = newSections.map((section, i) => ({
         ...section,
         ordering: i + 1,
@@ -158,6 +186,80 @@ const MockTestForm = () => {
     setSections(newSections);
   };
 
+  // Get initial sections based on test type
+  const getInitialSections = (testType: string): IMockTestSection[] => {
+    const sectionsMap: Record<string, IMockTestSection[]> = {
+      full_test: [
+        {
+          section_name: "Listening",
+          section_type: "listening",
+          time_limit: 40,
+          ordering: 1,
+          instructions:
+            "Listen carefully to the audio recordings and answer the questions.",
+        },
+        {
+          section_name: "Reading",
+          section_type: "reading",
+          time_limit: 60,
+          ordering: 2,
+          instructions: "Read the passages and answer the questions.",
+        },
+        {
+          section_name: "Writing",
+          section_type: "writing",
+          time_limit: 40,
+          ordering: 3,
+          instructions: "Write at least 250 words on the given topic.",
+        },
+        {
+          section_name: "Speaking",
+          section_type: "speaking",
+          time_limit: 15,
+          ordering: 4,
+          instructions: "Answer questions about yourself and familiar topics.",
+        },
+      ],
+      listening: [
+        {
+          section_name: "Listening Test",
+          section_type: "listening",
+          time_limit: 40,
+          ordering: 1,
+          instructions: "Listen to the recordings and answer all questions.",
+        },
+      ],
+      reading: [
+        {
+          section_name: "Reading Test",
+          section_type: "reading",
+          time_limit: 60,
+          ordering: 1,
+          instructions: "Read the passages carefully and answer all questions.",
+        },
+      ],
+      writing: [
+        {
+          section_name: "Writing",
+          section_type: "writing",
+          time_limit: 60,
+          ordering: 1,
+          instructions: "Write at least 150 words.",
+        },
+      ],
+      speaking: [
+        {
+          section_name: "Speaking",
+          section_type: "speaking",
+          time_limit: 15,
+          ordering: 1,
+          instructions: "Introduction and interview.",
+        },
+      ],
+    };
+    return sectionsMap[testType] || [];
+  };
+
   // Calculate total duration
   useEffect(() => {
     const total = sections.reduce(
@@ -168,145 +270,79 @@ const MockTestForm = () => {
     mockTestForm.setValue("time_limit", total);
   }, [sections, mockTestForm]);
 
-  // Initialize sections based on test type
+  // Initialize sections based on test type (only for new tests)
   useEffect(() => {
-    if (selectedTestType && sections.length === 0) {
-      let initialSections: IMockTestSection[] = [];
-
-      switch (selectedTestType) {
-        case "full_test":
-          initialSections = [
-            {
-              section_name: "Listening",
-              section_type: "listening",
-              time_limit: 40,
-              ordering: 1,
-              instructions:
-                "Listen carefully to the audio recordings and answer the questions.",
-            },
-            {
-              section_name: "Reading",
-              section_type: "reading",
-              time_limit: 60,
-              ordering: 2,
-              instructions: "Read the passages and answer the questions.",
-            },
-            {
-              section_name: "Writing",
-              section_type: "writing",
-              time_limit: 40,
-              ordering: 4,
-              instructions: "Write at least 250 words on the given topic.",
-            },
-            {
-              section_name: "Speaking",
-              section_type: "speaking",
-              time_limit: 15,
-              ordering: 5,
-              instructions:
-                "Answer questions about yourself and familiar topics.",
-            },
-          ];
-          break;
-        case "listening":
-          initialSections = [
-            {
-              section_name: "Listening Test",
-              section_type: "listening",
-              time_limit: 40,
-              ordering: 1,
-              instructions:
-                "Listen to the recordings and answer all questions.",
-            },
-          ];
-          break;
-        case "reading":
-          initialSections = [
-            {
-              section_name: "Reading Test",
-              section_type: "reading",
-              time_limit: 60,
-              ordering: 1,
-              instructions:
-                "Read the passages carefully and answer all questions.",
-            },
-          ];
-          break;
-        case "writing":
-          initialSections = [
-            {
-              section_name: "Writing",
-              section_type: "writing",
-              time_limit: 20,
-              ordering: 1,
-              instructions: "Write at least 150 words.",
-            },
-            {
-              section_name: "Writing Task 2",
-              section_type: "writing_task2",
-              time_limit: 40,
-              ordering: 2,
-              instructions: "Write at least 250 words.",
-            },
-          ];
-          break;
-        case "speaking":
-          initialSections = [
-            {
-              section_name: "Speaking",
-              section_type: "speaking",
-              time_limit: 5,
-              ordering: 1,
-              instructions: "Introduction and interview.",
-            },
-          ];
-          break;
-      }
-
-      setSections(initialSections);
+    if (
+      selectedTestType &&
+      sections.length === 0 &&
+      !isEditing &&
+      !mockTestData
+    ) {
+      console.log("Initializing sections for:", selectedTestType);
+      setSections(getInitialSections(selectedTestType));
     }
-  }, [selectedTestType]);
+  }, [selectedTestType, isEditing, mockTestData]);
 
   // Load existing data
   useEffect(() => {
-    if (mockTestData) {
+    if (mockTestData && isEditing) {
+      console.log("Loading existing mock test data:", mockTestData);
+
+      // Reset form with existing data
       mockTestForm.reset({
-        title: mockTestData.title,
-        test_type: mockTestData.test_type,
-        test_level: mockTestData.test_level,
-        instructions: mockTestData.instructions,
-        time_limit: mockTestData.time_limit,
-        is_active: mockTestData.is_active,
-        difficulty_level: mockTestData.difficulty_level,
-        description: mockTestData.description,
-        sections: mockTestData.sections || [],
+        title: mockTestData.title || "",
+        test_type: mockTestData.test_type || "full_test",
+        instructions: mockTestData.instructions || "",
+        time_limit: mockTestData.time_limit || 180,
+        difficulty_level: mockTestData.difficulty_level?.toString() || "2",
+        description: mockTestData.description || "",
+        deleted: mockTestData.deleted || false,
+        sections: mockTestData.test_sections || [],
       });
 
-      if (mockTestData.sections) {
-        setSections(mockTestData.sections);
+      // Set sections state
+      if (
+        mockTestData.test_sections &&
+        Array.isArray(mockTestData.test_sections)
+      ) {
+        console.log("Setting sections:", mockTestData.test_sections);
+        setSections(mockTestData.test_sections);
+      } else {
+        // Fallback to default sections if none exist
+        const initialSections = getInitialSections(mockTestData.test_type);
+        setSections(initialSections);
       }
     }
-  }, [mockTestData, mockTestForm]);
+  }, [mockTestData, isEditing, mockTestForm]);
 
-  const onSubmit = async (data: z.infer<typeof MockTestFormSchema>) => {
+  // Update onSubmit to use correct types
+  const onSubmit = async (data: any) => {
     if (sections.length === 0) {
       toast.error("Please add at least one section to the test");
       return;
     }
 
-    console.log("Mock Test Form Submitted:", {
-      ...data,
-      sections,
-      time_limit: totalDuration,
-    });
-    createMockTestMutation.mutate(data);
+    try {
+      if (isEditing) {
+        await updateMockTestMutation.mutateAsync(data);
+      } else {
+        await createMockTestMutation.mutateAsync(data);
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+    }
   };
 
-  if (isLoading) {
+  console.log("isEdit", isEditing);
+
+  const isSubmitting =
+    createMockTestMutation.isPending || updateMockTestMutation.isPending;
+
+  if (isLoading && isEditing) {
     return <Loading />;
   }
 
-  if (isError) {
+  if (isError && isEditing) {
     return (
       <Error
         title="Mock Test Not Found"
@@ -348,7 +384,9 @@ const MockTestForm = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Form {...mockTestForm}>
           <form
-            onSubmit={mockTestForm.handleSubmit(onSubmit)}
+            onSubmit={(e) => {
+              mockTestForm.handleSubmit(onSubmit)(e);
+            }}
             className="space-y-8"
           >
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -384,9 +422,9 @@ const MockTestForm = () => {
                         name="test_type"
                         label="Test Type"
                         placeholder="Select test type"
-                        options={testTypeOptions.map(option => ({
+                        options={TEST_TYPE_OPTIONS.map((option) => ({
                           label: option.label,
-                          value: option.value
+                          value: option.value,
                         }))}
                       />
 
@@ -395,7 +433,13 @@ const MockTestForm = () => {
                         name="test_level"
                         label="Test Level"
                         placeholder="Select test level"
-                        options={testLevelOptions}
+                        options={[
+                          { label: "Academic", value: "academic" },
+                          {
+                            label: "General Training",
+                            value: "general_training",
+                          },
+                        ]}
                       />
                     </div>
 
@@ -404,10 +448,7 @@ const MockTestForm = () => {
                       name="difficulty_level"
                       label="Difficulty Level"
                       placeholder="Select difficulty level"
-                      options={difficultyLevelOptions.map(option => ({
-                        label: option.label,
-                        value: option.value // Keep as string, will be converted in form
-                      }))}
+                      options={DIFFICULTY_LEVEL_OPTIONS}
                     />
 
                     <TextField
@@ -419,155 +460,238 @@ const MockTestForm = () => {
                   </CardContent>
                 </Card>
 
-                {/* Test Sections */}
-                <Card>
-                  <CardHeader>
+                {/* Test Sections - Enhanced Design */}
+                <Card className="border-0 shadow-lg">
+                  <CardHeader className="border-t">
                     <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Settings className="h-5 w-5 text-green-600" />
-                        <span>Test Sections</span>
-                        <span className="text-sm text-gray-500">
-                          ({sections.length} sections)
-                        </span>
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-green-100 rounded-xl">
+                          <Settings className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Test Sections
+                          </h3>
+                        </div>
                       </div>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={addSection}
-                        className="flex items-center space-x-1"
+                        className="flex items-center space-x-2 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
                       >
                         <Plus className="h-4 w-4" />
                         <span>Add Section</span>
                       </Button>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="p-6">
                     {sections.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                        <p>
-                          No sections added yet. Click "Add Section" to get
-                          started.
+                      <div className="text-center py-12">
+                        <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                          <Target className="h-12 w-12 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No sections yet
+                        </h3>
+                        <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+                          Create your first section to start building your mock
+                          test. Each section can have its own timing and
+                          instructions.
                         </p>
+                        <Button
+                          type="button"
+                          onClick={addSection}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create First Section
+                        </Button>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {sections.map((section, index) => (
-                          <div
-                            key={index}
-                            className="border rounded-lg p-4 space-y-4 bg-gray-50"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                                  {index + 1}
+                          <div key={index} className="relative group">
+                            <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300">
+                              {/* Section Header */}
+                              <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center space-x-4">
+                                  <div className="relative">
+                                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg">
+                                      {index + 1}
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-lg font-semibold text-gray-900">
+                                      {section.section_name ||
+                                        `Section ${index + 1}`}
+                                    </h4>
+                                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                      <span className="capitalize">
+                                        {section.section_type.replace("_", " ")}
+                                      </span>
+                                      <span>•</span>
+                                      <span>{section.time_limit} minutes</span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <span className="font-medium">
-                                  Section {index + 1}
-                                </span>
-                              </div>
-                              {sections.length > 1 && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeSection(index)}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                  Section Name
-                                </label>
-                                <TextField
-                                  control={{
-                                    ...mockTestForm.control,
-                                    _formValues: {
-                                      [`section_${index}_name`]: section.section_name
+                                {sections.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeSection(index)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+
+                              {/* Section Form Fields */}
+                              <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
+                                      <FileText className="h-4 w-4 text-gray-500" />
+                                      <span>Section Name</span>
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={section.section_name}
+                                      onChange={(e) =>
+                                        updateSection(
+                                          index,
+                                          "section_name",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                                      placeholder="e.g., Listening Comprehension"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
+                                      <Settings className="h-4 w-4 text-gray-500" />
+                                      <span>Section Type</span>
+                                    </label>
+                                    <select
+                                      value={section.section_type}
+                                      onChange={(e) =>
+                                        updateSection(
+                                          index,
+                                          "section_type",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                                    >
+                                      {SECTION_TYPE_OPTIONS.map((option) => (
+                                        <option
+                                          key={option.value}
+                                          value={option.value}
+                                        >
+                                          {option.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
+                                      <Clock className="h-4 w-4 text-gray-500" />
+                                      <span>Time Limit</span>
+                                    </label>
+                                    <div className="relative">
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        max="180"
+                                        value={section.time_limit}
+                                        onChange={(e) =>
+                                          updateSection(
+                                            index,
+                                            "time_limit",
+                                            parseInt(e.target.value) || 0
+                                          )
+                                        }
+                                        className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                                        placeholder="60"
+                                      />
+                                      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <span className="text-sm text-gray-500 font-medium">
+                                          minutes
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
+                                    <FileText className="h-4 w-4 text-gray-500" />
+                                    <span>Section Instructions</span>
+                                  </label>
+                                  <textarea
+                                    value={section.instructions}
+                                    onChange={(e) =>
+                                      updateSection(
+                                        index,
+                                        "instructions",
+                                        e.target.value
+                                      )
                                     }
-                                  } as any}
-                                  name={`section_${index}_name`}
-                                  label=""
-                                  placeholder="Enter section name..."
-                                  onValueChange={(value) => updateSection(index, "section_name", value)}
-                                />
+                                    rows={3}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white resize-none"
+                                    placeholder="Provide specific instructions for this section..."
+                                  />
+                                </div>
                               </div>
 
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                  Section Type
-                                </label>
-                                <SelectField
-                                  control={{
-                                    ...mockTestForm.control,
-                                    _formValues: {
-                                      [`section_${index}_type`]: section.section_type
-                                    }
-                                  } as any}
-                                  name={`section_${index}_type`}
-                                  label=""
-                                  placeholder="Select section type"
-                                  options={sectionTypeOptions}
-                                />
-                              </div>
-
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                  Time Limit (minutes)
-                                </label>
-                                <TextField
-                                  control={{
-                                    ...mockTestForm.control,
-                                    _formValues: {
-                                      [`section_${index}_time`]: section.time_limit
-                                    }
-                                  } as any}
-                                  name={`section_${index}_time`}
-                                  label=""
-                                  type="number"
-                                  min={1}
-                                  max={180}
-                                  placeholder="Enter time limit..."
-                                  onValueChange={(value) => updateSection(index, "time_limit", parseInt(value) || 0)}
-                                />
-                              </div>
-
-                              <div className="flex items-end">
-                                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                  <Clock className="h-4 w-4" />
+                              {/* Section Footer */}
+                              <div className="mt-6 pt-4 border-t border-gray-100">
+                                <div className="flex items-center justify-between text-sm text-gray-500">
                                   <span>
-                                    {Math.floor(section.time_limit / 60)}h{" "}
-                                    {section.time_limit % 60}m
+                                    Section {index + 1} of {sections.length}
                                   </span>
+                                  <div className="flex items-center space-x-4">
+                                    <span>Order: {section.ordering}</span>
+                                    <span>•</span>
+                                    <span className="capitalize">
+                                      {section.section_type.replace("_", " ")}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
 
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                                Section Instructions
-                              </label>
-                              <TextField
-                                control={{
-                                  ...mockTestForm.control,
-                                  _formValues: {
-                                    [`section_${index}_instructions`]: section.instructions
-                                  }
-                                } as any}
-                                name={`section_${index}_instructions`}
-                                label=""
-                                placeholder="Enter specific instructions for this section..."
-                                onValueChange={(value) => updateSection(index, "instructions", value)}
-                              />
-                            </div>
+                            {index < sections.length - 1 && (
+                              <div className="flex justify-center my-4">
+                                <div className="w-px h-6 bg-gray-300"></div>
+                              </div>
+                            )}
                           </div>
                         ))}
+
+                        <div className="flex justify-center pt-6">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={addSection}
+                            className="flex items-center space-x-2 px-6 py-3 border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+                          >
+                            <Plus className="h-5 w-5 text-gray-500" />
+                            <span className="text-gray-600 font-medium">
+                              Add Another Section
+                            </span>
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -613,7 +737,10 @@ const MockTestForm = () => {
                             <Star
                               key={i}
                               className={`h-3 w-3 ${
-                                i < parseInt(mockTestForm.watch("difficulty_level") || "0")
+                                i <
+                                parseInt(
+                                  mockTestForm.watch("difficulty_level") || "0"
+                                )
                                   ? "text-yellow-400 fill-yellow-400"
                                   : "text-gray-300"
                               }`}
@@ -627,7 +754,7 @@ const MockTestForm = () => {
                       <div className="flex justify-between text-lg font-bold">
                         <span>Status:</span>
                         <div className="flex items-center space-x-2">
-                          {mockTestForm.watch("is_active") ? (
+                          {!mockTestForm.watch("deleted") ? (
                             <>
                               <CheckCircle className="h-4 w-4 text-green-600" />
                               <span className="text-green-600">Active</span>
@@ -666,9 +793,9 @@ const MockTestForm = () => {
                         </div>
                       </div>
                       <Switch
-                        checked={mockTestForm.watch("is_active")}
+                        checked={!mockTestForm.watch("deleted")}
                         onCheckedChange={(checked) =>
-                          mockTestForm.setValue("is_active", checked)
+                          mockTestForm.setValue("deleted", !checked)
                         }
                       />
                     </div>
@@ -682,15 +809,16 @@ const MockTestForm = () => {
                       <Button
                         type="submit"
                         className="w-full flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                        disabled={
-                          createMockTestMutation.isPending ||
-                          sections.length === 0
-                        }
+                        disabled={isSubmitting || sections.length === 0}
                       >
                         <Save className="h-4 w-4" />
                         <span>
-                          {createMockTestMutation.isPending
-                            ? "Creating..."
+                          {isSubmitting
+                            ? isEditing
+                              ? "Updating..."
+                              : "Creating..."
+                            : isEditing
+                            ? "Update Mock Test"
                             : "Create Mock Test"}
                         </span>
                       </Button>
@@ -700,6 +828,7 @@ const MockTestForm = () => {
                         variant="outline"
                         className="w-full"
                         onClick={() => router.back()}
+                        disabled={isSubmitting}
                       >
                         Cancel
                       </Button>
