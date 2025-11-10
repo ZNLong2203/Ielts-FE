@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 import { Play, Pause, Rewind, FastForward, Volume2, VolumeX, Settings, ChevronDown, ChevronUp, Star, ArrowLeft, CheckCircle2, XCircle, Pin, PinOff } from "lucide-react"
 import { IExercise } from "@/interface/exercise"
 import { ICourseQuestion } from "@/interface/courseQuestion"
-import { mockExercises } from "@/data/mockExercises"
+import { getExercisesByLessonId, getExerciseByLessonId } from "@/api/exercise"
 import { DragDropExercise } from "@/components/exercise/DragDropExercise"
 import { MatchingHeadingExercise } from "@/components/exercise/MatchingHeadingExercise"
 import { useTextHighlight } from "@/hooks/useTextHighlight"
@@ -37,20 +38,63 @@ export default function ExercisePage() {
   const [questionResults, setQuestionResults] = useState<Record<string, boolean>>({})
   const audioRef = useRef<HTMLAudioElement>(null)
 
+  // Fetch all exercises for the lesson
+  const { data: exercisesData, isLoading: exercisesLoading } = useQuery({
+    queryKey: ["exercises", lessonId],
+    queryFn: () => getExercisesByLessonId(lessonId),
+    enabled: !!lessonId,
+  })
+
+  // Validate if exerciseId is a valid UUID
+  const isValidUUID = (str: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(str)
+  }
+
+  // Fetch current exercise details
+  const { data: currentExerciseData, isLoading: exerciseLoading } = useQuery({
+    queryKey: ["exercise", lessonId, exerciseId],
+    queryFn: () => getExerciseByLessonId(lessonId, exerciseId),
+    enabled: !!lessonId && !!exerciseId && isValidUUID(exerciseId),
+  })
+
+  // Update exercises list when data is fetched
   useEffect(() => {
-    setAllExercises(mockExercises)
-    
-    const foundIndex = mockExercises.findIndex((ex) => ex.id === exerciseId)
-    if (foundIndex >= 0) {
-      setCurrentExerciseIndex(foundIndex)
+    if (exercisesData && Array.isArray(exercisesData)) {
+      const sortedExercises = [...exercisesData].sort((a, b) => (a.ordering || 0) - (b.ordering || 0))
+      setAllExercises(sortedExercises)
+      
+      // If exerciseId is not a valid UUID, try to find by index or use first exercise
+      if (!isValidUUID(exerciseId)) {
+        const index = parseInt(exerciseId) - 1
+        if (index >= 0 && index < sortedExercises.length) {
+          const targetExercise = sortedExercises[index]
+          router.replace(`/student/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/exercises/${targetExercise.id}`, { scroll: false })
+          return
+        } else if (sortedExercises.length > 0) {
+          // If invalid index, redirect to first exercise
+          router.replace(`/student/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/exercises/${sortedExercises[0].id}`, { scroll: false })
+          return
+        }
+      }
+      
+      const foundIndex = sortedExercises.findIndex((ex) => ex.id === exerciseId)
+      if (foundIndex >= 0) {
+        setCurrentExerciseIndex(foundIndex)
+      } else if (sortedExercises.length > 0) {
+        // If exercise not found, redirect to first exercise
+        router.replace(`/student/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/exercises/${sortedExercises[0].id}`, { scroll: false })
+      }
     }
-  }, [exerciseId])
+  }, [exercisesData, exerciseId, courseId, sectionId, lessonId, router])
+
+  // Use current exercise data from API or fallback to exercises list
+  const exercise = currentExerciseData || allExercises[currentExerciseIndex] || null
 
   useEffect(() => {
-    const currentExercise = allExercises[currentExerciseIndex]
-    if (currentExercise) {
+    if (exercise) {
       const initialAnswers: Record<string, UserAnswer> = {}
-      const allQuestions = currentExercise.question_groups?.flatMap(group => group.questions || []) || currentExercise.questions || []
+      const allQuestions = exercise.question_groups?.flatMap(group => group.questions || []) || exercise.questions || []
       allQuestions.forEach((q) => {
         initialAnswers[q.id] = {
           questionId: q.id,
@@ -59,8 +103,10 @@ export default function ExercisePage() {
       })
       setUserAnswers(initialAnswers)
       setExpandedExplanations({})
+      setShowResults(false)
+      setQuestionResults({})
     }
-  }, [currentExerciseIndex, allExercises])
+  }, [exercise])
 
   const handleExerciseChange = (index: number) => {
     if (index >= 0 && index < allExercises.length) {
@@ -70,14 +116,13 @@ export default function ExercisePage() {
     }
   }
 
-  const exercise = allExercises[currentExerciseIndex] || null
   const questionGroups = exercise?.question_groups || []
   const questions = questionGroups.length > 0 
     ? questionGroups.flatMap(group => group.questions || [])
     : (exercise?.questions || [])
-  const skillType = (exercise as any)?.skill_type || 'general'
-  const sharedAudioUrl = (exercise as any)?.audio_url
-  const displayDuration = audioDuration > 0 ? audioDuration : (exercise as any)?.audio_duration || 180
+  const skillType = exercise?.skill_type || 'general'
+  const sharedAudioUrl = exercise?.audio_url
+  const displayDuration = audioDuration > 0 ? audioDuration : 180
 
   useEffect(() => {
     const audio = audioRef.current
@@ -163,7 +208,7 @@ export default function ExercisePage() {
         const correctOption = q.question_options?.find((opt) => opt.is_correct)
         isCorrect = correctOption ? userAnswer === correctOption.id : false
       } else if (q.question_type === 'fill_blank') {
-        const correctAnswer = (q as any).correct_answer || ''
+        const correctAnswer = (q as ICourseQuestion & { correct_answer?: string }).correct_answer || ''
         isCorrect = userAnswer?.toString().toLowerCase().trim() === correctAnswer.toLowerCase().trim()
       } else if (q.question_type === 'drag_drop') {
         const correctOption = q.question_options?.find((opt) => opt.is_correct)
@@ -497,7 +542,7 @@ export default function ExercisePage() {
                               />
                               {showResults && isIncorrect && (
                                 <span className="ml-2 text-sm text-red-600 font-semibold">
-                                  (Correct answer: {(question as any).correct_answer || 'N/A'})
+                                  (Correct answer: {(question as ICourseQuestion & { correct_answer?: string }).correct_answer || 'N/A'})
                                 </span>
                               )}
                             </span>
@@ -671,7 +716,7 @@ export default function ExercisePage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
 
-  if (!exercise || allExercises.length === 0) {
+  if (exercisesLoading || exerciseLoading || !exercise) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
