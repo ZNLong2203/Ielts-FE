@@ -73,8 +73,6 @@ const MockTestForm = () => {
     enabled: !!mockTestId,
   });
 
-  console.log("Mock Test Data:", mockTestData);
-
   // Form setup - Use different schemas based on mode
   const schema = isEditing ? MockTestFormUpdateSchema : MockTestFormSchema;
 
@@ -84,12 +82,11 @@ const MockTestForm = () => {
       title: "",
       test_type: "full_test",
       instructions: "",
-      time_limit: 180,
+      duration: 180,
       deleted: false,
       difficulty_level: "2",
       description: "",
-      sections: [],
-      test_level: "academic",
+      test_sections: [],
     },
   });
 
@@ -100,8 +97,8 @@ const MockTestForm = () => {
     mutationFn: async (formData: z.infer<typeof MockTestFormSchema>) => {
       const payload = {
         ...formData,
-        sections,
-        time_limit: totalDuration,
+        test_sections: sections,
+        duration: totalDuration,
         instructions: formData.instructions || "",
         deleted: formData.deleted || false,
         difficulty_level: formData.difficulty_level || "1",
@@ -116,7 +113,6 @@ const MockTestForm = () => {
       router.push(ROUTES.ADMIN_MOCK_TESTS);
     },
     onError: (error: any) => {
-      console.error("Create error:", error);
       toast.error(
         error?.response?.data?.message || "Failed to create mock test"
       );
@@ -127,15 +123,14 @@ const MockTestForm = () => {
     mutationFn: async (formData: z.infer<typeof MockTestFormUpdateSchema>) => {
       const payload = {
         ...formData,
-        sections,
-        time_limit: totalDuration,
+        test_sections: sections,
+        duration: totalDuration,
         instructions: formData.instructions || "",
         deleted: formData.deleted || false,
         difficulty_level: formData.difficulty_level || "1",
         description: formData.description || "",
       };
       console.log("Updating with payload:", payload);
-      console.log("Update ID:", mockTestId);
       return updateMockTest(mockTestId!, payload);
     },
     onSuccess: (data) => {
@@ -158,10 +153,11 @@ const MockTestForm = () => {
     const newSection: IMockTestSection = {
       section_name: `Section ${sections.length + 1}`,
       section_type: "reading",
-      time_limit: 60,
+      duration: 60,
       ordering: sections.length + 1,
-      instructions: "",
+      description: "",
     };
+    mockTestForm.setValue("test_sections", [...sections, newSection]);
     setSections([...sections, newSection]);
   };
 
@@ -173,6 +169,7 @@ const MockTestForm = () => {
         ordering: i + 1,
       }));
       setSections(updatedSections);
+      mockTestForm.setValue("test_sections", updatedSections);
     }
   };
 
@@ -183,6 +180,7 @@ const MockTestForm = () => {
   ) => {
     const newSections = [...sections];
     newSections[index] = { ...newSections[index], [field]: value };
+    mockTestForm.setValue("test_sections", newSections);
     setSections(newSections);
   };
 
@@ -193,81 +191,83 @@ const MockTestForm = () => {
         {
           section_name: "Listening",
           section_type: "listening",
-          time_limit: 40,
+          duration: 40,
           ordering: 1,
-          instructions:
+          description:
             "Listen carefully to the audio recordings and answer the questions.",
         },
         {
           section_name: "Reading",
           section_type: "reading",
-          time_limit: 60,
+          duration: 60,
           ordering: 2,
-          instructions: "Read the passages and answer the questions.",
+          description: "Read the passages and answer the questions.",
         },
         {
           section_name: "Writing",
           section_type: "writing",
-          time_limit: 40,
+          duration: 40,
           ordering: 3,
-          instructions: "Write at least 250 words on the given topic.",
+          description: "Write at least 250 words on the given topic.",
         },
         {
           section_name: "Speaking",
           section_type: "speaking",
-          time_limit: 15,
+          duration: 15,
           ordering: 4,
-          instructions: "Answer questions about yourself and familiar topics.",
+          description: "Answer questions about yourself and familiar topics.",
         },
       ],
       listening: [
         {
           section_name: "Listening Test",
           section_type: "listening",
-          time_limit: 40,
+          duration: 40,
           ordering: 1,
-          instructions: "Listen to the recordings and answer all questions.",
+          description: "Listen to the recordings and answer all questions.",
         },
       ],
       reading: [
         {
           section_name: "Reading Test",
           section_type: "reading",
-          time_limit: 60,
+          duration: 60,
           ordering: 1,
-          instructions: "Read the passages carefully and answer all questions.",
+          description: "Read the passages carefully and answer all questions.",
         },
       ],
       writing: [
         {
           section_name: "Writing",
           section_type: "writing",
-          time_limit: 60,
+          duration: 60,
           ordering: 1,
-          instructions: "Write at least 150 words.",
+          description: "Write at least 150 words.",
+        
         },
       ],
       speaking: [
         {
           section_name: "Speaking",
           section_type: "speaking",
-          time_limit: 15,
+          duration: 15,
           ordering: 1,
-          instructions: "Introduction and interview.",
+          description: "Introduction and interview.",
         },
       ],
     };
     return sectionsMap[testType] || [];
   };
+  useEffect(() => {
+    // Update form sections field whenever sections state changes
+    mockTestForm.setValue("test_sections", sections);
+  }, [sections, mockTestForm]);
 
   // Calculate total duration
   useEffect(() => {
-    const total = sections.reduce(
-      (sum, section) => sum + section.time_limit,
-      0
-    );
+    const total = sections.reduce((sum, section) => sum + section.duration, 0);
     setTotalDuration(total);
-    mockTestForm.setValue("time_limit", total);
+    mockTestForm.setValue("duration", total);
   }, [sections, mockTestForm]);
 
   // Initialize sections based on test type (only for new tests)
@@ -286,18 +286,17 @@ const MockTestForm = () => {
   // Load existing data
   useEffect(() => {
     if (mockTestData && isEditing) {
-      console.log("Loading existing mock test data:", mockTestData);
 
       // Reset form with existing data
       mockTestForm.reset({
         title: mockTestData.title || "",
         test_type: mockTestData.test_type || "full_test",
         instructions: mockTestData.instructions || "",
-        time_limit: mockTestData.time_limit || 180,
+        duration: mockTestData.duration || 180,
         difficulty_level: mockTestData.difficulty_level?.toString() || "2",
         description: mockTestData.description || "",
         deleted: mockTestData.deleted || false,
-        sections: mockTestData.test_sections || [],
+        test_sections: mockTestData.test_sections || [],
       });
 
       // Set sections state
@@ -332,8 +331,6 @@ const MockTestForm = () => {
       console.error("Submit error:", error);
     }
   };
-
-  console.log("isEdit", isEditing);
 
   const isSubmitting =
     createMockTestMutation.isPending || updateMockTestMutation.isPending;
@@ -427,20 +424,6 @@ const MockTestForm = () => {
                           value: option.value,
                         }))}
                       />
-
-                      <SelectField
-                        control={mockTestForm.control}
-                        name="test_level"
-                        label="Test Level"
-                        placeholder="Select test level"
-                        options={[
-                          { label: "Academic", value: "academic" },
-                          {
-                            label: "General Training",
-                            value: "general_training",
-                          },
-                        ]}
-                      />
                     </div>
 
                     <SelectField
@@ -533,7 +516,7 @@ const MockTestForm = () => {
                                         {section.section_type.replace("_", " ")}
                                       </span>
                                       <span>•</span>
-                                      <span>{section.time_limit} minutes</span>
+                                      <span>{section.duration} minutes</span>
                                     </div>
                                   </div>
                                 </div>
@@ -606,18 +589,18 @@ const MockTestForm = () => {
                                   <div className="space-y-2">
                                     <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2">
                                       <Clock className="h-4 w-4 text-gray-500" />
-                                      <span>Time Limit</span>
+                                      <span>Duration</span>
                                     </label>
                                     <div className="relative">
                                       <input
                                         type="number"
                                         min="1"
                                         max="180"
-                                        value={section.time_limit}
+                                        value={section.duration}
                                         onChange={(e) =>
                                           updateSection(
                                             index,
-                                            "time_limit",
+                                            "duration",
                                             parseInt(e.target.value) || 0
                                           )
                                         }
@@ -639,17 +622,17 @@ const MockTestForm = () => {
                                     <span>Section Instructions</span>
                                   </label>
                                   <textarea
-                                    value={section.instructions}
+                                    value={section.description}
                                     onChange={(e) =>
                                       updateSection(
                                         index,
-                                        "instructions",
+                                        "description",
                                         e.target.value
                                       )
                                     }
                                     rows={3}
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white resize-none"
-                                    placeholder="Provide specific instructions for this section..."
+                                    placeholder="Provide specific description for this section..."
                                   />
                                 </div>
                               </div>

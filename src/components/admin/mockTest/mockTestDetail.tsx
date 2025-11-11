@@ -219,7 +219,7 @@ const MockTestDetail = () => {
 
   const totalDuration =
     mockTest.test_sections?.reduce(
-      (total, section) => total + section.time_limit,
+      (total, section) => total + section.duration,
       0
     ) || 0;
 
@@ -411,7 +411,7 @@ const MockTestDetail = () => {
                         <div className="flex items-center space-x-4 text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4" />
-                            <span>{formatDuration(section.time_limit)}</span>
+                            <span>{formatDuration(section.duration)}</span>
                           </div>
                           <Badge variant="outline" className="capitalize">
                             {section.section_type.replace("_", " ")}
@@ -419,10 +419,10 @@ const MockTestDetail = () => {
                         </div>
                       </div>
 
-                      {section.instructions && (
+                      {section.description && (
                         <div className="mt-3 p-3 bg-white rounded border border-gray-200">
                           <p className="text-sm text-gray-700">
-                            {section.instructions}
+                            {section.description}
                           </p>
                         </div>
                       )}
