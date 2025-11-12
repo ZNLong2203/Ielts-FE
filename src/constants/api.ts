@@ -21,6 +21,8 @@ export const API_URL = {
   EXERCISES: "/exercises",
   LESSONS: "/lessons",
   MOCK_TESTS: "/mock-tests",
+  READING: "/reading",
+  LISTENING: "/listening",
   QUESTION_GROUPS: "/question-groups",
   QUESTIONS: "/questions",
   ORDERS: "/orders",

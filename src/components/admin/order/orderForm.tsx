@@ -17,7 +17,6 @@ import Error from "@/components/ui/error";
 import { Separator } from "@/components/ui/separator";
 import {
   Save,
-  ShoppingCart,
   DollarSign,
   Package,
   CreditCard,
