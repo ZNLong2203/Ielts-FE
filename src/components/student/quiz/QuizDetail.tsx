@@ -1,5 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,11 +31,11 @@ import {
   Mic,
   Timer,
   Target,
-  Users,
   Star,
+  Loader2,
 } from "lucide-react";
 
-import { QuizData, QuizQuestion, calculateQuizScore, convertToBandScore, allIeltsQuizzes } from "@/quizMockData";
+import { startMockTest, submitSectionAnswers, TestSectionSubmission, TestAnswerSubmission } from "@/api/mockTest";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -42,44 +44,282 @@ interface QuizDetailProps {
   onBack?: () => void;
 }
 
-const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) => {
-  // Get quiz data - fallback to listening quiz if not found
-  const quiz = Object.values(allIeltsQuizzes).find(q => q.id === quizId) || allIeltsQuizzes.listening;
-  
+interface TransformedQuestion {
+  id: string;
+  type: string;
+  question: string;
+  audio_url?: string;
+  image_url?: string;
+  reading_passage?: string;
+  options?: string[];
+  option_ids?: string[];
+  correct_answer?: string | string[];
+  points: number;
+  time_limit?: number;
+  question_group_id?: string;
+  question_group_title?: string;
+  passage_reference?: string;
+}
+
+interface TransformedQuiz {
+  id: string;
+  title: string;
+  description: string;
+  section: string;
+  duration: number;
+  total_questions: number;
+  instructions: string;
+  questions: TransformedQuestion[];
+  test_result_id?: string;
+  current_section_id?: string;
+  current_section_type?: string;
+}
+
+const QuizDetail = ({ quizId, onBack }: QuizDetailProps) => {
+  const router = useRouter();
+  const [testResultId, setTestResultId] = useState<string | null>(null);
+  const [currentSectionId, setCurrentSectionId] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
-  const [timeRemaining, setTimeRemaining] = useState(quiz.duration * 60);
+  const [answers, setAnswers] = useState<{ [key: string]: string | string[] }>({});
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [timeStarted, setTimeStarted] = useState<number | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [score, setScore] = useState<number | null>(null);
-  const [bandScore, setBandScore] = useState<number | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [sectionResult, setSectionResult] = useState<{
+    band_score: number;
+    correct_answers: number;
+    total_questions: number;
+    detailed_answers?: unknown;
+  } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentQuestion = quiz.questions[currentQuestionIndex];
-  const totalQuestions = quiz.questions.length;
-  const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  const startTestMutation = useMutation({
+    mutationFn: (testId: string) => startMockTest(testId),
+    onSuccess: (data) => {
+      if (!data || !data.test_result_id || !data.test) {
+        console.error("Invalid response data:", data);
+        toast.error("Invalid test data received");
+        return;
+      }
+      setTestResultId(data.test_result_id);
+      const test = data.test;
+      const firstSection = test.test_sections?.[0];
+      if (firstSection) {
+        setCurrentSectionId(firstSection.id);
+        setTimeRemaining(firstSection.duration * 60);
+      } else {
+        toast.error("Test has no sections");
+      }
+      toast.success("Test started! Good luck! 🍀");
+    },
+    onError: (error: unknown) => {
+      console.error("Start test error:", error);
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(errorMessage || "Failed to start test");
+    },
+  });
 
-  // Timer effect
+  const submitSectionMutation = useMutation({
+    mutationFn: (data: TestSectionSubmission) => submitSectionAnswers(data),
+    onSuccess: (response) => {
+      setSectionResult(response.data);
+      setIsCompleted(true);
+      setIsStarted(false);
+      toast.success(`Section completed! Band Score: ${response.data.band_score}`, {
+        duration: 5000,
+      });
+    },
+    onError: (error: unknown) => {
+      const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(errorMessage || "Failed to submit answers");
+      setIsSubmitting(false);
+    },
+  });
+
   useEffect(() => {
-    if (!isStarted || isCompleted || timeRemaining <= 0) return;
+    if (quizId && !startTestMutation.data && !startTestMutation.isPending) {
+      startTestMutation.mutate(quizId);
+    }
+  }, [quizId, startTestMutation]);
+
+  const transformedQuiz: TransformedQuiz | null = useMemo(() => {
+    if (!startTestMutation.data) return null;
+    
+    const test = startTestMutation.data.test;
+    if (!test) return null;
+    const firstSection = test.test_sections?.[0];
+    if (!firstSection) return null;
+
+    const questions: TransformedQuestion[] = [];
+    
+    firstSection.exercises?.forEach((exercise: {
+      question_groups?: Array<{
+        id: string;
+        passage_reference?: string | null;
+        group_title?: string | null;
+        group_instruction?: string | null;
+        image_url?: string | null;
+        questions?: Array<{
+          id: string;
+          question_type: string;
+          question_text: string;
+          audio_url?: string | null;
+          image_url?: string | null;
+          reading_passage?: string | null;
+          points?: number | null;
+          ordering: number;
+          question_options?: Array<{
+            id: string;
+            option_text: string;
+          }>;
+        }>;
+      }>;
+    }) => {
+      exercise.question_groups?.forEach((group) => {
+        const groupQuestions = group.questions || [];
+        
+        groupQuestions.forEach((question) => {
+          const transformed: TransformedQuestion = {
+            id: question.id,
+            type: question.question_type,
+            question: question.question_text,
+            audio_url: question.audio_url || undefined,
+            image_url: question.image_url || group.image_url || undefined,
+            reading_passage: question.reading_passage || undefined,
+            points: question.points ? Number(question.points) : 1,
+            question_group_id: group.id,
+            question_group_title: group.group_title || undefined,
+            passage_reference: group.passage_reference || undefined,
+            options: question.question_options?.map((opt) => opt.option_text) || [],
+            option_ids: question.question_options?.map((opt) => opt.id) || [],
+          };
+          questions.push(transformed);
+        });
+      });
+    });
+
+    return {
+      id: test.id,
+      title: test.title,
+      description: test.description || "",
+      section: firstSection.section_type,
+      duration: firstSection.duration,
+      total_questions: questions.length,
+      instructions: firstSection.description || test.instructions || "",
+      questions,
+      test_result_id: startTestMutation.data.test_result_id,
+      current_section_id: firstSection.id,
+      current_section_type: firstSection.section_type,
+    };
+  }, [startTestMutation.data]);
+
+  const quiz = transformedQuiz;
+  const currentQuestion = quiz?.questions[currentQuestionIndex];
+  const totalQuestions = quiz?.questions.length || 0;
+  const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
+
+  // Get current question group info
+  const getCurrentQuestionGroup = useMemo(() => {
+    if (!quiz || !currentQuestion) return null;
+    
+    const currentGroupId = currentQuestion.question_group_id;
+    if (!currentGroupId) return null;
+    
+    // Find all questions in the same group
+    const groupQuestions = quiz.questions.filter(q => q.question_group_id === currentGroupId);
+    const firstQuestionInGroup = groupQuestions[0];
+    const groupIndex = quiz.questions.findIndex(q => q.id === firstQuestionInGroup.id);
+    
+    return {
+      id: currentGroupId,
+      title: currentQuestion.question_group_title,
+      passage: currentQuestion.passage_reference,
+      image: currentQuestion.image_url,
+      startIndex: groupIndex,
+      endIndex: groupIndex + groupQuestions.length - 1,
+      isFirstInGroup: currentQuestionIndex === groupIndex,
+    };
+  }, [quiz, currentQuestion, currentQuestionIndex]);
+
+  const currentGroup = getCurrentQuestionGroup;
+
+  const handleSubmitQuizMemo = React.useCallback(async () => {
+    if (!quiz || !testResultId || !currentSectionId || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      const timeTaken = timeStarted ? Math.floor((Date.now() - timeStarted) / 1000) : 0;
+      
+      const answerSubmissions: TestAnswerSubmission[] = quiz.questions.map((q) => {
+        const userAnswer = answers[q.id];
+        const answerData: {
+          fill_blank_answers?: string;
+          multiple_choice_answers?: string[];
+          true_false_answers?: string;
+          matching_answers?: string;
+        } = {};
+        
+        switch (q.type) {
+          case "multiple_choice":
+            const mcAnswer = Array.isArray(userAnswer) ? userAnswer[0] : userAnswer;
+            answerData.multiple_choice_answers = mcAnswer ? [mcAnswer] : [];
+            break;
+          case "fill_blank":
+            answerData.fill_blank_answers = Array.isArray(userAnswer) ? userAnswer.join(" ") : (userAnswer || "");
+            break;
+          case "true_false":
+            answerData.true_false_answers = Array.isArray(userAnswer) ? userAnswer[0] : (userAnswer || "");
+            break;
+          case "matching":
+            answerData.matching_answers = Array.isArray(userAnswer) ? userAnswer[0] : (userAnswer || "");
+            break;
+          default:
+            answerData.fill_blank_answers = Array.isArray(userAnswer) ? userAnswer.join(" ") : (userAnswer || "");
+        }
+        
+        return {
+          question_id: q.id,
+          user_answer: answerData,
+        };
+      });
+
+      const submissionData: TestSectionSubmission = {
+        test_result_id: testResultId,
+        test_section_id: currentSectionId,
+        time_taken: timeTaken,
+        answers: answerSubmissions,
+      };
+
+      await submitSectionMutation.mutateAsync(submissionData);
+    } catch {
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [quiz, testResultId, currentSectionId, isSubmitting, timeStarted, answers, submitSectionMutation]);
+
+  useEffect(() => {
+    if (!isStarted || isCompleted || timeRemaining <= 0 || !timeStarted) return;
 
     const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          handleSubmitQuiz();
-          return 0;
-        }
-        return prev - 1;
-      });
+      const elapsed = Math.floor((Date.now() - timeStarted) / 1000);
+      const remaining = (quiz?.duration || 0) * 60 - elapsed;
+      
+      if (remaining <= 0) {
+        handleSubmitQuizMemo();
+        return;
+      }
+      
+      setTimeRemaining(remaining);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isStarted, isCompleted, timeRemaining]);
+  }, [isStarted, isCompleted, timeRemaining, timeStarted, quiz, handleSubmitQuizMemo]);
 
-  // Get section icon
   const getSectionIcon = (section: string) => {
     switch (section) {
       case "listening": return <Headphones className="h-5 w-5" />;
@@ -90,7 +330,6 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     }
   };
 
-  // Get section color
   const getSectionColor = (section: string) => {
     switch (section) {
       case "listening": return "bg-blue-50 text-blue-700 border-blue-200";
@@ -101,7 +340,6 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     }
   };
 
-  // Format time display
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -113,30 +351,52 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Get time color based on remaining time
   const getTimeColor = () => {
+    if (!quiz) return "text-green-600";
     const percentage = (timeRemaining / (quiz.duration * 60)) * 100;
     if (percentage <= 10) return "text-red-600";
     if (percentage <= 25) return "text-orange-600";
     return "text-green-600";
   };
 
-  // Start quiz
-  const handleStartQuiz = () => {
-    setIsStarted(true);
-    setShowInstructions(false);
-    toast.success("Quiz started! Good luck! 🍀");
+  const handleStartQuiz = async () => {
+    if (!quizId) {
+      toast.error("Test ID is required");
+      return;
+    }
+    
+    if (startTestMutation.data) {
+      setIsStarted(true);
+      setShowInstructions(false);
+      if (!timeStarted) {
+        setTimeStarted(Date.now());
+      }
+    } else {
+      try {
+        await startTestMutation.mutateAsync(quizId);
+        setIsStarted(true);
+        setShowInstructions(false);
+        setTimeStarted(Date.now());
+      } catch {
+      }
+    }
   };
 
-  // Handle answer selection
-  const handleAnswerChange = (value: string) => {
+  useEffect(() => {
+    if (startTestMutation.data && !isStarted && !showInstructions) {
+      setIsStarted(true);
+      setTimeStarted(Date.now());
+    }
+  }, [startTestMutation.data, isStarted, showInstructions]);
+
+  const handleAnswerChange = (value: string | string[]) => {
+    if (!currentQuestion) return;
     setAnswers(prev => ({
       ...prev,
       [currentQuestion.id]: value
     }));
   };
 
-  // Navigate between questions
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
@@ -149,13 +409,12 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     }
   };
 
-  // Jump to specific question
   const handleJumpToQuestion = (index: number) => {
     setCurrentQuestionIndex(index);
   };
 
-  // Toggle flag for question
   const toggleFlag = () => {
+    if (!currentQuestion) return;
     const newFlagged = new Set(flaggedQuestions);
     if (newFlagged.has(currentQuestion.id)) {
       newFlagged.delete(currentQuestion.id);
@@ -165,77 +424,85 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     setFlaggedQuestions(newFlagged);
   };
 
-  // Submit quiz
-  const handleSubmitQuiz = () => {
-    const calculatedScore = calculateQuizScore(answers, quiz);
-    const calculatedBandScore = convertToBandScore(calculatedScore, quiz.section);
-    
-    setScore(calculatedScore);
-    setBandScore(calculatedBandScore);
-    setIsCompleted(true);
-    setIsStarted(false);
-    
-    toast.success(`Quiz completed! Band Score: ${calculatedBandScore}`, {
-      duration: 5000,
-    });
-  };
+  const handleSubmitQuiz = handleSubmitQuizMemo;
 
-  // Reset quiz
   const handleResetQuiz = () => {
     setCurrentQuestionIndex(0);
     setAnswers({});
-    setTimeRemaining(quiz.duration * 60);
+    if (quiz) {
+      setTimeRemaining(quiz.duration * 60);
+    }
     setIsStarted(false);
     setIsCompleted(false);
     setFlaggedQuestions(new Set());
     setShowInstructions(true);
-    setScore(null);
-    setBandScore(null);
+    setSectionResult(null);
+    setTimeStarted(null);
+    setIsSubmitting(false);
     toast.success("Quiz reset successfully!");
   };
 
-  // Render question based on type
   const renderQuestion = () => {
     if (!currentQuestion) return null;
 
     const baseClasses = "space-y-4";
+    const currentAnswer = answers[currentQuestion.id];
 
     switch (currentQuestion.type) {
       case "multiple_choice":
         return (
           <div className={baseClasses}>
+            {/* Only show reading_passage if it's not already shown in group header */}
+            {currentQuestion.reading_passage && !currentGroup?.passage && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-900 whitespace-pre-line">
+                  {currentQuestion.reading_passage}
+                </p>
+              </div>
+            )}
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-900 whitespace-pre-line font-medium">
                 {currentQuestion.question}
               </p>
             </div>
             <RadioGroup
-              value={answers[currentQuestion.id] || ""}
+              value={Array.isArray(currentAnswer) ? currentAnswer[0] : (currentAnswer || "")}
               onValueChange={handleAnswerChange}
               className="space-y-3"
             >
-              {currentQuestion.options?.map((option, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem 
-                    value={option.charAt(0)} 
-                    id={`option-${index}`}
-                    className="mt-1"
-                  />
-                  <Label 
-                    htmlFor={`option-${index}`} 
-                    className="cursor-pointer flex-1 text-sm leading-relaxed"
-                  >
-                    {option}
-                  </Label>
-                </div>
-              ))}
+              {currentQuestion.options?.map((option, index) => {
+                const optionValue = currentQuestion.option_ids?.[index] || String(index);
+                return (
+                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                    <RadioGroupItem 
+                      value={optionValue} 
+                      id={`option-${index}`}
+                      className="mt-1"
+                    />
+                    <Label 
+                      htmlFor={`option-${index}`} 
+                      className="cursor-pointer flex-1 text-sm leading-relaxed"
+                    >
+                      {option}
+                    </Label>
+                  </div>
+                );
+              })}
             </RadioGroup>
           </div>
         );
 
-      case "fill_in_blank":
+      case "fill_blank":
         return (
           <div className={baseClasses}>
+            {/* Only show reading_passage if it's not already shown in group header */}
+            {currentQuestion.reading_passage && !currentGroup?.passage && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-900 whitespace-pre-line">
+                  {currentQuestion.reading_passage}
+                </p>
+              </div>
+            )}
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-900 whitespace-pre-line font-medium">
                 {currentQuestion.question}
@@ -247,7 +514,9 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               </Label>
               <Input
                 id="answer-input"
-                value={answers[currentQuestion.id] || ""}
+                value={Array.isArray(currentAnswer) 
+                  ? currentAnswer.join(" ") 
+                  : (currentAnswer as string) || ""}
                 onChange={(e) => handleAnswerChange(e.target.value)}
                 placeholder="Type your answer here..."
                 className="w-full p-3 border-2 focus:border-blue-500"
@@ -262,13 +531,21 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
       case "true_false":
         return (
           <div className={baseClasses}>
+            {/* Only show reading_passage if it's not already shown in group header */}
+            {currentQuestion.reading_passage && !currentGroup?.passage && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-900 whitespace-pre-line">
+                  {currentQuestion.reading_passage}
+                </p>
+              </div>
+            )}
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-900 whitespace-pre-line font-medium">
                 {currentQuestion.question}
               </p>
             </div>
             <RadioGroup
-              value={answers[currentQuestion.id] || ""}
+              value={Array.isArray(currentAnswer) ? currentAnswer[0] : (currentAnswer as string) || ""}
               onValueChange={handleAnswerChange}
               className="space-y-3"
             >
@@ -287,25 +564,119 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
       case "matching":
         return (
           <div className={baseClasses}>
+            {/* Only show reading_passage if it's not already shown in group header */}
+            {currentQuestion.reading_passage && !currentGroup?.passage && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-900 whitespace-pre-line">
+                  {currentQuestion.reading_passage}
+                </p>
+              </div>
+            )}
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-gray-900 whitespace-pre-line font-medium">
                 {currentQuestion.question}
               </p>
             </div>
             <RadioGroup
-              value={answers[currentQuestion.id] || ""}
+              value={Array.isArray(currentAnswer) ? currentAnswer[0] : (currentAnswer as string) || ""}
               onValueChange={handleAnswerChange}
               className="space-y-3"
             >
-              {currentQuestion.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value={option} id={`match-${index}`} />
-                  <Label htmlFor={`match-${index}`} className="cursor-pointer font-medium">
-                    {option}
-                  </Label>
-                </div>
-              ))}
+              {currentQuestion.options?.map((option, index) => {
+                const optionValue = currentQuestion.option_ids?.[index] || option;
+                return (
+                  <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+                    <RadioGroupItem value={optionValue} id={`match-${index}`} />
+                    <Label htmlFor={`match-${index}`} className="cursor-pointer font-medium">
+                      {option}
+                    </Label>
+                  </div>
+                );
+              })}
             </RadioGroup>
+          </div>
+        );
+
+      case "essay":
+        return (
+          <div className={baseClasses}>
+            {currentGroup?.image && (
+              <div className="mb-4">
+                <img 
+                  src={currentGroup.image} 
+                  alt="Task reference" 
+                  className="w-full rounded-lg border border-gray-200"
+                />
+              </div>
+            )}
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-gray-900 whitespace-pre-line font-medium">
+                {currentQuestion.question}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="essay-answer" className="text-sm font-medium">
+                Your Answer:
+              </Label>
+              <Textarea
+                id="essay-answer"
+                value={Array.isArray(currentAnswer) 
+                  ? currentAnswer.join(" ") 
+                  : (currentAnswer as string) || ""}
+                onChange={(e) => handleAnswerChange(e.target.value)}
+                placeholder="Type your detailed answer here..."
+                rows={12}
+                className="w-full p-3 border-2 focus:border-blue-500 font-sans"
+              />
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">Write clearly and organize your thoughts</span>
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-500">
+                    Words: {((Array.isArray(currentAnswer) ? currentAnswer.join(" ") : (currentAnswer as string) || "").match(/\S+/g) || []).length}
+                  </span>
+                  <span className="text-gray-500">
+                    Characters: {(Array.isArray(currentAnswer) ? currentAnswer.join(" ") : (currentAnswer as string) || "").length}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "speaking":
+        return (
+          <div className={baseClasses}>
+            <div className="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-4">
+              <p className="text-sm font-medium text-orange-900 mb-2">Speaking Task</p>
+              <p className="text-xs text-orange-700">
+                {currentQuestion.question.includes("Describe") || currentQuestion.question.includes("Speak") 
+                  ? "You have 1 minute to prepare and 2 minutes to speak"
+                  : "Answer the question clearly and in detail"}
+              </p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-gray-900 whitespace-pre-line font-medium">
+                {currentQuestion.question}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="speaking-answer" className="text-sm font-medium">
+                Your Response (Practice):
+              </Label>
+              <Textarea
+                id="speaking-answer"
+                value={Array.isArray(currentAnswer) 
+                  ? currentAnswer.join(" ") 
+                  : (currentAnswer as string) || ""}
+                onChange={(e) => handleAnswerChange(e.target.value)}
+                placeholder="Type your response here (for practice purposes)..."
+                rows={6}
+                className="w-full p-3 border-2 focus:border-orange-500"
+              />
+              <p className="text-xs text-gray-500">
+                Note: In the actual IELTS test, you will speak your answer. This is for practice only.
+              </p>
+            </div>
           </div>
         );
 
@@ -323,7 +694,9 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               </Label>
               <Textarea
                 id="essay-answer"
-                value={answers[currentQuestion.id] || ""}
+                value={Array.isArray(currentAnswer) 
+                  ? currentAnswer.join(" ") 
+                  : (currentAnswer as string) || ""}
                 onChange={(e) => handleAnswerChange(e.target.value)}
                 placeholder="Type your detailed answer here..."
                 rows={8}
@@ -331,7 +704,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               />
               <div className="flex justify-between text-xs text-gray-500">
                 <span>Write clearly and organize your thoughts</span>
-                <span>{(answers[currentQuestion.id] || "").length} characters</span>
+                <span>{(Array.isArray(currentAnswer) ? currentAnswer.join(" ") : (currentAnswer as string) || "").length} characters</span>
               </div>
             </div>
           </div>
@@ -339,15 +712,39 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     }
   };
 
-  // Instructions Screen
-  if (showInstructions && !isCompleted) {
+  if (startTestMutation.isPending || (!startTestMutation.data && !startTestMutation.isError)) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Starting test...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (startTestMutation.isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-600" />
+          <p className="text-gray-600">Failed to start test</p>
+          <Button onClick={() => quizId && startTestMutation.mutate(quizId)} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showInstructions && !isCompleted && quiz) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
-            onClick={onBack}
+            onClick={() => onBack ? onBack() : router.push("/student/dashboard/my-quizzes")}
             className="text-gray-600"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -394,13 +791,8 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               </div>
               <div className="bg-purple-50 rounded-lg p-4 text-center">
                 <Star className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-purple-900">{quiz.total_points}</p>
+                <p className="text-2xl font-bold text-purple-900">{quiz.questions.reduce((sum, q) => sum + q.points, 0)}</p>
                 <p className="text-sm text-purple-700">Points</p>
-              </div>
-              <div className="bg-orange-50 rounded-lg p-4 text-center">
-                <Users className="h-6 w-6 text-orange-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-orange-900">4.8</p>
-                <p className="text-sm text-orange-700">Rating</p>
               </div>
             </div>
 
@@ -432,7 +824,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
                   <li>• Monitor your time carefully</li>
                   <li>• Flag difficult questions to review</li>
                   <li>• Read questions thoroughly</li>
-                  <li>• Don't spend too long on one question</li>
+                  <li>• Do not spend too long on one question</li>
                 </ul>
               </div>
             </div>
@@ -454,10 +846,12 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     );
   }
 
-  // Results Screen
-  if (isCompleted && score !== null && bandScore !== null) {
+  if (isCompleted && sectionResult && quiz) {
     const answeredQuestions = Object.keys(answers).length;
-    const correctAnswers = Math.round((score / 100) * totalQuestions);
+    const correctAnswers = sectionResult.correct_answers || 0;
+    const totalQuestionsResult = sectionResult.total_questions || totalQuestions;
+    const bandScore = sectionResult.band_score || 0;
+    const score = totalQuestionsResult > 0 ? Math.round((correctAnswers / totalQuestionsResult) * 100) : 0;
     
     return (
       <div className="max-w-4xl mx-auto space-y-6">
@@ -465,7 +859,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
-            onClick={onBack}
+            onClick={() => onBack ? onBack() : router.push("/student/dashboard/my-quizzes")}
             className="text-gray-600"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -490,14 +884,14 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               </div>
             </div>
             <CardTitle className="text-2xl text-green-900">Test Completed!</CardTitle>
-            <p className="text-gray-600">Here are your results for {quiz.title}</p>
+            <p className="text-gray-600">Here are your results for {quiz?.title || "this test"}</p>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Score Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-6 bg-blue-50 rounded-lg">
                 <h3 className="text-lg font-semibold text-blue-900 mb-2">Band Score</h3>
-                <p className="text-4xl font-bold text-blue-600">{bandScore}</p>
+                <p className="text-4xl font-bold text-blue-600">{bandScore.toFixed(1)}</p>
                 <p className="text-sm text-blue-700 mt-2">IELTS Band</p>
               </div>
               <div className="text-center p-6 bg-green-50 rounded-lg">
@@ -507,7 +901,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               </div>
               <div className="text-center p-6 bg-purple-50 rounded-lg">
                 <h3 className="text-lg font-semibold text-purple-900 mb-2">Correct</h3>
-                <p className="text-4xl font-bold text-purple-600">{correctAnswers}/{totalQuestions}</p>
+                <p className="text-4xl font-bold text-purple-600">{correctAnswers}/{totalQuestionsResult}</p>
                 <p className="text-sm text-purple-700 mt-2">Questions</p>
               </div>
             </div>
@@ -537,7 +931,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
 
             {/* Band Score Explanation */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 mb-2">Your Band Score: {bandScore}</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">Your Band Score: {bandScore.toFixed(1)}</h4>
               <p className="text-sm text-blue-800">
                 {bandScore >= 8.5 ? "Excellent! You have a very high level of English proficiency." :
                  bandScore >= 7.0 ? "Good work! You have a good command of English with some minor errors." :
@@ -566,7 +960,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
                 Retake Test
               </Button>
               <Button
-                onClick={onBack}
+                onClick={() => onBack ? onBack() : router.push("/student/dashboard/my-quizzes")}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -579,7 +973,17 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
     );
   }
 
-  // Quiz Taking Interface
+  if (!quiz || !currentQuestion) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading test...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -635,9 +1039,9 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center space-x-2">
                   <h2 className="text-xl font-semibold">Question {currentQuestionIndex + 1}</h2>
-                  {currentQuestion.part && (
+                  {currentQuestion.question_group_title && (
                     <Badge variant="outline" className="text-xs">
-                      {currentQuestion.part}
+                      {currentQuestion.question_group_title}
                     </Badge>
                   )}
                   {flaggedQuestions.has(currentQuestion.id) && (
@@ -677,6 +1081,36 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
             </CardHeader>
 
             <CardContent className="space-y-6">
+              {/* Question Group Header (for Reading/Listening) */}
+              {currentGroup && currentGroup.isFirstInGroup && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-blue-900">
+                      {currentGroup.title || `Questions ${currentGroup.startIndex + 1}-${currentGroup.endIndex + 1}`}
+                    </h3>
+                    <Badge className="bg-blue-600 text-white">
+                      Questions {currentGroup.startIndex + 1}-{currentGroup.endIndex + 1}
+                    </Badge>
+                  </div>
+                  {currentGroup.passage && (
+                    <div className="mt-4 bg-white rounded-lg p-4 border border-blue-200">
+                      <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                        {currentGroup.passage}
+                      </p>
+                    </div>
+                  )}
+                  {currentGroup.image && (
+                    <div className="mt-4">
+                      <img 
+                        src={currentGroup.image} 
+                        alt="Question reference" 
+                        className="w-full rounded-lg border border-gray-200"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Audio Player for Listening Questions */}
               {currentQuestion.audio_url && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -815,10 +1249,19 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
               <Button
                 onClick={handleSubmitQuiz}
                 className="w-full bg-green-600 hover:bg-green-700"
-                disabled={Object.keys(answers).length === 0}
+                disabled={Object.keys(answers).length === 0 || isSubmitting}
               >
-                <Send className="h-4 w-4 mr-2" />
-                Submit Quiz ({Object.keys(answers).length}/{totalQuestions})
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit Quiz ({Object.keys(answers).length}/{totalQuestions})
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -837,7 +1280,7 @@ const QuizDetail = ({ quizId = "ielts-listening-1", onBack }: QuizDetailProps) =
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-700">
-                Are you sure you want to exit? Your progress will be lost and you'll need to start over.
+                Are you sure you want to exit? Your progress will be lost and you will need to start over.
               </p>
               <div className="flex space-x-2">
                 <Button

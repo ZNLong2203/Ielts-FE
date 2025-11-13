@@ -159,7 +159,7 @@ export default function StudentLayout({
       </div>
 
         {/* Main content */}
-        <div className="lg:pl-72 pt-16">
+        <div className="lg:pl-72 pt-16 flex flex-col min-h-[calc(100vh-4rem)]">
           {/* Page content */}
           <main className="flex-1">
             <div className="py-6">
@@ -175,26 +175,26 @@ export default function StudentLayout({
             </div>
           </main>
 
-        {/* Footer */}
-        <footer className="bg-white border-t border-gray-200">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex items-center gap-2 mb-4 md:mb-0">
-                <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-                  <BookOpen className="w-4 h-4 text-white" />
+          {/* Footer */}
+          <footer className="bg-white border-t border-gray-200 mt-auto">
+            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+              <div className="flex flex-col md:flex-row justify-between items-center">
+                <div className="flex items-center gap-2 mb-4 md:mb-0">
+                  <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">IELTS Academy</span>
                 </div>
-                <span className="text-sm font-medium text-gray-900">IELTS Academy</span>
-              </div>
-              <div className="flex items-center gap-6 text-sm text-gray-500">
-                <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
-                <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
-                <Link href="/support" className="hover:text-gray-900">Support</Link>
-                <span>© 2024 IELTS Academy. All rights reserved.</span>
+                <div className="flex items-center gap-6 text-sm text-gray-500">
+                  <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
+                  <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
+                  <Link href="/support" className="hover:text-gray-900">Support</Link>
+                  <span>© 2024 IELTS Academy. All rights reserved.</span>
+                </div>
               </div>
             </div>
-          </div>
-        </footer>
-      </div>
+          </footer>
+        </div>
     </div>
     </StudentProvider>
   )
