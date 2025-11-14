@@ -1,6 +1,6 @@
-import QuizDetail from "@/components/student/quiz/QuizDetail";
+import QuizDetailNew from "@/components/student/quiz/QuizDetailNew";
 
 export default function QuizDetailPage({ params }: { params: { id: string } }) {
-  return <QuizDetail quizId={params.id} />;
+  return <QuizDetailNew quizId={params.id} />;
 }
 
