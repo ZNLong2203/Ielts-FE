@@ -21,61 +21,42 @@ import {
   Plus,
   Trash2,
   Calculator,
-  Settings,
   CheckCircle,
   Clock,
   Hash,
   AlertTriangle,
   Eye,
 } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { getReadingExercise, createReadingExercise, updateReadingExercise } from "@/api/reading";
-import { IPassageParagraph } from "@/interface/reading";
-
-// Validation Schema
-const ReadingFormSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title is too long"),
-  test_section_id: z.string().min(1, "Section ID is required"),
-  time_limit: z.number().min(1, "Time limit must be at least 1 minute").max(180, "Time limit cannot exceed 180 minutes"),
-  passing_score: z.number().min(0, "Passing score must be at least 0").max(100, "Passing score cannot exceed 100"),
-  ordering: z.number().min(1, "Ordering must be at least 1"),
-  passage: z.object({
-    title: z.string().min(1, "Passage title is required"),
-    content: z.string().min(50, "Passage content must be at least 50 characters"),
-    word_count: z.number().min(1, "Word count must be calculated"),
-    difficulty_level: z.string().min(1, "Difficulty level is required"),
-    paragraphs: z.array(z.object({
-      id: z.string(),
-      label: z.string().min(1, "Paragraph label is required"),
-      content: z.string().min(1, "Paragraph content is required"),
-    })).min(1, "At least one paragraph is required"),
-  }),
-});
+import { IReadingParagraph } from "@/interface/reading";
+import { ReadingFormSchema } from "@/validation/reading";
 
 const ReadingFormUpdateSchema = ReadingFormSchema.partial().extend({
   passage: ReadingFormSchema.shape.passage.partial(),
 });
 
-type ReadingFormData = z.infer<typeof ReadingFormSchema>;
 
 const DIFFICULTY_OPTIONS = [
-  { label: "⭐ Beginner", value: "1" },
-  { label: "⭐⭐ Elementary", value: "2" },
-  { label: "⭐⭐⭐ Intermediate", value: "3" },
-  { label: "⭐⭐⭐⭐ Upper Intermediate", value: "4" },
-  { label: "⭐⭐⭐⭐⭐ Advanced", value: "5" },
+  { label: " Beginner", value: "1" },
+  { label: " Elementary", value: "2" },
+  { label: " Intermediate", value: "3" },
+  { label: " Upper Intermediate", value: "4" },
+  { label: " Advanced", value: "5" },
 ];
 
 const ReadingForm = () => {
   const router = useRouter();
-  const param = useParams();
+  const params = useParams();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
 
-  const readingExerciseId = Array.isArray(param.slug) ? param.slug[0] : param.slug;
-  const testSectionId = Array.isArray(param.sectionId) ? param.sectionId[0] : param.sectionId;
+  const mockTestId = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const readingExerciseId = Array.isArray(params.readingId) ? params.readingId[0] : params.readingId;
+  const testSectionId = searchParams?.get("sectionId") ?? undefined;
   const isEditing = !!readingExerciseId;
 
   const title = isEditing ? "Update Reading Exercise" : "Create Reading Exercise";
@@ -83,7 +64,7 @@ const ReadingForm = () => {
     ? "Update reading exercise information and passage content"
     : "Create a comprehensive reading comprehension exercise with passage content";
 
-  const [paragraphs, setParagraphs] = useState<IPassageParagraph[]>([]);
+  const [paragraphs, setParagraphs] = useState<IReadingParagraph[]>([]);
   const [wordCount, setWordCount] = useState(0);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -108,7 +89,7 @@ const ReadingForm = () => {
       title: "",
       test_section_id: testSectionId || "",
       time_limit: 20,
-      passing_score: 65,
+      passing_score: "65",
       ordering: 1,
       passage: {
         title: "",
@@ -141,9 +122,9 @@ const ReadingForm = () => {
       return createReadingExercise(payload);
     },
     onSuccess: () => {
-      toast.success("Reading exercise created successfully! 📚");
+      toast.success("Reading exercise created successfully! ");
       queryClient.invalidateQueries({ queryKey: ["readingExercises"] });
-      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/sections/${testSectionId}/exercises`);
+      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_READING}`);
     },
     onError: (error: any) => {
       toast.error(
@@ -169,13 +150,12 @@ const ReadingForm = () => {
       return updateReadingExercise(readingExerciseId!, payload);
     },
     onSuccess: (data) => {
-      console.log("Update success:", data);
-      toast.success("Reading exercise updated successfully! 📚");
+      toast.success("Reading exercise updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["readingExercises"] });
       queryClient.invalidateQueries({ queryKey: ["readingExercise", readingExerciseId] });
+      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_READING}?sectionId=${testSectionId}`);
     },
     onError: (error: any) => {
-      console.error("Update error:", error);
       toast.error(
         error?.response?.data?.message || "Failed to update reading exercise"
       );
@@ -199,7 +179,7 @@ const ReadingForm = () => {
   // Paragraph management functions
   const addParagraph = () => {
     const nextLabel = String.fromCharCode(65 + paragraphs.length);
-    const newParagraph: IPassageParagraph = {
+    const newParagraph: IReadingParagraph = {
       id: crypto.randomUUID(),
       label: nextLabel,
       content: "",
@@ -224,52 +204,13 @@ const ReadingForm = () => {
 
   const updateParagraph = (
     index: number,
-    field: keyof IPassageParagraph,
+    field: keyof IReadingParagraph,
     value: any
   ) => {
     const newParagraphs = [...paragraphs];
     newParagraphs[index] = { ...newParagraphs[index], [field]: value };
     setParagraphs(newParagraphs);
     readingForm.setValue(`passage.paragraphs.${index}.${field}`, value);
-  };
-
-  // Generate paragraphs from content
-  const generateParagraphs = () => {
-    const content = readingForm.getValues("passage.content");
-    if (!content.trim()) {
-      toast.error("Please enter passage content first");
-      return;
-    }
-
-    // Split content by double line breaks
-    const generatedParagraphs = content
-      .split(/\n\s*\n/)
-      .filter(p => p.trim().length > 0)
-      .map((paragraph, index) => ({
-        id: crypto.randomUUID(),
-        label: String.fromCharCode(65 + index), // A, B, C, etc.
-        content: paragraph.trim(),
-      }));
-
-    if (generatedParagraphs.length === 0) {
-      toast.error("No paragraphs found in the content");
-      return;
-    }
-
-    // Clear existing paragraphs
-    const currentLength = paragraphs.length;
-    for (let i = 0; i < currentLength; i++) {
-      remove(0);
-    }
-    setParagraphs([]);
-
-    // Add new paragraphs
-    generatedParagraphs.forEach(paragraph => {
-      append(paragraph);
-    });
-    setParagraphs(generatedParagraphs);
-
-    toast.success(`Generated ${generatedParagraphs.length} paragraphs`);
   };
 
   // Update paragraphs in form
@@ -285,26 +226,26 @@ const ReadingForm = () => {
       // Reset form with existing data
       readingForm.reset({
         title: readingExerciseData.title || "",
-        test_section_id: readingExerciseData.test_section_id || "",
+        test_section_id: testSectionId || "",
         time_limit: readingExerciseData.time_limit || 20,
-        passing_score: readingExerciseData.passing_score || 65,
+        passing_score: readingExerciseData.passing_score || "",
         ordering: readingExerciseData.ordering || 1,
         passage: {
-          title: readingExerciseData.passage?.title || "",
-          content: readingExerciseData.passage?.content || "",
-          word_count: readingExerciseData.passage?.word_count || 0,
-          difficulty_level: readingExerciseData.passage?.difficulty_level || "3",
-          paragraphs: readingExerciseData.passage?.paragraphs || [],
+          title: readingExerciseData.reading_passage?.title || "",
+          content: readingExerciseData.reading_passage?.content || "",
+          word_count: readingExerciseData.reading_passage.word_count || 0,
+          difficulty_level: readingExerciseData.reading_passage?.difficulty_level.toString() || "3",
+          paragraphs: readingExerciseData.reading_passage?.paragraphs || [],
         },
       });
 
       // Set paragraphs state
       if (
-        readingExerciseData.passage?.paragraphs &&
-        Array.isArray(readingExerciseData.passage.paragraphs)
+        readingExerciseData.reading_passage?.paragraphs &&
+        Array.isArray(readingExerciseData.reading_passage.paragraphs)
       ) {
-        console.log("Setting paragraphs:", readingExerciseData.passage.paragraphs);
-        setParagraphs(readingExerciseData.passage.paragraphs);
+        console.log("Setting paragraphs:", readingExerciseData.reading_passage.paragraphs);
+        setParagraphs(readingExerciseData.reading_passage.paragraphs);
       }
     }
   }, [readingExerciseData, isEditing, readingForm]);
@@ -312,7 +253,7 @@ const ReadingForm = () => {
   // Initialize first paragraph for new exercises
   useEffect(() => {
     if (!isEditing && paragraphs.length === 0) {
-      const initialParagraph: IPassageParagraph = {
+      const initialParagraph: IReadingParagraph = {
         id: crypto.randomUUID(),
         label: "A",
         content: "",
@@ -323,16 +264,7 @@ const ReadingForm = () => {
   }, [isEditing, paragraphs.length, append]);
 
   const onSubmit = async (data: any) => {
-    if (paragraphs.length === 0) {
-      toast.error("Please add at least one paragraph to the passage");
-      return;
-    }
-
-    if (wordCount < 50) {
-      toast.error("Passage content must be at least 50 words");
-      return;
-    }
-
+    console.log("Form submit data:", data);
     try {
       if (isEditing) {
         await updateReadingExerciseMutation.mutateAsync(data);
@@ -348,7 +280,6 @@ const ReadingForm = () => {
     createReadingExerciseMutation.isPending || updateReadingExerciseMutation.isPending;
 
   const selectedDifficulty = readingForm.watch("passage.difficulty_level");
-  const readingTime = Math.ceil(wordCount / 200);
 
   if (isLoading && isEditing) {
     return <Loading />;
@@ -360,7 +291,7 @@ const ReadingForm = () => {
         title="Reading Exercise Not Found"
         description="The requested reading exercise does not exist or has been deleted."
         dismissible={true}
-        onDismiss={() => router.push(`${ROUTES.ADMIN_MOCK_TESTS}/sections/${testSectionId}/exercises`)}
+        onDismiss={() => router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_READING}?sectionId=${testSectionId}`)}
         onRetry={() => refetch()}
         onGoBack={() => router.back()}
       />
@@ -392,7 +323,7 @@ const ReadingForm = () => {
 
               <Button
                 variant="outline"
-                onClick={() => router.push(`${ROUTES.ADMIN_MOCK_TESTS}/sections/${testSectionId}/exercises`)}
+                onClick={() => router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_READING}?sectionId=${testSectionId}`)}
                 className="flex items-center space-x-2"
               >
                 <span>Back to Exercises</span>
@@ -441,7 +372,7 @@ const ReadingForm = () => {
                     <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4">
                       <span>Words: {wordCount}</span>
                       <span>Paragraphs: {paragraphs.length}</span>
-                      <span>Reading Time: ~{readingTime} min</span>
+                     
                     </div>
 
                     <div className="space-y-4">
@@ -506,8 +437,8 @@ const ReadingForm = () => {
                         <TextField
                           control={readingForm.control}
                           name="passing_score"
-                          label="Passing Score (%)"
-                          type="number"
+                          label="Passing Score"
+                          type="text"
                           placeholder="65"
                           required
                         />
@@ -556,32 +487,15 @@ const ReadingForm = () => {
                           <label className="text-sm font-medium text-gray-700">Passage Content</label>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
                             <span>Words: {wordCount}</span>
-                            <span>~{readingTime} min read</span>
                           </div>
                         </div>
                         <TextField
                           control={readingForm.control}
                           name="passage.content"
-                          placeholder="Enter the reading passage content here. Separate paragraphs with double line breaks for automatic paragraph detection..."
-                          rows={12}
+                          label
+                          placeholder="Enter the reading passage content here..."
                           required
                         />
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={generateParagraphs}
-                          className="flex items-center space-x-2"
-                        >
-                          <Settings className="h-4 w-4" />
-                          <span>Auto-Generate Paragraphs</span>
-                        </Button>
-                        
-                        <div className="text-sm text-gray-600">
-                          Separate paragraphs with double line breaks
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -795,14 +709,10 @@ const ReadingForm = () => {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Passing Score:</span>
                           <span className="font-medium">
-                            {readingForm.watch("passing_score")}%
+                            {readingForm.watch("passing_score")}
                           </span>
                         </div>
 
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Reading Time:</span>
-                          <span className="font-medium">~{readingTime} min</span>
-                        </div>
 
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-600">Difficulty:</span>
@@ -817,7 +727,7 @@ const ReadingForm = () => {
 
                         <div className="space-y-2 text-xs text-gray-500">
                           <p>• Average reading speed: 200 words/min</p>
-                          <p>• Recommended for {DIFFICULTY_OPTIONS.find(opt => opt.value === selectedDifficulty)?.label.replace(/⭐/g, '').trim()} level</p>
+                          <p>• Recommended for {DIFFICULTY_OPTIONS.find(opt => Number(opt.value) === Number(selectedDifficulty))?.label?.replace(/⭐/g, '').trim()} level</p>
                         </div>
                       </div>
                     </CardContent>
@@ -852,12 +762,12 @@ const ReadingForm = () => {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          {wordCount >= 50 ? (
+                          {wordCount >= 5 ? (
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           ) : (
                             <AlertTriangle className="h-4 w-4 text-yellow-500" />
                           )}
-                          <span>Passage content ({wordCount}/50+ words)</span>
+                          <span>Passage content ({wordCount}/5+ words)</span>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -879,7 +789,7 @@ const ReadingForm = () => {
                         <Button
                           type="submit"
                           className="w-full flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                          disabled={isSubmitting || paragraphs.length === 0 || wordCount < 50}
+                          disabled={isSubmitting || paragraphs.length === 0 || wordCount < 5}
                         >
                           <Save className="h-4 w-4" />
                           <span>

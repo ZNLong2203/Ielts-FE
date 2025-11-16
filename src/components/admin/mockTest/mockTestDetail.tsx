@@ -42,7 +42,6 @@ import toast from "react-hot-toast";
 import { getMockTest, deleteMockTest, updateMockTest } from "@/api/mockTest";
 import ROUTES from "@/constants/route";
 import { format } from "date-fns";
-import { useState, useEffect } from "react";
 
 const MockTestDetail = () => {
   const router = useRouter();
@@ -50,10 +49,6 @@ const MockTestDetail = () => {
   const queryClient = useQueryClient();
 
   const mockTestId = Array.isArray(param.slug) ? param.slug[0] : param.slug;
-
-  // State for status update
-
-  // Queries
   const {
     data: mockTest,
     isLoading,
@@ -80,23 +75,6 @@ const MockTestDetail = () => {
     },
   });
 
-  const toggleActiveMutation = useMutation({
-    mutationFn: (isActive: boolean) =>
-      updateMockTest(mockTestId, { deleted: isActive }),
-    onSuccess: (data) => {
-      toast.success(
-        `Mock test ${data.deleted ? "deactivated" : "activated"} successfully!`
-      );
-      queryClient.invalidateQueries({ queryKey: ["mockTest", mockTestId] });
-      queryClient.invalidateQueries({ queryKey: ["mockTests"] });
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update mock test status"
-      );
-    },
-  });
-
   // Helper functions
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "PPP 'at' pp");
@@ -104,10 +82,10 @@ const MockTestDetail = () => {
 
   const formatDuration = (minutes: number) => {
     if (!minutes) return "0m";
-    
+
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    
+
     if (hours > 0) {
       return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
     } else {
@@ -170,17 +148,19 @@ const MockTestDetail = () => {
     );
   }
 
-  const totalDuration = mockTest.test_sections?.reduce(
-    (total, section) => total + section.duration,
-    0
-  ) || 0;
+  const totalDuration =
+    mockTest.test_sections?.reduce(
+      (total, section) => total + section.duration,
+      0
+    ) || 0;
 
-  const sectionsByType = mockTest.test_sections?.reduce((acc, section) => {
-    const type = section.section_type.split("_")[0];
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(section);
-    return acc;
-  }, {} as Record<string, any[]>) || {};
+  const sectionsByType =
+    mockTest.test_sections?.reduce((acc, section) => {
+      const type = section.section_type.split("_")[0];
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(section);
+      return acc;
+    }, {} as Record<string, any[]>) || {};
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -263,7 +243,9 @@ const MockTestDetail = () => {
                       )}
                     </Badge>
                     <span className="text-sm text-gray-500">
-                      {mockTest.deleted ? "Hidden from students" : "Visible to students"}
+                      {mockTest.deleted
+                        ? "Hidden from students"
+                        : "Visible to students"}
                     </span>
                   </div>
                 </div>
@@ -318,9 +300,11 @@ const MockTestDetail = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
                           {getSectionTypeIcon(section.section_type)}
-                          <Badge 
-                            variant="outline" 
-                            className={`capitalize text-xs ${getSectionTypeColor(section.section_type)}`}
+                          <Badge
+                            variant="outline"
+                            className={`capitalize text-xs ${getSectionTypeColor(
+                              section.section_type
+                            )}`}
                           >
                             {section.section_type.replace("_", " ")}
                           </Badge>
@@ -346,24 +330,45 @@ const MockTestDetail = () => {
                           {formatDuration(section.duration)}
                         </p>
                       </div>
+                      <div className="text-right space-y-2">
+                        <p className="text-md font-semibold text-blue-600 flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {formatDuration(section.duration)}
+                        </p>
+                        {section.section_type.includes("reading") && (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              router.push(
+                                `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading?sectionId=${section.id}`
+                              )
+                            }
+                            className="ml-2"
+                          >
+                            Manage Reading
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Test Instructions */}
-            {mockTest.instructions && (
+            {/* Test Description */}
+            {mockTest.description && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <FileText className="h-5 w-5 text-gray-600" />
-                    <span>Test Instructions</span>
+                    <span>Test Description</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700 leading-relaxed">{mockTest.instructions}</p>
+                    <p className="text-gray-700 leading-relaxed">
+                      {mockTest.description}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -380,33 +385,57 @@ const MockTestDetail = () => {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {Object.entries(sectionsByType).map(([type, sections]) => (
-                    <div key={type} className="p-6 border-2 border-gray-200 rounded-xl bg-gradient-to-br from-white to-gray-50">
+                    <div
+                      key={type}
+                      className="p-6 border-2 border-gray-200 rounded-xl bg-gradient-to-br from-white to-gray-50"
+                    >
                       <div className="flex items-center space-x-3 mb-4">
                         <div className="p-2 bg-gray-100 rounded-lg">
                           {getSectionTypeIcon(type)}
                         </div>
                         <div>
-                          <h4 className="text-lg font-semibold capitalize">{type}</h4>
-                          <p className="text-sm text-gray-500">{sections.length} section(s)</p>
+                          <h4 className="text-lg font-semibold capitalize">
+                            {type}
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {sections.length} section(s)
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-3">
                         {sections.map((section, index) => (
-                          <div key={index} className="flex justify-between items-center p-2 bg-white rounded-lg">
-                            <span className="text-sm font-medium">{section.section_name}</span>
+                          <div
+                            key={index}
+                            className="flex justify-between items-center p-2 bg-white rounded-lg"
+                          >
+                            <span className="text-sm font-medium">
+                              {section.section_name}
+                            </span>
                             <span className="text-sm text-gray-600 font-mono">
                               {formatDuration(section.duration)}
                             </span>
                           </div>
                         ))}
-                        
+
                         <Separator className="my-2" />
-                        
+
                         <div className="flex justify-between items-center font-semibold text-lg">
                           <span>Total:</span>
-                          <span className={`font-mono ${type === 'listening' ? 'text-blue-600' : type === 'reading' ? 'text-green-600' : type === 'writing' ? 'text-purple-600' : 'text-orange-600'}`}>
-                            {formatDuration(sections.reduce((sum, s) => sum + s.duration, 0))}
+                          <span
+                            className={`font-mono ${
+                              type === "listening"
+                                ? "text-blue-600"
+                                : type === "reading"
+                                ? "text-green-600"
+                                : type === "writing"
+                                ? "text-purple-600"
+                                : "text-orange-600"
+                            }`}
+                          >
+                            {formatDuration(
+                              sections.reduce((sum, s) => sum + s.duration, 0)
+                            )}
                           </span>
                         </div>
                       </div>
@@ -431,13 +460,15 @@ const MockTestDetail = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Test ID:</span>
-                    <span className="font-medium text-xs font-mono">{mockTest.id}</span>
+                    <span className="font-medium text-xs font-mono">
+                      {mockTest.id}
+                    </span>
                   </div>
 
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Test Type:</span>
                     <span className="font-medium capitalize">
-                      {mockTest.test_type.replace('_', ' ')}
+                      {mockTest.test_type.replace("_", " ")}
                     </span>
                   </div>
 
@@ -475,7 +506,11 @@ const MockTestDetail = () => {
 
                   <div className="flex justify-between text-lg font-bold">
                     <span>Status:</span>
-                    <span className={mockTest.deleted ? "text-red-600" : "text-green-600"}>
+                    <span
+                      className={
+                        mockTest.deleted ? "text-red-600" : "text-green-600"
+                      }
+                    >
                       {mockTest.deleted ? "Inactive" : "Active"}
                     </span>
                   </div>
@@ -487,9 +522,15 @@ const MockTestDetail = () => {
                     Test Information
                   </h4>
                   <div className="space-y-1 text-xs text-blue-700">
-                    <p>• Visibility: {mockTest.deleted ? "Hidden" : "Public"}</p>
-                    <p>• Created: {format(new Date(mockTest.created_at), "PPP")}</p>
-                    <p>• Updated: {format(new Date(mockTest.updated_at), "PPP")}</p>
+                    <p>
+                      • Visibility: {mockTest.deleted ? "Hidden" : "Public"}
+                    </p>
+                    <p>
+                      • Created: {format(new Date(mockTest.created_at), "PPP")}
+                    </p>
+                    <p>
+                      • Updated: {format(new Date(mockTest.updated_at), "PPP")}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -517,7 +558,9 @@ const MockTestDetail = () => {
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      {deleteMutation.isPending ? "Deleting..." : "Delete Mock Test"}
+                      {deleteMutation.isPending
+                        ? "Deleting..."
+                        : "Delete Mock Test"}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>

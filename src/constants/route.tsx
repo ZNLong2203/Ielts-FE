@@ -19,6 +19,7 @@ const ROUTES = {
   ADMIN_COURSE_COMBO: "/admin/courseCombo",
   ADMIN_ORDERS: "/admin/order",
   ADMIN_MOCK_TESTS: "/admin/mockTest",
+  ADMIN_READING: "/reading",
 
   TEACHER: "/teacher/dashboard",
   TEACHER_BLOGS: "/teacher/dashboard/blog",

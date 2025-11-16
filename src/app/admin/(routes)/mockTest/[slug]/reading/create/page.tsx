@@ -1,6 +1,6 @@
 import ReadingForm from "@/components/admin/mockTest/exercise/reading/readingForm";
 
-const ReadingFormPage = () => {
+const ReadingExerciseFormPage = () => {
   return (
     <div>
         <ReadingForm />
@@ -8,4 +8,4 @@ const ReadingFormPage = () => {
   );
 };
 
-export default ReadingFormPage;
+export default ReadingExerciseFormPage;
