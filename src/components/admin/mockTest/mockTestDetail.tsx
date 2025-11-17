@@ -324,17 +324,14 @@ const MockTestDetail = () => {
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-md font-semibold text-blue-600 flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {formatDuration(section.duration)}
-                        </p>
-                      </div>
+
                       <div className="text-right space-y-2">
                         <p className="text-md font-semibold text-blue-600 flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
                           {formatDuration(section.duration)}
                         </p>
+
+                        {/* Reading Section Button */}
                         {section.section_type.includes("reading") && (
                           <Button
                             size="sm"
@@ -343,9 +340,58 @@ const MockTestDetail = () => {
                                 `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading?sectionId=${section.id}`
                               )
                             }
-                            className="ml-2"
+                            className="ml-2 bg-green-600 hover:bg-green-700 text-white"
                           >
+                            <BookOpen className="h-4 w-4 mr-1" />
                             Manage Reading
+                          </Button>
+                        )}
+
+                        {/* Listening Section Button */}
+                        {section.section_type.includes("listening") && (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              router.push(
+                                `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/listening?sectionId=${section.id}`
+                              )
+                            }
+                            className="ml-2 bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Volume2 className="h-4 w-4 mr-1" />
+                            Manage Listening
+                          </Button>
+                        )}
+
+                        {/* Writing Section Button */}
+                        {section.section_type.includes("writing") && (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              router.push(
+                                `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/writing?sectionId=${section.id}`
+                              )
+                            }
+                            className="ml-2 bg-purple-600 hover:bg-purple-700 text-white"
+                          >
+                            <PenTool className="h-4 w-4 mr-1" />
+                            Manage Writing
+                          </Button>
+                        )}
+
+                        {/* Speaking Section Button */}
+                        {section.section_type.includes("speaking") && (
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              router.push(
+                                `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/speaking?sectionId=${section.id}`
+                              )
+                            }
+                            className="ml-2 bg-orange-600 hover:bg-orange-700 text-white"
+                          >
+                            <Mic className="h-4 w-4 mr-1" />
+                            Manage Speaking
                           </Button>
                         )}
                       </div>

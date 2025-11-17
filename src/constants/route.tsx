@@ -20,6 +20,7 @@ const ROUTES = {
   ADMIN_ORDERS: "/admin/order",
   ADMIN_MOCK_TESTS: "/admin/mockTest",
   ADMIN_READING: "/reading",
+  ADMIN_LISTENING: "/listening",
 
   TEACHER: "/teacher/dashboard",
   TEACHER_BLOGS: "/teacher/dashboard/blog",

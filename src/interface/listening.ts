@@ -1,40 +1,89 @@
-export interface IPassageParagraph {
-    id: string;
-    label: string;
-    content: string;
+export interface IListeningParagraph {
+  id: string;
+  label: string;
+  content: string;
 }
 
 export interface IListeningPassage {
+  title: string;
+  content: string;
+  paragraphs: IListeningParagraph[];
+  word_count: number;
+  difficulty_level: string;
+}
+
+export interface ExerciseContent {
+  id: string;
+  test_section_id: string;
+  title: string;
+  passage: IListeningPassage;
+  time_limit: number; // in minutes
+  passing_score: string;
+  ordering: number;
+}
+
+export interface IListeningSection {
+  id: string;
+  mock_test: {
+    id: string;
+    test_type: string;
     title: string;
-    content: string;
-    paragraphs: IPassageParagraph[];
-    word_count: number;
-    difficulty_level: string;
+  };
+  section_name: string;
+}
+
+export interface IListeningExerciseList {
+  exercises: ExerciseContent[];
+  test_section: IListeningSection;
 }
 
 export interface IListeningExercise {
-    id: string;
-    test_section_id: string;
+  id: string;
+  audio_url?: File;
+  exercise_type: string;
+  instruction: string;
+  ordering: number;
+  passing_score: string;
+  listening_passage: {
+    content: string;
+    difficulty_level: string;
+    estimated_listening_time: number;
     title: string;
-    passage: IListeningPassage;
-    time_limit: number; // in minutes
-    passing_score: number; 
-    ordering: number;
+    word_count: number;
+    paragraphs: IListeningParagraph[];
+  };
+  skill_type: string;
+  time_limit: number; // in minutes
+  title: string;
+  total_questions: number;
+  total_points: number;
+  ungrouped_questions?: any[];
+  question_groups?: any[];
+}
+
+export interface IListeningPassageCreate {
+  title: string;
+  content: string;
+  audio_url?: File;
+  paragraphs: IListeningParagraph[];
+  word_count: number;
+  difficulty_level: string;
 }
 
 export interface IListeningExerciseCreate {
-    test_section_id: string;
-    title: string;
-    passage: IListeningPassage;
-    time_limit: number; // in minutes
-    passing_score: number;
-    ordering: number;
+  test_section_id: string;
+  title: string;
+  passage: IListeningPassageCreate;
+  time_limit: number; // in minutes
+  passing_score: string;
+  ordering: number;
 }
 
 export interface IListeningExerciseUpdate {
-    title?: string;
-    passage?: IListeningPassage;
-    time_limit?: number; // in minutes
-    passing_score?: number;
-    ordering?: number;
+  title?: string;
+  audio_url?: File;
+  passage?: IListeningPassageCreate;
+  time_limit?: number; // in minutes
+  passing_score?: string;
+  ordering?: number;
 }

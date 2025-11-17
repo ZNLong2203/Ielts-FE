@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { getReadingExercise } from "@/api/reading";
+import { getListeningExercise } from "@/api/listening";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import Error from "@/components/ui/error";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import {
-  BookOpen,
+  Headphones,
   Edit3,
   Clock,
   Target,
@@ -26,13 +26,16 @@ import {
   Info,
   Timer,
   Award,
-  BookMarked,
+  Volume2,
   List,
   CheckCircle,
+  Play,
+  Pause,
+  Mic,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
-import { IReadingExercise } from "@/interface/reading";
+import { IListeningExercise } from "@/interface/listening";
 
 const DIFFICULTY_LABELS = {
   "1": {
@@ -62,54 +65,70 @@ const DIFFICULTY_LABELS = {
   },
 } as const;
 
-const ReadingDetail = () => {
+const ListeningDetail = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const params = useParams();
 
   const mockTestId = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const readingExerciseId = Array.isArray(params.readingId)
-    ? params.readingId[0]
-    : params.readingId;
+  const listeningExerciseId = Array.isArray(params.listeningId)
+    ? params.listeningId[0]
+    : params.listeningId;
   const sectionId = searchParams?.get("sectionId");
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "passage" | "paragraphs" | "preview"
+    "overview" | "audio" | "transcript" | "paragraphs" | "preview"
   >("overview");
   const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
     null
   );
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Audio ref
+  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   // Query
   const {
-    data: readingExercise,
+    data: listeningExercise,
     isLoading,
     isError,
     refetch,
-  } = useQuery<IReadingExercise>({
-    queryKey: ["readingExercise", readingExerciseId],
-    queryFn: async () => getReadingExercise(readingExerciseId!),
-    enabled: !!readingExerciseId,
+  } = useQuery<IListeningExercise>({
+    queryKey: ["listeningExercise", listeningExerciseId],
+    queryFn: async () => getListeningExercise(listeningExerciseId!),
+    enabled: !!listeningExerciseId,
     retry: 2,
   });
 
   // Navigation handlers
   const handleBackToList = () => {
     router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading?sectionId=${sectionId}`
+      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/listening?sectionId=${sectionId}`
     );
   };
 
   const handleEdit = () => {
     router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading/${readingExerciseId}?sectionId=${sectionId}`
+      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/listening/${listeningExerciseId}/update?sectionId=${sectionId}`
     );
   };
 
   const handlePreview = () => {
     router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading/${readingExerciseId}/preview?sectionId=${sectionId}`
+      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/listening/${listeningExerciseId}/preview?sectionId=${sectionId}`
     );
+  };
+
+  // Audio handlers
+  const togglePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
   };
 
   // Utility functions
@@ -118,15 +137,22 @@ const ReadingDetail = () => {
     toast.success("Copied to clipboard!");
   };
 
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   if (isLoading) {
     return <Loading />;
   }
 
-  if (isError || !readingExercise) {
+  if (isError || !listeningExercise) {
     return (
       <Error
-        title="Reading Exercise Not Found"
-        description="The requested reading exercise does not exist or has been deleted."
+        title="Listening Exercise Not Found"
+        description="The requested listening exercise does not exist or has been deleted."
         onRetry={() => refetch()}
         onGoBack={handleBackToList}
       />
@@ -135,11 +161,12 @@ const ReadingDetail = () => {
 
   const difficulty =
     DIFFICULTY_LABELS[
-      readingExercise.reading_passage
+      listeningExercise.listening_passage
         ?.difficulty_level as keyof typeof DIFFICULTY_LABELS
     ] || DIFFICULTY_LABELS["3"];
-  const wordCount = readingExercise.reading_passage?.word_count || 0;
-  const paragraphs = readingExercise.reading_passage?.paragraphs || [];
+  const wordCount = listeningExercise.listening_passage?.word_count || 0;
+  const paragraphs = listeningExercise.listening_passage?.paragraphs || [];
+  const audioDuration = listeningExercise.audio_duration || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,15 +176,15 @@ const ReadingDetail = () => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Headphones className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">
-                    {readingExercise.title}
+                    {listeningExercise.title}
                   </h1>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <span>{readingExercise.reading_passage?.title}</span>
+                    <span>{listeningExercise.listening_passage?.title}</span>
                     <span>•</span>
                     <Badge className={`${difficulty.color} border text-xs`}>
                       <div className="flex items-center space-x-1">
@@ -167,6 +194,8 @@ const ReadingDetail = () => {
                         <span>{difficulty.label}</span>
                       </div>
                     </Badge>
+                    <span>•</span>
+                    <span>{formatDuration(audioDuration)}</span>
                   </div>
                 </div>
               </div>
@@ -184,7 +213,7 @@ const ReadingDetail = () => {
 
               <Button
                 onClick={handleEdit}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700"
               >
                 <Edit3 className="h-4 w-4" />
                 <span>Edit Exercise</span>
@@ -196,7 +225,8 @@ const ReadingDetail = () => {
           <div className="flex space-x-8 border-b">
             {[
               { key: "overview", label: "Overview", icon: BarChart3 },
-              { key: "passage", label: "Passage", icon: BookMarked },
+              { key: "audio", label: "Audio", icon: Volume2 },
+              { key: "transcript", label: "Transcript", icon: FileText },
               { key: "paragraphs", label: "Paragraphs", icon: List },
               { key: "preview", label: "Full Preview", icon: Eye },
             ].map((tab) => {
@@ -207,7 +237,7 @@ const ReadingDetail = () => {
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.key
-                      ? "border-blue-500 text-blue-600"
+                      ? "border-purple-500 text-purple-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
@@ -230,7 +260,7 @@ const ReadingDetail = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Info className="h-5 w-5 text-blue-600" />
+                    <Info className="h-5 w-5 text-purple-600" />
                     <span>Exercise Information</span>
                   </CardTitle>
                 </CardHeader>
@@ -241,7 +271,7 @@ const ReadingDetail = () => {
                         Exercise Title
                       </label>
                       <p className="text-lg font-semibold text-gray-900 mt-1">
-                        {readingExercise.title}
+                        {listeningExercise.title}
                       </p>
                     </div>
                     <div>
@@ -249,8 +279,8 @@ const ReadingDetail = () => {
                         Exercise Type
                       </label>
                       <p className="text-lg font-semibold text-gray-900 mt-1 capitalize">
-                        {readingExercise.exercise_type ||
-                          "Reading Comprehension"}
+                        {listeningExercise.exercise_type ||
+                          "Listening Comprehension"}
                       </p>
                     </div>
                     <div>
@@ -258,7 +288,7 @@ const ReadingDetail = () => {
                         Skill Type
                       </label>
                       <p className="text-lg font-semibold text-gray-900 mt-1 capitalize">
-                        {readingExercise.skill_type || "Reading"}
+                        {listeningExercise.skill_type || "Listening"}
                       </p>
                     </div>
                     <div>
@@ -266,19 +296,19 @@ const ReadingDetail = () => {
                         Order
                       </label>
                       <p className="text-lg font-semibold text-gray-900 mt-1">
-                        #{readingExercise.ordering}
+                        #{listeningExercise.ordering}
                       </p>
                     </div>
                   </div>
 
-                  {readingExercise.instruction && (
+                  {listeningExercise.instruction && (
                     <div>
                       <label className="text-sm font-medium text-gray-600">
                         Instructions
                       </label>
-                      <div className="mt-2 p-4 bg-blue-50 rounded-lg">
+                      <div className="mt-2 p-4 bg-purple-50 rounded-lg">
                         <p className="text-gray-700">
-                          {readingExercise.instruction}
+                          {listeningExercise.instruction}
                         </p>
                       </div>
                     </div>
@@ -286,22 +316,22 @@ const ReadingDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Passage Overview */}
+              {/* Audio & Transcript Overview */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <BookMarked className="h-5 w-5 text-green-600" />
-                    <span>Passage Overview</span>
+                    <Volume2 className="h-5 w-5 text-green-600" />
+                    <span>Audio & Transcript Overview</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-600">
-                        Passage Title
+                        Audio Title
                       </label>
                       <p className="text-md font-semibold text-gray-900 mt-1">
-                        {readingExercise.reading_passage?.title}
+                        {listeningExercise.listening_passage?.title}
                       </p>
                     </div>
                     <div>
@@ -327,7 +357,13 @@ const ReadingDetail = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                  <div className="grid grid-cols-4 gap-4 pt-4 border-t">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {formatDuration(audioDuration)}
+                      </div>
+                      <div className="text-sm text-gray-600">Duration</div>
+                    </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {wordCount}
@@ -340,10 +376,9 @@ const ReadingDetail = () => {
                       </div>
                       <div className="text-sm text-gray-600">Paragraphs</div>
                     </div>
-                   
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
-                        {readingExercise.total_questions || 0}
+                        {listeningExercise.total_questions || 0}
                       </div>
                       <div className="text-sm text-gray-600">Questions</div>
                     </div>
@@ -351,11 +386,11 @@ const ReadingDetail = () => {
 
                   <div className="pt-4">
                     <label className="text-sm font-medium text-gray-600">
-                      Content Preview
+                      Transcript Preview
                     </label>
                     <div className="mt-2 p-4 bg-gray-50 rounded-lg">
                       <p className="text-gray-700 line-clamp-4">
-                        {readingExercise.reading_passage?.content}
+                        {listeningExercise.listening_passage?.content}
                       </p>
                     </div>
                   </div>
@@ -376,13 +411,13 @@ const ReadingDetail = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Timer className="h-4 w-4 text-blue-600" />
+                      <Timer className="h-4 w-4 text-purple-600" />
                       <span className="text-sm font-medium text-gray-700">
                         Time Limit
                       </span>
                     </div>
-                    <span className="text-lg font-bold text-blue-600">
-                      {readingExercise.time_limit} min
+                    <span className="text-lg font-bold text-purple-600">
+                      {listeningExercise.time_limit} min
                     </span>
                   </div>
 
@@ -394,19 +429,31 @@ const ReadingDetail = () => {
                       </span>
                     </div>
                     <span className="text-lg font-bold text-green-600">
-                      {readingExercise.passing_score}%
+                      {listeningExercise.passing_score}%
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Hash className="h-4 w-4 text-purple-600" />
+                      <Hash className="h-4 w-4 text-orange-600" />
                       <span className="text-sm font-medium text-gray-700">
                         Total Points
                       </span>
                     </div>
-                    <span className="text-lg font-bold text-purple-600">
-                      {readingExercise.total_points || 0}
+                    <span className="text-lg font-bold text-orange-600">
+                      {listeningExercise.total_points || 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Volume2 className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        Audio Duration
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-blue-600">
+                      {formatDuration(audioDuration)}
                     </span>
                   </div>
                 </CardContent>
@@ -426,21 +473,30 @@ const ReadingDetail = () => {
                     className="w-full justify-start"
                     onClick={() =>
                       copyToClipboard(
-                        readingExercise.reading_passage?.content || ""
+                        listeningExercise.listening_passage?.content || ""
                       )
                     }
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    Copy Passage Content
+                    Copy Transcript
                   </Button>
 
                   <Button
                     variant="outline"
                     className="w-full justify-start"
-                    onClick={() => copyToClipboard(readingExercise.title)}
+                    onClick={() => copyToClipboard(listeningExercise.title)}
                   >
                     <Share2 className="h-4 w-4 mr-2" />
                     Copy Exercise Title
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => copyToClipboard(listeningExercise.audio_url || "")}
+                  >
+                    <Volume2 className="h-4 w-4 mr-2" />
+                    Copy Audio URL
                   </Button>
 
                   <Button
@@ -454,7 +510,7 @@ const ReadingDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Reading Tips */}
+              {/* Listening Tips */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -463,34 +519,92 @@ const ReadingDetail = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-gray-600">
-                  <p>• Average reading speed: 200 words/min</p>
+                  <p>• Average listening speed: ~150 words/min</p>
                   <p>• Recommended for {difficulty.label} level</p>
                   <p>
-                    • Estimated completion:{" "}
-                    {Math.ceil(readingExercise.time_limit * 0.8)} minutes
+                    • Audio duration:{" "}
+                    {formatDuration(audioDuration)}
                   </p>
-                 
+                  <p>• Listen carefully for key information</p>
                 </CardContent>
               </Card>
             </div>
           </div>
         )}
 
-        {activeTab === "passage" && (
+        {activeTab === "audio" && (
           <div className="max-w-4xl mx-auto">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <BookMarked className="h-5 w-5 text-green-600" />
-                    <span>{readingExercise.reading_passage?.title}</span>
+                    <Volume2 className="h-5 w-5 text-purple-600" />
+                    <span>{listeningExercise.listening_passage?.title}</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Duration: {formatDuration(audioDuration)}
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8">
+                  <div className="flex items-center space-x-6 mb-6">
+                    <div className="p-4 bg-purple-100 rounded-full">
+                      <Headphones className="h-12 w-12 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        {listeningExercise.listening_passage?.title}
+                      </h3>
+                      <p className="text-gray-600">
+                        {difficulty.label} • {formatDuration(audioDuration)} • {wordCount} words
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {listeningExercise.audio_url && (
+                    <div className="bg-white rounded-lg p-6 shadow-sm">
+                      <audio 
+                        ref={audioRef}
+                        src={listeningExercise.audio_url}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        onEnded={() => setIsPlaying(false)}
+                        className="w-full"
+                        controls
+                        preload="metadata"
+                      />
+                      
+                      <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+                        <span>Use the controls above to play the audio</span>
+                        <div className="flex items-center space-x-2">
+                          <Mic className="h-4 w-4" />
+                          <span>High Quality Audio</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === "transcript" && (
+          <div className="max-w-4xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-5 w-5 text-green-600" />
+                    <span>Audio Transcript</span>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() =>
                       copyToClipboard(
-                        readingExercise.reading_passage?.content || ""
+                        listeningExercise.listening_passage?.content || ""
                       )
                     }
                   >
@@ -502,7 +616,14 @@ const ReadingDetail = () => {
               <CardContent>
                 <div className="prose prose-gray max-w-none">
                   <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {readingExercise.reading_passage?.content}
+                    {listeningExercise.listening_passage?.content}
+                  </div>
+                </div>
+                <div className="mt-6 pt-4 border-t">
+                  <div className="flex items-center space-x-6 text-sm text-gray-600">
+                    <span>Word Count: {wordCount}</span>
+                    <span>Characters: {listeningExercise.listening_passage?.content?.length || 0}</span>
+                    <span>Paragraphs: {paragraphs.length}</span>
                   </div>
                 </div>
               </CardContent>
@@ -528,14 +649,14 @@ const ReadingDetail = () => {
                   key={paragraph.id}
                   className={`transition-all duration-200 ${
                     selectedParagraph === paragraph.id
-                      ? "ring-2 ring-blue-500 shadow-lg"
+                      ? "ring-2 ring-purple-500 shadow-lg"
                       : "hover:shadow-md"
                   }`}
                 >
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold">
+                        <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center font-bold">
                           {paragraph.label}
                         </div>
                         <span className="text-lg">
@@ -578,21 +699,25 @@ const ReadingDetail = () => {
             <Card>
               <CardHeader className="text-center">
                 <div className="flex items-center justify-center space-x-2 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <BookOpen className="h-6 w-6 text-blue-600" />
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Headphones className="h-6 w-6 text-purple-600" />
                   </div>
                 </div>
                 <CardTitle className="text-2xl">
-                  {readingExercise.title}
+                  {listeningExercise.title}
                 </CardTitle>
                 <div className="flex items-center justify-center space-x-6 text-sm text-gray-600 mt-4">
                   <div className="flex items-center space-x-1">
                     <Clock className="h-4 w-4" />
-                    <span>Time: {readingExercise.time_limit} minutes</span>
+                    <span>Time: {listeningExercise.time_limit} minutes</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Target className="h-4 w-4" />
-                    <span>Pass: {readingExercise.passing_score}</span>
+                    <span>Pass: {listeningExercise.passing_score}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Volume2 className="h-4 w-4" />
+                    <span>{formatDuration(audioDuration)}</span>
                   </div>
                   <Badge className={`${difficulty.color} border`}>
                     <div className="flex items-center space-x-1">
@@ -607,28 +732,67 @@ const ReadingDetail = () => {
             </Card>
 
             {/* Instructions */}
-            {readingExercise.instruction && (
+            {listeningExercise.instruction && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-md">Instructions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 text-sm">{readingExercise.instruction}</p>
+                  <p className="text-gray-700 text-sm">{listeningExercise.instruction}</p>
                 </CardContent>
               </Card>
             )}
 
-            {/* Reading Passage */}
+            {/* Audio Player */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">
-                  {readingExercise.reading_passage?.title}
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <Volume2 className="h-5 w-5 text-purple-600" />
+                  <span>{listeningExercise.listening_passage?.title}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="p-4 bg-purple-100 rounded-full">
+                      <Headphones className="h-8 w-8 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">{listeningExercise.listening_passage?.title}</h4>
+                      <p className="text-sm text-gray-600">Duration: {formatDuration(audioDuration)}</p>
+                    </div>
+                  </div>
+                  
+                  {listeningExercise.audio_url && (
+                    <div className="bg-white rounded-lg p-4">
+                      <audio 
+                        ref={audioRef}
+                        src={listeningExercise.audio_url}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        onEnded={() => setIsPlaying(false)}
+                        className="w-full"
+                        controls
+                        preload="metadata"
+                      />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Transcript */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-green-600" />
+                  <span>Audio Transcript</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose prose-gray max-w-none">
                   <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {readingExercise.reading_passage?.content}
+                    {listeningExercise.listening_passage?.content}
                   </div>
                 </div>
               </CardContent>
@@ -644,7 +808,7 @@ const ReadingDetail = () => {
                   <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                   <p>Questions for this exercise will be displayed here.</p>
                   <p className="text-sm mt-2">
-                    Total Questions: {readingExercise.total_questions || 0}
+                    Total Questions: {listeningExercise.total_questions || 0}
                   </p>
                 </div>
               </CardContent>
@@ -656,4 +820,4 @@ const ReadingDetail = () => {
   );
 };
 
-export default ReadingDetail;
+export default ListeningDetail;
