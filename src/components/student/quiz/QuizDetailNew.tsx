@@ -341,6 +341,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           multiple_choice_answers?: string[];
           true_false_answers?: string;
           matching_answers?: string;
+          essay_answers?: string;
         } = {};
         
         switch (q.type) {
@@ -356,6 +357,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             break;
           case "matching":
             answerData.matching_answers = Array.isArray(userAnswer) ? userAnswer[0] : (userAnswer || "");
+            break;
+          case "essay":
+            answerData.essay_answers = Array.isArray(userAnswer) ? userAnswer.join(" ") : (userAnswer || "");
             break;
           default:
             answerData.fill_blank_answers = Array.isArray(userAnswer) ? userAnswer.join(" ") : (userAnswer || "");

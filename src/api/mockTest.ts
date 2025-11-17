@@ -52,6 +52,7 @@ export interface TestAnswerSubmission {
         multiple_choice_answers?: string[];
         true_false_answers?: string;
         matching_answers?: string;
+        essay_answers?: string;
     };
 }
 

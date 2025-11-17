@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Lightbulb,
 } from "lucide-react";
+import WritingResults from "./WritingResults";
 
 interface QuizResultsProps {
   quiz: {
@@ -75,6 +76,12 @@ export default function QuizResults({
   const overallFeedback = detailedAnswers?.overall_feedback || detailedAnswers?.feedback || "";
   const criteriaScores = detailedAnswers?.overall_criteria_scores || detailedAnswers?.criteria_scores || {};
   const isSpeaking = currentSection?.type === "speaking";
+  const isWriting = currentSection?.type === "writing";
+  
+  // Extract writing results
+  const writingTask1 = detailedAnswers?.task1 || null;
+  const writingTask2 = detailedAnswers?.task2 || null;
+  const writingOverallScore = detailedAnswers?.overallScore || bandScore;
   
   // Check if we have any detailed feedback to show
   const hasDetailedFeedback = isSpeaking && (
@@ -84,12 +91,47 @@ export default function QuizResults({
     overallFeedback || 
     Object.keys(criteriaScores).length > 0
   );
+  
+  // Check if we have writing results
+  const hasWritingResults = isWriting && (writingTask1 || writingTask2);
 
   const getScoreColor = (score: number) => {
     if (score >= 7) return "bg-gradient-to-r from-green-500 to-emerald-500";
     if (score >= 5) return "bg-gradient-to-r from-yellow-500 to-orange-500";
     return "bg-gradient-to-r from-red-500 to-pink-500";
   };
+
+  // If writing section, show WritingResults component
+  if (hasWritingResults) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="text-gray-600"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Tests
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onReset}
+            className="text-blue-600 border-blue-600"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Retake Test
+          </Button>
+        </div>
+        
+        <WritingResults
+          task1={writingTask1}
+          task2={writingTask2}
+          overallScore={writingOverallScore}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
