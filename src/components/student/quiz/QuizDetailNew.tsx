@@ -5,139 +5,28 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  Flag,
-  AlertCircle,
-  CheckCircle2,
-  X,
-  ArrowLeft,
-  RotateCcw,
-  Send,
-  BookOpen,
-  Loader2,
-  FileText,
-  Headphones,
-  Mic,
-  Pin,
-  PinOff,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AlertCircle, X, ArrowLeft, Loader2, BookOpen, FileText, Headphones, Mic } from "lucide-react";
 
 import { startMockTest, submitSectionAnswers, TestSectionSubmission, TestAnswerSubmission } from "@/api/mockTest";
+import { uploadAudio } from "@/api/file";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { useTextHighlight } from "@/hooks/useTextHighlight";
-
-// Passage Component with Highlight and Pin Support
-const PassageWithHighlight = ({ 
-  passageId, 
-  passageText, 
-  onPin, 
-  isPinned 
-}: { 
-  passageId: string; 
-  passageText: string;
-  onPin: () => void;
-  isPinned: boolean;
-}) => {
-  const { highlights, toggleHighlight, clearAllHighlights, renderHighlightedText } = useTextHighlight(passageId);
-  
-  return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-blue-900">
-          Reading Passage
-        </h3>
-        <div className="flex items-center gap-2">
-          {highlights.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAllHighlights}
-              className="text-xs"
-            >
-              Clear Highlights ({highlights.length})
-            </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onPin}
-            className={cn(
-              "text-xs",
-              isPinned ? "bg-blue-600 text-white hover:bg-blue-700" : ""
-            )}
-          >
-            {isPinned ? (
-              <>
-                <PinOff className="h-3 w-3 mr-1" />
-                Unpin
-              </>
-            ) : (
-              <>
-                <Pin className="h-3 w-3 mr-1" />
-                Pin
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-      <div 
-        id={passageId}
-        onMouseUp={toggleHighlight}
-        className="bg-white rounded-lg p-6 border border-blue-200 cursor-text select-text"
-      >
-        <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">
-          {renderHighlightedText(passageText)}
-        </p>
-        <p className="text-xs text-gray-500 mt-2 italic">
-          💡 Tip: Select text to highlight important information
-        </p>
-      </div>
-    </div>
-  );
-};
-
-// Question Text Component with Highlight Support
-const QuestionTextWithHighlight = ({ questionId, questionText }: { questionId: string; questionText: string }) => {
-  const questionTextId = `question-text-${questionId}`;
-  const { highlights, toggleHighlight, clearAllHighlights, renderHighlightedText } = useTextHighlight(questionTextId);
-  
-  return (
-    <div className="flex-1">
-      <div className="relative group">
-        <div 
-          id={questionTextId}
-          onMouseUp={toggleHighlight}
-          className="text-gray-900 font-medium cursor-text select-text pr-8"
-        >
-          {renderHighlightedText(questionText)}
-        </div>
-        {highlights.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearAllHighlights}
-            className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs h-6 px-2"
-            title={`Clear ${highlights.length} highlight${highlights.length > 1 ? 's' : ''}`}
-          >
-            ✕
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-};
+import QuizResults from "./QuizResults";
+import QuizHeader from "./QuizHeader";
+import PinnedPassagePanel from "./PinnedPassagePanel";
+import QuizInstructions from "./QuizInstructions";
+import QuizNavigation from "./QuizNavigation";
+import QuizQuestionGroup from "./QuizQuestionGroup";
 
 interface QuizDetailProps {
   quizId?: string;
@@ -202,6 +91,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const [isStarted, setIsStarted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [showInstructions, setShowInstructions] = useState(false);
   const [sectionResult, setSectionResult] = useState<{
@@ -216,6 +106,13 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const [pinnedImageUrl, setPinnedImageUrl] = useState<string | null>(null);
   const [isNavigationExpanded, setIsNavigationExpanded] = useState(true);
   const questionRefs = React.useRef<{ [key: string]: HTMLDivElement | null }>({});
+  
+  // Speaking question states
+  const [speakingAudios, setSpeakingAudios] = useState<{ [key: string]: { blob: Blob; url: string } }>({});
+  const [speakingRecording, setSpeakingRecording] = useState<{ [key: string]: boolean }>({});
+  const mediaRecorderRefs = React.useRef<{ [key: string]: MediaRecorder | null }>({});
+  const audioChunksRefs = React.useRef<{ [key: string]: Blob[] }>({});
+  const fileInputRefs = React.useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const startTestMutation = useMutation({
     mutationFn: (testId: string) => startMockTest(testId),
@@ -259,9 +156,31 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
 
   useEffect(() => {
     if (quizId && !startTestMutation.data && !startTestMutation.isPending) {
-      startTestMutation.mutate(quizId);
+      // Use setTimeout to avoid calling mutation during render
+      const timer = setTimeout(() => {
+        startTestMutation.mutate(quizId);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [quizId, startTestMutation]);
+
+  // Cleanup audio URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      Object.values(speakingAudios).forEach(audio => {
+        if (audio?.url) {
+          URL.revokeObjectURL(audio.url);
+        }
+      });
+      // Stop any active recordings
+      Object.keys(mediaRecorderRefs.current).forEach(questionId => {
+        const recorder = mediaRecorderRefs.current[questionId];
+        if (recorder && recorder.state !== 'inactive') {
+          recorder.stop();
+        }
+      });
+    };
+  }, [speakingAudios]);
 
   const transformedQuiz: TransformedQuiz | null = useMemo(() => {
     if (!startTestMutation.data) return null;
@@ -372,8 +291,39 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const currentSection = quiz?.sections[currentSectionIndex];
   const totalQuestions = quiz?.total_questions || 0;
 
-  const handleSubmitQuiz = useCallback(async () => {
+  const isQuestionAnswered = useCallback((questionId: string, questionType?: string) => {
+    // For speaking questions, check if audio exists
+    if (questionType === "speaking") {
+      return !!speakingAudios[questionId];
+    }
+    // For other question types, check answers
+    return !!answers[questionId];
+  }, [answers, speakingAudios]);
+
+  // Calculate total answered questions (including speaking)
+  const answeredCount = useMemo(() => {
+    if (!quiz) return 0;
+    const allQuestions = quiz.sections.flatMap(s => 
+      s.question_groups.flatMap(g => g.questions)
+    );
+    return allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
+  }, [quiz, isQuestionAnswered]);
+
+  const handleSubmitQuiz = useCallback(async (skipConfirm = false) => {
     if (!quiz || !testResultId || !currentSection || isSubmitting) return;
+    
+    // Calculate answered count on the fly to avoid dependency issues
+    const allQuestions = quiz.sections.flatMap(s => 
+      s.question_groups.flatMap(g => g.questions)
+    );
+    const currentAnsweredCount = allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
+    const currentTotalQuestions = quiz.total_questions || 0;
+    
+    // Show confirmation if not all questions are answered and not skipping confirm
+    if (!skipConfirm && currentAnsweredCount < currentTotalQuestions) {
+      setShowSubmitConfirm(true);
+      return;
+    }
     
     setIsSubmitting(true);
     
@@ -424,12 +374,81 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         answers: answerSubmissions,
       };
 
+      // For speaking section, upload audio files first, then submit
+      if (currentSection.type === "speaking") {
+        const sectionQuestions = currentSection.question_groups.flatMap((g: any) => g.questions);
+        const audioFilesToUpload: Array<{ questionId: string; blob: Blob; questionText: string }> = [];
+        
+        for (const q of sectionQuestions) {
+          const audio = speakingAudios[q.id];
+          if (audio?.blob) {
+            audioFilesToUpload.push({
+              questionId: q.id,
+              blob: audio.blob,
+              questionText: q.question,
+            });
+          }
+        }
+        
+        // Validate that at least one question has audio
+        if (audioFilesToUpload.length === 0) {
+          toast.error("Please record or upload audio for at least one speaking question before submitting");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Upload all audio files in parallel
+        toast.loading("Uploading audio files...", { id: "upload-audio" });
+        try {
+          const uploadPromises = audioFilesToUpload.map(async ({ questionId, blob, questionText }) => {
+            const audioFile = new File([blob], `speaking-${questionId}.webm`, {
+              type: blob.type || 'audio/webm',
+            });
+            const uploadResult = await uploadAudio(audioFile);
+            
+            if (!uploadResult || !uploadResult.url) {
+              console.error('Invalid upload result:', uploadResult);
+              throw new Error(`Failed to upload audio for question ${questionId}: Invalid response`);
+            }
+            
+            const audioUrl = String(uploadResult.url);
+            
+            return {
+              question_id: String(questionId),
+              audio_url: audioUrl,
+              question_text: String(questionText),
+            };
+          });
+
+          const audioData = await Promise.all(uploadPromises);
+          
+          const validatedAudioData = audioData.map(item => {
+            const audioUrl = item.audio_url ? String(item.audio_url) : '';
+            if (!audioUrl) {
+              console.error('Missing audio_url in item:', item);
+            }
+            return {
+              question_id: String(item.question_id),
+              audio_url: audioUrl,
+              question_text: String(item.question_text),
+            };
+          });
+          
+          submissionData.speaking_audio_data = validatedAudioData;
+          toast.success("Audio files uploaded successfully!", { id: "upload-audio" });
+        } catch (error) {
+          toast.error("Failed to upload audio files. Please try again.", { id: "upload-audio" });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       await submitSectionMutation.mutateAsync(submissionData);
     } catch {
     } finally {
       setIsSubmitting(false);
     }
-  }, [quiz, testResultId, currentSection, isSubmitting, timeStarted, answers, submitSectionMutation]);
+  }, [quiz, testResultId, currentSection, isSubmitting, timeStarted, answers, submitSectionMutation, speakingAudios, isQuestionAnswered]);
 
   useEffect(() => {
     if (!isStarted || isCompleted || !timeStarted) return;
@@ -440,7 +459,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
       
       if (remaining <= 0) {
         setTimeRemaining(0);
-        handleSubmitQuiz();
+        handleSubmitQuiz(true); // Skip confirmation when time runs out
         return;
       }
       
@@ -602,6 +621,25 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     // Reset pinned items when resetting quiz
     setPinnedPassageId(null);
     setPinnedImageUrl(null);
+    
+    // Cleanup speaking audio URLs to prevent memory leaks
+    Object.values(speakingAudios).forEach(audio => {
+      if (audio?.url) {
+        URL.revokeObjectURL(audio.url);
+      }
+    });
+    setSpeakingAudios({});
+    setSpeakingRecording({});
+    // Stop any active recordings
+    Object.keys(mediaRecorderRefs.current).forEach(questionId => {
+      const recorder = mediaRecorderRefs.current[questionId];
+      if (recorder && recorder.state !== 'inactive') {
+        recorder.stop();
+      }
+    });
+    mediaRecorderRefs.current = {};
+    audioChunksRefs.current = {};
+    
     if (quiz) {
       setTimeRemaining(quiz.duration * 60);
     }
@@ -626,142 +664,61 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     }
   };
 
-  // Render question input based on type
-  const renderQuestionInput = (question: TransformedQuestion) => {
-    const currentAnswer = answers[question.id];
-    const baseId = `question-${question.id}`;
+  // Speaking question handlers
+  const startSpeakingRecording = async (questionId: string) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRefs.current[questionId] = mediaRecorder;
+      audioChunksRefs.current[questionId] = [];
 
-    switch (question.type) {
-      case "multiple_choice":
-        return (
-          <RadioGroup
-            value={Array.isArray(currentAnswer) ? currentAnswer[0] : (currentAnswer || "")}
-            onValueChange={(value) => setAnswers(prev => ({ ...prev, [question.id]: value }))}
-            className="space-y-2"
-          >
-            {question.options?.map((option, index) => {
-              const optionValue = question.option_ids?.[index] || String(index);
-              return (
-                <div key={index} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem 
-                    value={optionValue} 
-                    id={`${baseId}-opt-${index}`}
-                    className="mt-1"
-                  />
-                  <Label 
-                    htmlFor={`${baseId}-opt-${index}`} 
-                    className="cursor-pointer flex-1 text-sm leading-relaxed"
-                  >
-                    {option}
-                  </Label>
-                </div>
-              );
-            })}
-          </RadioGroup>
-        );
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRefs.current[questionId].push(event.data);
+      };
 
-      case "fill_blank":
-        return (
-          <div className="space-y-2">
-            <Input
-              id={baseId}
-              value={Array.isArray(currentAnswer) 
-                ? currentAnswer.join(" ") 
-                : (currentAnswer as string) || ""}
-              onChange={(e) => setAnswers(prev => ({ ...prev, [question.id]: e.target.value }))}
-              placeholder="Type your answer here..."
-              className="w-full p-3 border-2 focus:border-blue-500"
-            />
-            <p className="text-xs text-gray-500">
-              Enter your answer exactly as requested in the question.
-            </p>
-          </div>
-        );
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRefs.current[questionId], { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        setSpeakingAudios(prev => ({ ...prev, [questionId]: { blob, url } }));
+        stream.getTracks().forEach(track => track.stop());
+      };
 
-      case "true_false":
-        return (
-          <RadioGroup
-            value={Array.isArray(currentAnswer) ? currentAnswer[0] : (currentAnswer as string) || ""}
-            onValueChange={(value) => setAnswers(prev => ({ ...prev, [question.id]: value }))}
-            className="space-y-2"
-          >
-            {["TRUE", "FALSE", "NOT GIVEN"].map((option) => (
-              <div key={option} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <RadioGroupItem value={option} id={`${baseId}-${option.toLowerCase()}`} />
-                <Label htmlFor={`${baseId}-${option.toLowerCase()}`} className="cursor-pointer font-medium">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
-        );
-
-      case "matching":
-        return (
-          <RadioGroup
-            value={Array.isArray(currentAnswer) ? currentAnswer[0] : (currentAnswer as string) || ""}
-            onValueChange={(value) => setAnswers(prev => ({ ...prev, [question.id]: value }))}
-            className="space-y-2"
-          >
-            {question.options?.map((option, index) => {
-              const optionValue = question.option_ids?.[index] || option;
-              return (
-                <div key={index} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value={optionValue} id={`${baseId}-match-${index}`} />
-                  <Label htmlFor={`${baseId}-match-${index}`} className="cursor-pointer font-medium">
-                    {option}
-                  </Label>
-                </div>
-              );
-            })}
-          </RadioGroup>
-        );
-
-      case "essay":
-      case "speaking":
-        return (
-          <div className="space-y-2">
-            <Textarea
-              id={baseId}
-              value={Array.isArray(currentAnswer) 
-                ? currentAnswer.join(" ") 
-                : (currentAnswer as string) || ""}
-              onChange={(e) => setAnswers(prev => ({ ...prev, [question.id]: e.target.value }))}
-              placeholder="Type your detailed answer here..."
-              rows={question.type === "essay" ? 12 : 6}
-              className="w-full p-3 border-2 focus:border-blue-500 font-sans"
-            />
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500">Write clearly and organize your thoughts</span>
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-500">
-                  Words: {((Array.isArray(currentAnswer) ? currentAnswer.join(" ") : (currentAnswer as string) || "").match(/\S+/g) || []).length}
-                </span>
-                <span className="text-gray-500">
-                  Characters: {(Array.isArray(currentAnswer) ? currentAnswer.join(" ") : (currentAnswer as string) || "").length}
-                </span>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="space-y-2">
-            <Textarea
-              id={baseId}
-              value={Array.isArray(currentAnswer) 
-                ? currentAnswer.join(" ") 
-                : (currentAnswer as string) || ""}
-              onChange={(e) => setAnswers(prev => ({ ...prev, [question.id]: e.target.value }))}
-              placeholder="Type your answer here..."
-              rows={6}
-              className="w-full p-3 border-2 focus:border-blue-500"
-            />
-          </div>
-        );
+      mediaRecorder.start();
+      setSpeakingRecording(prev => ({ ...prev, [questionId]: true }));
+    } catch (err) {
+      console.error('Error starting recording:', err);
+      toast.error('Failed to access microphone. Please check permissions.');
     }
   };
+
+  const stopSpeakingRecording = (questionId: string) => {
+    const mediaRecorder = mediaRecorderRefs.current[questionId];
+    if (mediaRecorder && speakingRecording[questionId]) {
+      mediaRecorder.stop();
+      setSpeakingRecording(prev => ({ ...prev, [questionId]: false }));
+    }
+  };
+
+  const handleSpeakingFileUpload = (questionId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setSpeakingAudios(prev => ({ ...prev, [questionId]: { blob: file, url } }));
+    }
+  };
+
+  const clearSpeakingAudio = (questionId: string) => {
+    const audio = speakingAudios[questionId];
+    if (audio?.url) {
+      URL.revokeObjectURL(audio.url);
+    }
+    setSpeakingAudios(prev => {
+      const newState = { ...prev };
+      delete newState[questionId];
+      return newState;
+    });
+  };
+
 
   if (startTestMutation.isPending || (!startTestMutation.data && !startTestMutation.isError)) {
     return (
@@ -788,146 +745,57 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     );
   }
 
-  if (showInstructions && !isCompleted && quiz) {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => onBack ? onBack() : router.push("/student/dashboard/my-quizzes")}
-            className="text-gray-600"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tests
-          </Button>
+  if (showInstructions && !isCompleted) {
+    // Ensure quiz exists and has all required properties
+    if (!quiz) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+            <p className="text-gray-600">Loading quiz information...</p>
+          </div>
         </div>
+      );
+    }
 
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={cn("p-3 rounded-lg border", getSectionColor(quiz.section))}>
-                  {getSectionIcon(quiz.section)}
-                </div>
-                <div>
-                  <CardTitle className="text-2xl">{quiz.title}</CardTitle>
-                  <p className="text-gray-600 mt-1 capitalize">
-                    {quiz.section} Section - Practice Test
-                  </p>
-                </div>
-              </div>
-              <Badge variant="outline" className={cn("text-sm", getSectionColor(quiz.section))}>
-                {quiz.section.toUpperCase()}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-gray-700 leading-relaxed">
-              {quiz.description}
-            </p>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="font-semibold text-yellow-900 mb-2 flex items-center">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Important Instructions
-              </h3>
-              <div className="text-sm text-yellow-800 space-y-2">
-                <p className="whitespace-pre-line">{quiz.instructions}</p>
-              </div>
-            </div>
-
-            <div className="flex justify-center pt-4">
-              <Button
-                onClick={handleStartQuiz}
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 px-8 py-3 text-lg"
-              >
-                Start Test Now
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    const quizForInstructions = {
+      title: quiz.title || "IELTS Test",
+      section: quiz.section || quiz.sections?.[0]?.type || "reading",
+      description: quiz.description || "",
+      instructions: quiz.instructions || "",
+    };
+    
+    return (
+      <QuizInstructions
+        quiz={quizForInstructions}
+        onBack={() => {
+          if (onBack) {
+            onBack();
+          } else {
+            router.push("/student/dashboard/my-quizzes");
+          }
+        }}
+        onStart={handleStartQuiz}
+      />
     );
   }
 
-  if (isCompleted && sectionResult && quiz) {
-    const answeredQuestions = Object.keys(answers).length;
-    const correctAnswers = sectionResult.correct_answers || 0;
-    const totalQuestionsResult = sectionResult.total_questions || totalQuestions;
-    const bandScore = sectionResult.band_score || 0;
-    const score = totalQuestionsResult > 0 ? Math.round((correctAnswers / totalQuestionsResult) * 100) : 0;
-    
+  if (isCompleted && sectionResult && quiz && currentSection) {
+    // Redirect to results page or show results component
     return (
-      <div className="max-w-4xl mx-auto space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => onBack ? onBack() : router.push("/student/dashboard/my-quizzes")}
-            className="text-gray-600"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Tests
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleResetQuiz}
-            className="text-blue-600 border-blue-600"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Retake Test
-          </Button>
-        </div>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
-              </div>
-            </div>
-            <CardTitle className="text-2xl text-green-900">Test Completed!</CardTitle>
-            <p className="text-gray-600">Here are your results for {quiz?.title || "this test"}</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-blue-50 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-900 mb-2">Band Score</h3>
-                <p className="text-4xl font-bold text-blue-600">{bandScore.toFixed(1)}</p>
-                <p className="text-sm text-blue-700 mt-2">IELTS Band</p>
-              </div>
-              <div className="text-center p-6 bg-green-50 rounded-lg">
-                <h3 className="text-lg font-semibold text-green-900 mb-2">Percentage</h3>
-                <p className="text-4xl font-bold text-green-600">{score}%</p>
-                <p className="text-sm text-green-700 mt-2">Overall Score</p>
-              </div>
-              <div className="text-center p-6 bg-purple-50 rounded-lg">
-                <h3 className="text-lg font-semibold text-purple-900 mb-2">Correct</h3>
-                <p className="text-4xl font-bold text-purple-600">{correctAnswers}/{totalQuestionsResult}</p>
-                <p className="text-sm text-purple-700 mt-2">Questions</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button
-                onClick={handleResetQuiz}
-                variant="outline"
-                className="flex-1"
-              >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Retake Test
-              </Button>
-              <Button
-                onClick={() => onBack ? onBack() : router.push("/student/dashboard/my-quizzes")}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Tests
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <QuizResults
+        quiz={quiz}
+        sectionResult={sectionResult}
+        currentSection={currentSection}
+        onBack={() => {
+          if (onBack) {
+            onBack();
+          } else {
+            router.push("/student/dashboard/my-quizzes");
+          }
+        }}
+        onReset={handleResetQuiz}
+      />
     );
   }
 
@@ -955,105 +823,38 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
       (pinnedPassageId || pinnedImageUrl) && "fixed inset-0 z-50 bg-gray-50"
     )}>
       {/* Header */}
-      <div className={cn(
-        "bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10",
-        (pinnedPassageId || pinnedImageUrl) && "w-full"
-      )}>
-        <div className={cn(
-          "flex items-center justify-between",
-          (pinnedPassageId || pinnedImageUrl) ? "w-full px-6" : "max-w-7xl mx-auto"
-        )}>
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              onClick={() => {
-                if (isStarted && Object.keys(answers).length > 0) {
-                  setShowConfirmExit(true);
-                } else {
-                  if (onBack) {
-                    onBack();
-                  } else {
-                    router.push("/student/dashboard/my-quizzes");
-                  }
-                }
-              }}
-              className="text-gray-600"
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Exit
-            </Button>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">{quiz.title}</h1>
-              <p className="text-sm text-gray-600">{currentSection.name}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-6">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Time Remaining</p>
-              <p className={cn("font-mono font-bold text-lg", getTimeColor())}>
-                <Clock className="h-4 w-4 inline mr-1" />
-                {formatTime(timeRemaining)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <QuizHeader
+        quizTitle={quiz.title}
+        sectionName={currentSection.name}
+        timeRemaining={timeRemaining}
+        onExit={() => {
+          if (isStarted && Object.keys(answers).length > 0) {
+            setShowConfirmExit(true);
+          } else {
+            if (onBack) {
+              onBack();
+            } else {
+              router.push("/student/dashboard/my-quizzes");
+            }
+          }
+        }}
+        isPinned={!!(pinnedPassageId || pinnedImageUrl)}
+      />
 
       {/* Main Content */}
       {(pinnedPassageId || pinnedImageUrl) ? (
         // Layout khi có pinned item - Full screen
         <div className="flex flex-col lg:flex-row h-[calc(100vh-88px)]">
           {/* Pinned Passage/Image Panel - Left Side 50% */}
-          <div className="hidden lg:flex lg:w-1/2 bg-white border-r border-gray-200 overflow-y-auto h-full">
-            <div className="w-full p-6">
-              <div className="sticky top-0 bg-white pb-4 mb-4 border-b border-gray-200 flex items-center justify-between z-10">
-                <h3 className="text-lg font-bold text-gray-800">Pinned Reference</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setPinnedPassageId(null);
-                    setPinnedImageUrl(null);
-                  }}
-                  className="text-xs"
-                >
-                  <PinOff className="h-3 w-3 mr-1" />
-                  Unpin All
-                </Button>
-              </div>
-              
-              {/* Pinned Passage */}
-              {pinnedPassageId && (() => {
-                const pinnedGroup = currentSection.question_groups.find(g => `passage-${g.id}` === pinnedPassageId);
-                if (!pinnedGroup?.passage_reference) return null;
-                return (
-                  <div className="mb-6">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Reading Passage</h4>
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <p className="text-sm text-gray-800 whitespace-pre-line leading-relaxed">
-                        {pinnedGroup.passage_reference}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })()}
-              
-              {/* Pinned Image */}
-              {pinnedImageUrl && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Reference Image</h4>
-                  <div className="rounded-lg overflow-hidden border border-gray-200">
-                    <img 
-                      src={pinnedImageUrl} 
-                      alt="Pinned reference" 
-                      className="w-full h-auto"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <PinnedPassagePanel
+            pinnedPassageId={pinnedPassageId}
+            pinnedImageUrl={pinnedImageUrl}
+            currentSection={currentSection}
+            onUnpin={() => {
+              setPinnedPassageId(null);
+              setPinnedImageUrl(null);
+            }}
+          />
 
           {/* Section Content - Right Side with Questions */}
           <div className="flex-1 flex flex-col overflow-hidden lg:w-1/2">
@@ -1072,282 +873,67 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                 </CardHeader>
 
                 <CardContent className="space-y-8">
-              {/* Display all question groups in this section */}
-              {currentSection.question_groups.map((group, groupIndex) => {
-                const passageId = `passage-${group.id}`;
-                const isPassagePinned = pinnedPassageId === passageId;
-                const isImagePinned = pinnedImageUrl === group.image_url;
-                
-                return (
-                <div key={group.id} className="space-y-6">
-                  {/* Passage/Reading Text at Top */}
-                  {group.passage_reference && (
-                    <PassageWithHighlight 
-                      passageId={passageId}
-                      passageText={group.passage_reference}
-                      onPin={() => {
-                        if (isPassagePinned) {
-                          setPinnedPassageId(null);
-                        } else {
-                          setPinnedPassageId(passageId);
-                        }
-                      }}
-                      isPinned={isPassagePinned}
+                  {currentSection.question_groups.map((group, groupIndex) => (
+                    <QuizQuestionGroup
+                      key={group.id}
+                      group={group}
+                      groupIndex={groupIndex}
+                      currentAnswer={(questionId) => answers[questionId]}
+                      flaggedQuestions={flaggedQuestions}
+                      selectedQuestionId={selectedQuestionId}
+                      onAnswerChange={(questionId, answer) =>
+                        setAnswers((prev) => ({ ...prev, [questionId]: answer }))
+                      }
+                      onToggleFlag={toggleFlag}
+                      onPinPassage={(passageId) =>
+                        setPinnedPassageId(passageId || null)
+                      }
+                      onPinImage={setPinnedImageUrl}
+                      pinnedPassageId={pinnedPassageId}
+                      pinnedImageUrl={pinnedImageUrl}
+                      questionRefs={questionRefs}
+                      speakingAudios={speakingAudios}
+                      speakingRecording={speakingRecording}
+                      onStartRecording={startSpeakingRecording}
+                      onStopRecording={stopSpeakingRecording}
+                      onFileUpload={handleSpeakingFileUpload}
+                      onClearAudio={clearSpeakingAudio}
+                      fileInputRefs={fileInputRefs}
+                      isLastGroup={
+                        groupIndex === currentSection.question_groups.length - 1
+                      }
                     />
-                  )}
-
-                  {/* Group Image */}
-                  {group.image_url && (
-                    <div className="mb-4 relative group">
-                      <img 
-                        src={group.image_url} 
-                        alt="Question reference" 
-                        className="w-full rounded-lg border border-gray-200"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (isImagePinned) {
-                            setPinnedImageUrl(null);
-                          } else {
-                            setPinnedImageUrl(group.image_url || null);
-                          }
-                        }}
-                        className={cn(
-                          "absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity",
-                          isImagePinned ? "bg-blue-600 text-white hover:bg-blue-700" : ""
-                        )}
-                      >
-                        {isImagePinned ? (
-                          <>
-                            <PinOff className="h-3 w-3 mr-1" />
-                            Unpin
-                          </>
-                        ) : (
-                          <>
-                            <Pin className="h-3 w-3 mr-1" />
-                            Pin
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Group Header */}
-                  <div className="border-b-2 border-gray-200 pb-3">
-                    <h4 className="text-lg font-semibold text-gray-900">
-                      {group.title || `Questions ${group.questions[0]?.ordering || groupIndex + 1}-${group.questions[group.questions.length - 1]?.ordering || groupIndex + group.questions.length}`}
-                    </h4>
-                    {group.instruction && (
-                      <p className="text-sm text-gray-600 mt-2 italic">{group.instruction}</p>
-                    )}
-                  </div>
-
-                  {/* All Questions in this Group */}
-                  <div className="space-y-6">
-                    {group.questions.map((question, qIndex) => (
-                      <div 
-                        key={question.id} 
-                        ref={(el) => { questionRefs.current[question.id] = el; }}
-                        className={cn(
-                          "bg-white rounded-lg p-6 border-2 transition-all duration-300",
-                          selectedQuestionId === question.id
-                            ? "border-blue-500 shadow-lg ring-2 ring-blue-200"
-                            : "border-gray-100 hover:border-blue-200"
-                        )}
-                      >
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-baseline space-x-2 flex-1">
-                            <span className="font-semibold text-lg text-gray-900 flex-shrink-0">
-                              {question.ordering || `${groupIndex + 1}.${qIndex + 1}`}.
-                            </span>
-                            <QuestionTextWithHighlight 
-                              questionId={question.id}
-                              questionText={question.question}
-                            />
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleFlag(question.id)}
-                            className={cn(
-                              "ml-2 flex-shrink-0",
-                              flaggedQuestions.has(question.id) ? "text-yellow-600" : "text-gray-400"
-                            )}
-                          >
-                            <Flag className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        {/* Question Input */}
-                        <div className="mt-4">
-                          {renderQuestionInput(question)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {groupIndex < currentSection.question_groups.length - 1 && (
-                    <Separator className="my-8" />
-                  )}
-                </div>
-              );
-              })}
+                  ))}
                 </CardContent>
               </Card>
             </div>
 
             {/* Navigation Panel - Bottom */}
-            <div className="w-full bg-white border-t border-gray-200">
-              {/* Toggle Button */}
-              <div className="flex items-center justify-center p-2 border-b border-gray-200">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsNavigationExpanded(!isNavigationExpanded)}
-                  className="text-xs text-gray-600 hover:text-gray-900"
-                >
-                  {isNavigationExpanded ? (
-                    <>
-                      <ChevronDown className="h-4 w-4 mr-1" />
-                      Hide Navigation
-                    </>
-                  ) : (
-                    <>
-                      <ChevronUp className="h-4 w-4 mr-1" />
-                      Show Navigation
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Navigation Content */}
-              {isNavigationExpanded && (
-                <div className="p-4 space-y-4 max-h-48 overflow-y-auto">
-                  <div className="flex gap-4 flex-col lg:flex-row">
-                    {/* Section Navigation - Full Width */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-3 text-sm">Sections</h3>
-                      <div className="space-y-2">
-                        {quiz.sections.map((section, index) => (
-                          <button
-                            key={section.id}
-                            onClick={() => {
-                              setCurrentSectionIndex(index);
-                              setPinnedPassageId(null);
-                              setPinnedImageUrl(null);
-                            }}
-                            className={cn(
-                              "w-full text-left p-2 rounded-lg border transition-colors text-xs",
-                              index === currentSectionIndex
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                            )}
-                          >
-                            <div className="font-medium">{section.name}</div>
-                            <div className="text-xs opacity-80 mt-0.5">
-                              {section.total_questions} questions
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Separator className="my-2 lg:hidden" />
-
-                    {/* Question Navigation - Full Width */}
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-3 text-sm">Questions</h3>
-                      <div className="grid grid-cols-5 gap-2 max-h-24 overflow-y-auto">
-                        {allQuestions.map(({ question, sectionIndex }, index) => (
-                          <button
-                            key={question.id}
-                            onClick={() => {
-                              setCurrentSectionIndex(sectionIndex);
-                              setPinnedPassageId(null);
-                              setPinnedImageUrl(null);
-                              setTimeout(() => scrollToQuestion(question.id), 100);
-                            }}
-                            className={cn(
-                              "w-8 h-8 rounded text-xs font-medium transition-colors",
-                              answers[question.id]
-                                ? "bg-green-100 text-green-700 hover:bg-green-200"
-                                : flaggedQuestions.has(question.id)
-                                ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            )}
-                          >
-                            {index + 1}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
-                        <span className="flex items-center">
-                          <div className="w-2 h-2 bg-green-100 rounded mr-1"></div>
-                          Answered
-                        </span>
-                        <span className="flex items-center">
-                          <div className="w-2 h-2 bg-yellow-100 rounded mr-1"></div>
-                          Flagged
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                <Separator className="my-2" />
-
-                {/* Summary and Submit */}
-                <div className="flex gap-4 flex-col lg:flex-row">
-                  {/* Summary */}
-                  <div className="bg-gray-50 rounded-lg p-3 flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-2 text-sm">Summary</h3>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Answered:</span>
-                        <span className="font-medium text-green-600">
-                          {Object.keys(answers).length}/{totalQuestions}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Flagged:</span>
-                        <span className="font-medium text-yellow-600">
-                          {flaggedQuestions.size}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Remaining:</span>
-                        <span className="font-medium text-gray-600">
-                          {totalQuestions - Object.keys(answers).length}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="lg:w-1/2">
-                    <Button
-                      onClick={handleSubmitQuiz}
-                      className="w-full bg-green-600 hover:bg-green-700 text-sm"
-                      disabled={Object.keys(answers).length === 0 || isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Submit ({Object.keys(answers).length}/{totalQuestions})
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                </div>
-              )}
-            </div>
+            <QuizNavigation
+              sections={quiz.sections}
+              allQuestions={allQuestions}
+              currentSectionIndex={currentSectionIndex}
+              answeredCount={answeredCount}
+              totalQuestions={totalQuestions}
+              flaggedQuestions={flaggedQuestions}
+              isSubmitting={isSubmitting}
+              isNavigationExpanded={isNavigationExpanded}
+              isQuestionAnswered={isQuestionAnswered}
+              onSectionChange={(index) => {
+                setCurrentSectionIndex(index);
+                setPinnedPassageId(null);
+                setPinnedImageUrl(null);
+              }}
+              onQuestionClick={(questionId, sectionIndex) => {
+                setCurrentSectionIndex(sectionIndex);
+                setPinnedPassageId(null);
+                setPinnedImageUrl(null);
+                setTimeout(() => scrollToQuestion(questionId), 100);
+              }}
+              onSubmit={() => handleSubmitQuiz()}
+              onToggleNavigation={() => setIsNavigationExpanded(!isNavigationExpanded)}
+              isPinned={true}
+            />
           </div>
         </div>
       ) : (
@@ -1369,254 +955,112 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               </CardHeader>
 
               <CardContent className="space-y-8">
-                {/* Display all question groups in this section */}
-                {currentSection.question_groups.map((group, groupIndex) => {
-                  const passageId = `passage-${group.id}`;
-                  const isPassagePinned = pinnedPassageId === passageId;
-                  const isImagePinned = pinnedImageUrl === group.image_url;
-                  
-                  return (
-                  <div key={group.id} className="space-y-6">
-                    {/* Passage/Reading Text at Top */}
-                    {group.passage_reference && (
-                      <PassageWithHighlight 
-                        passageId={passageId}
-                        passageText={group.passage_reference}
-                        onPin={() => {
-                          if (isPassagePinned) {
-                            setPinnedPassageId(null);
-                          } else {
-                            setPinnedPassageId(passageId);
-                          }
-                        }}
-                        isPinned={isPassagePinned}
-                      />
-                    )}
-
-                    {/* Group Image */}
-                    {group.image_url && (
-                      <div className="mb-4 relative group">
-                        <img 
-                          src={group.image_url} 
-                          alt="Question reference" 
-                          className="w-full rounded-lg border border-gray-200"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (isImagePinned) {
-                              setPinnedImageUrl(null);
-                            } else {
-                              setPinnedImageUrl(group.image_url || null);
-                            }
-                          }}
-                          className={cn(
-                            "absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity",
-                            isImagePinned ? "bg-blue-600 text-white hover:bg-blue-700" : ""
-                          )}
-                        >
-                          {isImagePinned ? (
-                            <>
-                              <PinOff className="h-3 w-3 mr-1" />
-                              Unpin
-                            </>
-                          ) : (
-                            <>
-                              <Pin className="h-3 w-3 mr-1" />
-                              Pin
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Group Header */}
-                    <div className="border-b-2 border-gray-200 pb-3">
-                      <h4 className="text-lg font-semibold text-gray-900">
-                        {group.title || `Questions ${group.questions[0]?.ordering || groupIndex + 1}-${group.questions[group.questions.length - 1]?.ordering || groupIndex + group.questions.length}`}
-                      </h4>
-                      {group.instruction && (
-                        <p className="text-sm text-gray-600 mt-2 italic">{group.instruction}</p>
-                      )}
-                    </div>
-
-                    {/* All Questions in this Group */}
-                    <div className="space-y-6">
-                      {group.questions.map((question, qIndex) => (
-                        <div 
-                          key={question.id} 
-                          ref={(el) => { questionRefs.current[question.id] = el; }}
-                          className={cn(
-                            "bg-white rounded-lg p-6 border-2 transition-all duration-300",
-                            selectedQuestionId === question.id
-                              ? "border-blue-500 shadow-lg ring-2 ring-blue-200"
-                              : "border-gray-100 hover:border-blue-200"
-                          )}
-                        >
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-baseline space-x-2 flex-1">
-                              <span className="font-semibold text-lg text-gray-900 flex-shrink-0">
-                                {question.ordering || `${groupIndex + 1}.${qIndex + 1}`}.
-                              </span>
-                              <QuestionTextWithHighlight 
-                                questionId={question.id}
-                                questionText={question.question}
-                              />
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleFlag(question.id)}
-                              className={cn(
-                                "ml-2 flex-shrink-0",
-                                flaggedQuestions.has(question.id) ? "text-yellow-600" : "text-gray-400"
-                              )}
-                            >
-                              <Flag className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          {/* Question Input */}
-                          <div className="mt-4">
-                            {renderQuestionInput(question)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {groupIndex < currentSection.question_groups.length - 1 && (
-                      <Separator className="my-8" />
-                    )}
-                  </div>
-                );
-                })}
+                {currentSection.question_groups.map((group, groupIndex) => (
+                  <QuizQuestionGroup
+                    key={group.id}
+                    group={group}
+                    groupIndex={groupIndex}
+                    currentAnswer={(questionId) => answers[questionId]}
+                    flaggedQuestions={flaggedQuestions}
+                    selectedQuestionId={selectedQuestionId}
+                    onAnswerChange={(questionId, answer) =>
+                      setAnswers((prev) => ({ ...prev, [questionId]: answer }))
+                    }
+                    onToggleFlag={toggleFlag}
+                    onPinPassage={(passageId) =>
+                      setPinnedPassageId(passageId || null)
+                    }
+                    onPinImage={setPinnedImageUrl}
+                    pinnedPassageId={pinnedPassageId}
+                    pinnedImageUrl={pinnedImageUrl}
+                    questionRefs={questionRefs}
+                    speakingAudios={speakingAudios}
+                    speakingRecording={speakingRecording}
+                    onStartRecording={startSpeakingRecording}
+                    onStopRecording={stopSpeakingRecording}
+                    onFileUpload={handleSpeakingFileUpload}
+                    onClearAudio={clearSpeakingAudio}
+                    fileInputRefs={fileInputRefs}
+                    isLastGroup={
+                      groupIndex === currentSection.question_groups.length - 1
+                    }
+                  />
+                ))}
               </CardContent>
             </Card>
           </div>
 
           {/* Navigation Panel */}
-          <div className="w-full lg:w-80 p-6 bg-white border-l border-gray-200">
-            <div className="space-y-6 sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
-              {/* Section Navigation */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Sections</h3>
-                <div className="space-y-2">
-                  {quiz.sections.map((section, index) => (
-                    <button
-                      key={section.id}
-                      onClick={() => {
-                        setCurrentSectionIndex(index);
-                        // Reset pinned items when changing sections
-                        setPinnedPassageId(null);
-                        setPinnedImageUrl(null);
-                      }}
-                      className={cn(
-                        "w-full text-left p-3 rounded-lg border transition-colors",
-                        index === currentSectionIndex
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                      )}
-                    >
-                      <div className="font-medium text-sm">{section.name}</div>
-                      <div className="text-xs opacity-80 mt-1">
-                        {section.total_questions} questions
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Question Navigation */}
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Questions</h3>
-                <div className="grid grid-cols-5 gap-2 max-h-64 overflow-y-auto">
-                  {allQuestions.map(({ question, sectionIndex }, index) => (
-                    <button
-                      key={question.id}
-                      onClick={() => {
-                        setCurrentSectionIndex(sectionIndex);
-                        // Reset pinned items when changing sections
-                        setPinnedPassageId(null);
-                        setPinnedImageUrl(null);
-                        setTimeout(() => scrollToQuestion(question.id), 100);
-                      }}
-                      className={cn(
-                        "w-10 h-10 rounded text-sm font-medium transition-colors",
-                        answers[question.id]
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : flaggedQuestions.has(question.id)
-                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      )}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-3">
-                  <span className="flex items-center">
-                    <div className="w-3 h-3 bg-green-100 rounded mr-1"></div>
-                    Answered
-                  </span>
-                  <span className="flex items-center">
-                    <div className="w-3 h-3 bg-yellow-100 rounded mr-1"></div>
-                    Flagged
-                  </span>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Summary */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">Summary</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Answered:</span>
-                    <span className="font-medium text-green-600">
-                      {Object.keys(answers).length}/{totalQuestions}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Flagged:</span>
-                    <span className="font-medium text-yellow-600">
-                      {flaggedQuestions.size}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Remaining:</span>
-                    <span className="font-medium text-gray-600">
-                      {totalQuestions - Object.keys(answers).length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                onClick={handleSubmitQuiz}
-                className="w-full bg-green-600 hover:bg-green-700"
-                disabled={Object.keys(answers).length === 0 || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Submit Test ({Object.keys(answers).length}/{totalQuestions})
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
+          <QuizNavigation
+            sections={quiz.sections}
+            allQuestions={allQuestions}
+            currentSectionIndex={currentSectionIndex}
+            answeredCount={answeredCount}
+            totalQuestions={totalQuestions}
+            flaggedQuestions={flaggedQuestions}
+            isSubmitting={isSubmitting}
+            isNavigationExpanded={isNavigationExpanded}
+            isQuestionAnswered={isQuestionAnswered}
+            onSectionChange={(index) => {
+              setCurrentSectionIndex(index);
+              setPinnedPassageId(null);
+              setPinnedImageUrl(null);
+            }}
+            onQuestionClick={(questionId, sectionIndex) => {
+              setCurrentSectionIndex(sectionIndex);
+              setPinnedPassageId(null);
+              setPinnedImageUrl(null);
+              setTimeout(() => scrollToQuestion(questionId), 100);
+            }}
+            onSubmit={() => handleSubmitQuiz()}
+            onToggleNavigation={() => setIsNavigationExpanded(!isNavigationExpanded)}
+            isPinned={false}
+          />
         </div>
       )}
+
+      {/* Submit Confirmation Dialog */}
+      <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+                Incomplete Test Submission
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-gray-600 space-y-3 pt-2">
+              <p>
+                You have answered <span className="font-semibold text-orange-600">{answeredCount} out of {totalQuestions}</span> questions.
+              </p>
+              <p>
+                Are you sure you want to submit your test now? You will not be able to make any changes after submission.
+              </p>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-4">
+                <p className="text-sm text-orange-800">
+                  <strong>Note:</strong> Unanswered questions will be marked as incorrect.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <AlertDialogCancel className="w-full sm:w-auto">
+              Continue Test
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowSubmitConfirm(false);
+                handleSubmitQuiz(true);
+              }}
+              className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700"
+            >
+              Submit Anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Exit Confirmation Modal */}
       {showConfirmExit && (

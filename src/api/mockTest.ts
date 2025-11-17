@@ -60,6 +60,11 @@ export interface TestSectionSubmission {
     test_section_id: string;
     time_taken: number; // in seconds
     answers: TestAnswerSubmission[];
+    speaking_audio_data?: Array<{
+        question_id: string;
+        audio_url: string;
+        question_text: string;
+    }>; // For speaking section - audio URLs and question texts
 }
 
 export const submitSectionAnswers = async (data: TestSectionSubmission) => {
