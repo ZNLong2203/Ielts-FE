@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Pin, PinOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import PassageWithHighlight from "./PassageWithHighlight";
 import QuizQuestion from "./QuizQuestion";
+import { MatchingHeadingExercise } from "@/components/exercise/MatchingHeadingExercise";
+import { ICourseQuestion } from "@/interface/courseQuestion";
 
 interface Question {
   id: string;
@@ -23,7 +24,13 @@ interface QuestionGroup {
   instruction?: string;
   passage_reference?: string;
   image_url?: string;
+  type: string;
   questions: Question[];
+  matching_options?: Array<{
+    id: string;
+    option_text: string;
+    ordering: number;
+  }>;
 }
 
 interface QuizQuestionGroupProps {
@@ -34,9 +41,7 @@ interface QuizQuestionGroupProps {
   selectedQuestionId: string | null;
   onAnswerChange: (questionId: string, answer: string | string[]) => void;
   onToggleFlag: (questionId: string) => void;
-  onPinPassage: (passageId: string) => void;
   onPinImage: (imageUrl: string | null) => void;
-  pinnedPassageId: string | null;
   pinnedImageUrl: string | null;
   questionRefs: React.RefObject<{ [key: string]: HTMLDivElement | null }>;
   // For speaking questions
@@ -58,9 +63,7 @@ export default function QuizQuestionGroup({
   selectedQuestionId,
   onAnswerChange,
   onToggleFlag,
-  onPinPassage,
   onPinImage,
-  pinnedPassageId,
   pinnedImageUrl,
   questionRefs,
   speakingAudios,
@@ -72,24 +75,14 @@ export default function QuizQuestionGroup({
   fileInputRefs,
   isLastGroup = false,
 }: QuizQuestionGroupProps) {
-  const passageId = `passage-${group.id}`;
-  const isPassagePinned = pinnedPassageId === passageId;
   const isImagePinned = pinnedImageUrl === group.image_url;
 
   return (
     <div className="space-y-6">
-      {/* Passage/Reading Text at Top */}
-      {group.passage_reference && (
-        <PassageWithHighlight
-          passageId={passageId}
-          passageText={group.passage_reference}
-          onPin={() => onPinPassage(isPassagePinned ? "" : passageId)}
-          isPinned={isPassagePinned}
-        />
-      )}
-
-      {/* Group Image */}
-      {group.image_url && (
+      {/* Note: Passage is now displayed at exercise level, not here */}
+      {/* Group Image (if not already shown at exercise level) - Skip for writing exercises as image is shown at exercise level */}
+      {/* Only show group image if it's not a writing type (writing images are shown at exercise level) */}
+      {group.image_url && group.type !== "essay" && (
         <div className="mb-4 relative group">
           <img
             src={group.image_url}
@@ -136,53 +129,81 @@ export default function QuizQuestionGroup({
 
       {/* All Questions in this Group */}
       <div className="space-y-6">
-        {group.questions.map((question, qIndex) => {
-          // Create a ref object for this question's file input
-          const questionFileInputRef = useMemo(() => {
-            if (!fileInputRefs?.current) return undefined;
-            return {
+        {/* Check if this is a matching heading exercise */}
+        {group.type === "matching" && group.matching_options && group.matching_options.length > 0 ? (
+          // Render MatchingHeadingExercise for matching heading questions
+          <div className="mt-4">
+            <MatchingHeadingExercise
+              questions={group.questions.map(q => ({
+                id: q.id,
+                question_text: q.question,
+                question_type: q.type,
+                question_options: group.matching_options?.map(mo => ({
+                  id: mo.id,
+                  option_text: mo.option_text,
+                  is_correct: false, // Will be determined by backend
+                  ordering: mo.ordering,
+                })) || [],
+              })) as ICourseQuestion[]}
+              userAnswers={group.questions.reduce((acc, q) => {
+                const answer = currentAnswer(q.id);
+                acc[q.id] = Array.isArray(answer) ? answer[0] : (answer || null);
+                return acc;
+              }, {} as Record<string, string | null>)}
+              onAnswerChange={(questionId, answer) => {
+                onAnswerChange(questionId, answer);
+              }}
+              showResults={false}
+              questionResults={{}}
+            />
+          </div>
+        ) : (
+          // Render individual questions for other types
+          group.questions.map((question, qIndex) => {
+            // Create a ref object for this question's file input (moved outside useMemo)
+            const questionFileInputRef: React.RefObject<HTMLInputElement> = {
               get current() {
-                return fileInputRefs.current?.[question.id] || null;
+                return fileInputRefs?.current?.[question.id] || null;
               },
               set current(value: HTMLInputElement | null) {
                 if (fileInputRefs?.current) {
                   fileInputRefs.current[question.id] = value;
                 }
               },
-            } as React.RefObject<HTMLInputElement>;
-          }, [fileInputRefs, question.id]);
+            };
 
-          return (
-            <QuizQuestion
-              key={question.id}
-              question={question}
-              questionNumber={question.ordering || `${groupIndex + 1}.${qIndex + 1}`}
-              currentAnswer={currentAnswer(question.id)}
-              isFlagged={flaggedQuestions.has(question.id)}
-              isSelected={selectedQuestionId === question.id}
-              onAnswerChange={(answer) => onAnswerChange(question.id, answer)}
-              onToggleFlag={() => onToggleFlag(question.id)}
-              questionRef={(el) => {
-                if (questionRefs.current) {
-                  questionRefs.current[question.id] = el;
+            return (
+              <QuizQuestion
+                key={question.id}
+                question={question}
+                questionNumber={question.ordering || `${groupIndex + 1}.${qIndex + 1}`}
+                currentAnswer={currentAnswer(question.id)}
+                isFlagged={flaggedQuestions.has(question.id)}
+                isSelected={selectedQuestionId === question.id}
+                onAnswerChange={(answer) => onAnswerChange(question.id, answer)}
+                onToggleFlag={() => onToggleFlag(question.id)}
+                questionRef={(el) => {
+                  if (questionRefs.current) {
+                    questionRefs.current[question.id] = el;
+                  }
+                }}
+                speakingAudio={speakingAudios?.[question.id]}
+                isRecording={speakingRecording?.[question.id]}
+                onStartRecording={
+                  onStartRecording ? () => onStartRecording(question.id) : undefined
                 }
-              }}
-              speakingAudio={speakingAudios?.[question.id]}
-              isRecording={speakingRecording?.[question.id]}
-              onStartRecording={
-                onStartRecording ? () => onStartRecording(question.id) : undefined
-              }
-              onStopRecording={
-                onStopRecording ? () => onStopRecording(question.id) : undefined
-              }
-              onFileUpload={
-                onFileUpload ? (e) => onFileUpload(question.id, e) : undefined
-              }
-              onClearAudio={onClearAudio ? () => onClearAudio(question.id) : undefined}
-              fileInputRef={questionFileInputRef}
-            />
-          );
-        })}
+                onStopRecording={
+                  onStopRecording ? () => onStopRecording(question.id) : undefined
+                }
+                onFileUpload={
+                  onFileUpload ? (e) => onFileUpload(question.id, e) : undefined
+                }
+                onClearAudio={onClearAudio ? () => onClearAudio(question.id) : undefined}
+                fileInputRef={questionFileInputRef}
+              />
+            );
+          })
+        )}
       </div>
 
       {!isLastGroup && <Separator className="my-8" />}

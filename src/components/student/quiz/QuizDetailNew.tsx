@@ -10,7 +10,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -27,6 +26,7 @@ import PinnedPassagePanel from "./PinnedPassagePanel";
 import QuizInstructions from "./QuizInstructions";
 import QuizNavigation from "./QuizNavigation";
 import QuizQuestionGroup from "./QuizQuestionGroup";
+import QuizExercise from "./QuizExercise";
 
 interface QuizDetailProps {
   quizId?: string;
@@ -55,6 +55,23 @@ interface QuestionGroup {
   image_url?: string;
   type: string;
   questions: TransformedQuestion[];
+  matching_options?: Array<{
+    id: string;
+    option_text: string;
+    ordering: number;
+  }>;
+}
+
+interface Exercise {
+  id: string;
+  title: string;
+  instruction?: string;
+  content?: string; // JSON string containing passage, image_url, audio_url, etc.
+  audio_url?: string;
+  passage?: string;
+  image_url?: string;
+  question_groups: QuestionGroup[];
+  total_questions: number;
 }
 
 interface TestSection {
@@ -64,7 +81,8 @@ interface TestSection {
   description?: string;
   duration: number;
   ordering: number;
-  question_groups: QuestionGroup[];
+  exercises: Exercise[];
+  question_groups: QuestionGroup[]; // Keep for backward compatibility
   total_questions: number;
 }
 
@@ -85,6 +103,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const router = useRouter();
   const [testResultId, setTestResultId] = useState<string | null>(null);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: string | string[] }>({});
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [timeStarted, setTimeStarted] = useState<number | null>(null);
@@ -198,6 +217,12 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         duration: number;
         ordering: number;
         exercises?: Array<{
+          id: string;
+          title: string;
+          instruction?: string | null;
+          content?: string | null; // JSON string
+          audio_url?: string | null;
+          ordering: number;
           question_groups?: Array<{
             id: string;
             passage_reference?: string | null;
@@ -206,6 +231,11 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             image_url?: string | null;
             question_type: string;
             ordering: number;
+            matching_options?: Array<{
+              id: string;
+              option_text: string;
+              ordering: number;
+            }>;
             questions?: Array<{
               id: string;
               question_type: string;
@@ -223,40 +253,79 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           }>;
         }>;
       }) => {
-        const questionGroups: QuestionGroup[] = [];
+        const exercises: Exercise[] = [];
+        const allQuestionGroups: QuestionGroup[] = [];
         
-        section.exercises?.forEach((exercise) => {
-          exercise.question_groups
-            ?.sort((a, b) => a.ordering - b.ordering)
-            .forEach((group) => {
-              const questions: TransformedQuestion[] = (group.questions || [])
-                .sort((a, b) => a.ordering - b.ordering)
-                .map((question) => ({
-                  id: question.id,
-                  type: question.question_type,
-                  question: question.question_text,
-                  audio_url: question.audio_url || undefined,
-                  image_url: question.image_url || group.image_url || undefined,
-                  reading_passage: question.reading_passage || undefined,
-                  points: question.points ? Number(question.points) : 1,
-                  ordering: question.ordering,
-                  options: question.question_options?.map((opt) => opt.option_text) || [],
-                  option_ids: question.question_options?.map((opt) => opt.id) || [],
-                }));
+        section.exercises
+          ?.sort((a, b) => a.ordering - b.ordering)
+          .forEach((exercise) => {
+            // Parse exercise content (JSON string)
+            let exerciseContent: Record<string, unknown> = {};
+            if (exercise.content) {
+              try {
+                exerciseContent = typeof exercise.content === 'string' 
+                  ? JSON.parse(exercise.content) as Record<string, unknown>
+                  : (exercise.content as Record<string, unknown>);
+              } catch (e) {
+                console.warn('Failed to parse exercise content:', e);
+              }
+            }
 
-              questionGroups.push({
-                id: group.id,
-                title: group.group_title || undefined,
-                instruction: group.group_instruction || undefined,
-                passage_reference: group.passage_reference || undefined,
-                image_url: group.image_url || undefined,
-                type: group.question_type,
-                questions,
+            const questionGroups: QuestionGroup[] = [];
+            
+            exercise.question_groups
+              ?.sort((a, b) => a.ordering - b.ordering)
+              .forEach((group) => {
+                const questions: TransformedQuestion[] = (group.questions || [])
+                  .sort((a, b) => a.ordering - b.ordering)
+                  .map((question) => ({
+                    id: question.id,
+                    type: question.question_type,
+                    question: question.question_text,
+                    audio_url: question.audio_url || undefined,
+                    image_url: question.image_url || group.image_url || undefined,
+                    reading_passage: question.reading_passage || undefined,
+                    points: question.points ? Number(question.points) : 1,
+                    ordering: question.ordering,
+                    options: question.question_options?.map((opt) => opt.option_text) || [],
+                    option_ids: question.question_options?.map((opt) => opt.id) || [],
+                  }));
+
+                const groupData: QuestionGroup = {
+                  id: group.id,
+                  title: group.group_title || undefined,
+                  instruction: group.group_instruction || undefined,
+                  passage_reference: group.passage_reference || undefined,
+                  image_url: group.image_url || undefined,
+                  type: group.question_type,
+                  questions,
+                  matching_options: group.matching_options?.map(mo => ({
+                    id: mo.id,
+                    option_text: mo.option_text,
+                    ordering: mo.ordering,
+                  })),
+                };
+
+                questionGroups.push(groupData);
+                allQuestionGroups.push(groupData);
               });
-            });
-        });
 
-        const totalQuestions = questionGroups.reduce((sum, g) => sum + g.questions.length, 0);
+            const exerciseTotalQuestions = questionGroups.reduce((sum, g) => sum + g.questions.length, 0);
+
+            exercises.push({
+              id: exercise.id,
+              title: exercise.title,
+              instruction: exercise.instruction || undefined,
+              content: exercise.content || undefined,
+              audio_url: exercise.audio_url || (exerciseContent.audio_url as string) || undefined,
+              passage: (exerciseContent.passage as string) || undefined,
+              image_url: (exerciseContent.chart_url as string) || (exerciseContent.image_url as string) || undefined,
+              question_groups: questionGroups,
+              total_questions: exerciseTotalQuestions,
+            });
+          });
+
+        const totalQuestions = allQuestionGroups.reduce((sum, g) => sum + g.questions.length, 0);
 
         return {
           id: section.id,
@@ -265,7 +334,8 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           description: section.description,
           duration: section.duration,
           ordering: section.ordering,
-          question_groups: questionGroups,
+          exercises: exercises,
+          question_groups: allQuestionGroups, // Keep for backward compatibility
           total_questions: totalQuestions,
         };
       });
@@ -304,7 +374,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const answeredCount = useMemo(() => {
     if (!quiz) return 0;
     const allQuestions = quiz.sections.flatMap(s => 
-      s.question_groups.flatMap(g => g.questions)
+      s.exercises && s.exercises.length > 0
+        ? s.exercises.flatMap(e => e.question_groups.flatMap(g => g.questions))
+        : s.question_groups.flatMap(g => g.questions) // Fallback for backward compatibility
     );
     return allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
   }, [quiz, isQuestionAnswered]);
@@ -314,7 +386,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     
     // Calculate answered count on the fly to avoid dependency issues
     const allQuestions = quiz.sections.flatMap(s => 
-      s.question_groups.flatMap(g => g.questions)
+      s.exercises && s.exercises.length > 0
+        ? s.exercises.flatMap(e => e.question_groups.flatMap(g => g.questions))
+        : s.question_groups.flatMap(g => g.questions) // Fallback for backward compatibility
     );
     const currentAnsweredCount = allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
     const currentTotalQuestions = quiz.total_questions || 0;
@@ -330,12 +404,25 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     try {
       const timeTaken = timeStarted ? Math.floor((Date.now() - timeStarted) / 1000) : 0;
       
-      const allQuestions = quiz.sections.flatMap(s => 
-        s.question_groups.flatMap(g => g.questions)
-      );
+      // Only submit questions from the current section, not all sections
+      const currentSectionQuestions = currentSection.exercises && currentSection.exercises.length > 0
+        ? currentSection.exercises.flatMap((e) =>
+            e.question_groups.flatMap((g) => g.questions || [])
+          )
+        : currentSection.question_groups.flatMap((g) => g.questions || []); // Fallback
       
-      const answerSubmissions: TestAnswerSubmission[] = allQuestions.map((q) => {
+      // Debug: Log all answers before submission
+      console.log('[Frontend] All answers before submission:', answers);
+      console.log('[Frontend] Current section questions:', currentSectionQuestions.map(q => ({ id: q.id, type: q.type })));
+      
+      const answerSubmissions: TestAnswerSubmission[] = currentSectionQuestions.map((q) => {
         const userAnswer = answers[q.id];
+        
+        // Debug: Log each question's answer
+        if (q.type === 'multiple_choice') {
+          console.log(`[Frontend] Question ${q.id} (${q.type}): answer =`, userAnswer);
+        }
+        
         const answerData: {
           fill_blank_answers?: string;
           multiple_choice_answers?: string[];
@@ -348,6 +435,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           case "multiple_choice":
             const mcAnswer = Array.isArray(userAnswer) ? userAnswer[0] : userAnswer;
             answerData.multiple_choice_answers = mcAnswer ? [mcAnswer] : [];
+            console.log(`[Frontend] Question ${q.id} multiple_choice_answers:`, answerData.multiple_choice_answers);
             break;
           case "fill_blank":
             answerData.fill_blank_answers = Array.isArray(userAnswer) ? userAnswer.join(" ") : (userAnswer || "");
@@ -815,11 +903,32 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   }
 
   // Get all questions for section navigation
-  const allQuestions = quiz.sections.flatMap((s, si) => 
-    s.question_groups.flatMap((g, gi) => 
-      g.questions.map((q, qi) => ({ question: q, sectionIndex: si, groupIndex: gi, questionIndex: qi }))
-    )
-  );
+  const allQuestions = quiz.sections.flatMap((s, si) => {
+    if (s.exercises && s.exercises.length > 0) {
+      // New structure: exercises -> question_groups -> questions
+      return s.exercises.flatMap((e, ei) =>
+        e.question_groups.flatMap((g, gi) =>
+          g.questions.map((q, qi) => ({ 
+            question: q, 
+            sectionIndex: si, 
+            exerciseIndex: ei,
+            groupIndex: gi, 
+            questionIndex: qi 
+          }))
+        )
+      );
+    } else {
+      // Fallback: question_groups -> questions (backward compatibility)
+      return s.question_groups.flatMap((g, gi) =>
+        g.questions.map((q, qi) => ({ 
+          question: q, 
+          sectionIndex: si, 
+          groupIndex: gi, 
+          questionIndex: qi 
+        }))
+      );
+    }
+  });
 
   return (
     <div className={cn(
@@ -868,7 +977,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-2xl">{currentSection.name}</CardTitle>
                     <Badge className="bg-blue-600 text-white">
-                      Section {currentSectionIndex + 1} of {quiz.sections.length}
+                      {currentSection.exercises && currentSection.exercises.length > 0
+                        ? `Section ${currentExerciseIndex + 1} of ${currentSection.exercises.length}`
+                        : `Section ${currentSectionIndex + 1} of ${quiz.sections.length}`}
                     </Badge>
                   </div>
                   {currentSection.description && (
@@ -876,8 +987,49 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                   )}
                 </CardHeader>
 
-                <CardContent className="space-y-8">
-                  {currentSection.question_groups.map((group, groupIndex) => (
+              <CardContent className="space-y-8">
+                {currentSection.exercises && currentSection.exercises.length > 0 ? (
+                  (() => {
+                    const currentExercise = currentSection.exercises[currentExerciseIndex];
+                    if (!currentExercise) return null;
+                    return (
+                      <QuizExercise
+                        key={currentExercise.id}
+                        exercise={currentExercise}
+                        exerciseIndex={currentExerciseIndex}
+                        currentAnswer={(questionId) => answers[questionId]}
+                        flaggedQuestions={flaggedQuestions}
+                        selectedQuestionId={selectedQuestionId}
+                        onAnswerChange={(questionId, answer) => {
+                          console.log(`[Frontend] Answer changed for question ${questionId}:`, answer);
+                          setAnswers((prev) => {
+                            const updated = { ...prev, [questionId]: answer };
+                            console.log(`[Frontend] Updated answers state:`, updated);
+                            return updated;
+                          });
+                        }}
+                        onToggleFlag={toggleFlag}
+                        onPinPassage={(passageId) =>
+                          setPinnedPassageId(passageId || null)
+                        }
+                        onPinImage={setPinnedImageUrl}
+                        pinnedPassageId={pinnedPassageId}
+                        pinnedImageUrl={pinnedImageUrl}
+                        questionRefs={questionRefs}
+                        speakingAudios={speakingAudios}
+                        speakingRecording={speakingRecording}
+                        onStartRecording={startSpeakingRecording}
+                        onStopRecording={stopSpeakingRecording}
+                        onFileUpload={handleSpeakingFileUpload}
+                        onClearAudio={clearSpeakingAudio}
+                        fileInputRefs={fileInputRefs}
+                        isLastExercise={false}
+                      />
+                    );
+                  })()
+                ) : (
+                  // Fallback: Display by question_groups (backward compatibility)
+                  currentSection.question_groups.map((group, groupIndex) => (
                     <QuizQuestionGroup
                       key={group.id}
                       group={group}
@@ -885,15 +1037,16 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                       currentAnswer={(questionId) => answers[questionId]}
                       flaggedQuestions={flaggedQuestions}
                       selectedQuestionId={selectedQuestionId}
-                      onAnswerChange={(questionId, answer) =>
-                        setAnswers((prev) => ({ ...prev, [questionId]: answer }))
-                      }
+                      onAnswerChange={(questionId, answer) => {
+                        console.log(`[Frontend] Answer changed for question ${questionId}:`, answer);
+                        setAnswers((prev) => {
+                          const updated = { ...prev, [questionId]: answer };
+                          console.log(`[Frontend] Updated answers state:`, updated);
+                          return updated;
+                        });
+                      }}
                       onToggleFlag={toggleFlag}
-                      onPinPassage={(passageId) =>
-                        setPinnedPassageId(passageId || null)
-                      }
                       onPinImage={setPinnedImageUrl}
-                      pinnedPassageId={pinnedPassageId}
                       pinnedImageUrl={pinnedImageUrl}
                       questionRefs={questionRefs}
                       speakingAudios={speakingAudios}
@@ -907,8 +1060,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                         groupIndex === currentSection.question_groups.length - 1
                       }
                     />
-                  ))}
-                </CardContent>
+                  ))
+                )}
+              </CardContent>
               </Card>
             </div>
 
@@ -917,6 +1071,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               sections={quiz.sections}
               allQuestions={allQuestions}
               currentSectionIndex={currentSectionIndex}
+              currentExerciseIndex={currentExerciseIndex}
               answeredCount={answeredCount}
               totalQuestions={totalQuestions}
               flaggedQuestions={flaggedQuestions}
@@ -925,11 +1080,28 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               isQuestionAnswered={isQuestionAnswered}
               onSectionChange={(index) => {
                 setCurrentSectionIndex(index);
+                setCurrentExerciseIndex(0); // Reset to first exercise when changing section
+                setPinnedPassageId(null);
+                setPinnedImageUrl(null);
+              }}
+              onExerciseChange={(sectionIndex, exerciseIndex) => {
+                setCurrentSectionIndex(sectionIndex);
+                setCurrentExerciseIndex(exerciseIndex);
                 setPinnedPassageId(null);
                 setPinnedImageUrl(null);
               }}
               onQuestionClick={(questionId, sectionIndex) => {
                 setCurrentSectionIndex(sectionIndex);
+                // Find which exercise contains this question
+                const section = quiz.sections[sectionIndex];
+                if (section?.exercises && section.exercises.length > 0) {
+                  const exerciseIndex = section.exercises.findIndex(ex =>
+                    ex.question_groups.some(g => g.questions.some(q => q.id === questionId))
+                  );
+                  if (exerciseIndex >= 0) {
+                    setCurrentExerciseIndex(exerciseIndex);
+                  }
+                }
                 setPinnedPassageId(null);
                 setPinnedImageUrl(null);
                 setTimeout(() => scrollToQuestion(questionId), 100);
@@ -948,10 +1120,12 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             <Card className="h-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">{currentSection.name}</CardTitle>
-                  <Badge className="bg-blue-600 text-white">
-                    Section {currentSectionIndex + 1} of {quiz.sections.length}
-                  </Badge>
+                <CardTitle className="text-2xl">{currentSection.name}</CardTitle>
+                <Badge className="bg-blue-600 text-white">
+                  {currentSection.exercises && currentSection.exercises.length > 0
+                    ? `Section ${currentExerciseIndex + 1} of ${currentSection.exercises.length}`
+                    : `Section ${currentSectionIndex + 1} of ${quiz.sections.length}`}
+                </Badge>
                 </div>
                 {currentSection.description && (
                   <p className="text-sm text-gray-600 mt-2">{currentSection.description}</p>
@@ -959,37 +1133,71 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               </CardHeader>
 
               <CardContent className="space-y-8">
-                {currentSection.question_groups.map((group, groupIndex) => (
-                  <QuizQuestionGroup
-                    key={group.id}
-                    group={group}
-                    groupIndex={groupIndex}
-                    currentAnswer={(questionId) => answers[questionId]}
-                    flaggedQuestions={flaggedQuestions}
-                    selectedQuestionId={selectedQuestionId}
-                    onAnswerChange={(questionId, answer) =>
-                      setAnswers((prev) => ({ ...prev, [questionId]: answer }))
-                    }
-                    onToggleFlag={toggleFlag}
-                    onPinPassage={(passageId) =>
-                      setPinnedPassageId(passageId || null)
-                    }
-                    onPinImage={setPinnedImageUrl}
-                    pinnedPassageId={pinnedPassageId}
-                    pinnedImageUrl={pinnedImageUrl}
-                    questionRefs={questionRefs}
-                    speakingAudios={speakingAudios}
-                    speakingRecording={speakingRecording}
-                    onStartRecording={startSpeakingRecording}
-                    onStopRecording={stopSpeakingRecording}
-                    onFileUpload={handleSpeakingFileUpload}
-                    onClearAudio={clearSpeakingAudio}
-                    fileInputRefs={fileInputRefs}
-                    isLastGroup={
-                      groupIndex === currentSection.question_groups.length - 1
-                    }
-                  />
-                ))}
+                {currentSection.exercises && currentSection.exercises.length > 0 ? (
+                  // Display only current exercise (new structure)
+                  (() => {
+                    const currentExercise = currentSection.exercises[currentExerciseIndex];
+                    if (!currentExercise) return null;
+                    return (
+                      <QuizExercise
+                        key={currentExercise.id}
+                        exercise={currentExercise}
+                        exerciseIndex={currentExerciseIndex}
+                        currentAnswer={(questionId) => answers[questionId]}
+                        flaggedQuestions={flaggedQuestions}
+                        selectedQuestionId={selectedQuestionId}
+                        onAnswerChange={(questionId, answer) =>
+                          setAnswers((prev) => ({ ...prev, [questionId]: answer }))
+                        }
+                        onToggleFlag={toggleFlag}
+                        onPinPassage={(passageId) =>
+                          setPinnedPassageId(passageId || null)
+                        }
+                        onPinImage={setPinnedImageUrl}
+                        pinnedPassageId={pinnedPassageId}
+                        pinnedImageUrl={pinnedImageUrl}
+                        questionRefs={questionRefs}
+                        speakingAudios={speakingAudios}
+                        speakingRecording={speakingRecording}
+                        onStartRecording={startSpeakingRecording}
+                        onStopRecording={stopSpeakingRecording}
+                        onFileUpload={handleSpeakingFileUpload}
+                        onClearAudio={clearSpeakingAudio}
+                        fileInputRefs={fileInputRefs}
+                        isLastExercise={false}
+                      />
+                    );
+                  })()
+                ) : (
+                  // Fallback: Display by question_groups (backward compatibility)
+                  currentSection.question_groups.map((group, groupIndex) => (
+                    <QuizQuestionGroup
+                      key={group.id}
+                      group={group}
+                      groupIndex={groupIndex}
+                      currentAnswer={(questionId) => answers[questionId]}
+                      flaggedQuestions={flaggedQuestions}
+                      selectedQuestionId={selectedQuestionId}
+                      onAnswerChange={(questionId, answer) =>
+                        setAnswers((prev) => ({ ...prev, [questionId]: answer }))
+                      }
+                      onToggleFlag={toggleFlag}
+                      onPinImage={setPinnedImageUrl}
+                      pinnedImageUrl={pinnedImageUrl}
+                      questionRefs={questionRefs}
+                      speakingAudios={speakingAudios}
+                      speakingRecording={speakingRecording}
+                      onStartRecording={startSpeakingRecording}
+                      onStopRecording={stopSpeakingRecording}
+                      onFileUpload={handleSpeakingFileUpload}
+                      onClearAudio={clearSpeakingAudio}
+                      fileInputRefs={fileInputRefs}
+                      isLastGroup={
+                        groupIndex === currentSection.question_groups.length - 1
+                      }
+                    />
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>
@@ -999,6 +1207,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             sections={quiz.sections}
             allQuestions={allQuestions}
             currentSectionIndex={currentSectionIndex}
+            currentExerciseIndex={currentExerciseIndex}
             answeredCount={answeredCount}
             totalQuestions={totalQuestions}
             flaggedQuestions={flaggedQuestions}
@@ -1007,11 +1216,28 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             isQuestionAnswered={isQuestionAnswered}
             onSectionChange={(index) => {
               setCurrentSectionIndex(index);
+              setCurrentExerciseIndex(0); // Reset to first exercise when changing section
+              setPinnedPassageId(null);
+              setPinnedImageUrl(null);
+            }}
+            onExerciseChange={(sectionIndex, exerciseIndex) => {
+              setCurrentSectionIndex(sectionIndex);
+              setCurrentExerciseIndex(exerciseIndex);
               setPinnedPassageId(null);
               setPinnedImageUrl(null);
             }}
             onQuestionClick={(questionId, sectionIndex) => {
               setCurrentSectionIndex(sectionIndex);
+              // Find which exercise contains this question
+              const section = quiz.sections[sectionIndex];
+              if (section?.exercises && section.exercises.length > 0) {
+                const exerciseIndex = section.exercises.findIndex(ex =>
+                  ex.question_groups.some(g => g.questions.some(q => q.id === questionId))
+                );
+                if (exerciseIndex >= 0) {
+                  setCurrentExerciseIndex(exerciseIndex);
+                }
+              }
               setPinnedPassageId(null);
               setPinnedImageUrl(null);
               setTimeout(() => scrollToQuestion(questionId), 100);
@@ -1035,7 +1261,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                 Incomplete Test Submission
               </AlertDialogTitle>
             </div>
-            <AlertDialogDescription className="text-gray-600 space-y-3 pt-2">
+            <div className="text-gray-600 space-y-3 pt-2">
               <p>
                 You have answered <span className="font-semibold text-orange-600">{answeredCount} out of {totalQuestions}</span> questions.
               </p>
@@ -1047,7 +1273,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
                   <strong>Note:</strong> Unanswered questions will be marked as incorrect.
                 </p>
               </div>
-            </AlertDialogDescription>
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
             <AlertDialogCancel className="w-full sm:w-auto">

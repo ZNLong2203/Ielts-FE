@@ -51,13 +51,14 @@ export default function QuizResults({
   const router = useRouter();
   const correctAnswers = sectionResult.correct_answers || 0;
   
-  // Calculate total questions from currentSection instead of sectionResult
-  // because sectionResult.total_questions might only reflect submitted questions
+  // Backend returns total_questions for the current section only (not aggregated)
+  // Fallback to currentSection if sectionResult.total_questions is not available
   const totalQuestionsFromSection = currentSection?.question_groups?.reduce(
     (sum, group) => sum + (group.questions?.length || 0),
     0
   ) || 0;
-  const totalQuestionsResult = totalQuestionsFromSection || sectionResult.total_questions || 0;
+  // Use sectionResult.total_questions (from backend) - it's the total for this section only
+  const totalQuestionsResult = sectionResult.total_questions || totalQuestionsFromSection || 0;
   
   const bandScore = sectionResult.band_score || 0;
 
@@ -184,7 +185,7 @@ export default function QuizResults({
                 </div>
                 <div className="text-center p-6 bg-green-50 rounded-lg">
                   <h3 className="text-lg font-semibold text-green-900 mb-2">
-                    Completed
+                    Correct Answers
                   </h3>
                   <p className="text-4xl font-bold text-green-600">
                     {correctAnswers}/{totalQuestionsResult}

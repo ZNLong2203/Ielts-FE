@@ -10,12 +10,19 @@ interface QuizNavigationProps {
     id: string;
     name: string;
     total_questions: number;
+    exercises?: Array<{
+      id: string;
+      title: string;
+      total_questions: number;
+    }>;
   }>;
   allQuestions: Array<{
     question: { id: string; type: string };
     sectionIndex: number;
+    exerciseIndex?: number;
   }>;
   currentSectionIndex: number;
+  currentExerciseIndex?: number; // For exercise-based navigation
   answeredCount: number;
   totalQuestions: number;
   flaggedQuestions: Set<string>;
@@ -23,6 +30,7 @@ interface QuizNavigationProps {
   isNavigationExpanded: boolean;
   isQuestionAnswered: (questionId: string, questionType?: string) => boolean;
   onSectionChange: (index: number) => void;
+  onExerciseChange?: (sectionIndex: number, exerciseIndex: number) => void; // New prop for exercise navigation
   onQuestionClick: (questionId: string, sectionIndex: number) => void;
   onSubmit: () => void;
   onToggleNavigation: () => void;
@@ -33,6 +41,7 @@ export default function QuizNavigation({
   sections,
   allQuestions,
   currentSectionIndex,
+  currentExerciseIndex,
   answeredCount,
   totalQuestions,
   flaggedQuestions,
@@ -40,11 +49,31 @@ export default function QuizNavigation({
   isNavigationExpanded,
   isQuestionAnswered,
   onSectionChange,
+  onExerciseChange,
   onQuestionClick,
   onSubmit,
   onToggleNavigation,
   isPinned = false,
 }: QuizNavigationProps) {
+  // Get current section
+  const currentSection = sections[currentSectionIndex];
+  // If current section has exercises, use exercises for "Sections" display
+  // Otherwise, use sections as before
+  const displayItems = currentSection?.exercises && currentSection.exercises.length > 0
+    ? currentSection.exercises.map(ex => ({
+        id: ex.id,
+        name: ex.title,
+        total_questions: ex.total_questions,
+      }))
+    : sections.map(s => ({
+        id: s.id,
+        name: s.name,
+        total_questions: s.total_questions,
+      }));
+  
+  const currentItemIndex = currentSection?.exercises && currentSection.exercises.length > 0
+    ? (currentExerciseIndex ?? 0)
+    : currentSectionIndex;
   if (isPinned) {
     // Navigation at bottom when pinned
     return (
@@ -76,20 +105,26 @@ export default function QuizNavigation({
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-3 text-sm">Sections</h3>
                 <div className="space-y-2">
-                  {sections.map((section, index) => (
+                  {displayItems.map((item, index) => (
                     <button
-                      key={section.id}
-                      onClick={() => onSectionChange(index)}
+                      key={item.id}
+                      onClick={() => {
+                        if (currentSection?.exercises && currentSection.exercises.length > 0 && onExerciseChange) {
+                          onExerciseChange(currentSectionIndex, index);
+                        } else {
+                          onSectionChange(index);
+                        }
+                      }}
                       className={cn(
                         "w-full text-left p-2 rounded-lg border transition-colors text-xs",
-                        index === currentSectionIndex
+                        index === currentItemIndex
                           ? "bg-blue-600 text-white border-blue-600"
                           : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                       )}
                     >
-                      <div className="font-medium">{section.name}</div>
+                      <div className="font-medium">{item.name}</div>
                       <div className="text-xs opacity-80 mt-0.5">
-                        {section.total_questions} questions
+                        {item.total_questions} questions
                       </div>
                     </button>
                   ))}
@@ -189,19 +224,25 @@ export default function QuizNavigation({
         <div>
           <h3 className="font-semibold text-gray-900 mb-3">Sections</h3>
           <div className="space-y-2">
-            {sections.map((section, index) => (
+            {displayItems.map((item, index) => (
               <button
-                key={section.id}
-                onClick={() => onSectionChange(index)}
+                key={item.id}
+                onClick={() => {
+                  if (currentSection?.exercises && currentSection.exercises.length > 0 && onExerciseChange) {
+                    onExerciseChange(currentSectionIndex, index);
+                  } else {
+                    onSectionChange(index);
+                  }
+                }}
                 className={cn(
                   "w-full text-left p-3 rounded-lg border transition-colors",
-                  index === currentSectionIndex
+                  index === currentItemIndex
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                 )}
               >
-                <div className="font-medium text-sm">{section.name}</div>
-                <div className="text-xs opacity-80 mt-1">{section.total_questions} questions</div>
+                <div className="font-medium text-sm">{item.name}</div>
+                <div className="text-xs opacity-80 mt-1">{item.total_questions} questions</div>
               </button>
             ))}
           </div>
@@ -212,22 +253,28 @@ export default function QuizNavigation({
         <div>
           <h3 className="font-semibold text-gray-900 mb-3">Questions</h3>
           <div className="grid grid-cols-5 gap-2 max-h-64 overflow-y-auto">
-            {allQuestions.map(({ question, sectionIndex }, index) => (
+            {allQuestions.map(({ question, sectionIndex }, index) => {
+              const isFlagged = flaggedQuestions.has(question.id);
+              const isAnswered = isQuestionAnswered(question.id, question.type);
+              
+              return (
               <button
                 key={question.id}
                 onClick={() => onQuestionClick(question.id, sectionIndex)}
                 className={cn(
                   "w-10 h-10 rounded text-sm font-medium transition-colors",
-                  isQuestionAnswered(question.id, question.type)
+                    // Priority: flagged (yellow) > answered (green) > default (gray)
+                    isFlagged
+                      ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                      : isAnswered
                     ? "bg-green-100 text-green-700 hover:bg-green-200"
-                    : flaggedQuestions.has(question.id)
-                    ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 )}
               >
                 {index + 1}
               </button>
-            ))}
+              );
+            })}
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-3">
             <span className="flex items-center">
