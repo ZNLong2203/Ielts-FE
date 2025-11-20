@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import { Separator } from "@/components/ui/separator";
+import HLSAudioPlayer from "@/components/modal/hsl-audio-player";
 import {
   Save,
   Headphones,
@@ -28,13 +29,19 @@ import {
   Eye,
   Upload,
   Volume2,
+  Loader2,
 } from "lucide-react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { getListeningExercise, createListeningExercise, updateListeningExercise } from "@/api/listening";
-import { IListeningParagraph } from "@/interface/listening";
+import { 
+  getListeningExercise, 
+  createListeningExercise, 
+  updateListeningExercise,
+  uploadListeningAudio 
+} from "@/api/listening";
+import { IListeningParagraph, IListeningExerciseUpdate } from "@/interface/listening";
 import { ListeningFormSchema } from "@/validation/listening";
 
 const ListeningFormUpdateSchema = ListeningFormSchema.partial().extend({
@@ -71,9 +78,7 @@ const ListeningForm = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [audioDuration, setAudioDuration] = useState(0);
-
-  // Audio ref
-  const audioRef = React.useRef<HTMLAudioElement>(null);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
   // Queries
   const {
@@ -89,7 +94,6 @@ const ListeningForm = () => {
 
   // Form setup
   const schema = isEditing ? ListeningFormUpdateSchema : ListeningFormSchema;
-
   const listeningForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -115,82 +119,112 @@ const ListeningForm = () => {
     name: "passage.paragraphs",
   });
 
-  // Mutations
+  // Audio upload mutation
+  const uploadAudioMutation = useMutation({
+    mutationFn: async ({ exerciseId, formData }: { exerciseId: string; formData: FormData }) => {
+      return uploadListeningAudio(exerciseId, formData);
+    },
+    onSuccess: (response) => {
+      toast.success("Audio uploaded successfully! 🎵");
+      setIsUploadingAudio(false);
+      if (response?.data?.audio_url) {
+        setAudioUrl(response.data.audio_url);
+        listeningForm.setValue("audio_url", response.data.audio_url);
+      }
+      setAudioFile(null);
+      if (listeningExerciseId) {
+        refetch();
+      }
+    },
+    onError: (error: any) => {
+      console.error("Audio upload error:", error);
+      setIsUploadingAudio(false);
+      toast.error(error?.response?.data?.message || "Failed to upload audio");
+    },
+  });
+
+  // Main mutations
   const createListeningExerciseMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof ListeningFormSchema>) => {
-      const formDataToSend = new FormData();
-      
-      // Add form fields
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('test_section_id', formData.test_section_id);
-      formDataToSend.append('time_limit', formData.time_limit.toString());
-      formDataToSend.append('passing_score', formData.passing_score);
-      formDataToSend.append('ordering', formData.ordering.toString());
-      
-      // Add audio file if present
-      if (audioFile) {
-        formDataToSend.append('audio_url', audioFile);
-      }
-      
-      // Add passage data
-      const passageData = {
-        ...formData.passage,
-        paragraphs: paragraphs,
-        word_count: wordCount,
+      const payload = {
+        ...formData,
+        audio_url: undefined,
+        passage: {
+          ...formData.passage,
+          paragraphs: paragraphs,
+          word_count: wordCount,
+        },
       };
-      formDataToSend.append('passage', JSON.stringify(passageData));
-      
-      return createListeningExercise(formDataToSend as any);
+      return createListeningExercise(payload);
     },
-    onSuccess: () => {
-      toast.success("Listening exercise created successfully! 🎧");
+    onSuccess: async (response) => {
+      if (audioFile && response?.id) {
+        setIsUploadingAudio(true);
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioFile);
+          await uploadAudioMutation.mutateAsync({
+            exerciseId: response.id,
+            formData
+          });
+          toast.success("Listening exercise created and audio uploaded successfully! 🎧");
+        } catch (error) {
+          toast.error("Exercise created but audio upload failed. You can upload audio later from the edit page.");
+        }
+      } else {
+        toast.success("Listening exercise created successfully! 🎧");
+      }
+
       queryClient.invalidateQueries({ queryKey: ["listeningExercises"] });
       router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to create listening exercise"
-      );
+      toast.error(error?.response?.data?.message || "Failed to create listening exercise");
     },
   });
 
   const updateListeningExerciseMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof ListeningFormUpdateSchema>) => {
-      const formDataToSend = new FormData();
-      
-      // Add form fields
-      if (formData.title) formDataToSend.append('title', formData.title);
-      if (formData.time_limit) formDataToSend.append('time_limit', formData.time_limit.toString());
-      if (formData.passing_score) formDataToSend.append('passing_score', formData.passing_score);
-      if (formData.ordering) formDataToSend.append('ordering', formData.ordering.toString());
-      
-      // Add audio file if new file is uploaded
-      if (audioFile) {
-        formDataToSend.append('audio_url', audioFile);
-      }
-      
-      // Add passage data
-      const passageData = {
-        title: formData.passage?.title || "",
-        content: formData.passage?.content || "",
-        difficulty_level: formData.passage?.difficulty_level || "3",
-        paragraphs: paragraphs,
-        word_count: wordCount,
+      const payload: IListeningExerciseUpdate = {
+        title: formData.title || "",
+        time_limit: formData.time_limit ?? 30,
+        passing_score: formData.passing_score || "",
+        ordering: formData.ordering ?? 1,
+        audio_url: formData.audio_url,
+        passage: {
+          title: formData.passage?.title || "",
+          content: formData.passage?.content || "",
+          difficulty_level: formData.passage?.difficulty_level || "3",
+          word_count: wordCount,
+          paragraphs: paragraphs,
+        },
       };
-      formDataToSend.append('passage', JSON.stringify(passageData));
-      
-      return updateListeningExercise(listeningExerciseId!, formDataToSend as any);
+      return updateListeningExercise(listeningExerciseId!, payload);
     },
-    onSuccess: () => {
-      toast.success("Listening exercise updated successfully! 🎧");
+    onSuccess: async () => {
+      if (audioFile && listeningExerciseId) {
+        setIsUploadingAudio(true);
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioFile);
+          await uploadAudioMutation.mutateAsync({
+            exerciseId: listeningExerciseId,
+            formData
+          });
+          toast.success("Listening exercise updated and audio uploaded successfully! 🎧");
+        } catch (error) {
+          toast.error("Exercise updated but audio upload failed. Please try uploading audio again.");
+        }
+      } else {
+        toast.success("Listening exercise updated successfully! 🎧");
+      }
+
       queryClient.invalidateQueries({ queryKey: ["listeningExercises"] });
       queryClient.invalidateQueries({ queryKey: ["listeningExercise", listeningExerciseId] });
       router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`);
     },
     onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update listening exercise"
-      );
+      toast.error(error?.response?.data?.message || "Failed to update listening exercise");
     },
   });
 
@@ -217,17 +251,67 @@ const ListeningForm = () => {
   // Audio handling
   const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      setAudioFile(file);
-      const url = URL.createObjectURL(file);
-      setAudioUrl(url);
-      listeningForm.setValue("audio_url", file);
-      
-      // Get audio duration
-      const audio = new Audio(url);
-      audio.onloadedmetadata = () => {
-        setAudioDuration(Math.round(audio.duration));
-      };
+    if (!file) return;
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`);
+      event.target.value = '';
+      return;
+    }
+
+    const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/m4a'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid audio format. Please use MP3, WAV, OGG, or M4A.");
+      event.target.value = '';
+      return;
+    }
+
+    setAudioFile(file);
+    const url = URL.createObjectURL(file);
+    setAudioUrl(url);
+    
+    const audio = new Audio(url);
+    audio.onloadedmetadata = () => {
+      setAudioDuration(Math.round(audio.duration));
+    };
+    
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    const message = isEditing 
+      ? `Audio file selected (${fileSizeMB}MB). It will be uploaded when you save the exercise.`
+      : `Audio file selected (${fileSizeMB}MB). It will be uploaded after creating the exercise.`;
+    toast.success(message);
+  };
+
+  const handleUploadAudioOnly = async (event: React.MouseEvent) => {
+    // Prevent event bubbling to avoid triggering other buttons
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!audioFile || !listeningExerciseId) {
+      toast.error("Please select an audio file first.");
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (audioFile.size > maxSize) {
+      const fileSizeMB = (audioFile.size / (1024 * 1024)).toFixed(2);
+      toast.error(`Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', audioFile);
+
+    try {
+      setIsUploadingAudio(true);
+      await uploadAudioMutation.mutateAsync({
+        exerciseId: listeningExerciseId,
+        formData
+      });
+    } catch (error) {
+      console.error("Failed to upload audio:", error);
     }
   };
 
@@ -244,28 +328,54 @@ const ListeningForm = () => {
   };
 
   const removeParagraph = (index: number) => {
-    if (paragraphs.length > 1) {
-      const newParagraphs = paragraphs.filter((_, i) => i !== index);
-      const updatedParagraphs = newParagraphs.map((paragraph, i) => ({
-        ...paragraph,
-        label: String.fromCharCode(65 + i),
-      }));
-      setParagraphs(updatedParagraphs);
-      remove(index);
-    } else {
+    if (paragraphs.length <= 1) {
       toast.error("At least one paragraph is required");
+      return;
     }
+    
+    const newParagraphs = paragraphs.filter((_, i) => i !== index);
+    const updatedParagraphs = newParagraphs.map((paragraph, i) => ({
+      ...paragraph,
+      label: String.fromCharCode(65 + i),
+    }));
+    setParagraphs(updatedParagraphs);
+    remove(index);
   };
 
-  const updateParagraph = (
-    index: number,
-    field: keyof IListeningParagraph,
-    value: any
-  ) => {
+  const updateParagraph = (index: number, field: keyof IListeningParagraph, value: any) => {
     const newParagraphs = [...paragraphs];
     newParagraphs[index] = { ...newParagraphs[index], [field]: value };
     setParagraphs(newParagraphs);
     listeningForm.setValue(`passage.paragraphs.${index}.${field}`, value);
+  };
+
+  const triggerFileInput = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'audio/*';
+    input.addEventListener('change', (e) =>
+      handleAudioUpload(e as unknown as React.ChangeEvent<HTMLInputElement>)
+    );
+    input.click();
+  };
+
+  const removeAudio = () => {
+    setAudioUrl("");
+    setAudioFile(null);
+    setAudioDuration(0);
+    listeningForm.setValue("audio_url", undefined);
+  };
+
+  const cancelNewAudio = () => {
+    setAudioFile(null);
+    if (isEditing && listeningExerciseData?.audio_url) {
+      const originalUrl = typeof listeningExerciseData.audio_url === "string"
+        ? listeningExerciseData.audio_url
+        : "";
+      setAudioUrl(originalUrl);
+    } else {
+      setAudioUrl("");
+    }
   };
 
   // Update paragraphs in form
@@ -284,23 +394,18 @@ const ListeningForm = () => {
         ordering: listeningExerciseData.ordering || 1,
         audio_url: listeningExerciseData.audio_url,
         passage: {
-          title: listeningExerciseData.listening_passage?.title || "",
-          content: listeningExerciseData.listening_passage?.content || "",
-          word_count: listeningExerciseData.listening_passage?.word_count || 0,
-          difficulty_level: listeningExerciseData.listening_passage?.difficulty_level?.toString() || "3",
-          paragraphs: listeningExerciseData.listening_passage?.paragraphs || [],
+          title: listeningExerciseData.reading_passage?.title || "",
+          content: listeningExerciseData.reading_passage?.content || "",
+          word_count: listeningExerciseData.reading_passage?.word_count || 0,
+          difficulty_level: listeningExerciseData.reading_passage?.difficulty_level?.toString() || "3",
+          paragraphs: listeningExerciseData.reading_passage?.paragraphs || [],
         },
       });
 
-      // Set paragraphs state
-      if (
-        listeningExerciseData.listening_passage?.paragraphs &&
-        Array.isArray(listeningExerciseData.listening_passage.paragraphs)
-      ) {
-        setParagraphs(listeningExerciseData.listening_passage.paragraphs);
+      if (listeningExerciseData.reading_passage?.paragraphs && Array.isArray(listeningExerciseData.reading_passage.paragraphs)) {
+        setParagraphs(listeningExerciseData.reading_passage.paragraphs);
       }
 
-      // Set audio URL if exists
       if (listeningExerciseData.audio_url && typeof listeningExerciseData.audio_url === 'string') {
         setAudioUrl(listeningExerciseData.audio_url);
       }
@@ -321,11 +426,6 @@ const ListeningForm = () => {
   }, [isEditing, paragraphs.length, append]);
 
   const onSubmit = async (data: any) => {
-    if (!audioFile && !audioUrl) {
-      toast.error("Please upload an audio file");
-      return;
-    }
-
     try {
       if (isEditing) {
         await updateListeningExerciseMutation.mutateAsync(data);
@@ -337,7 +437,9 @@ const ListeningForm = () => {
     }
   };
 
-  const isSubmitting = createListeningExerciseMutation.isPending || updateListeningExerciseMutation.isPending;
+  const isSubmitting = createListeningExerciseMutation.isPending || 
+    updateListeningExerciseMutation.isPending || 
+    isUploadingAudio;
   const selectedDifficulty = listeningForm.watch("passage.difficulty_level");
 
   if (isLoading && isEditing) {
@@ -415,74 +517,52 @@ const ListeningForm = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
-                      <Volume2 className="h-5 w-5 text-purple-600" />
-                      <span>{listeningForm.watch("passage.title") || "Untitled Audio"}</span>
-                    </h3>
-                    
-                    {/* Audio Player Preview */}
-                    {audioUrl && (
-                      <div className="mb-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="p-4 bg-purple-100 rounded-full">
-                            <Headphones className="h-8 w-8 text-purple-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{listeningForm.watch("passage.title")}</h4>
-                            <p className="text-sm text-gray-600">Duration: {formatTime(audioDuration)}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="bg-white rounded-lg p-4">
-                          <audio 
-                            ref={audioRef}
-                            src={audioUrl}
-                            onLoadedMetadata={() => {
-                              if (audioRef.current) {
-                                setAudioDuration(audioRef.current.duration);
-                              }
-                            }}
-                            className="w-full"
-                            controls
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {listeningForm.watch("passage.content") && (
-                      <div className="prose prose-gray max-w-none mb-6">
-                        <h4 className="font-medium text-gray-900 mb-2 flex items-center space-x-2">
-                          <FileText className="h-4 w-4" />
-                          <span>Audio Transcript:</span>
-                        </h4>
-                        <div className="whitespace-pre-line text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-lg border">
-                          {listeningForm.watch("passage.content")}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4">
-                      <span>Words: {wordCount}</span>
-                      <span>Paragraphs: {paragraphs.length}</span>
-                      <span>Duration: {formatTime(audioDuration)}</span>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
+                    <Volume2 className="h-5 w-5 text-purple-600" />
+                    <span>{listeningForm.watch("passage.title") || "Untitled Audio"}</span>
+                  </h3>
+                  
+                  {audioUrl && (
+                    <div className="mb-6">
+                      <HLSAudioPlayer
+                        src={audioUrl}
+                        title={listeningForm.watch("passage.title") || "Listening Exercise Audio"}
+                      />
                     </div>
+                  )}
 
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-900">Paragraph References:</h4>
-                      {paragraphs.map((paragraph) => (
-                        <div key={paragraph.id} className="border-l-4 border-purple-500 pl-4">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm font-medium">
-                              Paragraph {paragraph.label}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600 line-clamp-3">
-                            {paragraph.content}
-                          </p>
-                        </div>
-                      ))}
+                  {listeningForm.watch("passage.content") && (
+                    <div className="prose prose-gray max-w-none mb-6">
+                      <h4 className="font-medium text-gray-900 mb-2 flex items-center space-x-2">
+                        <FileText className="h-4 w-4" />
+                        <span>Audio Transcript:</span>
+                      </h4>
+                      <div className="whitespace-pre-line text-gray-700 leading-relaxed p-4 bg-gray-50 rounded-lg border">
+                        {listeningForm.watch("passage.content")}
+                      </div>
                     </div>
+                  )}
+
+                  <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4">
+                    <span>Words: {wordCount}</span>
+                    <span>Paragraphs: {paragraphs.length}</span>
+                    <span>Duration: {formatTime(audioDuration)}</span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">Paragraph References:</h4>
+                    {paragraphs.map((paragraph) => (
+                      <div key={paragraph.id} className="border-l-4 border-purple-500 pl-4">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm font-medium">
+                            Paragraph {paragraph.label}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {paragraph.content}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -570,82 +650,177 @@ const ListeningForm = () => {
                         />
                       </div>
 
-                      {/* Audio Upload */}
-                      <div className="space-y-4">
-                        <label className="text-sm font-medium text-gray-700">Audio File *</label>
-                        <div className="border-2 border-dashed border-purple-300 rounded-xl p-6">
-                          {audioUrl ? (
-                            <div className="space-y-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="p-3 bg-purple-100 rounded-full">
-                                  <Volume2 className="h-6 w-6 text-purple-600" />
+                      {/* Current Audio - Fixed Layout to prevent button overlap */}
+                      {audioUrl && (
+                        <div className="space-y-4">
+                          <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-gray-700">Current Audio</label>
+                              {audioFile && (
+                                <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                                  ⚠️ New audio selected - will replace current when saved
                                 </div>
-                                <div className="flex-1">
-                                  <div className="font-medium text-gray-900">
-                                    {audioFile ? audioFile.name : "Current audio"}
-                                  </div>
-                                  <div className="text-sm text-gray-600">
-                                    Duration: {formatTime(audioDuration)}
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="bg-white rounded-lg p-4 border">
-                                <audio 
-                                  ref={audioRef}
-                                  src={audioUrl}
-                                  onLoadedMetadata={() => {
-                                    if (audioRef.current) {
-                                      setAudioDuration(audioRef.current.duration);
-                                    }
-                                  }}
-                                  className="w-full"
-                                  controls
-                                />
-                              </div>
-                              
-                              <div className="flex items-center justify-end">
+                              )}
+                            </div>
+                            
+                            {/* Upload Audio Now Button - Positioned ABOVE audio player */}
+                            {isEditing && audioFile && !isUploadingAudio && (
+                              <div className="flex justify-end">
                                 <Button
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {
-                                    setAudioUrl("");
-                                    setAudioFile(null);
-                                    setAudioDuration(0);
-                                    listeningForm.setValue("audio_url", undefined);
-                                  }}
+                                  onClick={handleUploadAudioOnly}
+                                  disabled={uploadAudioMutation.isPending}
+                                  className="whitespace-nowrap z-10 relative"
+                                  style={{ pointerEvents: 'auto' }}
                                 >
-                                  Remove Audio
+                                  {uploadAudioMutation.isPending ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      Uploading...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="h-4 w-4 mr-2" />
+                                      Upload Audio Now
+                                    </>
+                                  )}
                                 </Button>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="text-center">
-                              <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                                <Upload className="h-8 w-8 text-purple-600" />
-                              </div>
-                              <div className="space-y-2">
-                                <p className="text-lg font-medium text-gray-900">Upload Audio File</p>
-                                <p className="text-gray-500">Drag and drop or click to select audio file</p>
-                                <div className="text-sm text-gray-400">
-                                  Supported formats: MP3, WAV, OGG (Max: 50MB)
+                            )}
+                          </div>
+                          
+                          {/* Audio Player Container - Separate and isolated */}
+                          <div className="w-full bg-gray-50 p-4 rounded-lg border relative isolate">
+                            <HLSAudioPlayer
+                              src={audioUrl}
+                              title={listeningForm.watch("passage.title") || "Listening Exercise Audio"}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Audio Upload Section */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-gray-700">
+                            {audioUrl ? "Replace Audio File" : "Audio File"}
+                          </label>
+                        </div>
+                        
+                        {(!audioUrl || audioFile) && (
+                          <div className="border-2 border-dashed border-purple-300 rounded-xl p-6">
+                            {audioFile ? (
+                              <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                  <div className="p-3 bg-purple-100 rounded-full">
+                                    <Volume2 className="h-6 w-6 text-purple-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="font-medium text-gray-900">
+                                      New: {audioFile.name}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      Size: {(audioFile.size / (1024 * 1024)).toFixed(2)}MB
+                                    </div>
+                                    <div className="text-xs text-amber-600 mt-1">
+                                      ⚠️ {isEditing 
+                                        ? "New audio will be uploaded when you save or use 'Upload Audio Now' button"
+                                        : "Audio will be uploaded after creating the exercise"
+                                      }
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-white rounded-lg p-4 border">
+                                  <audio 
+                                    src={URL.createObjectURL(audioFile)}
+                                    onLoadedMetadata={(e) => {
+                                      const audio = e.target as HTMLAudioElement;
+                                      setAudioDuration(audio.duration);
+                                    }}
+                                    className="w-full"
+                                    controls
+                                  />
+                                </div>
+                                
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-500">
+                                    Preview of new audio file
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={cancelNewAudio}
+                                  >
+                                    Cancel New Audio
+                                  </Button>
                                 </div>
                               </div>
-                              <input
-                                type="file"
-                                accept="audio/*"
-                                onChange={handleAudioUpload}
-                                className="mt-4 block w-full text-sm text-gray-500
-                                  file:mr-4 file:py-2 file:px-4
-                                  file:rounded-full file:border-0
-                                  file:text-sm file:font-semibold
-                                  file:bg-purple-50 file:text-purple-700
-                                  hover:file:bg-purple-100 transition-colors"
-                              />
-                            </div>
-                          )}
-                        </div>
+                            ) : (
+                              <div className="text-center">
+                                <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                                  <Upload className="h-8 w-8 text-purple-600" />
+                                </div>
+                                <div className="space-y-2">
+                                  <p className="text-lg font-medium text-gray-900">
+                                    {audioUrl ? "Replace Audio File" : "Upload Audio File"}
+                                  </p>
+                                  <p className="text-gray-500">Drag and drop or click to select audio file</p>
+                                  <div className="text-sm text-gray-400">
+                                    Supported formats: MP3, WAV, OGG, M4A (Max: 10MB)
+                                  </div>
+                                  <div className="text-xs text-red-500 bg-red-50 p-2 rounded-lg">
+                                    ⚠️ File size limit: 10MB. Larger files will be rejected.
+                                  </div>
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="audio/*"
+                                  onChange={handleAudioUpload}
+                                  className="mt-4 block w-full text-sm text-gray-500
+                                    file:mr-4 file:py-2 file:px-4
+                                    file:rounded-full file:border-0
+                                    file:text-sm file:font-semibold
+                                    file:bg-purple-50 file:text-purple-700
+                                    hover:file:bg-purple-100 transition-colors"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {isUploadingAudio && (
+                          <div className="flex items-center space-x-2 text-sm text-blue-600">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Uploading audio file...</span>
+                          </div>
+                        )}
+
+                        {audioUrl && !audioFile && (
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={triggerFileInput}
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              Replace Audio
+                            </Button>
+                            
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={removeAudio}
+                            >
+                              Remove Audio
+                            </Button>
+                          </div>
+                        )}
                       </div>
 
                       {/* Audio Transcript */}
@@ -720,7 +895,6 @@ const ListeningForm = () => {
                           {paragraphs.map((paragraph, index) => (
                             <div key={paragraph.id} className="relative group">
                               <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
-                                {/* Paragraph Header */}
                                 <div className="flex items-center justify-between mb-6">
                                   <div className="flex items-center space-x-4">
                                     <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg">
@@ -751,7 +925,6 @@ const ListeningForm = () => {
                                   )}
                                 </div>
 
-                                {/* Paragraph Form Fields */}
                                 <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
                                   <div className="md:col-span-2">
                                     <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2 mb-2">
@@ -761,13 +934,7 @@ const ListeningForm = () => {
                                     <input
                                       type="text"
                                       value={paragraph.label}
-                                      onChange={(e) =>
-                                        updateParagraph(
-                                          index,
-                                          "label",
-                                          e.target.value
-                                        )
-                                      }
+                                      onChange={(e) => updateParagraph(index, "label", e.target.value)}
                                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                                       placeholder="A"
                                     />
@@ -780,13 +947,7 @@ const ListeningForm = () => {
                                     </label>
                                     <textarea
                                       value={paragraph.content}
-                                      onChange={(e) =>
-                                        updateParagraph(
-                                          index,
-                                          "content",
-                                          e.target.value
-                                        )
-                                      }
+                                      onChange={(e) => updateParagraph(index, "content", e.target.value)}
                                       rows={4}
                                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none"
                                       placeholder="Enter paragraph content..."
@@ -872,6 +1033,12 @@ const ListeningForm = () => {
                         <div className="space-y-2 text-xs text-gray-500">
                           <p>• Average listening speed: ~150 words/min</p>
                           <p>• Audio should be clear and well-paced</p>
+                          <p>• Maximum file size: 10MB</p>
+                          {audioFile && (
+                            <p className="text-amber-600">
+                              • Audio will be uploaded on save ({(audioFile.size / (1024 * 1024)).toFixed(2)}MB)
+                            </p>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -909,9 +1076,9 @@ const ListeningForm = () => {
                           {(audioFile || audioUrl) ? (
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           ) : (
-                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                            <AlertTriangle className="h-4 w-4 text-orange-500" />
                           )}
-                          <span>Audio file</span>
+                          <span>Audio file {!audioFile && !audioUrl && "(optional)"}</span>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -942,18 +1109,32 @@ const ListeningForm = () => {
                         <Button
                           type="submit"
                           className="w-full flex items-center space-x-2 bg-purple-600 hover:bg-purple-700"
-                          disabled={isSubmitting || paragraphs.length === 0 || wordCount < 5 || (!audioFile && !audioUrl)}
+                          disabled={
+                            isSubmitting || 
+                            paragraphs.length === 0 || 
+                            wordCount < 5
+                          }
                         >
-                          <Save className="h-4 w-4" />
-                          <span>
-                            {isSubmitting
-                              ? isEditing
-                                ? "Updating..."
-                                : "Creating..."
-                              : isEditing
-                              ? "Update Exercise"
-                              : "Create Exercise"}
-                          </span>
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span>
+                                {isUploadingAudio 
+                                  ? "Uploading audio..." 
+                                  : isEditing 
+                                  ? "Updating..." 
+                                  : "Creating..."
+                                }
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4" />
+                              <span>
+                                {isEditing ? "Update Exercise" : "Create Exercise"}
+                              </span>
+                            </>
+                          )}
                         </Button>
 
                         <Button

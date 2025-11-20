@@ -161,9 +161,6 @@ const ReadingDetail = () => {
                     <span>•</span>
                     <Badge className={`${difficulty.color} border text-xs`}>
                       <div className="flex items-center space-x-1">
-                        {Array.from({ length: difficulty.stars }, (_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-current" />
-                        ))}
                         <span>{difficulty.label}</span>
                       </div>
                     </Badge>
@@ -311,15 +308,6 @@ const ReadingDetail = () => {
                       <div className="mt-1">
                         <Badge className={`${difficulty.color} border`}>
                           <div className="flex items-center space-x-1">
-                            {Array.from(
-                              { length: difficulty.stars },
-                              (_, i) => (
-                                <Star
-                                  key={i}
-                                  className="h-3 w-3 fill-current"
-                                />
-                              )
-                            )}
                             <span>{difficulty.label}</span>
                           </div>
                         </Badge>
@@ -340,7 +328,7 @@ const ReadingDetail = () => {
                       </div>
                       <div className="text-sm text-gray-600">Paragraphs</div>
                     </div>
-                   
+
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
                         {readingExercise.total_questions || 0}
@@ -442,15 +430,6 @@ const ReadingDetail = () => {
                     <Share2 className="h-4 w-4 mr-2" />
                     Copy Exercise Title
                   </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => window.print()}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Print Exercise
-                  </Button>
                 </CardContent>
               </Card>
 
@@ -469,7 +448,6 @@ const ReadingDetail = () => {
                     • Estimated completion:{" "}
                     {Math.ceil(readingExercise.time_limit * 0.8)} minutes
                   </p>
-                 
                 </CardContent>
               </Card>
             </div>
@@ -596,9 +574,6 @@ const ReadingDetail = () => {
                   </div>
                   <Badge className={`${difficulty.color} border`}>
                     <div className="flex items-center space-x-1">
-                      {Array.from({ length: difficulty.stars }, (_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-current" />
-                      ))}
                       <span>{difficulty.label}</span>
                     </div>
                   </Badge>
@@ -613,7 +588,9 @@ const ReadingDetail = () => {
                   <CardTitle className="text-md">Instructions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 text-sm">{readingExercise.instruction}</p>
+                  <p className="text-gray-700 text-sm">
+                    {readingExercise.instruction}
+                  </p>
                 </CardContent>
               </Card>
             )}

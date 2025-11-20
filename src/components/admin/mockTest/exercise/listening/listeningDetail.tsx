@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getListeningExercise } from "@/api/listening";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,13 +14,11 @@ import {
   Clock,
   Target,
   Hash,
-  Star,
   FileText,
   Eye,
   BarChart3,
   Layers,
   Copy,
-  Download,
   Share2,
   Settings,
   Info,
@@ -29,13 +27,11 @@ import {
   Volume2,
   List,
   CheckCircle,
-  Play,
-  Pause,
-  Mic,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
 import { IListeningExercise } from "@/interface/listening";
+import HLSAudioPlayer from "@/components/modal/hsl-audio-player";
 
 const DIFFICULTY_LABELS = {
   "1": {
@@ -82,10 +78,6 @@ const ListeningDetail = () => {
   const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
     null
   );
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Audio ref
-  const audioRef = React.useRef<HTMLAudioElement>(null);
 
   // Query
   const {
@@ -99,6 +91,8 @@ const ListeningDetail = () => {
     enabled: !!listeningExerciseId,
     retry: 2,
   });
+
+  console.log("Listening Exercise Data:", listeningExercise);
 
   // Navigation handlers
   const handleBackToList = () => {
@@ -117,18 +111,6 @@ const ListeningDetail = () => {
     router.push(
       `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/listening/${listeningExerciseId}/preview?sectionId=${sectionId}`
     );
-  };
-
-  // Audio handlers
-  const togglePlayPause = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
   };
 
   // Utility functions
@@ -159,14 +141,14 @@ const ListeningDetail = () => {
     );
   }
 
+  // Fix: Use listening_passage instead of reading_passage
   const difficulty =
     DIFFICULTY_LABELS[
-      listeningExercise.listening_passage
+      listeningExercise.reading_passage
         ?.difficulty_level as keyof typeof DIFFICULTY_LABELS
     ] || DIFFICULTY_LABELS["3"];
-  const wordCount = listeningExercise.listening_passage?.word_count || 0;
-  const paragraphs = listeningExercise.listening_passage?.paragraphs || [];
-  const audioDuration = listeningExercise.audio_duration || 0;
+  const wordCount = listeningExercise.reading_passage?.word_count || 0;
+  const paragraphs = listeningExercise.reading_passage?.paragraphs || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -175,28 +157,21 @@ const ListeningDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Headphones className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {listeningExercise.title}
-                  </h1>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <span>{listeningExercise.listening_passage?.title}</span>
-                    <span>•</span>
-                    <Badge className={`${difficulty.color} border text-xs`}>
-                      <div className="flex items-center space-x-1">
-                        {Array.from({ length: difficulty.stars }, (_, i) => (
-                          <Star key={i} className="h-3 w-3 fill-current" />
-                        ))}
-                        <span>{difficulty.label}</span>
-                      </div>
-                    </Badge>
-                    <span>•</span>
-                    <span>{formatDuration(audioDuration)}</span>
-                  </div>
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Headphones className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {listeningExercise.title}
+                </h1>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <span>{listeningExercise.reading_passage?.title}</span>
+                  <span>•</span>
+                  <Badge className={`${difficulty.color} border text-xs`}>
+                    <div className="flex items-center space-x-1">
+                      <span>{difficulty.label}</span>
+                    </div>
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -331,7 +306,7 @@ const ListeningDetail = () => {
                         Audio Title
                       </label>
                       <p className="text-md font-semibold text-gray-900 mt-1">
-                        {listeningExercise.listening_passage?.title}
+                        {listeningExercise.reading_passage?.title}
                       </p>
                     </div>
                     <div>
@@ -341,15 +316,6 @@ const ListeningDetail = () => {
                       <div className="mt-1">
                         <Badge className={`${difficulty.color} border`}>
                           <div className="flex items-center space-x-1">
-                            {Array.from(
-                              { length: difficulty.stars },
-                              (_, i) => (
-                                <Star
-                                  key={i}
-                                  className="h-3 w-3 fill-current"
-                                />
-                              )
-                            )}
                             <span>{difficulty.label}</span>
                           </div>
                         </Badge>
@@ -357,13 +323,7 @@ const ListeningDetail = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4 pt-4 border-t">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">
-                        {formatDuration(audioDuration)}
-                      </div>
-                      <div className="text-sm text-gray-600">Duration</div>
-                    </div>
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">
                         {wordCount}
@@ -390,7 +350,7 @@ const ListeningDetail = () => {
                     </label>
                     <div className="mt-2 p-4 bg-gray-50 rounded-lg">
                       <p className="text-gray-700 line-clamp-4">
-                        {listeningExercise.listening_passage?.content}
+                        {listeningExercise.reading_passage?.content}
                       </p>
                     </div>
                   </div>
@@ -429,7 +389,7 @@ const ListeningDetail = () => {
                       </span>
                     </div>
                     <span className="text-lg font-bold text-green-600">
-                      {listeningExercise.passing_score}%
+                      {listeningExercise.passing_score}
                     </span>
                   </div>
 
@@ -442,18 +402,6 @@ const ListeningDetail = () => {
                     </div>
                     <span className="text-lg font-bold text-orange-600">
                       {listeningExercise.total_points || 0}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Volume2 className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-700">
-                        Audio Duration
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-blue-600">
-                      {formatDuration(audioDuration)}
                     </span>
                   </div>
                 </CardContent>
@@ -473,7 +421,7 @@ const ListeningDetail = () => {
                     className="w-full justify-start"
                     onClick={() =>
                       copyToClipboard(
-                        listeningExercise.listening_passage?.content || ""
+                        listeningExercise.reading_passage?.content || ""
                       )
                     }
                   >
@@ -489,24 +437,6 @@ const ListeningDetail = () => {
                     <Share2 className="h-4 w-4 mr-2" />
                     Copy Exercise Title
                   </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => copyToClipboard(listeningExercise.audio_url || "")}
-                  >
-                    <Volume2 className="h-4 w-4 mr-2" />
-                    Copy Audio URL
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => window.print()}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Print Exercise
-                  </Button>
                 </CardContent>
               </Card>
 
@@ -521,10 +451,6 @@ const ListeningDetail = () => {
                 <CardContent className="space-y-2 text-sm text-gray-600">
                   <p>• Average listening speed: ~150 words/min</p>
                   <p>• Recommended for {difficulty.label} level</p>
-                  <p>
-                    • Audio duration:{" "}
-                    {formatDuration(audioDuration)}
-                  </p>
                   <p>• Listen carefully for key information</p>
                 </CardContent>
               </Card>
@@ -534,59 +460,12 @@ const ListeningDetail = () => {
 
         {activeTab === "audio" && (
           <div className="max-w-4xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Volume2 className="h-5 w-5 text-purple-600" />
-                    <span>{listeningExercise.listening_passage?.title}</span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Duration: {formatDuration(audioDuration)}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8">
-                  <div className="flex items-center space-x-6 mb-6">
-                    <div className="p-4 bg-purple-100 rounded-full">
-                      <Headphones className="h-12 w-12 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                        {listeningExercise.listening_passage?.title}
-                      </h3>
-                      <p className="text-gray-600">
-                        {difficulty.label} • {formatDuration(audioDuration)} • {wordCount} words
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {listeningExercise.audio_url && (
-                    <div className="bg-white rounded-lg p-6 shadow-sm">
-                      <audio 
-                        ref={audioRef}
-                        src={listeningExercise.audio_url}
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
-                        onEnded={() => setIsPlaying(false)}
-                        className="w-full"
-                        controls
-                        preload="metadata"
-                      />
-                      
-                      <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
-                        <span>Use the controls above to play the audio</span>
-                        <div className="flex items-center space-x-2">
-                          <Mic className="h-4 w-4" />
-                          <span>High Quality Audio</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            {listeningExercise.audio_url && (
+              <HLSAudioPlayer
+                src={listeningExercise.audio_url}
+                title={listeningExercise.reading_passage?.title}
+              />
+            )}
           </div>
         )}
 
@@ -604,7 +483,7 @@ const ListeningDetail = () => {
                     size="sm"
                     onClick={() =>
                       copyToClipboard(
-                        listeningExercise.listening_passage?.content || ""
+                        listeningExercise.reading_passage?.content || ""
                       )
                     }
                   >
@@ -616,13 +495,16 @@ const ListeningDetail = () => {
               <CardContent>
                 <div className="prose prose-gray max-w-none">
                   <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {listeningExercise.listening_passage?.content}
+                    {listeningExercise.reading_passage?.content}
                   </div>
                 </div>
                 <div className="mt-6 pt-4 border-t">
                   <div className="flex items-center space-x-6 text-sm text-gray-600">
                     <span>Word Count: {wordCount}</span>
-                    <span>Characters: {listeningExercise.listening_passage?.content?.length || 0}</span>
+                    <span>
+                      Characters:{" "}
+                      {listeningExercise.reading_passage?.content?.length || 0}
+                    </span>
                     <span>Paragraphs: {paragraphs.length}</span>
                   </div>
                 </div>
@@ -715,15 +597,9 @@ const ListeningDetail = () => {
                     <Target className="h-4 w-4" />
                     <span>Pass: {listeningExercise.passing_score}</span>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Volume2 className="h-4 w-4" />
-                    <span>{formatDuration(audioDuration)}</span>
-                  </div>
+
                   <Badge className={`${difficulty.color} border`}>
                     <div className="flex items-center space-x-1">
-                      {Array.from({ length: difficulty.stars }, (_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-current" />
-                      ))}
                       <span>{difficulty.label}</span>
                     </div>
                   </Badge>
@@ -738,48 +614,21 @@ const ListeningDetail = () => {
                   <CardTitle className="text-md">Instructions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 text-sm">{listeningExercise.instruction}</p>
+                  <p className="text-gray-700 text-sm">
+                    {listeningExercise.instruction}
+                  </p>
                 </CardContent>
               </Card>
             )}
 
             {/* Audio Player */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center space-x-2">
-                  <Volume2 className="h-5 w-5 text-purple-600" />
-                  <span>{listeningExercise.listening_passage?.title}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="p-4 bg-purple-100 rounded-full">
-                      <Headphones className="h-8 w-8 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{listeningExercise.listening_passage?.title}</h4>
-                      <p className="text-sm text-gray-600">Duration: {formatDuration(audioDuration)}</p>
-                    </div>
-                  </div>
-                  
-                  {listeningExercise.audio_url && (
-                    <div className="bg-white rounded-lg p-4">
-                      <audio 
-                        ref={audioRef}
-                        src={listeningExercise.audio_url}
-                        onPlay={() => setIsPlaying(true)}
-                        onPause={() => setIsPlaying(false)}
-                        onEnded={() => setIsPlaying(false)}
-                        className="w-full"
-                        controls
-                        preload="metadata"
-                      />
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+
+            {listeningExercise.audio_url && (
+              <HLSAudioPlayer
+                src={listeningExercise.audio_url}
+                title={listeningExercise.reading_passage?.title}
+              />
+            )}
 
             {/* Transcript */}
             <Card>
@@ -792,7 +641,7 @@ const ListeningDetail = () => {
               <CardContent>
                 <div className="prose prose-gray max-w-none">
                   <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {listeningExercise.listening_passage?.content}
+                    {listeningExercise.reading_passage?.content}
                   </div>
                 </div>
               </CardContent>

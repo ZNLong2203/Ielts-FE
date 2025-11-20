@@ -39,12 +39,12 @@ export interface IListeningExerciseList {
 
 export interface IListeningExercise {
   id: string;
-  audio_url?: File;
+  audio_url?: string;
   exercise_type: string;
   instruction: string;
   ordering: number;
   passing_score: string;
-  listening_passage: {
+  reading_passage: {
     content: string;
     difficulty_level: string;
     estimated_listening_time: number;

@@ -325,8 +325,8 @@ const MockTestDetail = () => {
                         )}
                       </div>
 
-                      <div className="text-right space-y-2">
-                        <p className="text-md font-semibold text-blue-600 flex items-center">
+                      <div className="text-center space-y-2">
+                        <p className="text-sm flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
                           {formatDuration(section.duration)}
                         </p>
