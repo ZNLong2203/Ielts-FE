@@ -44,16 +44,44 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
     }
   };
 
+  // Reset audio element and all states
+  const resetAudio = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.src = "";
+      // Remove all existing event listeners by cloning and replacing the element
+      const newAudio = audio.cloneNode() as HTMLAudioElement;
+      audio.parentNode?.replaceChild(newAudio, audio);
+      // Update the ref to point to the new element
+      (audioRef as any).current = newAudio;
+    }
+    
+    // Reset all states
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setError(null);
+    setIsLoading(true);
+    setPlayerType("fallback");
+    
+    // Cleanup HLS
+    cleanup();
+  };
+
   const tryNativeFallback = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
+    console.log("🔄 Trying native HLS fallback...");
     cleanup();
 
     if (
       audio.canPlayType("application/vnd.apple.mpegurl") ||
       audio.canPlayType("application/x-mpegURL")
     ) {
+      console.log("✅ Native HLS supported");
       audio.src = src;
       setPlayerType("native");
     } else {
@@ -92,6 +120,7 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
             hlsRef.current = hls;
 
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              console.log("✅ HLS MANIFEST_PARSED");
               setPlayerType("hls");
               setIsLoading(false);
               setRetryCount(0);
@@ -126,6 +155,7 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
           tryNativeFallback();
         }
       } else {
+        console.log("✅ Using native audio");
         audio.src = src;
         setPlayerType("native");
       }
@@ -156,6 +186,7 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
     if (!audio) return;
 
     const handleLoadedMetadata = () => {
+      console.log("✅ Audio loadedmetadata", audio.duration);
       if (audio.duration && !isNaN(audio.duration)) {
         setDuration(audio.duration);
         setIsLoading(false);
@@ -164,13 +195,20 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
     };
 
     const handleCanPlay = () => {
+      console.log("✅ Audio canplay");
       setIsLoading(false);
       setError(null);
     };
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => {
+      console.log("▶️ Audio playing");
+      setIsPlaying(true);
+    };
+    const handlePause = () => {
+      console.log("⏸️ Audio paused");
+      setIsPlaying(false);
+    };
     const handleEnded = () => {
       setIsPlaying(false);
       setCurrentTime(0);
@@ -179,12 +217,14 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
     const handleError = () => {
       const errorCode = audio.error?.code;
       let userMessage = "Audio playback failed";
+      console.error("❌ Audio error:", errorCode, audio.error);
 
       if (
         errorCode === MediaError.MEDIA_ERR_DECODE &&
         isHLSUrl &&
         playerType === "native"
       ) {
+        console.log("🔄 Native decode failed, switching to HLS.js...");
         setTimeout(() => {
           setRetryCount(0);
           initializeAudio();
@@ -227,20 +267,33 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
         audio.removeEventListener(event, handler);
       });
     };
-  }, [playerType, isHLSUrl]);
+  }, [playerType, isHLSUrl, retryCount]); // Add retryCount as dependency
 
   const togglePlayPause = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!audioRef.current) return;
+    
+    const audio = audioRef.current;
+    if (!audio || isLoading || error) {
+      console.warn("Cannot play: audio not ready", { 
+        audioExists: !!audio, 
+        isLoading, 
+        error, 
+        duration 
+      });
+      return;
+    }
 
     try {
       if (isPlaying) {
-        audioRef.current.pause();
+        console.log("⏸️ Pausing audio");
+        audio.pause();
       } else {
-        await audioRef.current.play();
+        console.log("▶️ Attempting to play audio");
+        await audio.play();
       }
     } catch (err) {
+      console.error("❌ Playback error:", err);
       setError(
         `Playback failed: ${
           err instanceof Error ? err.message : "Unknown error"
@@ -250,6 +303,7 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     if (!audioRef.current || !duration) return;
     const time = parseFloat(e.target.value);
     audioRef.current.currentTime = time;
@@ -288,11 +342,18 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
     setCurrentTime(0);
   };
 
-  const retry = () => {
-    setError(null);
+  const retry = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log("🔄 Manual retry triggered - Full reset");
     setRetryCount(0);
-    setIsLoading(true);
-    initializeAudio();
+    resetAudio(); // Complete reset
+    
+    // Wait a bit then reinitialize
+    setTimeout(() => {
+      initializeAudio();
+    }, 100);
   };
 
   const formatTime = (seconds: number): string => {
@@ -305,7 +366,7 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
   // Error State
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center space-x-2 text-red-700 mb-3">
           <AlertCircle className="h-5 w-5" />
           <span className="text-sm font-medium">Audio Player Error</span>
@@ -322,7 +383,11 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.open(src, "_blank")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.open(src, "_blank");
+            }}
           >
             <ExternalLink className="h-3 w-3 mr-1" />
             Test Direct
@@ -346,12 +411,24 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
             <p>
               <strong>Retries:</strong> {retryCount}
             </p>
+            <p>
+              <strong>Loading:</strong> {isLoading ? "Yes" : "No"}
+            </p>
+            <p>
+              <strong>Duration:</strong> {duration}
+            </p>
           </div>
         </details>
 
         <div className="mt-4 p-3 bg-gray-50 rounded border-t">
           <p className="text-xs text-gray-600 mb-2">Browser fallback:</p>
-          <audio src={src} controls preload="metadata" className="w-full" />
+          <audio 
+            src={src} 
+            controls 
+            preload="metadata" 
+            className="w-full"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       </div>
     );
@@ -381,6 +458,10 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
                 {playerType === "hls" ? "HLS.js" : "Native HLS"}
               </Badge>
             )}
+            {/* Debug info */}
+            <Badge variant="outline" className="text-xs bg-blue-50">
+              {isLoading ? "Loading" : duration > 0 ? "Ready" : "No Duration"}
+            </Badge>
           </h4>
         </div>
       )}
@@ -401,8 +482,8 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
           <div className="flex items-center space-x-4">
             <Button
               onClick={togglePlayPause}
-              disabled={!duration}
-              className="bg-purple-600 hover:bg-purple-700 min-w-[50px]"
+              disabled={!duration || isLoading}
+              className="bg-purple-600 hover:bg-purple-700 min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPlaying ? (
                 <Pause className="h-5 w-5" />
@@ -503,7 +584,11 @@ const HLSAudioPlayer = ({ src, title }: { src: string; title?: string }) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(src, "_blank")}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(src, "_blank");
+              }}
               className="text-xs p-1 h-auto opacity-50 hover:opacity-100"
             >
               <ExternalLink className="h-3 w-3" />
