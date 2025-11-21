@@ -14,13 +14,11 @@ import {
   Clock,
   Target,
   Hash,
-  Star,
   FileText,
   Eye,
   BarChart3,
   Layers,
   Copy,
-  Download,
   Share2,
   Settings,
   Info,
@@ -189,6 +187,8 @@ const ReadingDetail = () => {
               { key: "overview", label: "Overview", icon: BarChart3 },
               { key: "passage", label: "Passage", icon: BookMarked },
               { key: "paragraphs", label: "Paragraphs", icon: List },
+              { key: "questionGroup", label: "Question Group", icon: Layers },
+              { key: "questions", label: "Questions", icon: FileText },
               { key: "preview", label: "Full Preview", icon: Eye },
             ].map((tab) => {
               const Icon = tab.icon;

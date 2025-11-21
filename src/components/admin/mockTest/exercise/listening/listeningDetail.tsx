@@ -23,11 +23,14 @@ import {
   Award,
   Volume2,
   CheckCircle,
+  Layers,
+  Users,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
 import { IListeningExercise } from "@/interface/listening";
 import HLSAudioPlayer from "@/components/modal/hsl-audio-player";
+import QuestionGroupList from "../questionGroup/questionGroupList";
 
 const DIFFICULTY_LABELS = {
   "1": {
@@ -57,6 +60,8 @@ const DIFFICULTY_LABELS = {
   },
 } as const;
 
+type TabType = "overview" | "audio" | "questionGroups" | "questions" | "preview";
+
 const ListeningDetail = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -68,12 +73,7 @@ const ListeningDetail = () => {
     : params.listeningId;
   const sectionId = searchParams?.get("sectionId");
 
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "audio" | "preview"
-  >("overview");
-  const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
-    null
-  );
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // Query
   const {
@@ -157,7 +157,7 @@ const ListeningDetail = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {listeningExercise.title} 
+                  {listeningExercise.title}
                 </h1>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <span>{listeningExercise.reading_passage?.title}</span>
@@ -166,6 +166,14 @@ const ListeningDetail = () => {
             </div>
 
             <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                onClick={handleBackToList}
+                className="flex items-center space-x-2"
+              >
+                <span>Back to List</span>
+              </Button>
+
               <Button
                 variant="outline"
                 onClick={handlePreview}
@@ -190,13 +198,15 @@ const ListeningDetail = () => {
             {[
               { key: "overview", label: "Overview", icon: BarChart3 },
               { key: "audio", label: "Audio", icon: Volume2 },
+              { key: "questionGroups", label: "Question Groups", icon: Layers },
+              { key: "questions", label: "Questions", icon: FileText },
               { key: "preview", label: "Full Preview", icon: Eye },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
+                  onClick={() => setActiveTab(tab.key as TabType)}
                   className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.key
                       ? "border-purple-500 text-purple-600"
@@ -317,7 +327,13 @@ const ListeningDetail = () => {
                       </div>
                       <div className="text-sm text-gray-600">Words</div>
                     </div>
-                    <div className="text-center"></div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {/* This would come from question groups count */}
+                        0
+                      </div>
+                      <div className="text-sm text-gray-600">Question Groups</div>
+                    </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
                         {listeningExercise.total_questions || 0}
@@ -403,19 +419,108 @@ const ListeningDetail = () => {
                   <p>• Listen carefully for key information</p>
                 </CardContent>
               </Card>
+
+              {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium text-gray-700">
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab("questionGroups")}
+                    className="w-full justify-start"
+                  >
+                    <Layers className="h-4 w-4 mr-2" />
+                    Manage Question Groups
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab("questions")}
+                    className="w-full justify-start"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    View All Questions
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab("audio")}
+                    className="w-full justify-start"
+                  >
+                    <Volume2 className="h-4 w-4 mr-2" />
+                    Test Audio
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
 
         {activeTab === "audio" && (
           <div className="max-w-4xl mx-auto">
-            {listeningExercise.audio_url && (
-              <HLSAudioPlayer
-                src={listeningExercise.audio_url}
-                title={listeningExercise.reading_passage?.title}
-              />
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Volume2 className="h-5 w-5 text-purple-600" />
+                  <span>Audio Player</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {listeningExercise.audio_url ? (
+                  <HLSAudioPlayer
+                    src={listeningExercise.audio_url}
+                    title={listeningExercise.reading_passage?.title}
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <Volume2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No Audio File
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                      No audio file has been uploaded for this exercise yet.
+                    </p>
+                    <Button onClick={handleEdit} className="bg-purple-600 hover:bg-purple-700">
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Add Audio File
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
+        )}
+
+        {activeTab === "questionGroups" && (
+          <QuestionGroupList
+            exerciseId={listeningExerciseId}
+            mockTestId={mockTestId}
+          />
+        )}
+
+        {activeTab === "questions" && (
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center">
+                <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Questions Overview
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  Individual questions will be listed here, organized by question groups.
+                </p>
+                <Button 
+                  onClick={() => setActiveTab("questionGroups")}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Layers className="h-4 w-4 mr-2" />
+                  Manage Question Groups First
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {activeTab === "preview" && (
@@ -465,7 +570,6 @@ const ListeningDetail = () => {
             )}
 
             {/* Audio Player */}
-
             {listeningExercise.audio_url && (
               <HLSAudioPlayer
                 src={listeningExercise.audio_url}
@@ -502,6 +606,13 @@ const ListeningDetail = () => {
                   <p className="text-sm mt-2">
                     Total Questions: {listeningExercise.total_questions || 0}
                   </p>
+                  <Button 
+                    onClick={() => setActiveTab("questionGroups")}
+                    className="mt-4 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Layers className="h-4 w-4 mr-2" />
+                    Create Question Groups
+                  </Button>
                 </div>
               </CardContent>
             </Card>

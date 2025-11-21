@@ -26,7 +26,6 @@ export interface IQuestionGroupCreate {
     question_range: string;
     correct_answer_count: number;
     ordering: number;
-    image_file?: File;
     matching_options?: IMatchingOption[];
 }
 
@@ -38,6 +37,5 @@ export interface IQuestionGroupUpdate {
     question_range?: string;
     correct_answer_count?: number;
     ordering?: number;
-    image_file?: File | null;
     matching_options?: IMatchingOption[];
 }
