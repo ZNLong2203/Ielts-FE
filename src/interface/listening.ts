@@ -1,13 +1,8 @@
-export interface IListeningParagraph {
-  id: string;
-  label: string;
-  content: string;
-}
+
 
 export interface IListeningPassage {
   title: string;
   content: string;
-  paragraphs: IListeningParagraph[];
   word_count: number;
   difficulty_level: string;
 }
@@ -50,8 +45,7 @@ export interface IListeningExercise {
     estimated_listening_time: number;
     title: string;
     word_count: number;
-    paragraphs: IListeningParagraph[];
-  };
+  }
   skill_type: string;
   time_limit: number; // in minutes
   title: string;
@@ -65,7 +59,6 @@ export interface IListeningPassageCreate {
   title: string;
   content: string;
   audio_url?: File;
-  paragraphs: IListeningParagraph[];
   word_count: number;
   difficulty_level: string;
 }

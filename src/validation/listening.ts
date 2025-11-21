@@ -12,10 +12,5 @@ export const ListeningFormSchema = z.object({
     content: z.string().min(5, "Passage content must be at least 5 characters"),
     word_count: z.number().min(1, "Word count must be calculated"),
     difficulty_level: z.string().min(1, "Difficulty level is required"),
-    paragraphs: z.array(z.object({
-      id: z.string(),
-      label: z.string().min(1, "Paragraph label is required"),
-      content: z.string().min(1, "Paragraph content is required"),
-    })).min(1, "At least one paragraph is required"), 
   }),
 });

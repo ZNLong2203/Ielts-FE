@@ -19,12 +19,9 @@ import {
   FileText,
   Star,
   ArrowRight,
-  Plus,
-  Trash2,
   Calculator,
   CheckCircle,
   Clock,
-  Hash,
   AlertTriangle,
   Eye,
   Upload,
@@ -35,13 +32,13 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { 
-  getListeningExercise, 
-  createListeningExercise, 
+import {
+  getListeningExercise,
+  createListeningExercise,
   updateListeningExercise,
-  uploadListeningAudio 
+  uploadListeningAudio,
 } from "@/api/listening";
-import { IListeningParagraph, IListeningExerciseUpdate } from "@/interface/listening";
+import { IListeningExerciseUpdate } from "@/interface/listening";
 import { ListeningFormSchema } from "@/validation/listening";
 
 const ListeningFormUpdateSchema = ListeningFormSchema.partial().extend({
@@ -63,16 +60,19 @@ const ListeningForm = () => {
   const queryClient = useQueryClient();
 
   const mockTestId = Array.isArray(params.slug) ? params.slug[0] : params.slug;
-  const listeningExerciseId = Array.isArray(params.listeningId) ? params.listeningId[0] : params.listeningId;
+  const listeningExerciseId = Array.isArray(params.listeningId)
+    ? params.listeningId[0]
+    : params.listeningId;
   const testSectionId = searchParams?.get("sectionId") ?? undefined;
   const isEditing = !!listeningExerciseId;
 
-  const title = isEditing ? "Update Listening Exercise" : "Create Listening Exercise";
+  const title = isEditing
+    ? "Update Listening Exercise"
+    : "Create Listening Exercise";
   const description = isEditing
     ? "Update listening exercise information and audio content"
     : "Create a comprehensive listening comprehension exercise with audio content";
 
-  const [paragraphs, setParagraphs] = useState<IListeningParagraph[]>([]);
   const [wordCount, setWordCount] = useState(0);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -92,6 +92,8 @@ const ListeningForm = () => {
     enabled: !!listeningExerciseId,
   });
 
+  console.log("listening Data", listeningExerciseData);
+
   // Form setup
   const schema = isEditing ? ListeningFormUpdateSchema : ListeningFormSchema;
   const listeningForm = useForm<z.infer<typeof schema>>({
@@ -108,7 +110,6 @@ const ListeningForm = () => {
         content: "",
         word_count: 0,
         difficulty_level: "3",
-        paragraphs: [],
       },
     },
   });
@@ -121,7 +122,13 @@ const ListeningForm = () => {
 
   // Audio upload mutation
   const uploadAudioMutation = useMutation({
-    mutationFn: async ({ exerciseId, formData }: { exerciseId: string; formData: FormData }) => {
+    mutationFn: async ({
+      exerciseId,
+      formData,
+    }: {
+      exerciseId: string;
+      formData: FormData;
+    }) => {
       return uploadListeningAudio(exerciseId, formData);
     },
     onSuccess: (response) => {
@@ -151,7 +158,6 @@ const ListeningForm = () => {
         audio_url: undefined,
         passage: {
           ...formData.passage,
-          paragraphs: paragraphs,
           word_count: wordCount,
         },
       };
@@ -162,24 +168,32 @@ const ListeningForm = () => {
         setIsUploadingAudio(true);
         try {
           const formData = new FormData();
-          formData.append('audio', audioFile);
+          formData.append("audio", audioFile);
           await uploadAudioMutation.mutateAsync({
             exerciseId: response.id,
-            formData
+            formData,
           });
-          toast.success("Listening exercise created and audio uploaded successfully! 🎧");
+          toast.success(
+            "Listening exercise created and audio uploaded successfully! 🎧"
+          );
         } catch (error) {
-          toast.error("Exercise created but audio upload failed. You can upload audio later from the edit page.");
+          toast.error(
+            "Exercise created but audio upload failed. You can upload audio later from the edit page."
+          );
         }
       } else {
         toast.success("Listening exercise created successfully! 🎧");
       }
 
       queryClient.invalidateQueries({ queryKey: ["listeningExercises"] });
-      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`);
+      router.push(
+        `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`
+      );
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create listening exercise");
+      toast.error(
+        error?.response?.data?.message || "Failed to create listening exercise"
+      );
     },
   });
 
@@ -196,7 +210,6 @@ const ListeningForm = () => {
           content: formData.passage?.content || "",
           difficulty_level: formData.passage?.difficulty_level || "3",
           word_count: wordCount,
-          paragraphs: paragraphs,
         },
       };
       return updateListeningExercise(listeningExerciseId!, payload);
@@ -206,25 +219,35 @@ const ListeningForm = () => {
         setIsUploadingAudio(true);
         try {
           const formData = new FormData();
-          formData.append('audio', audioFile);
+          formData.append("audio", audioFile);
           await uploadAudioMutation.mutateAsync({
             exerciseId: listeningExerciseId,
-            formData
+            formData,
           });
-          toast.success("Listening exercise updated and audio uploaded successfully! 🎧");
+          toast.success(
+            "Listening exercise updated and audio uploaded successfully! 🎧"
+          );
         } catch (error) {
-          toast.error("Exercise updated but audio upload failed. Please try uploading audio again.");
+          toast.error(
+            "Exercise updated but audio upload failed. Please try uploading audio again."
+          );
         }
       } else {
         toast.success("Listening exercise updated successfully! 🎧");
       }
 
       queryClient.invalidateQueries({ queryKey: ["listeningExercises"] });
-      queryClient.invalidateQueries({ queryKey: ["listeningExercise", listeningExerciseId] });
-      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`);
+      queryClient.invalidateQueries({
+        queryKey: ["listeningExercise", listeningExerciseId],
+      });
+      router.push(
+        `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`
+      );
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update listening exercise");
+      toast.error(
+        error?.response?.data?.message || "Failed to update listening exercise"
+      );
     },
   });
 
@@ -237,7 +260,7 @@ const ListeningForm = () => {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   // Update word count when content changes
@@ -256,29 +279,37 @@ const ListeningForm = () => {
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      toast.error(`Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`);
-      event.target.value = '';
+      toast.error(
+        `Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`
+      );
+      event.target.value = "";
       return;
     }
 
-    const validTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3', 'audio/m4a'];
+    const validTypes = [
+      "audio/mpeg",
+      "audio/wav",
+      "audio/ogg",
+      "audio/mp3",
+      "audio/m4a",
+    ];
     if (!validTypes.includes(file.type)) {
       toast.error("Invalid audio format. Please use MP3, WAV, OGG, or M4A.");
-      event.target.value = '';
+      event.target.value = "";
       return;
     }
 
     setAudioFile(file);
     const url = URL.createObjectURL(file);
     setAudioUrl(url);
-    
+
     const audio = new Audio(url);
     audio.onloadedmetadata = () => {
       setAudioDuration(Math.round(audio.duration));
     };
-    
+
     const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-    const message = isEditing 
+    const message = isEditing
       ? `Audio file selected (${fileSizeMB}MB). It will be uploaded when you save the exercise.`
       : `Audio file selected (${fileSizeMB}MB). It will be uploaded after creating the exercise.`;
     toast.success(message);
@@ -288,7 +319,7 @@ const ListeningForm = () => {
     // Prevent event bubbling to avoid triggering other buttons
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (!audioFile || !listeningExerciseId) {
       toast.error("Please select an audio file first.");
       return;
@@ -297,63 +328,31 @@ const ListeningForm = () => {
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (audioFile.size > maxSize) {
       const fileSizeMB = (audioFile.size / (1024 * 1024)).toFixed(2);
-      toast.error(`Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`);
+      toast.error(
+        `Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`
+      );
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', audioFile);
+    formData.append("file", audioFile);
 
     try {
       setIsUploadingAudio(true);
       await uploadAudioMutation.mutateAsync({
         exerciseId: listeningExerciseId,
-        formData
+        formData,
       });
     } catch (error) {
       console.error("Failed to upload audio:", error);
     }
   };
 
-  // Paragraph management functions
-  const addParagraph = () => {
-    const nextLabel = String.fromCharCode(65 + paragraphs.length);
-    const newParagraph: IListeningParagraph = {
-      id: crypto.randomUUID(),
-      label: nextLabel,
-      content: "",
-    };
-    setParagraphs([...paragraphs, newParagraph]);
-    append(newParagraph);
-  };
-
-  const removeParagraph = (index: number) => {
-    if (paragraphs.length <= 1) {
-      toast.error("At least one paragraph is required");
-      return;
-    }
-    
-    const newParagraphs = paragraphs.filter((_, i) => i !== index);
-    const updatedParagraphs = newParagraphs.map((paragraph, i) => ({
-      ...paragraph,
-      label: String.fromCharCode(65 + i),
-    }));
-    setParagraphs(updatedParagraphs);
-    remove(index);
-  };
-
-  const updateParagraph = (index: number, field: keyof IListeningParagraph, value: any) => {
-    const newParagraphs = [...paragraphs];
-    newParagraphs[index] = { ...newParagraphs[index], [field]: value };
-    setParagraphs(newParagraphs);
-    listeningForm.setValue(`passage.paragraphs.${index}.${field}`, value);
-  };
-
   const triggerFileInput = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'audio/*';
-    input.addEventListener('change', (e) =>
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "audio/*";
+    input.addEventListener("change", (e) =>
       handleAudioUpload(e as unknown as React.ChangeEvent<HTMLInputElement>)
     );
     input.click();
@@ -369,19 +368,15 @@ const ListeningForm = () => {
   const cancelNewAudio = () => {
     setAudioFile(null);
     if (isEditing && listeningExerciseData?.audio_url) {
-      const originalUrl = typeof listeningExerciseData.audio_url === "string"
-        ? listeningExerciseData.audio_url
-        : "";
+      const originalUrl =
+        typeof listeningExerciseData.audio_url === "string"
+          ? listeningExerciseData.audio_url
+          : "";
       setAudioUrl(originalUrl);
     } else {
       setAudioUrl("");
     }
   };
-
-  // Update paragraphs in form
-  useEffect(() => {
-    listeningForm.setValue("passage.paragraphs", paragraphs);
-  }, [paragraphs, listeningForm]);
 
   // Load existing data
   useEffect(() => {
@@ -397,33 +392,20 @@ const ListeningForm = () => {
           title: listeningExerciseData.reading_passage?.title || "",
           content: listeningExerciseData.reading_passage?.content || "",
           word_count: listeningExerciseData.reading_passage?.word_count || 0,
-          difficulty_level: listeningExerciseData.reading_passage?.difficulty_level?.toString() || "3",
-          paragraphs: listeningExerciseData.reading_passage?.paragraphs || [],
+          difficulty_level:
+            listeningExerciseData.reading_passage?.difficulty_level?.toString() ||
+            "3",
         },
       });
 
-      if (listeningExerciseData.reading_passage?.paragraphs && Array.isArray(listeningExerciseData.reading_passage.paragraphs)) {
-        setParagraphs(listeningExerciseData.reading_passage.paragraphs);
-      }
-
-      if (listeningExerciseData.audio_url && typeof listeningExerciseData.audio_url === 'string') {
+      if (
+        listeningExerciseData.audio_url &&
+        typeof listeningExerciseData.audio_url === "string"
+      ) {
         setAudioUrl(listeningExerciseData.audio_url);
       }
     }
   }, [listeningExerciseData, isEditing, listeningForm, testSectionId]);
-
-  // Initialize first paragraph for new exercises
-  useEffect(() => {
-    if (!isEditing && paragraphs.length === 0) {
-      const initialParagraph: IListeningParagraph = {
-        id: crypto.randomUUID(),
-        label: "A",
-        content: "",
-      };
-      setParagraphs([initialParagraph]);
-      append(initialParagraph);
-    }
-  }, [isEditing, paragraphs.length, append]);
 
   const onSubmit = async (data: any) => {
     try {
@@ -437,8 +419,9 @@ const ListeningForm = () => {
     }
   };
 
-  const isSubmitting = createListeningExerciseMutation.isPending || 
-    updateListeningExerciseMutation.isPending || 
+  const isSubmitting =
+    createListeningExerciseMutation.isPending ||
+    updateListeningExerciseMutation.isPending ||
     isUploadingAudio;
   const selectedDifficulty = listeningForm.watch("passage.difficulty_level");
 
@@ -452,7 +435,11 @@ const ListeningForm = () => {
         title="Listening Exercise Not Found"
         description="The requested listening exercise does not exist or has been deleted."
         dismissible={true}
-        onDismiss={() => router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`)}
+        onDismiss={() =>
+          router.push(
+            `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`
+          )
+        }
         onRetry={() => refetch()}
         onGoBack={() => router.back()}
       />
@@ -484,7 +471,11 @@ const ListeningForm = () => {
 
               <Button
                 variant="outline"
-                onClick={() => router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`)}
+                onClick={() =>
+                  router.push(
+                    `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`
+                  )
+                }
                 className="flex items-center space-x-2"
               >
                 <span>Back to Exercises</span>
@@ -503,12 +494,20 @@ const ListeningForm = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>{listeningForm.watch("title") || "Untitled Exercise"}</span>
+                  <span>
+                    {listeningForm.watch("title") || "Untitled Exercise"}
+                  </span>
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center space-x-1">
-                      {Array.from({ length: Number(selectedDifficulty) }, (_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      ))}
+                      {Array.from(
+                        { length: Number(selectedDifficulty) },
+                        (_, i) => (
+                          <Star
+                            key={i}
+                            className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                          />
+                        )
+                      )}
                     </div>
                     <Clock className="h-3 w-3 mr-1" />
                     <span>{listeningForm.watch("time_limit")} min</span>
@@ -519,14 +518,19 @@ const ListeningForm = () => {
                 <div className="space-y-6">
                   <h3 className="text-lg font-semibold mb-4 flex items-center space-x-2">
                     <Volume2 className="h-5 w-5 text-purple-600" />
-                    <span>{listeningForm.watch("passage.title") || "Untitled Audio"}</span>
+                    <span>
+                      {listeningForm.watch("passage.title") || "Untitled Audio"}
+                    </span>
                   </h3>
-                  
+
                   {audioUrl && (
                     <div className="mb-6">
                       <HLSAudioPlayer
                         src={audioUrl}
-                        title={listeningForm.watch("passage.title") || "Listening Exercise Audio"}
+                        title={
+                          listeningForm.watch("passage.title") ||
+                          "Listening Exercise Audio"
+                        }
                       />
                     </div>
                   )}
@@ -545,24 +549,7 @@ const ListeningForm = () => {
 
                   <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4">
                     <span>Words: {wordCount}</span>
-                    <span>Paragraphs: {paragraphs.length}</span>
                     <span>Duration: {formatTime(audioDuration)}</span>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Paragraph References:</h4>
-                    {paragraphs.map((paragraph) => (
-                      <div key={paragraph.id} className="border-l-4 border-purple-500 pl-4">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm font-medium">
-                            Paragraph {paragraph.label}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 line-clamp-3">
-                          {paragraph.content}
-                        </p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -571,7 +558,10 @@ const ListeningForm = () => {
         ) : (
           // Edit Mode
           <Form {...listeningForm}>
-            <form onSubmit={listeningForm.handleSubmit(onSubmit)} className="space-y-8">
+            <form
+              onSubmit={listeningForm.handleSubmit(onSubmit)}
+              className="space-y-8"
+            >
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Main Content Area */}
                 <div className="lg:col-span-2 space-y-8">
@@ -655,14 +645,17 @@ const ListeningForm = () => {
                         <div className="space-y-4">
                           <div className="flex flex-col gap-3">
                             <div className="flex items-center justify-between">
-                              <label className="text-sm font-medium text-gray-700">Current Audio</label>
+                              <label className="text-sm font-medium text-gray-700">
+                                Current Audio
+                              </label>
                               {audioFile && (
                                 <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                                  ⚠️ New audio selected - will replace current when saved
+                                  ⚠️ New audio selected - will replace current
+                                  when saved
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Upload Audio Now Button - Positioned ABOVE audio player */}
                             {isEditing && audioFile && !isUploadingAudio && (
                               <div className="flex justify-end">
@@ -673,7 +666,7 @@ const ListeningForm = () => {
                                   onClick={handleUploadAudioOnly}
                                   disabled={uploadAudioMutation.isPending}
                                   className="whitespace-nowrap z-10 relative"
-                                  style={{ pointerEvents: 'auto' }}
+                                  style={{ pointerEvents: "auto" }}
                                 >
                                   {uploadAudioMutation.isPending ? (
                                     <>
@@ -690,14 +683,15 @@ const ListeningForm = () => {
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Audio Player Container - Separate and isolated */}
-                          <div className="w-full bg-gray-50 p-4 rounded-lg border relative isolate">
-                            <HLSAudioPlayer
-                              src={audioUrl}
-                              title={listeningForm.watch("passage.title") || "Listening Exercise Audio"}
-                            />
-                          </div>
+                          <HLSAudioPlayer
+                            src={audioUrl}
+                            title={
+                              listeningForm.watch("passage.title") ||
+                              "Listening Exercise Audio"
+                            }
+                          />
                         </div>
                       )}
 
@@ -708,7 +702,7 @@ const ListeningForm = () => {
                             {audioUrl ? "Replace Audio File" : "Audio File"}
                           </label>
                         </div>
-                        
+
                         {(!audioUrl || audioFile) && (
                           <div className="border-2 border-dashed border-purple-300 rounded-xl p-6">
                             {audioFile ? (
@@ -722,29 +716,34 @@ const ListeningForm = () => {
                                       New: {audioFile.name}
                                     </div>
                                     <div className="text-sm text-gray-600">
-                                      Size: {(audioFile.size / (1024 * 1024)).toFixed(2)}MB
+                                      Size:{" "}
+                                      {(audioFile.size / (1024 * 1024)).toFixed(
+                                        2
+                                      )}
+                                      MB
                                     </div>
                                     <div className="text-xs text-amber-600 mt-1">
-                                      ⚠️ {isEditing 
+                                      ⚠️{" "}
+                                      {isEditing
                                         ? "New audio will be uploaded when you save or use 'Upload Audio Now' button"
-                                        : "Audio will be uploaded after creating the exercise"
-                                      }
+                                        : "Audio will be uploaded after creating the exercise"}
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div className="bg-white rounded-lg p-4 border">
-                                  <audio 
+                                  <audio
                                     src={URL.createObjectURL(audioFile)}
                                     onLoadedMetadata={(e) => {
-                                      const audio = e.target as HTMLAudioElement;
+                                      const audio =
+                                        e.target as HTMLAudioElement;
                                       setAudioDuration(audio.duration);
                                     }}
                                     className="w-full"
                                     controls
                                   />
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between">
                                   <div className="text-xs text-gray-500">
                                     Preview of new audio file
@@ -766,14 +765,20 @@ const ListeningForm = () => {
                                 </div>
                                 <div className="space-y-2">
                                   <p className="text-lg font-medium text-gray-900">
-                                    {audioUrl ? "Replace Audio File" : "Upload Audio File"}
+                                    {audioUrl
+                                      ? "Replace Audio File"
+                                      : "Upload Audio File"}
                                   </p>
-                                  <p className="text-gray-500">Drag and drop or click to select audio file</p>
+                                  <p className="text-gray-500">
+                                    Drag and drop or click to select audio file
+                                  </p>
                                   <div className="text-sm text-gray-400">
-                                    Supported formats: MP3, WAV, OGG, M4A (Max: 10MB)
+                                    Supported formats: MP3, WAV, OGG, M4A (Max:
+                                    10MB)
                                   </div>
                                   <div className="text-xs text-red-500 bg-red-50 p-2 rounded-lg">
-                                    ⚠️ File size limit: 10MB. Larger files will be rejected.
+                                    ⚠️ File size limit: 10MB. Larger files will
+                                    be rejected.
                                   </div>
                                 </div>
                                 <input
@@ -791,7 +796,7 @@ const ListeningForm = () => {
                             )}
                           </div>
                         )}
-                        
+
                         {isUploadingAudio && (
                           <div className="flex items-center space-x-2 text-sm text-blue-600">
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -810,7 +815,7 @@ const ListeningForm = () => {
                               <Upload className="h-4 w-4 mr-2" />
                               Replace Audio
                             </Button>
-                            
+
                             <Button
                               type="button"
                               variant="outline"
@@ -826,7 +831,9 @@ const ListeningForm = () => {
                       {/* Audio Transcript */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium text-gray-700">Audio Transcript</label>
+                          <label className="text-sm font-medium text-gray-700">
+                            Audio Transcript
+                          </label>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
                             <span>Words: {wordCount}</span>
                           </div>
@@ -839,146 +846,10 @@ const ListeningForm = () => {
                           required
                         />
                         <div className="text-xs text-gray-500">
-                          💡 Tip: The transcript helps students follow along and serves as reference material.
+                          💡 Tip: The transcript helps students follow along and
+                          serves as reference material.
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Paragraphs Management */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-purple-100 rounded-xl">
-                            <Hash className="h-5 w-5 text-purple-600" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            Paragraph References
-                          </h3>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addParagraph}
-                          className="flex items-center space-x-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span>Add Paragraph</span>
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      {paragraphs.length === 0 ? (
-                        <div className="text-center py-12">
-                          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <Hash className="h-12 w-12 text-gray-400" />
-                          </div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            No paragraphs yet
-                          </h3>
-                          <p className="text-gray-500 mb-6 max-w-sm mx-auto">
-                            Create your first paragraph reference to help students navigate through the audio transcript.
-                          </p>
-                          <Button
-                            type="button"
-                            onClick={addParagraph}
-                            className="bg-purple-600 hover:bg-purple-700"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create First Paragraph
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-6">
-                          {paragraphs.map((paragraph, index) => (
-                            <div key={paragraph.id} className="relative group">
-                              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
-                                <div className="flex items-center justify-between mb-6">
-                                  <div className="flex items-center space-x-4">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg">
-                                      {paragraph.label}
-                                    </div>
-                                    <div>
-                                      <h4 className="text-lg font-semibold text-gray-900">
-                                        Paragraph {paragraph.label}
-                                      </h4>
-                                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                                        <span>Reference paragraph</span>
-                                        <span>•</span>
-                                        <span>{paragraph.content.length} characters</span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {paragraphs.length > 1 && (
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => removeParagraph(index)}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                                  <div className="md:col-span-2">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2 mb-2">
-                                      <Hash className="h-4 w-4 text-gray-500" />
-                                      <span>Label</span>
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={paragraph.label}
-                                      onChange={(e) => updateParagraph(index, "label", e.target.value)}
-                                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                                      placeholder="A"
-                                    />
-                                  </div>
-
-                                  <div className="md:col-span-10">
-                                    <label className="text-sm font-semibold text-gray-700 flex items-center space-x-2 mb-2">
-                                      <FileText className="h-4 w-4 text-gray-500" />
-                                      <span>Content</span>
-                                    </label>
-                                    <textarea
-                                      value={paragraph.content}
-                                      onChange={(e) => updateParagraph(index, "content", e.target.value)}
-                                      rows={4}
-                                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none"
-                                      placeholder="Enter paragraph content..."
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              {index < paragraphs.length - 1 && (
-                                <div className="flex justify-center my-4">
-                                  <div className="w-px h-6 bg-gray-300"></div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-
-                          <div className="flex justify-center pt-6">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={addParagraph}
-                              className="flex items-center space-x-2 px-6 py-3 border-2 border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50 transition-all duration-200"
-                            >
-                              <Plus className="h-5 w-5 text-gray-500" />
-                              <span className="text-gray-600 font-medium">
-                                Add Another Paragraph
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -1001,11 +872,6 @@ const ListeningForm = () => {
                         </div>
 
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Paragraphs:</span>
-                          <span className="font-medium">{paragraphs.length}</span>
-                        </div>
-
-                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Time Limit:</span>
                           <span className="font-medium">
                             {listeningForm.watch("time_limit")} min
@@ -1022,9 +888,15 @@ const ListeningForm = () => {
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-600">Difficulty:</span>
                           <div className="flex items-center space-x-1">
-                            {Array.from({ length: Number(selectedDifficulty) }, (_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
+                            {Array.from(
+                              { length: Number(selectedDifficulty) },
+                              (_, i) => (
+                                <Star
+                                  key={i}
+                                  className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                                />
+                              )
+                            )}
                           </div>
                         </div>
 
@@ -1036,7 +908,8 @@ const ListeningForm = () => {
                           <p>• Maximum file size: 10MB</p>
                           {audioFile && (
                             <p className="text-amber-600">
-                              • Audio will be uploaded on save ({(audioFile.size / (1024 * 1024)).toFixed(2)}MB)
+                              • Audio will be uploaded on save (
+                              {(audioFile.size / (1024 * 1024)).toFixed(2)}MB)
                             </p>
                           )}
                         </div>
@@ -1073,12 +946,14 @@ const ListeningForm = () => {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          {(audioFile || audioUrl) ? (
+                          {audioFile || audioUrl ? (
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           ) : (
                             <AlertTriangle className="h-4 w-4 text-orange-500" />
                           )}
-                          <span>Audio file {!audioFile && !audioUrl && "(optional)"}</span>
+                          <span>
+                            Audio file {!audioFile && !audioUrl && "(optional)"}
+                          </span>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -1088,15 +963,6 @@ const ListeningForm = () => {
                             <AlertTriangle className="h-4 w-4 text-yellow-500" />
                           )}
                           <span>Transcript content ({wordCount}/5+ words)</span>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          {paragraphs.length > 0 && paragraphs.every(p => p.content.trim()) ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                          )}
-                          <span>Paragraph references</span>
                         </div>
                       </div>
                     </CardContent>
@@ -1109,29 +975,26 @@ const ListeningForm = () => {
                         <Button
                           type="submit"
                           className="w-full flex items-center space-x-2 bg-purple-600 hover:bg-purple-700"
-                          disabled={
-                            isSubmitting || 
-                            paragraphs.length === 0 || 
-                            wordCount < 5
-                          }
+                          disabled={isSubmitting || wordCount < 5}
                         >
                           {isSubmitting ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <span>
-                                {isUploadingAudio 
-                                  ? "Uploading audio..." 
-                                  : isEditing 
-                                  ? "Updating..." 
-                                  : "Creating..."
-                                }
+                                {isUploadingAudio
+                                  ? "Uploading audio..."
+                                  : isEditing
+                                  ? "Updating..."
+                                  : "Creating..."}
                               </span>
                             </>
                           ) : (
                             <>
                               <Save className="h-4 w-4" />
                               <span>
-                                {isEditing ? "Update Exercise" : "Create Exercise"}
+                                {isEditing
+                                  ? "Update Exercise"
+                                  : "Create Exercise"}
                               </span>
                             </>
                           )}

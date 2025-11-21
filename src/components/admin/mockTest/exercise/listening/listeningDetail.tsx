@@ -17,15 +17,11 @@ import {
   FileText,
   Eye,
   BarChart3,
-  Layers,
-  Copy,
-  Share2,
   Settings,
   Info,
   Timer,
   Award,
   Volume2,
-  List,
   CheckCircle,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
@@ -73,7 +69,7 @@ const ListeningDetail = () => {
   const sectionId = searchParams?.get("sectionId");
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "audio" | "transcript" | "paragraphs" | "preview"
+    "overview" | "audio" | "preview"
   >("overview");
   const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
     null
@@ -148,7 +144,6 @@ const ListeningDetail = () => {
         ?.difficulty_level as keyof typeof DIFFICULTY_LABELS
     ] || DIFFICULTY_LABELS["3"];
   const wordCount = listeningExercise.reading_passage?.word_count || 0;
-  const paragraphs = listeningExercise.reading_passage?.paragraphs || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -162,16 +157,10 @@ const ListeningDetail = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {listeningExercise.title}
+                  {listeningExercise.title} 
                 </h1>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <span>{listeningExercise.reading_passage?.title}</span>
-                  <span>•</span>
-                  <Badge className={`${difficulty.color} border text-xs`}>
-                    <div className="flex items-center space-x-1">
-                      <span>{difficulty.label}</span>
-                    </div>
-                  </Badge>
                 </div>
               </div>
             </div>
@@ -201,8 +190,6 @@ const ListeningDetail = () => {
             {[
               { key: "overview", label: "Overview", icon: BarChart3 },
               { key: "audio", label: "Audio", icon: Volume2 },
-              { key: "transcript", label: "Transcript", icon: FileText },
-              { key: "paragraphs", label: "Paragraphs", icon: List },
               { key: "preview", label: "Full Preview", icon: Eye },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -296,7 +283,7 @@ const ListeningDetail = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Volume2 className="h-5 w-5 text-green-600" />
-                    <span>Audio & Transcript Overview</span>
+                    <span>Audio & Content Overview</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -330,12 +317,7 @@ const ListeningDetail = () => {
                       </div>
                       <div className="text-sm text-gray-600">Words</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {paragraphs.length}
-                      </div>
-                      <div className="text-sm text-gray-600">Paragraphs</div>
-                    </div>
+                    <div className="text-center"></div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-600">
                         {listeningExercise.total_questions || 0}
@@ -346,7 +328,7 @@ const ListeningDetail = () => {
 
                   <div className="pt-4">
                     <label className="text-sm font-medium text-gray-600">
-                      Transcript Preview
+                      Content Preview
                     </label>
                     <div className="mt-2 p-4 bg-gray-50 rounded-lg">
                       <p className="text-gray-700 line-clamp-4">
@@ -407,39 +389,6 @@ const ListeningDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Layers className="h-5 w-5 text-gray-600" />
-                    <span>Quick Actions</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() =>
-                      copyToClipboard(
-                        listeningExercise.reading_passage?.content || ""
-                      )
-                    }
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Transcript
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => copyToClipboard(listeningExercise.title)}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Copy Exercise Title
-                  </Button>
-                </CardContent>
-              </Card>
-
               {/* Listening Tips */}
               <Card>
                 <CardHeader>
@@ -466,112 +415,6 @@ const ListeningDetail = () => {
                 title={listeningExercise.reading_passage?.title}
               />
             )}
-          </div>
-        )}
-
-        {activeTab === "transcript" && (
-          <div className="max-w-4xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-5 w-5 text-green-600" />
-                    <span>Audio Transcript</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      copyToClipboard(
-                        listeningExercise.reading_passage?.content || ""
-                      )
-                    }
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-gray max-w-none">
-                  <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {listeningExercise.reading_passage?.content}
-                  </div>
-                </div>
-                <div className="mt-6 pt-4 border-t">
-                  <div className="flex items-center space-x-6 text-sm text-gray-600">
-                    <span>Word Count: {wordCount}</span>
-                    <span>
-                      Characters:{" "}
-                      {listeningExercise.reading_passage?.content?.length || 0}
-                    </span>
-                    <span>Paragraphs: {paragraphs.length}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === "paragraphs" && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Paragraph References
-              </h2>
-              <div className="text-sm text-gray-600">
-                {paragraphs.length}{" "}
-                {paragraphs.length === 1 ? "paragraph" : "paragraphs"}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6">
-              {paragraphs.map((paragraph, index) => (
-                <Card
-                  key={paragraph.id}
-                  className={`transition-all duration-200 ${
-                    selectedParagraph === paragraph.id
-                      ? "ring-2 ring-purple-500 shadow-lg"
-                      : "hover:shadow-md"
-                  }`}
-                >
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center font-bold">
-                          {paragraph.label}
-                        </div>
-                        <span className="text-lg">
-                          Paragraph {paragraph.label}
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(paragraph.content)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="prose prose-gray max-w-none">
-                      <p className="text-gray-700 leading-relaxed">
-                        {paragraph.content}
-                      </p>
-                    </div>
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <span>
-                          Words: {paragraph.content.split(/\s+/).length}
-                        </span>
-                        <span>Characters: {paragraph.content.length}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </div>
         )}
 
@@ -635,7 +478,7 @@ const ListeningDetail = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center space-x-2">
                   <FileText className="h-5 w-5 text-green-600" />
-                  <span>Audio Transcript</span>
+                  <span>Audio Content</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
