@@ -31,6 +31,7 @@ import {
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
 import { IReadingExercise } from "@/interface/reading";
+import QuestionGroupList from "../questionGroup/questionGroupList";
 
 const DIFFICULTY_LABELS = {
   "1": {
@@ -72,7 +73,7 @@ const ReadingDetail = () => {
   const sectionId = searchParams?.get("sectionId");
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "passage" | "paragraphs" | "preview"
+    "overview" | "passage" | "questionGroup" | "question" | "paragraphs" | "preview"
   >("overview");
   const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
     null
@@ -188,7 +189,7 @@ const ReadingDetail = () => {
               { key: "passage", label: "Passage", icon: BookMarked },
               { key: "paragraphs", label: "Paragraphs", icon: List },
               { key: "questionGroup", label: "Question Group", icon: Layers },
-              { key: "questions", label: "Questions", icon: FileText },
+              { key: "question", label: "Question", icon: FileText },
               { key: "preview", label: "Full Preview", icon: Eye },
             ].map((tab) => {
               const Icon = tab.icon;
@@ -542,6 +543,13 @@ const ReadingDetail = () => {
               ))}
             </div>
           </div>
+        )}
+
+        {activeTab === "questionGroup" && (
+          <QuestionGroupList
+            exerciseId={readingExercise.id}
+            mockTestId={mockTestId}
+          />
         )}
 
         {activeTab === "preview" && (

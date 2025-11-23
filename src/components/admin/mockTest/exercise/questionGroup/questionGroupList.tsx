@@ -15,7 +15,7 @@ import {
   Target,
   Search,
   Users,
-  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,7 +70,7 @@ interface QuestionGroupListProps {
   sectionId?: string;
 }
 
-type ViewMode = 'list' | 'create' | 'edit' | 'detail';
+type ViewMode = "list" | "create" | "edit" | "detail";
 
 const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
   exerciseId,
@@ -82,8 +82,10 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>(
+    undefined
+  );
 
   // Query for question groups
   const {
@@ -104,51 +106,56 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
     mutationFn: deleteQuestionGroup,
     onSuccess: () => {
       toast.success("Question group deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["questionGroups", exerciseId] });
+      queryClient.invalidateQueries({
+        queryKey: ["questionGroups", exerciseId],
+      });
       // Return to list view after successful delete
-      setViewMode('list');
+      setViewMode("list");
       setSelectedGroupId(undefined);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete question group");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete question group"
+      );
     },
   });
 
   // Filter question groups
-  const filteredQuestionGroups = questionGroups?.groups?.filter((group: any) => {
-    const matchesSearch = group.group_title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) ||
-      group.question_type.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = selectedType === "all" || group.question_type === selectedType;
-    
-    return matchesSearch && matchesType;
-  }) || [];
+  const filteredQuestionGroups =
+    questionGroups?.groups?.filter((group: any) => {
+      const matchesSearch =
+        group.group_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        group.question_type.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesType =
+        selectedType === "all" || group.question_type === selectedType;
+
+      return matchesSearch && matchesType;
+    }) || [];
 
   // Navigation handlers
   const handleCreate = () => {
-    setViewMode('create');
+    setViewMode("create");
     setSelectedGroupId(undefined);
   };
 
   const handleEdit = (questionGroupId: string) => {
     setSelectedGroupId(questionGroupId);
-    setViewMode('edit');
+    setViewMode("edit");
   };
 
   const handleView = (questionGroupId: string) => {
     setSelectedGroupId(questionGroupId);
-    setViewMode('detail');
+    setViewMode("detail");
   };
 
   const handleBackToList = () => {
-    setViewMode('list');
+    setViewMode("list");
     setSelectedGroupId(undefined);
   };
 
   const handleFormSuccess = () => {
-    setViewMode('list');
+    setViewMode("list");
     setSelectedGroupId(undefined);
     refetch(); // Refresh the list
   };
@@ -167,12 +174,18 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
 
   // Detail view handlers
   const handleDetailEdit = () => {
-    setViewMode('edit');
+    setViewMode("edit");
   };
 
   const handleDetailDelete = () => {
-    setViewMode('list');
+    setViewMode("list");
     setSelectedGroupId(undefined);
+  };
+
+  const handleBack = () => {
+    router.push(
+      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/exercises/${exerciseId}?sectionId=${sectionId}`
+    );
   };
 
   if (isLoading) {
@@ -189,13 +202,132 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
     );
   }
 
+  // Render different headers based on current mode
+  const renderHeader = () => {
+    switch (viewMode) {
+      case "create":
+        return (
+          <div className="bg-white border-b shadow-sm">
+            <div className="px-6 py-4">
+              <div className="flex flex-row justify-between space-x-4">
+                <div className="flex flex-col">
+                  <h3 className="text-xl font-semibold tracking-tight">
+                    Create Question Group
+                  </h3>
+                  <p className="text-gray-500 text-md">
+                    Create a new question group with specific type and settings
+                  </p>
+                </div>
 
+                <div>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToList}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>Back to List</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "edit":
+        return (
+          <div className="bg-white">
+            <div className="px-6 py-4">
+              <div className="flex justify-between space-x-4">
+                <div className="flex flex-col">
+                  <h3 className="text-xl font-semibold tracking-tight">
+                    Edit Question Group
+                  </h3>
+                  <p className="text-gray-500 text-md">
+                    Update the question group settings and configuration
+                  </p>
+                </div>
+
+                <div>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToList}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>Back to List</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case "detail":
+        return (
+          <div className="bg-white">
+            <div className="px-6 py-4">
+              <div className="flex justify-between space-x-4">
+                <div className="flex flex-col">
+                  <h3 className="text-xl font-semibold tracking-tight">
+                    Question Group Detail
+                  </h3>
+                  <p className="text-gray-500 text-md">
+                    View and manage question group information
+                  </p>
+                </div>
+
+                <div>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackToList}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>Back to List</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="bg-white">
+            <div className="px-6 py-2">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <h3 className="text-xl font-semibold tracking-tight">
+                    Question Group
+                  </h3>
+                  <p className="text-gray-500 text-md">
+                    Manage question groups for this exercise
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  {/* Primary Create Button */}
+                  <Button
+                    onClick={handleCreate}
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 shadow-sm"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Add Question Group</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
 
   const renderContent = () => {
     switch (viewMode) {
-      case 'create':
+      case "create":
         return (
-          <QuestionGroupForm 
+          <QuestionGroupForm
             exerciseId={exerciseId}
             mockTestId={mockTestId}
             sectionId={sectionId}
@@ -206,9 +338,9 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
           />
         );
 
-      case 'edit':
+      case "edit":
         return (
-          <QuestionGroupForm 
+          <QuestionGroupForm
             exerciseId={exerciseId}
             mockTestId={mockTestId}
             sectionId={sectionId}
@@ -219,7 +351,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
           />
         );
 
-      case 'detail':
+      case "detail":
         return (
           <QuestionGroupDetail
             exerciseId={exerciseId}
@@ -239,7 +371,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
   };
 
   const renderListView = () => (
-    <>
+    <div className="space-y-6">
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -282,18 +414,16 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                 <FileText className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm || selectedType !== "all" 
-                  ? "No question groups found" 
-                  : "No question groups yet"
-                }
+                {searchTerm || selectedType !== "all"
+                  ? "No question groups found"
+                  : "No question groups yet"}
               </h3>
               <p className="text-gray-500 mb-6 max-w-sm mx-auto">
                 {searchTerm || selectedType !== "all"
                   ? "Try adjusting your search or filter criteria"
-                  : "Create your first question group to start adding questions to this exercise"
-                }
+                  : "Create your first question group to start adding questions to this exercise"}
               </p>
-              {(!searchTerm && selectedType === "all") && (
+              {!searchTerm && selectedType === "all" && (
                 <Button
                   onClick={handleCreate}
                   className="bg-blue-600 hover:bg-blue-700"
@@ -308,11 +438,17 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {filteredQuestionGroups.map((group: any) => {
-            const config = QUESTION_TYPE_CONFIG[group.question_type as keyof typeof QUESTION_TYPE_CONFIG];
+            const config =
+              QUESTION_TYPE_CONFIG[
+                group.question_type as keyof typeof QUESTION_TYPE_CONFIG
+              ];
             const Icon = config?.icon || FileText;
 
             return (
-              <Card key={group.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={group.id}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -320,7 +456,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                         <Icon className="h-5 w-5 text-gray-600" />
                       </div>
                       <div>
-                        <CardTitle 
+                        <CardTitle
                           className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
                           onClick={() => handleView(group.id)}
                         >
@@ -351,7 +487,9 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleViewQuestions(group.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handleViewQuestions(group.id)}
+                        >
                           <Users className="h-4 w-4 mr-2" />
                           View Questions
                         </DropdownMenuItem>
@@ -361,7 +499,9 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => handleDelete(group.id, group.group_title)}
+                          onClick={() =>
+                            handleDelete(group.id, group.group_title)
+                          }
                           className="text-red-600 focus:text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -374,7 +514,9 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
 
                 <CardContent className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Instructions</label>
+                    <label className="text-sm font-medium text-gray-600">
+                      Instructions
+                    </label>
                     <p className="text-sm text-gray-700 mt-1 line-clamp-2">
                       {group.group_instruction}
                     </p>
@@ -382,38 +524,50 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
 
                   {group.passage_reference && (
                     <div>
-                      <label className="text-sm font-medium text-gray-600">Passage Reference</label>
+                      <label className="text-sm font-medium text-gray-600">
+                        Passage Reference
+                      </label>
                       <p className="text-sm text-gray-700 mt-1">
                         {group.passage_reference}
                       </p>
                     </div>
                   )}
 
-                  {group.question_type === "matching" && group.matching_options && group.matching_options.length > 0 && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">
-                        Matching Options ({group.matching_options.length})
-                      </label>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {group.matching_options.slice(0, 3).map((option: any, index: number) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {option.option_text}
-                          </Badge>
-                        ))}
-                        {group.matching_options.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{group.matching_options.length - 3} more
-                          </Badge>
-                        )}
+                  {group.question_type === "matching" &&
+                    group.matching_options &&
+                    group.matching_options.length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Matching Options ({group.matching_options.length})
+                        </label>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {group.matching_options
+                            .slice(0, 3)
+                            .map((option: any, index: number) => (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {option.option_text}
+                              </Badge>
+                            ))}
+                          {group.matching_options.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{group.matching_options.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <Target className="h-4 w-4" />
-                        <span>{group.correct_answer_count} correct answers</span>
+                        <span>
+                          {group.correct_answer_count} correct answers
+                        </span>
                       </div>
                     </div>
 
@@ -453,12 +607,28 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
           })}
         </div>
       )}
-    </>
+
+      {/* Floating Add Button for Long Lists */}
+      {filteredQuestionGroups.length > 6 && (
+        <div className="fixed bottom-6 right-6 z-10">
+          <Button
+            onClick={handleCreate}
+            size="lg"
+            className="rounded-full shadow-lg bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 
   return (
-    <div className="space-y-6">
-      {renderContent()}
+    <div className="min-h-screen bg-gray-50">
+      {renderHeader()}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {renderContent()}
+      </div>
     </div>
   );
 };

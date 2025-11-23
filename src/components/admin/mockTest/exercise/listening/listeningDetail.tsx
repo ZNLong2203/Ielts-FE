@@ -31,6 +31,7 @@ import toast from "react-hot-toast";
 import { IListeningExercise } from "@/interface/listening";
 import HLSAudioPlayer from "@/components/modal/hsl-audio-player";
 import QuestionGroupList from "../questionGroup/questionGroupList";
+import QuestionList from "../question/questionList";
 
 const DIFFICULTY_LABELS = {
   "1": {
@@ -71,7 +72,7 @@ const ListeningDetail = () => {
   const listeningExerciseId = Array.isArray(params.listeningId)
     ? params.listeningId[0]
     : params.listeningId;
-  const sectionId = searchParams?.get("sectionId");
+  const sectionId = searchParams?.get("sectionId") ?? undefined;
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
@@ -500,27 +501,12 @@ const ListeningDetail = () => {
           />
         )}
 
-        {activeTab === "questions" && (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Questions Overview
-                </h3>
-                <p className="text-gray-500 mb-6">
-                  Individual questions will be listed here, organized by question groups.
-                </p>
-                <Button 
-                  onClick={() => setActiveTab("questionGroups")}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Layers className="h-4 w-4 mr-2" />
-                  Manage Question Groups First
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+         {activeTab === "questions" && (
+          <QuestionList
+            exerciseId={listeningExerciseId}
+            mockTestId={mockTestId}
+            sectionId={sectionId}
+          />
         )}
 
         {activeTab === "preview" && (

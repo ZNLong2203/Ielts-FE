@@ -47,6 +47,6 @@ export interface IQuestionGroupList {
         skill_type: string,
         title: string,
     }
-    groups: any,
+    groups: IQuestionGroup[],
     total_groups: number,
 }
