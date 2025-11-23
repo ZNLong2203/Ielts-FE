@@ -1,6 +1,6 @@
 "use client"
 
-import { BookOpen, Target, Award, TrendingUp } from "lucide-react"
+import { BookOpen, Target, Award } from "lucide-react"
 
 interface DashboardStatsProps {
   stats?: {
@@ -37,18 +37,10 @@ export function DashboardStats({ stats: propStats }: DashboardStatsProps) {
       bgColor: "bg-purple-50",
       borderColor: "border-purple-200",
     },
-    {
-      title: "Average Progress",
-      value: `${propStats?.averageProgress || 0}%`,
-      icon: TrendingUp,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
-      borderColor: "border-amber-200",
-    },
   ]
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
       {stats.map((stat) => (
         <div
           key={stat.title}

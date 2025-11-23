@@ -193,7 +193,7 @@ const LandingNavbar = () => {
                   </div>
                 </NavbarTitle>
 
-                <NavbarTitle text="Placement Test">
+                {/* <NavbarTitle text="Placement Test">
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
@@ -205,7 +205,7 @@ const LandingNavbar = () => {
                       </div>
                     </div>
                   </div>
-                </NavbarTitle>
+                </NavbarTitle> */}
 
                 <NavbarLink
                   text="Blog"

@@ -219,8 +219,8 @@ export default function MyCoursesPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl border-l-4 border-l-blue-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+      <div className="flex flex-row w-full gap-6">
+        <div className="flex-1 bg-white rounded-xl border-l-4 border-l-blue-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</div>
@@ -231,7 +231,7 @@ export default function MyCoursesPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border-l-4 border-l-emerald-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+        <div className="flex-1 bg-white rounded-xl border-l-4 border-l-emerald-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-3xl font-bold text-gray-900 mb-1">{stats.completed}</div>
@@ -242,7 +242,7 @@ export default function MyCoursesPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border-l-4 border-l-orange-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
+        <div className="flex-1 bg-white rounded-xl border-l-4 border-l-orange-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-3xl font-bold text-gray-900 mb-1">{stats.inProgress}</div>
@@ -250,17 +250,6 @@ export default function MyCoursesPage() {
             </div>
             <div className="bg-orange-100 rounded-xl p-4">
               <Play className="w-8 h-8 text-orange-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border-l-4 border-l-purple-500 border border-gray-200 shadow-md p-6 hover:shadow-lg hover:scale-[1.02] transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">{stats.averageProgress}%</div>
-              <div className="text-sm font-medium text-gray-600">Average Progress</div>
-            </div>
-            <div className="bg-purple-100 rounded-xl p-4">
-              <TrendingUp className="w-8 h-8 text-purple-600" />
             </div>
           </div>
         </div>

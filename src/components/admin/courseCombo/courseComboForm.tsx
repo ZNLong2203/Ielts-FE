@@ -308,7 +308,7 @@ const CourseComboForm = () => {
                       control={comboForm.control}
                       name="name"
                       label="Combo Name"
-                      placeholder="e.g., IELTS Complete Package, Speaking & Writing Bundle"
+                      placeholder="e.g., 5.0 - 6.0, 6.0 - 7.0, ..."
                       required
                     />
 

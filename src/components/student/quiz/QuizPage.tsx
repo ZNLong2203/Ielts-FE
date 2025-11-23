@@ -42,7 +42,7 @@ const QuizPage = () => {
   // Filter quizzes based on search and filters
   const filteredQuizzes = useMemo(() => {
     return quizList.filter((quiz) => {
-      const matchesSearch = quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            quiz.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
       // Get section type from test_type or first section
@@ -52,9 +52,9 @@ const QuizPage = () => {
           ? quiz.test_type 
           : quiz.test_sections?.[0]?.section_type);
       const matchesSection = selectedSection === "all" || sectionType === selectedSection;
-      
-      return matchesSearch && matchesSection;
-    });
+    
+    return matchesSearch && matchesSection;
+  });
   }, [quizList, searchQuery, selectedSection]);
 
   const handleStartQuiz = (quizId: string) => {

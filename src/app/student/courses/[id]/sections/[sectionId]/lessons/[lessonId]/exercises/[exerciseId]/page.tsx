@@ -2,23 +2,26 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Play, Pause, Rewind, FastForward, Volume2, VolumeX, Settings, ChevronDown, ChevronUp, Star, ArrowLeft, CheckCircle2, XCircle, Pin, PinOff } from "lucide-react"
 import { IExercise } from "@/interface/exercise"
 import { ICourseQuestion } from "@/interface/courseQuestion"
-import { getExercisesByLessonId, getExerciseByLessonId } from "@/api/exercise"
-import { DragDropExercise } from "@/components/exercise/DragDropExercise"
-import { MatchingHeadingExercise } from "@/components/exercise/MatchingHeadingExercise"
-import { useTextHighlight } from "@/hooks/useTextHighlight"
+import { getExercisesByLessonId, getExerciseByLessonId, submitExercise, getExerciseSubmission } from "@/api/exercise"
 
 interface UserAnswer {
   questionId: string
   answer: string | string[] | null
 }
 
+interface QuestionWithAnswer extends Omit<ICourseQuestion, 'correct_answer'> {
+  correct_answer?: string
+  alternative_answers?: string[]
+}
+
 export default function ExercisePage() {
   const params = useParams()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const courseId = params.id as string
   const sectionId = params.sectionId as string
   const lessonId = params.lessonId as string
@@ -36,6 +39,9 @@ export default function ExercisePage() {
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState({ correct: 0, total: 0 })
   const [questionResults, setQuestionResults] = useState<Record<string, boolean>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [startTime] = useState(Date.now())
+  const [hasLoadedSubmission, setHasLoadedSubmission] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   // Fetch all exercises for the lesson
@@ -56,6 +62,14 @@ export default function ExercisePage() {
     queryKey: ["exercise", lessonId, exerciseId],
     queryFn: () => getExerciseByLessonId(lessonId, exerciseId),
     enabled: !!lessonId && !!exerciseId && isValidUUID(exerciseId),
+  })
+
+  // Fetch existing submission if any
+  const { data: existingSubmission, isLoading: submissionLoading } = useQuery({
+    queryKey: ["exercise-submission", lessonId, exerciseId],
+    queryFn: () => getExerciseSubmission(lessonId, exerciseId),
+    enabled: !!lessonId && !!exerciseId && isValidUUID(exerciseId),
+    retry: false,
   })
 
   // Update exercises list when data is fetched
@@ -90,23 +104,66 @@ export default function ExercisePage() {
 
   // Use current exercise data from API or fallback to exercises list
   const exercise = currentExerciseData || allExercises[currentExerciseIndex] || null
+  const questions = exercise?.questions || []
 
   useEffect(() => {
-    if (exercise) {
+    if (existingSubmission && existingSubmission.totalQuestions > 0) {
+      setShowResults(true)
+      setScore({
+        correct: existingSubmission.correctAnswers || 0,
+        total: existingSubmission.totalQuestions || 0,
+      })
+      setQuestionResults(existingSubmission.questionResults || {})
+      setHasLoadedSubmission(true)
+      
+      if (existingSubmission.answers) {
+        const savedAnswers: Record<string, UserAnswer> = {}
+        Object.entries(existingSubmission.answers).forEach(([questionId, answer]) => {
+          savedAnswers[questionId] = {
+            questionId,
+            answer: answer as string | string[] | null,
+          }
+        })
+        setUserAnswers(savedAnswers)
+      }
+    } else if (!submissionLoading && !existingSubmission) {
+      setHasLoadedSubmission(false)
+    }
+  }, [existingSubmission, submissionLoading])
+
+  useEffect(() => {
+    // Don't reset if submission is still loading OR if we've already loaded a submission
+    if (submissionLoading || hasLoadedSubmission) return
+    
+    if (exercise && !existingSubmission) {
       const initialAnswers: Record<string, UserAnswer> = {}
-      const allQuestions = exercise.question_groups?.flatMap(group => group.questions || []) || exercise.questions || []
+      const allQuestions = exercise.questions || []
       allQuestions.forEach((q) => {
+        let defaultAnswer: string | string[] | null = null
+        if (q.question_type === 'fill_blank') {
+          defaultAnswer = ''
+        } else if (q.question_type === 'multiple_choice' || q.question_type === 'drop_list') {
+          defaultAnswer = null
+        }
         initialAnswers[q.id] = {
           questionId: q.id,
-          answer: q.question_type === 'multiple_choice' ? null : q.question_type === 'fill_blank' ? '' : q.question_type === 'drag_drop' ? null : null,
+          answer: defaultAnswer,
         }
       })
-      setUserAnswers(initialAnswers)
+      // Only update if there are new questions without answers
+      setUserAnswers((prev) => {
+        const updated = { ...prev }
+        Object.entries(initialAnswers).forEach(([qId, answer]) => {
+          if (!updated[qId]) {
+            updated[qId] = answer
+          }
+        })
+        return updated
+      })
       setExpandedExplanations({})
-      setShowResults(false)
-      setQuestionResults({})
+      // Don't reset showResults here - let existingSubmission effect handle it
     }
-  }, [exercise])
+  }, [exercise, existingSubmission, submissionLoading, hasLoadedSubmission])
 
   const handleExerciseChange = (index: number) => {
     if (index >= 0 && index < allExercises.length) {
@@ -116,10 +173,6 @@ export default function ExercisePage() {
     }
   }
 
-  const questionGroups = exercise?.question_groups || []
-  const questions = questionGroups.length > 0 
-    ? questionGroups.flatMap(group => group.questions || [])
-    : (exercise?.questions || [])
   const skillType = exercise?.skill_type || 'general'
   const sharedAudioUrl = exercise?.audio_url
   const displayDuration = audioDuration > 0 ? audioDuration : 180
@@ -195,33 +248,44 @@ export default function ExercisePage() {
     }))
   }
 
-  const handleSubmit = () => {
-    // Calculate score and results for each question
-    const results: Record<string, boolean> = {}
-    let correct = 0
+  const handleSubmit = async () => {
+    if (isSubmitting) return
     
-    questions.forEach((q) => {
-      const userAnswer = userAnswers[q.id]?.answer
-      let isCorrect = false
-      
-      if (q.question_type === 'multiple_choice') {
-        const correctOption = q.question_options?.find((opt) => opt.is_correct)
-        isCorrect = correctOption ? userAnswer === correctOption.id : false
-      } else if (q.question_type === 'fill_blank') {
-        const correctAnswer = (q as ICourseQuestion & { correct_answer?: string }).correct_answer || ''
-        isCorrect = userAnswer?.toString().toLowerCase().trim() === correctAnswer.toLowerCase().trim()
-      } else if (q.question_type === 'drag_drop') {
-        const correctOption = q.question_options?.find((opt) => opt.is_correct)
-        isCorrect = correctOption ? userAnswer === correctOption.id : false
+    if (showResults && !existingSubmission) return
+    
+    setIsSubmitting(true)
+    try {
+      const answers: Record<string, string | string[] | null> = {}
+      questions.forEach((q) => {
+        const userAnswer = userAnswers[q.id]?.answer
+        answers[q.id] = userAnswer || null
+      })
+
+      const timeTaken = Math.floor((Date.now() - startTime) / 1000)
+      const response = await submitExercise(lessonId, exerciseId, answers, timeTaken)
+      const submission = response?.data || response
+
+      if (submission && submission.questionResults) {
+        setQuestionResults(submission.questionResults)
+        setScore({
+          correct: submission.correctAnswers || 0,
+          total: submission.totalQuestions || 0,
+        })
+        setShowResults(true)
+        
+        await queryClient.invalidateQueries({
+          queryKey: ["exercise-submission", lessonId, exerciseId],
+        })
+      } else {
+        throw new Error('Invalid submission response from server')
       }
-      
-      results[q.id] = isCorrect
-      if (isCorrect) correct++
-    })
-    
-    setQuestionResults(results)
-    setScore({ correct, total: questions.length })
-    setShowResults(true)
+    } catch (error) {
+      console.error('Error submitting exercise:', error)
+      // Show error message to user
+      alert('Failed to submit exercise. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
   
   const getQuestionResult = (questionId: string): boolean | null => {
@@ -229,138 +293,31 @@ export default function ExercisePage() {
     return questionResults[questionId] ?? null
   }
 
-  const QuestionGroupContent = ({ group, groupImageUrl, combinedPassage, renderQuestion }: {
-    group: { id: string; question_type?: string; questions?: ICourseQuestion[]; group_title?: string; group_instruction?: string; passage_reference?: string; ordering: number; image_url?: string }
-    groupImageUrl?: string
-    combinedPassage: string | null
-    renderQuestion: (question: ICourseQuestion, index: number) => React.ReactNode
-  }) => {
-    const passageId = `group-passage-${group.id}`
-    const { highlights, toggleHighlight, clearAllHighlights, renderHighlightedText } = useTextHighlight(passageId)
+  const handleTryAgain = () => {
+    // Reset all states
+    setShowResults(false)
+    setQuestionResults({})
+    setScore({ correct: 0, total: questions.length || 0 })
+    setHasLoadedSubmission(false) // Reset flag to allow re-initialization
     
-    return (
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* Group Header with Image */}
-        {groupImageUrl && (
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 p-6 border-b border-slate-200 relative">
-            <div className="flex items-center justify-between mb-4">
-              {group.group_title && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-sm">{group.ordering}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800">{group.group_title}</h3>
-                </div>
-              )}
-              {groupImageUrl && (
-                <button
-                  onClick={() => setIsImagePinned(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
-                >
-                  <Pin className="w-3.5 h-3.5" />
-                  <span>Pin</span>
-                </button>
-              )}
-            </div>
-            {group.group_instruction && (
-              <p className="text-slate-700 font-medium mb-4 leading-relaxed">{group.group_instruction}</p>
-            )}
-            {group.passage_reference && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
-                <p className="text-slate-700 font-medium text-sm">{group.passage_reference}</p>
-              </div>
-            )}
-            <div className="rounded-xl overflow-hidden border-2 border-slate-200 shadow-sm">
-              <img src={groupImageUrl} alt={group.group_title || "Question Group Image"} className="w-full h-auto" />
-            </div>
-          </div>
-        )}
-
-        {/* Group Content */}
-        <div className="p-6">
-          {!groupImageUrl && (
-            <div className="mb-6">
-              {group.group_title && (
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-sm">{group.ordering}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800">{group.group_title}</h3>
-                </div>
-              )}
-              {group.group_instruction && (
-                <p className="text-slate-700 font-medium mb-4 leading-relaxed">{group.group_instruction}</p>
-              )}
-              {group.passage_reference && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                  <p className="text-slate-700 font-medium text-sm">{group.passage_reference}</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Combined Reading Passage for Drag Drop Groups */}
-          {combinedPassage && (
-            <div className="mb-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-800">Reading Passage</h3>
-                <button
-                  onClick={clearAllHighlights}
-                  className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm font-medium"
-                >
-                  Clear Highlights
-                </button>
-              </div>
-              <div
-                id={passageId}
-                onMouseUp={toggleHighlight}
-                className="text-slate-700 leading-relaxed select-text cursor-text"
-                style={{ userSelect: 'text' }}
-              >
-                {combinedPassage.split('\n\n').map((paragraph, index) => {
-                  if (!paragraph.trim()) return null
-                  return (
-                    <div key={index} className="mb-8 last:mb-0">
-                      <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                        {renderHighlightedText(paragraph)}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-              {highlights.length > 0 && (
-                <p className="mt-2 text-sm text-slate-500">
-                  {highlights.length} highlight{highlights.length > 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Questions in Group */}
-          {group.question_type === 'drag_drop' && group.questions ? (
-            <div className="mt-6">
-              <MatchingHeadingExercise
-                questions={group.questions}
-                userAnswers={Object.fromEntries(
-                  group.questions.map(q => [q.id, userAnswers[q.id]?.answer?.toString() || null])
-                )}
-                onAnswerChange={(questionId, answer) => handleAnswerChange(questionId, answer)}
-                showResults={showResults}
-                questionResults={questionResults}
-              />
-            </div>
-          ) : (
-            <div className="space-y-6 mt-6">
-              {group.questions?.map((question, qIndex) => (
-                <div key={question.id}>
-                  {renderQuestion(question, qIndex)}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    )
+    // Reset answers to initial state
+    const initialAnswers: Record<string, UserAnswer> = {}
+    questions.forEach((q) => {
+      let defaultAnswer: string | string[] | null = null
+      if (q.question_type === 'fill_blank') {
+        defaultAnswer = ''
+      }
+      initialAnswers[q.id] = {
+        questionId: q.id,
+        answer: defaultAnswer,
+      }
+    })
+    setUserAnswers(initialAnswers)
+    
+    // Invalidate query to allow new submission
+    queryClient.invalidateQueries({
+      queryKey: ["exercise-submission", lessonId, exerciseId],
+    })
   }
 
   const renderQuestion = (question: ICourseQuestion, index: number) => {
@@ -472,7 +429,7 @@ export default function ExercisePage() {
               </div>
 
               {/* Explanation Section */}
-              {showResults && question.explanation && (
+              {showResults && (question.explanation || (question as QuestionWithAnswer).correct_answer) && (
                 <div className="mt-6">
                   <button
                     onClick={() => toggleExplanation(question.id)}
@@ -490,11 +447,52 @@ export default function ExercisePage() {
                   </button>
                   {expandedExplanations[question.id] && (
                     <div className="bg-white rounded-xl p-6 mt-2 border-2 border-blue-200 shadow-lg">
-                      <h3 className="font-bold text-slate-800 mb-4">Transcript & Explanation</h3>
+                      <h3 className="font-bold text-slate-800 mb-4">Explanation</h3>
                       <div className="prose max-w-none">
-                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
-                          {question.explanation}
-                        </p>
+                        {(() => {
+                          const questionWithAnswer = question as QuestionWithAnswer;
+                          // Check if explanation is a JSON string that needs parsing
+                          let explanationText = question.explanation;
+                          let correctAnswer = questionWithAnswer.correct_answer;
+                          
+                          // Try to parse if it looks like JSON
+                          if (explanationText && explanationText.trim().startsWith('{')) {
+                            try {
+                              const parsed = JSON.parse(explanationText);
+                              explanationText = parsed.explanation || parsed.original_explanation || null;
+                              if (!correctAnswer) {
+                                correctAnswer = parsed.correct_answer;
+                              }
+                            } catch {
+                              // If parsing fails, use as is
+                            }
+                          }
+                          
+                          // Display explanation if available, otherwise show correct answer
+                          if (explanationText) {
+                            return (
+                              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                  {explanationText}
+                                </p>
+                                {correctAnswer && (
+                                  <p className="text-slate-700 leading-relaxed mt-2 pt-2 border-t border-yellow-300">
+                                    <strong>Correct Answer:</strong> {correctAnswer}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          } else if (correctAnswer) {
+                            return (
+                              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <p className="text-slate-700 leading-relaxed">
+                                  <strong>Correct Answer:</strong> {correctAnswer}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   )}
@@ -529,20 +527,20 @@ export default function ExercisePage() {
                               <input
                                 type="text"
                                 value={userAnswer?.toString() || ''}
-                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                onChange={(e) => !showResults && handleAnswerChange(question.id, e.target.value)}
                                 disabled={showResults}
                                 className={`inline-block px-4 py-2 border-2 rounded-lg font-semibold text-slate-800 min-w-[120px] text-center transition-all ${
-                                  isCorrect
-                                    ? 'border-green-500 bg-green-50'
-                                    : isIncorrect
-                                    ? 'border-red-500 bg-red-50'
+                                  showResults && questionResult !== null
+                                    ? questionResult
+                                      ? 'border-green-500 bg-green-50'
+                                      : 'border-red-500 bg-red-50'
                                     : 'border-blue-400 bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
                                 } ${showResults ? 'cursor-default' : 'cursor-text'}`}
                                 placeholder="?"
                               />
-                              {showResults && isIncorrect && (
+                              {showResults && questionResult === false && (
                                 <span className="ml-2 text-sm text-red-600 font-semibold">
-                                  (Correct answer: {(question as ICourseQuestion & { correct_answer?: string }).correct_answer || 'N/A'})
+                                  (Correct answer: {(question as QuestionWithAnswer).correct_answer || 'N/A'})
                                 </span>
                               )}
                             </span>
@@ -572,7 +570,7 @@ export default function ExercisePage() {
               </div>
 
               {/* Explanation Section */}
-              {showResults && question.explanation && (
+              {showResults && (question.explanation || (question as QuestionWithAnswer).correct_answer) && (
                 <div className="mt-6">
                   <button
                     onClick={() => toggleExplanation(question.id)}
@@ -590,11 +588,52 @@ export default function ExercisePage() {
                   </button>
                   {expandedExplanations[question.id] && (
                     <div className="bg-white rounded-xl p-6 mt-2 border-2 border-blue-200 shadow-lg">
-                      <h3 className="font-bold text-slate-800 mb-4">Transcript & Explanation</h3>
+                      <h3 className="font-bold text-slate-800 mb-4">Explanation</h3>
                       <div className="prose max-w-none">
-                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
-                          {question.explanation}
-                        </p>
+                        {(() => {
+                          const questionWithAnswer = question as QuestionWithAnswer;
+                          // Check if explanation is a JSON string that needs parsing
+                          let explanationText = question.explanation;
+                          let correctAnswer = questionWithAnswer.correct_answer;
+                          
+                          // Try to parse if it looks like JSON
+                          if (explanationText && explanationText.trim().startsWith('{')) {
+                            try {
+                              const parsed = JSON.parse(explanationText);
+                              explanationText = parsed.explanation || parsed.original_explanation || null;
+                              if (!correctAnswer) {
+                                correctAnswer = parsed.correct_answer;
+                              }
+                            } catch {
+                              // If parsing fails, use as is
+                            }
+                          }
+                          
+                          // Display explanation if available, otherwise show correct answer
+                          if (explanationText) {
+                            return (
+                              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                  {explanationText}
+                                </p>
+                                {correctAnswer && (
+                                  <p className="text-slate-700 leading-relaxed mt-2 pt-2 border-t border-yellow-300">
+                                    <strong>Correct Answer:</strong> {correctAnswer}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          } else if (correctAnswer) {
+                            return (
+                              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <p className="text-slate-700 leading-relaxed">
+                                  <strong>Correct Answer:</strong> {correctAnswer}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   )}
@@ -604,23 +643,185 @@ export default function ExercisePage() {
           </div>
         )
 
-      case 'drag_drop':
+      case 'drop_list':
+        // Drop list question type - render as custom styled dropdown
+        const selectedOption = question.question_options?.find(opt => opt.id === userAnswer?.toString())
+        const correctOption = question.question_options?.find(opt => opt.is_correct)
+        
+        // Use questionResult from backend as source of truth (not local calculation)
+        // questionResult is already set from backend submission result
+        const actualIsCorrect = isCorrect // Use isCorrect from questionResult (backend)
+        
         return (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-            <DragDropExercise
-              question={question}
-              userAnswer={userAnswer?.toString() || null}
-              onAnswerChange={(answer) => handleAnswerChange(question.id, answer)}
-              showResults={showResults}
-              isCorrect={isCorrect}
-            />
-          </div>
-        )
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+              <div className="flex items-start justify-between gap-4 mb-8">
+                <div className="flex items-start gap-4 flex-1">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-lg ${
+                    showResults && actualIsCorrect
+                      ? 'bg-green-100 text-green-700 border-2 border-green-300' 
+                      : showResults && !actualIsCorrect
+                      ? 'bg-red-100 text-red-700 border-2 border-red-300'
+                      : 'bg-blue-100 text-blue-700 border-2 border-blue-200'
+                  }`}>
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-slate-800 mb-2 leading-relaxed">{question.question_text}</h3>
+                  </div>
+                </div>
+                {showResults && questionResult !== null && (
+                  <div className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm ${
+                    actualIsCorrect ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}>
+                    {actualIsCorrect ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>Correct</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-5 h-5" />
+                        <span>Incorrect</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
-      default:
-        return (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-            <p className="text-slate-700">{question.question_text}</p>
+              <div className="space-y-3">
+                <div className="relative">
+                  <select
+                    value={userAnswer?.toString() || ''}
+                    onChange={(e) => !showResults && handleAnswerChange(question.id, e.target.value)}
+                    disabled={showResults}
+                    className={`w-full p-4 pr-12 rounded-xl border-2 transition-all duration-200 text-slate-700 font-medium appearance-none bg-white ${
+                      showResults && actualIsCorrect
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : showResults && !actualIsCorrect
+                        ? 'border-red-500 bg-red-50 text-red-700'
+                        : 'border-slate-200 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                    } ${showResults ? 'cursor-default' : 'cursor-pointer'}`}
+                  >
+                    <option value="">Select an option...</option>
+                    {question.question_options?.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.option_text}
+                      </option>
+                    ))}
+                  </select>
+                  <div className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${
+                    showResults && actualIsCorrect
+                      ? 'text-green-600'
+                      : showResults && !actualIsCorrect
+                      ? 'text-red-600'
+                      : 'text-slate-400'
+                  }`}>
+                    <ChevronDown className="w-5 h-5" />
+                  </div>
+                </div>
+                
+                {/* Show selected option with feedback */}
+                {showResults && selectedOption && (
+                  <div className={`p-4 rounded-lg border-2 ${
+                    actualIsCorrect
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-red-50 border-red-200'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {actualIsCorrect ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-medium ${
+                          actualIsCorrect ? 'text-green-700' : 'text-red-700'
+                        }`}>
+                          Your answer: <span className="font-semibold">{selectedOption.option_text}</span>
+                        </p>
+                        {!actualIsCorrect && correctOption && (
+                          <p className="text-sm text-green-700 mt-1">
+                            Correct answer: <span className="font-semibold">{correctOption.option_text}</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Explanation Section */}
+              {showResults && (question.explanation || (question as QuestionWithAnswer).correct_answer) && (
+                <div className="mt-6">
+                  <button
+                    onClick={() => toggleExplanation(question.id)}
+                    className="w-full bg-blue-600 text-white rounded-xl p-4 flex items-center justify-between hover:bg-blue-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Star className="w-5 h-5" />
+                      <span className="font-semibold">View Explanation</span>
+                    </div>
+                    {expandedExplanations[question.id] ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </button>
+                  {expandedExplanations[question.id] && (
+                    <div className="bg-white rounded-xl p-6 mt-2 border-2 border-blue-200 shadow-lg">
+                      <h3 className="font-bold text-slate-800 mb-4">Explanation</h3>
+                      <div className="prose max-w-none">
+                        {(() => {
+                          const questionWithAnswer = question as QuestionWithAnswer;
+                          // Check if explanation is a JSON string that needs parsing
+                          let explanationText = question.explanation;
+                          let correctAnswer = questionWithAnswer.correct_answer;
+                          
+                          // Try to parse if it looks like JSON
+                          if (explanationText && explanationText.trim().startsWith('{')) {
+                            try {
+                              const parsed = JSON.parse(explanationText);
+                              explanationText = parsed.explanation || parsed.original_explanation || null;
+                              if (!correctAnswer) {
+                                correctAnswer = parsed.correct_answer;
+                              }
+                            } catch {
+                              // If parsing fails, use as is
+                            }
+                          }
+                          
+                          // Display explanation if available, otherwise show correct answer
+                          if (explanationText) {
+                            return (
+                              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                  {explanationText}
+                                </p>
+                                {correctAnswer && (
+                                  <p className="text-slate-700 leading-relaxed mt-2 pt-2 border-t border-yellow-300">
+                                    <strong>Correct Answer:</strong> {correctAnswer}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          } else if (correctAnswer) {
+                            return (
+                              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                                <p className="text-slate-700 leading-relaxed">
+                                  <strong>Correct Answer:</strong> {correctAnswer}
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )
     }
@@ -733,7 +934,7 @@ export default function ExercisePage() {
       {/* Header */}
       <div className={`sticky top-0 bg-white border-b border-slate-200 shadow-sm z-10 ${isImagePinned ? 'lg:!ml-0' : ''}`}>
         <div className={`${isImagePinned ? 'w-full' : 'max-w-7xl'} mx-auto px-4 sm:px-6 lg:px-8 py-4`}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push(`/student/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`)}
@@ -742,7 +943,9 @@ export default function ExercisePage() {
                 <ArrowLeft className="w-5 h-5 text-slate-600" />
               </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">Exercise {currentExerciseIndex + 1}</h1>
+              <h1 className="text-2xl font-bold text-slate-800">
+                Exercise Practice
+              </h1>
             </div>
             </div>
 
@@ -768,11 +971,40 @@ export default function ExercisePage() {
               )}
             </div>
           </div>
+
+          {/* Exercise Tabs */}
+          {allExercises.length > 1 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
+              {allExercises.map((ex, index) => {
+                const isActive = index === currentExerciseIndex
+                const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer)
+                
+                return (
+                  <button
+                    key={ex.id}
+                    onClick={() => handleExerciseChange(index)}
+                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 whitespace-nowrap flex items-center gap-2 ${
+                      isActive
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : hasAnswer
+                        ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>Exercise {index + 1}</span>
+                    {hasAnswer && !isActive && (
+                      <CheckCircle2 className="w-4 h-4" />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Score Summary */}
-      {showResults && (
+      {showResults && score.total > 0 && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
           <div className="bg-white rounded-xl p-6 shadow-md border border-slate-200 mb-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
@@ -796,7 +1028,7 @@ export default function ExercisePage() {
                     }
                   </p>
                   <p className="text-sm text-slate-600 mt-1">
-                    Score: {Math.round((score.correct / score.total) * 100)}%
+                    Score: {score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0}%
                   </p>
                 </div>
               </div>
@@ -849,16 +1081,19 @@ export default function ExercisePage() {
 
       {/* Content */}
       {isImagePinned ? (() => {
-        const pinnedGroup = questionGroups.find(g => g.image_url)
-        const pinnedImageUrl = pinnedGroup?.image_url
-        if (!pinnedImageUrl) return null
+        const content = exercise?.content && typeof exercise.content === 'object' 
+          ? exercise.content as Record<string, unknown>
+          : null;
+        const imageUrl = content?.image_url as string | undefined;
+        if (!imageUrl) return null;
+        
         return (
           <div className="flex h-[calc(100vh-80px)] lg:pl-0">
             {/* Pinned Image - Left Side */}
             <div className="hidden lg:flex lg:w-1/2 bg-white border-r border-slate-200 overflow-y-auto">
               <div className="w-full p-6">
                 <div className="sticky top-0 bg-white pb-4 mb-4 border-b border-slate-200 flex items-center justify-between z-10">
-                  <h3 className="text-lg font-bold text-slate-800">{pinnedGroup?.group_title || "Question Image"}</h3>
+                  <h3 className="text-lg font-bold text-slate-800">Exercise Image</h3>
                   <button
                     onClick={() => setIsImagePinned(false)}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -867,11 +1102,8 @@ export default function ExercisePage() {
                     <span>Unpin</span>
                   </button>
                 </div>
-                {pinnedGroup?.group_instruction && (
-                  <p className="text-slate-700 font-medium mb-4 leading-relaxed">{pinnedGroup.group_instruction}</p>
-                )}
                 <div className="rounded-xl overflow-hidden border border-slate-200">
-                  <img src={pinnedImageUrl} alt="Exercise Image" className="w-full h-auto rounded-xl" />
+                  <img src={imageUrl} alt="Exercise Image" className="w-full h-auto rounded-xl" />
                 </div>
               </div>
             </div>
@@ -882,66 +1114,87 @@ export default function ExercisePage() {
                 {/* Audio Player for Listening */}
                 {skillType === 'listening' && sharedAudioUrl && renderAudioPlayer()}
 
-                {/* Question Groups */}
-                {questionGroups.length > 0 ? (
-                  <div className="space-y-8">
-                    {questionGroups.map((group) => (
-                      <div key={group.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                        {/* Group Header without Image (since it's pinned) */}
-                        <div className="p-6">
-                          {group.group_title && (
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                                <span className="text-white font-bold text-sm">{group.ordering}</span>
+                {/* Exercise Title and Instruction (without image since it's pinned) */}
+                {exercise && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2">{exercise.title}</h2>
+                    {exercise.instruction && (
+                      <p className="text-slate-600 leading-relaxed">{exercise.instruction}</p>
+                    )}
+                    {exercise.content && typeof exercise.content === 'object' && (
+                      (() => {
+                        const content = exercise.content as Record<string, unknown>;
+                        const passage = content?.passage as string | undefined;
+                        return (
+                          <>
+                            {passage && (
+                              <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                <h3 className="font-semibold text-slate-800 mb-2">Reading Passage</h3>
+                                <div className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                                  {passage}
+                                </div>
                               </div>
-                              <h3 className="text-xl font-bold text-slate-800">{group.group_title}</h3>
-                            </div>
-                          )}
-                          {group.group_instruction && (
-                            <p className="text-slate-700 font-medium mb-4 leading-relaxed">{group.group_instruction}</p>
-                          )}
-                          {group.passage_reference && (
-                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mb-4">
-                              <p className="text-slate-700 font-medium text-sm">{group.passage_reference}</p>
-                            </div>
-                          )}
-
-                          {/* Questions in Group */}
-                          <div className="space-y-6 mt-6">
-                            {group.questions?.map((question, qIndex) => (
-                              <div key={question.id}>
-                                {renderQuestion(question, qIndex)}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                            )}
+                          </>
+                        );
+                      })()
+                    )}
                   </div>
-                ) : (
-                  <div className="space-y-6">
-                    {questions.map((question, index) => (
+                )}
+
+                {/* Questions */}
+                <div className="space-y-6">
+                  {questions.length > 0 ? (
+                    questions.map((question, index) => (
                       <div key={question.id}>
                         {renderQuestion(question, index)}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    ))
+                  ) : (
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
+                      <p className="text-slate-600">No questions available for this exercise.</p>
+                    </div>
+                  )}
+                </div>
 
-                {/* Submit Button */}
-                {!showResults && (
-                  <div className="mt-12 flex flex-col items-center gap-4 pb-8">
-                    <button
-                      onClick={handleSubmit}
-                      className="px-10 py-4 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 hover:shadow-xl transition-all transform hover:scale-105"
-                    >
-                      Submit Answers
-                    </button>
-                    <p className="text-sm text-slate-500 font-medium">
-                      Review your answers before submitting. After submission, correct answers and explanations will be shown.
-                    </p>
-                  </div>
-                )}
+                {/* Submit Button or Try Again Button */}
+                <div className="mt-12 flex flex-col items-center gap-4 pb-8">
+                  {!showResults ? (
+                    <>
+                      <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="px-10 py-4 bg-green-600 text-white rounded-xl font-bold text-lg hover:bg-green-700 hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      >
+                        {isSubmitting ? 'Submitting...' : 'Submit Answers'}
+                      </button>
+                      <p className="text-sm text-slate-500 font-medium">
+                        Review your answers before submitting. After submission, correct answers and explanations will be shown.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-6">
+                        <div className="text-center bg-gradient-to-r from-blue-50 to-blue-100 px-8 py-4 rounded-xl border-2 border-blue-200">
+                          <p className="text-sm text-blue-600 font-medium mb-1">Your Score</p>
+                          <p className="text-3xl font-bold text-blue-700">{score.correct}/{score.total}</p>
+                          <p className="text-sm text-blue-600 font-medium mt-1">
+                            {Math.round((score.correct / score.total) * 100)}%
+                          </p>
+                        </div>
+                        <button
+                          onClick={handleTryAgain}
+                          className="px-8 py-4 bg-orange-600 text-white rounded-xl font-bold text-lg hover:bg-orange-700 hover:shadow-xl transition-all transform hover:scale-105"
+                        >
+                          Try Again
+                        </button>
+                      </div>
+                      <p className="text-sm text-slate-500 font-medium">
+                        Click "Try Again" to reset and attempt the exercise again.
+                      </p>
+                    </>
+                  )}
+                </div>
 
                 {/* Exercise Selector */}
                 {allExercises.length > 1 && (
@@ -951,7 +1204,7 @@ export default function ExercisePage() {
                       <div className="flex items-center gap-3 flex-wrap justify-center">
                         {allExercises.map((ex, index) => {
                           const isActive = index === currentExerciseIndex
-                          const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer) || ex.question_groups?.some((g) => g.questions?.some((q) => userAnswers[q.id]?.answer))
+                          const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer)
                           
                           return (
                             <button
@@ -978,45 +1231,78 @@ export default function ExercisePage() {
           </div>
         )
       })() : (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Audio Player for Listening */}
         {skillType === 'listening' && sharedAudioUrl && renderAudioPlayer()}
 
-        {/* Question Groups or Direct Questions */}
-        {questionGroups.length > 0 ? (
-          <div className="space-y-8">
-            {questionGroups.map((group) => {
-              // Check if this group has image for pinning
-              const groupImageUrl = group.image_url
-              
-              // Combine reading passages for drag_drop groups
-              const combinedPassage = group.question_type === 'drag_drop' && group.questions
-                ? group.questions
-                    .map(q => q.reading_passage || '')
-                    .filter(p => p.trim().length > 0)
-                    .join('\n\n')
-                : null
-              
-              return (
-                <QuestionGroupContent
-                  key={group.id}
-                  group={group}
-                  groupImageUrl={groupImageUrl}
-                  combinedPassage={combinedPassage}
-                  renderQuestion={renderQuestion}
-                />
-              )
-            })}
+        {/* Exercise Title and Instruction */}
+        {exercise && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">{exercise.title}</h2>
+            {exercise.instruction && (
+              <p className="text-slate-600 leading-relaxed">{exercise.instruction}</p>
+            )}
+            {exercise.content && typeof exercise.content === 'object' && (
+              (() => {
+                const content = exercise.content as Record<string, unknown>;
+                const passage = content?.passage as string | undefined;
+                const imageUrl = content?.image_url as string | undefined;
+                return (
+                  <>
+                    {passage && (
+                      <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <h3 className="font-semibold text-slate-800 mb-2">Reading Passage</h3>
+                        <div className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                          {passage}
+                        </div>
+                      </div>
+                    )}
+                    {imageUrl && (
+                      <div className="mt-4 relative group">
+                        <img 
+                          src={imageUrl} 
+                          alt="Exercise reference" 
+                          className="w-full rounded-lg border border-gray-200"
+                        />
+                        <button
+                          onClick={() => setIsImagePinned(!isImagePinned)}
+                          className="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm flex items-center gap-2 opacity-0 group-hover:opacity-100"
+                        >
+                          {isImagePinned ? (
+                            <>
+                              <PinOff className="w-3.5 h-3.5" />
+                              <span>Unpin</span>
+                            </>
+                          ) : (
+                            <>
+                              <Pin className="w-3.5 h-3.5" />
+                              <span>Pin</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()
+            )}
           </div>
-        ) : (
-          <div className="space-y-6">
-            {questions.map((question, index) => (
+        )}
+
+        {/* Questions */}
+        <div className="space-y-6">
+          {questions.length > 0 ? (
+            questions.map((question, index) => (
               <div key={question.id}>
                 {renderQuestion(question, index)}
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
+              <p className="text-slate-600">No questions available for this exercise.</p>
+            </div>
+          )}
+        </div>
 
         {/* Submit Button */}
         {!showResults && (
@@ -1041,7 +1327,7 @@ export default function ExercisePage() {
               <div className="flex items-center gap-3 flex-wrap justify-center">
                 {allExercises.map((ex, index) => {
                   const isActive = index === currentExerciseIndex
-                  const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer) || ex.question_groups?.some((g) => g.questions?.some((q) => userAnswers[q.id]?.answer))
+                  const hasAnswer = ex.questions?.some((q) => userAnswers[q.id]?.answer)
                   
                   return (
                     <button
@@ -1063,7 +1349,7 @@ export default function ExercisePage() {
             </div>
           </div>
         )}
-        </div>
+      </div>
       )}
     </div>
   )

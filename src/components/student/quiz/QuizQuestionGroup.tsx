@@ -172,36 +172,36 @@ export default function QuizQuestionGroup({
               },
             };
 
-            return (
-              <QuizQuestion
-                key={question.id}
-                question={question}
-                questionNumber={question.ordering || `${groupIndex + 1}.${qIndex + 1}`}
-                currentAnswer={currentAnswer(question.id)}
-                isFlagged={flaggedQuestions.has(question.id)}
-                isSelected={selectedQuestionId === question.id}
-                onAnswerChange={(answer) => onAnswerChange(question.id, answer)}
-                onToggleFlag={() => onToggleFlag(question.id)}
-                questionRef={(el) => {
-                  if (questionRefs.current) {
-                    questionRefs.current[question.id] = el;
-                  }
-                }}
-                speakingAudio={speakingAudios?.[question.id]}
-                isRecording={speakingRecording?.[question.id]}
-                onStartRecording={
-                  onStartRecording ? () => onStartRecording(question.id) : undefined
+          return (
+            <QuizQuestion
+              key={question.id}
+              question={question}
+              questionNumber={question.ordering || `${groupIndex + 1}.${qIndex + 1}`}
+              currentAnswer={currentAnswer(question.id)}
+              isFlagged={flaggedQuestions.has(question.id)}
+              isSelected={selectedQuestionId === question.id}
+              onAnswerChange={(answer) => onAnswerChange(question.id, answer)}
+              onToggleFlag={() => onToggleFlag(question.id)}
+              questionRef={(el) => {
+                if (questionRefs.current) {
+                  questionRefs.current[question.id] = el;
                 }
-                onStopRecording={
-                  onStopRecording ? () => onStopRecording(question.id) : undefined
-                }
-                onFileUpload={
-                  onFileUpload ? (e) => onFileUpload(question.id, e) : undefined
-                }
-                onClearAudio={onClearAudio ? () => onClearAudio(question.id) : undefined}
-                fileInputRef={questionFileInputRef}
-              />
-            );
+              }}
+              speakingAudio={speakingAudios?.[question.id]}
+              isRecording={speakingRecording?.[question.id]}
+              onStartRecording={
+                onStartRecording ? () => onStartRecording(question.id) : undefined
+              }
+              onStopRecording={
+                onStopRecording ? () => onStopRecording(question.id) : undefined
+              }
+              onFileUpload={
+                onFileUpload ? (e) => onFileUpload(question.id, e) : undefined
+              }
+              onClearAudio={onClearAudio ? () => onClearAudio(question.id) : undefined}
+              fileInputRef={questionFileInputRef}
+            />
+          );
           })
         )}
       </div>

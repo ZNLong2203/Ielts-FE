@@ -58,3 +58,31 @@ export const deleteExercise = async (lessonId: string, exerciseId: string) => {
     )
     return response.data
 }
+
+// Submit exercise answers
+export const submitExercise = async (
+    lessonId: string,
+    exerciseId: string,
+    answers: Record<string, string | string[] | null>,
+    timeTaken?: number
+) => {
+    const response = await api.post(
+        `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}/${exerciseId}/submit`,
+        {
+            exerciseId,
+            answers,
+            timeTaken,
+        }
+    )
+    return response.data.data
+}
+
+export const getExerciseSubmission = async (
+    lessonId: string,
+    exerciseId: string
+) => {
+    const response = await api.get(
+        `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}/${exerciseId}/submission`
+    )
+    return response.data.data?.data || response.data.data
+}

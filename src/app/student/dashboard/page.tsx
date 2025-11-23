@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { DashboardStats } from "@/components/student/dashboard/DashboardStats"
 import { LearningPathCard } from "@/components/student/dashboard/LearningPathCard"
@@ -10,6 +10,7 @@ import { useStudent } from "@/context/StudentContext"
 export default function DashboardPage() {
   const { studentData, loading, error, refetch } = useStudent()
   const pathname = usePathname()
+  const [showAllPaths, setShowAllPaths] = useState(false)
 
   useEffect(() => {
     const lastPathname = sessionStorage.getItem('lastPathname')
@@ -103,11 +104,20 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">My Learning Paths</h2>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</button>
+            {activeLearningPaths.length > 3 && (
+              <button
+                onClick={() => setShowAllPaths(!showAllPaths)}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                {showAllPaths ? "Show Less" : "View All"}
+              </button>
+            )}
           </div>
 
           {activeLearningPaths.length > 0 ? (
-            activeLearningPaths.map((path) => <LearningPathCard key={path.id} path={path} />)
+            (showAllPaths ? activeLearningPaths : activeLearningPaths.slice(0, 3)).map((path) => (
+              <LearningPathCard key={path.id} path={path} />
+            ))
           ) : (
             <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
               <p className="text-gray-600">No learning paths enrolled yet.</p>
