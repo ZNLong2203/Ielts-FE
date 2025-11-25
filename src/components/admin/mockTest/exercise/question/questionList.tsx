@@ -24,6 +24,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -35,7 +42,7 @@ import Error from "@/components/ui/error";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { getQuestions, deleteQuestion, getQuestion } from "@/api/question";
-// import QuestionForm from "./questionForm";
+import QuestionForm from "./questionForm";
 // import QuestionDetail from "./questionDetail";
 
 // Question type configurations - matching with questionGroup config
@@ -87,7 +94,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string | undefined>(undefined);
+  const [selectedQuestionId, setSelectedQuestionId] = useState<
+    string | undefined
+  >(undefined);
 
   // Query for questions
   const {
@@ -106,13 +115,17 @@ const QuestionList: React.FC<QuestionListProps> = ({
     mutationFn: deleteQuestion,
     onSuccess: () => {
       toast.success("Question deleted successfully! 🗑️");
-      queryClient.invalidateQueries({ queryKey: ["questions", exerciseId, questionGroupId] });
+      queryClient.invalidateQueries({
+        queryKey: ["questions", exerciseId, questionGroupId],
+      });
       // Return to list view after successful delete
       setViewMode("list");
       setSelectedQuestionId(undefined);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete question");
+      toast.error(
+        error?.response?.data?.message || "Failed to delete question"
+      );
     },
   });
 
@@ -120,21 +133,23 @@ const QuestionList: React.FC<QuestionListProps> = ({
 
   // Filter questions based on questionGroupId if provided
   const allQuestions = questionsData?.questions || [];
-  const filteredByGroup = questionGroupId 
+  const filteredByGroup = questionGroupId
     ? allQuestions.filter((q: any) => q.question_group_id === questionGroupId)
     : allQuestions;
 
   // Apply search and difficulty filters
   const filteredQuestions = filteredByGroup.filter((question: any) => {
-    const matchesSearch = 
-      question.question_text?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch =
+      question.question_text
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       question.question_number?.toString().includes(searchTerm) ||
       question.correct_answer?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDifficulty = 
-      selectedDifficulty === "all" || 
+
+    const matchesDifficulty =
+      selectedDifficulty === "all" ||
       question.difficulty === selectedDifficulty;
-    
+
     return matchesSearch && matchesDifficulty;
   });
 
@@ -196,7 +211,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
   // Get question type config
   const getQuestionTypeConfig = (questionType?: string) => {
     if (!questionType) return null;
-    return QUESTION_TYPE_CONFIG[questionType as keyof typeof QUESTION_TYPE_CONFIG];
+    return QUESTION_TYPE_CONFIG[
+      questionType as keyof typeof QUESTION_TYPE_CONFIG
+    ];
   };
 
   if (isLoading) {
@@ -222,7 +239,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
     switch (viewMode) {
       case "create":
         return (
-          <div className="bg-white border-b shadow-sm">
+          <div className="bg-white ">
             <div className="px-6 py-4">
               <div className="flex flex-row justify-between space-x-4">
                 <div className="flex flex-col">
@@ -230,10 +247,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
                     Create Question
                   </h3>
                   <p className="text-gray-500 text-md">
-                    {questionsData 
+                    {questionsData
                       ? `Create a new question for "${questionsData.exercise_info.title}"`
-                      : "Create a new question for this exercise"
-                    }
+                      : "Create a new question for this exercise"}
                   </p>
                 </div>
                 <div>
@@ -316,21 +332,16 @@ const QuestionList: React.FC<QuestionListProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
                   <h3 className="text-xl font-semibold tracking-tight">
-                    {questionsData
-                      ? `Questions - ${questionsData.exercise_info.title}`
-                      : "Questions"
-                    }
+                      Questions
                   </h3>
                   <p className="text-gray-500 text-md">
                     {questionsData
-                      ? `Manage questions for the "${questionsData.exercise_info.title}" question group`
-                      : "Manage questions for this exercise"
-                    }
+                      ? `Manage questions for the "${questionsData.exercise_info.title}" exercise`
+                      : "Manage questions for this exercise"}
                   </p>
                 </div>
 
                 <div className="flex items-center space-x-3">
-                
                   {/* Primary Create Button */}
                   <Button
                     onClick={handleCreate}
@@ -350,47 +361,47 @@ const QuestionList: React.FC<QuestionListProps> = ({
   const renderContent = () => {
     switch (viewMode) {
       case "create":
-        // return (
-        //   <QuestionForm
-        //     exerciseId={exerciseId}
-        //     mockTestId={mockTestId}
-        //     sectionId={sectionId}
-        //     questionGroupId={questionGroupId}
-        //     questionId={null}
-        //     onSuccess={handleFormSuccess}
-        //     onCancel={handleBackToList}
-        //     embedded={true}
-        //   />
-        // );
+      return (
+        <QuestionForm
+          exerciseId={exerciseId}
+          mockTestId={mockTestId}
+          sectionId={sectionId}
+          questionGroupId={questionGroupId}
+          questionId={null}
+          onSuccess={handleFormSuccess}
+          onCancel={handleBackToList}
+          embedded={true}
+        />
+      );
 
       case "edit":
-        // return (
-        //   <QuestionForm
-        //     exerciseId={exerciseId}
-        //     mockTestId={mockTestId}
-        //     sectionId={sectionId}
-        //     questionGroupId={questionGroupId}
-        //     questionId={selectedQuestionId!}
-        //     onSuccess={handleFormSuccess}
-        //     onCancel={handleBackToList}
-        //     embedded={true}
-        //   />
-        // );
+      return (
+        <QuestionForm
+          exerciseId={exerciseId}
+          mockTestId={mockTestId}
+          sectionId={sectionId}
+          questionGroupId={questionGroupId}
+          questionId={selectedQuestionId!}
+          onSuccess={handleFormSuccess}
+          onCancel={handleBackToList}
+          embedded={true}
+        />
+      );
 
       case "detail":
-        // return (
-        //   <QuestionDetail
-        //     exerciseId={exerciseId}
-        //     mockTestId={mockTestId}
-        //     sectionId={sectionId}
-        //     questionGroupId={questionGroupId}
-        //     questionId={selectedQuestionId}
-        //     onEdit={handleDetailEdit}
-        //     onDelete={handleDetailDelete}
-        //     onClose={handleBackToList}
-        //     embedded={true}
-        //   />
-        // );
+      // return (
+      //   <QuestionDetail
+      //     exerciseId={exerciseId}
+      //     mockTestId={mockTestId}
+      //     sectionId={sectionId}
+      //     questionGroupId={questionGroupId}
+      //     questionId={selectedQuestionId}
+      //     onEdit={handleDetailEdit}
+      //     onDelete={handleDetailDelete}
+      //     onClose={handleBackToList}
+      //     embedded={true}
+      //   />
+      // );
 
       default:
         return renderListView();
@@ -399,49 +410,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
 
   const renderListView = () => (
     <div className="space-y-6">
-      {/* Question Group Info */}
-      {questionsData && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start space-x-4">
-              <div className="p-2 bg-gray-100 rounded-lg">
-                {questionTypeConfig?.icon ? (
-                  <questionTypeConfig.icon className="h-5 w-5 text-gray-600" />
-                ) : (
-                  <FileText className="h-5 w-5 text-gray-600" />
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {questionsData.exercise_info.title}
-                  </h3>
-                  <Badge className={`${questionTypeConfig?.color} border text-xs`}>
-                    {questionTypeConfig?.label}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    Questions: {questionsData.exercise_info.total_questions}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-600 mb-3">
-                  {questionsData.exercise_info.title}
-                </p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <span>Correct answers: {questionsData.exercise_info.correct_answer_count}</span>
-                  <span>Order: #{questionsData.exercise_info.ordering}</span>
-                  {questionsData.exercise_info.passage_reference && (
-                    <span>Reference: {questionsData.exercise_info.passage_reference}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Filters */}
       <Card>
-        <CardContent className="pt-2">
+        <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -455,16 +426,32 @@ const QuestionList: React.FC<QuestionListProps> = ({
               </div>
             </div>
             <div className="sm:w-48">
-              <select
+              <Select
                 value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onValueChange={setSelectedDifficulty}
               >
-                <option value="all">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Difficulties" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Difficulties</SelectItem>
+                  <SelectItem value="easy">
+                    <div className="flex items-center space-x-2">
+                      <span>Easy</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <div className="flex items-center space-x-2">
+                      <span>Medium</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="hard">
+                    <div className="flex items-center space-x-2">
+                      <span>Hard</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -479,20 +466,18 @@ const QuestionList: React.FC<QuestionListProps> = ({
                 <FileText className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm || selectedDifficulty !== "all" 
-                  ? "No questions found" 
-                  : "No questions yet"
-                }
+                {searchTerm || selectedDifficulty !== "all"
+                  ? "No questions found"
+                  : "No questions yet"}
               </h3>
               <p className="text-gray-500 mb-6 max-w-sm mx-auto">
                 {searchTerm || selectedDifficulty !== "all"
                   ? "Try adjusting your search or filter criteria"
                   : questionsData
                   ? `Create your first question for "${questionsData.exercise_info.title}"`
-                  : "Create your first question for this exercise"
-                }
+                  : "Create your first question for this exercise"}
               </p>
-              {(!searchTerm && selectedDifficulty === "all") && (
+              {!searchTerm && selectedDifficulty === "all" && (
                 <Button
                   onClick={handleCreate}
                   className="bg-blue-600 hover:bg-blue-700"
@@ -507,140 +492,164 @@ const QuestionList: React.FC<QuestionListProps> = ({
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {filteredQuestions
-            .sort((a: any, b: any) => (a.question_number || 0) - (b.question_number || 0))
+            .sort(
+              (a: any, b: any) =>
+                (a.question_number || 0) - (b.question_number || 0)
+            )
             .map((question: any) => {
-            const difficultyConfig = {
-              easy: { color: "bg-green-100 text-green-800", label: "Easy" },
-              medium: { color: "bg-yellow-100 text-yellow-800", label: "Medium" },
-              hard: { color: "bg-red-100 text-red-800", label: "Hard" },
-            };
-            const difficulty = difficultyConfig[question.difficulty as keyof typeof difficultyConfig] || 
-                              difficultyConfig.medium;
+              const difficultyConfig = {
+                easy: { color: "bg-green-100 text-green-800", label: "Easy" },
+                medium: {
+                  color: "bg-yellow-100 text-yellow-800",
+                  label: "Medium",
+                },
+                hard: { color: "bg-red-100 text-red-800", label: "Hard" },
+              };
+              const difficulty =
+                difficultyConfig[
+                  question.difficulty as keyof typeof difficultyConfig
+                ] || difficultyConfig.medium;
 
-            return (
-              <Card key={question.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        <FileText className="h-5 w-5 text-gray-600" />
+              return (
+                <Card
+                  key={question.id}
+                  className="hover:shadow-md transition-shadow"
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-2 bg-gray-100 rounded-lg">
+                          <FileText className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <div>
+                          <CardTitle
+                            className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => handleView(question.id)}
+                          >
+                            {question.question_text}
+                          </CardTitle>
+                          <div className="flex items-center space-x-3 mt-1">
+                            <Badge
+                              variant="outline"
+                              className="text-xs font-mono"
+                            >
+                              Q{question.question_number || "?"}
+                            </Badge>
+                            <Badge className={`${difficulty.color} text-xs`}>
+                              {difficulty.label}
+                            </Badge>
+                            {question.image_url && (
+                              <Badge variant="outline" className="text-xs">
+                                <ImageIcon className="h-3 w-3 mr-1" />
+                                Image
+                              </Badge>
+                            )}
+                            {question.audio_url && (
+                              <Badge variant="outline" className="text-xs">
+                                <Volume2 className="h-3 w-3 mr-1" />
+                                Audio
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleView(question.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(question.id)}
+                          >
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            Edit Question
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleDelete(question.id, question.question_text)
+                            }
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {question.correct_answer && (
                       <div>
-                        <CardTitle 
-                          className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-                          onClick={() => handleView(question.id)}
-                        >
-                          {question.question_text}
-                        </CardTitle>
-                        <div className="flex items-center space-x-3 mt-1">
-                          <Badge variant="outline" className="text-xs font-mono">
-                            Q{question.question_number || '?'}
-                          </Badge>
-                          <Badge className={`${difficulty.color} text-xs`}>
-                            {difficulty.label}
-                          </Badge>
-                          {question.image_url && (
-                            <Badge variant="outline" className="text-xs">
-                              <ImageIcon className="h-3 w-3 mr-1" />
-                              Image
-                            </Badge>
-                          )}
-                          {question.audio_url && (
-                            <Badge variant="outline" className="text-xs">
-                              <Volume2 className="h-3 w-3 mr-1" />
-                              Audio
-                            </Badge>
-                          )}
-                        </div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Correct Answer
+                        </label>
+                        <p className="text-sm text-green-600 font-medium mt-1">
+                          {question.correct_answer}
+                        </p>
                       </div>
-                    </div>
+                    )}
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(question.id)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(question.id)}>
-                          <Edit3 className="h-4 w-4 mr-2" />
-                          Edit Question
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(question.id, question.question_text)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {question.correct_answer && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Correct Answer</label>
-                      <p className="text-sm text-green-600 font-medium mt-1">
-                        {question.correct_answer}
-                      </p>
-                    </div>
-                  )}
-
-                  {question.explanation && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Explanation</label>
-                      <p className="text-sm text-gray-700 mt-1 line-clamp-2">
-                        {question.explanation}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <Target className="h-4 w-4" />
-                        <span>Points: {question.points || 1}</span>
+                    {question.explanation && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Explanation
+                        </label>
+                        <p className="text-sm text-gray-700 mt-1 line-clamp-2">
+                          {question.explanation}
+                        </p>
                       </div>
-                      {question.time_limit && (
+                    )}
+
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
                         <div className="flex items-center space-x-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{question.time_limit}s</span>
+                          <Target className="h-4 w-4" />
+                          <span>Points: {question.points || 1}</span>
                         </div>
-                      )}
-                    </div>
+                        {question.time_limit && (
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-4 w-4" />
+                            <span>{question.time_limit}s</span>
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleView(question.id)}
-                        className="flex items-center space-x-1"
-                      >
-                        <Eye className="h-3 w-3" />
-                        <span>View</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(question.id)}
-                        className="flex items-center space-x-1"
-                      >
-                        <Edit3 className="h-3 w-3" />
-                        <span>Edit</span>
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleView(question.id)}
+                          className="flex items-center space-x-1"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>View</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(question.id)}
+                          className="flex items-center space-x-1"
+                        >
+                          <Edit3 className="h-3 w-3" />
+                          <span>Edit</span>
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })}
         </div>
       )}
 

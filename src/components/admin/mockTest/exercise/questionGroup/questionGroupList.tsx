@@ -28,6 +28,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import toast from "react-hot-toast";
@@ -207,7 +214,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
     switch (viewMode) {
       case "create":
         return (
-          <div className="bg-white border-b shadow-sm">
+          <div className="bg-white">
             <div className="px-6 py-4">
               <div className="flex flex-row justify-between space-x-4">
                 <div className="flex flex-col">
@@ -302,7 +309,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                     Question Group
                   </h3>
                   <p className="text-gray-500 text-md">
-                    Manage question groups for this exercise
+                    {`Manage question groups for the "${questionGroups?.exercise_info.title}" exercise`}
                   </p>
                 </div>
 
@@ -388,18 +395,23 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
               </div>
             </div>
             <div className="sm:w-48">
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Types</option>
-                {Object.entries(QUESTION_TYPE_CONFIG).map(([key, config]) => (
-                  <option key={key} value={key}>
-                    {config.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedType} onValueChange={setSelectedType}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {Object.entries(QUESTION_TYPE_CONFIG).map(([key, config]) => {
+                    return (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center space-x-2">
+                          <span>{config.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

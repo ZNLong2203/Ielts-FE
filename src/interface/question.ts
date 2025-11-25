@@ -29,9 +29,22 @@ export interface IQuestionCreate {
     alternate_answers: string[];
     points: number;
     ordering: number;
-    difficulty_level: string;
+    difficulty_level: number;
     question_group: string;
     explanation: string;
-    image_url?: string;
-    audio_url?: string;
+}
+
+export interface IQuestionUpdate {
+    question_group_id?: string;
+    question_type?: string;
+    question_text?: string;
+    reading_passage?: string;
+    options?: IQuestionOption[];
+    correct_answer?: string;
+    alternate_answers?: string[];
+    points?: number;
+    ordering?: number;
+    difficulty_level?: number;
+    question_group?: string;
+    explanation?: string;
 }

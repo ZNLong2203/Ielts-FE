@@ -18,6 +18,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -29,14 +36,13 @@ import {
   Trash2,
   Clock,
   Target,
-  Star,
-  FileText,
   Eye,
   Search,
-  Volume2,
+  CheckCircle,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
+import { Input } from "@/components/ui/input";
 
 const DIFFICULTY_LABELS = {
   "1": { label: "Beginner", color: "bg-green-100 text-green-800", stars: 1 },
@@ -69,7 +75,7 @@ const ListeningList = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortByType>("ordering");
-  const [filterDifficulty, setFilterDifficulty] = useState<string>("");
+  const [filterDifficulty, setFilterDifficulty] = useState<string>("0");
 
   // Queries
   const {
@@ -145,66 +151,59 @@ const ListeningList = () => {
     }
   };
 
-  // Utility function to format duration
-  const formatDuration = (seconds: number) => {
-    if (!seconds) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+ // Sửa filter logic
+const filteredAndSortedExercises = useMemo(() => {
+  if (
+    !listeningExercises?.exercises ||
+    !Array.isArray(listeningExercises.exercises)
+  ) {
+    return [];
+  }
 
-  // Filter and sort exercises
-  const filteredAndSortedExercises = useMemo(() => {
-    if (
-      !listeningExercises?.exercises ||
-      !Array.isArray(listeningExercises.exercises)
-    ) {
-      return [];
+  let filtered = listeningExercises.exercises.filter((exercise: any) => {
+    if (!exercise) return false;
+
+    const title = exercise.title || "";
+    const passageTitle = exercise.reading_passage?.title || "";
+
+    const matchesSearch =
+      searchTerm === "" ||
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      passageTitle.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Sửa logic này
+    const matchesDifficulty =
+      filterDifficulty === "0" || // "0" means "All Difficulties"
+      exercise.reading_passage?.difficulty_level === filterDifficulty;
+    return matchesSearch && matchesDifficulty;
+  });
+
+  // Sort exercises
+  filtered.sort((a: any, b: any) => {
+    if (!a || !b) return 0;
+
+    switch (sortBy) {
+      case "title":
+        return (a.title || "").localeCompare(b.title || "");
+      case "difficulty":
+        const aDiff =
+          a.reading_passage?.difficulty_level;
+        const bDiff =
+          b.reading_passage?.difficulty_level;
+        return aDiff.localeCompare(bDiff);
+      case "ordering":
+        return (a.ordering || 0) - (b.ordering || 0);
+      case "created_at":
+        const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bDate - aDate;
+      default:
+        return (a.ordering || 0) - (b.ordering || 0);
     }
+  });
 
-    let filtered = listeningExercises.exercises.filter((exercise: any) => {
-      if (!exercise) return false;
-
-      const title = exercise.title || "";
-      const passageTitle = exercise.listening_passage?.title || "";
-
-      const matchesSearch =
-        searchTerm === "" ||
-        title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        passageTitle.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesDifficulty =
-        filterDifficulty === "" ||
-        exercise.listening_passage?.difficulty_level === filterDifficulty;
-
-      return matchesSearch && matchesDifficulty;
-    });
-
-    // Sort exercises
-    filtered.sort((a: any, b: any) => {
-      if (!a || !b) return 0;
-
-      switch (sortBy) {
-        case "title":
-          return (a.title || "").localeCompare(b.title || "");
-        case "difficulty":
-          const aDiff = a.listening_passage?.difficulty_level?.toString() || "3";
-          const bDiff = b.listening_passage?.difficulty_level?.toString() || "3";
-          return aDiff.localeCompare(bDiff);
-        case "ordering":
-          return (a.ordering || 0) - (b.ordering || 0);
-        case "created_at":
-          const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
-          const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
-          return bDate - aDate;
-        default:
-          return (a.ordering || 0) - (b.ordering || 0);
-      }
-    });
-
-    return filtered;
-  }, [listeningExercises, searchTerm, filterDifficulty, sortBy]);
-
+  return filtered;
+}, [listeningExercises, searchTerm, filterDifficulty, sortBy]);
   // Computed stats
   const stats = useMemo(() => {
     const exercises = listeningExercises?.exercises || [];
@@ -233,16 +232,10 @@ const ListeningList = () => {
       ) / totalExercises
     );
 
-    const totalDuration = exercises.reduce(
-      (acc: number, ex: any) => acc + Number(ex.audio_duration || 0),
-      0
-    );
-
     return {
       totalExercises,
       avgTimeLimit,
       avgPassingScore,
-      totalDuration,
     };
   }, [listeningExercises]);
 
@@ -327,7 +320,7 @@ const ListeningList = () => {
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <input
+                    <Input
                       type="text"
                       placeholder="Search exercises by title or audio..."
                       value={searchTerm}
@@ -338,29 +331,39 @@ const ListeningList = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={filterDifficulty}
-                    onChange={(e) => setFilterDifficulty(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onValueChange={(value) => setFilterDifficulty(value)}
                   >
-                    <option value="">All Difficulties</option>
-                    <option value="1">Beginner</option>
-                    <option value="2">Elementary</option>
-                    <option value="3">Intermediate</option>
-                    <option value="4">Upper Intermediate</option>
-                    <option value="5">Advanced</option>
-                  </select>
+                    <SelectTrigger className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <SelectValue placeholder="All Difficulties" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">All Difficulties</SelectItem>
+                      <SelectItem value="1">Beginner</SelectItem>
+                      <SelectItem value="2">Elementary</SelectItem>
+                      <SelectItem value="3">Intermediate</SelectItem>
+                      <SelectItem value="4">Upper Intermediate</SelectItem>
+                      <SelectItem value="5">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                  <select
+                  <Select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortByType)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onValueChange={(value) => setSortBy(value as SortByType)}
                   >
-                    <option value="ordering">Sort by Order</option>
-                    <option value="title">Sort by Title</option>
-                    <option value="difficulty">Sort by Difficulty</option>
-                    <option value="created_at">Sort by Date</option>
-                  </select>
+                    <SelectTrigger className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ordering">Sort by Order</SelectItem>
+                      <SelectItem value="title">Sort by Title</SelectItem>
+                      <SelectItem value="difficulty">
+                        Sort by Difficulty
+                      </SelectItem>
+                      <SelectItem value="created_at">Sort by Date</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
@@ -405,18 +408,19 @@ const ListeningList = () => {
             </CardContent>
           </Card>
 
+          
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Volume2 className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">
-                    Total Audio Duration
+                    Avg Passing Score
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatDuration(stats.totalDuration)}
+                    {stats.avgPassingScore}
                   </p>
                 </div>
               </div>
@@ -458,7 +462,8 @@ const ListeningList = () => {
             </Card>
           ) : (
             filteredAndSortedExercises.map((exercise: any) => {
-              const difficultyLevel = exercise.listening_passage?.difficulty_level || "3";
+              const difficultyLevel =
+                exercise.listening_passage?.difficulty_level || "3";
               const difficulty =
                 DIFFICULTY_LABELS[
                   difficultyLevel as keyof typeof DIFFICULTY_LABELS
@@ -486,15 +491,6 @@ const ListeningList = () => {
                               </h3>
                               <Badge className={`${difficulty.color} border-0`}>
                                 <div className="flex items-center space-x-1">
-                                  {Array.from(
-                                    { length: difficulty.stars },
-                                    (_, i) => (
-                                      <Star
-                                        key={i}
-                                        className="h-3 w-3 fill-current"
-                                      />
-                                    )
-                                  )}
                                   <span className="ml-1">
                                     {difficulty.label}
                                   </span>
@@ -504,7 +500,8 @@ const ListeningList = () => {
 
                             <p className="text-gray-600 mb-4 line-clamp-2">
                               <span className="font-medium">Audio:</span>{" "}
-                              {exercise.listening_passage?.title || "Untitled Audio"}
+                              {exercise.reading_passage?.title ||
+                                "Untitled Audio"}
                             </p>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
@@ -516,19 +513,6 @@ const ListeningList = () => {
                                 <Target className="h-4 w-4" />
                                 <span>
                                   {exercise.passing_score || 0} to pass
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Volume2 className="h-4 w-4" />
-                                <span>
-                                  {formatDuration(exercise.audio_duration || 0)} audio
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <FileText className="h-4 w-4" />
-                                <span>
-                                  {exercise.listening_passage?.paragraphs?.length || 0}{" "}
-                                  paragraphs
                                 </span>
                               </div>
                             </div>

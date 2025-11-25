@@ -18,6 +18,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -331,29 +338,39 @@ const ReadingList = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={filterDifficulty}
-                    onChange={(e) => setFilterDifficulty(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onValueChange={(value) => setFilterDifficulty(value)}
                   >
-                    <option value="">All Difficulties</option>
-                    <option value="1">Beginner</option>
-                    <option value="2">Elementary</option>
-                    <option value="3">Intermediate</option>
-                    <option value="4">Upper Intermediate</option>
-                    <option value="5">Advanced</option>
-                  </select>
+                    <SelectTrigger className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <SelectValue placeholder="All Difficulties" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">All Difficulties</SelectItem>
+                      <SelectItem value="1">Beginner</SelectItem>
+                      <SelectItem value="2">Elementary</SelectItem>
+                      <SelectItem value="3">Intermediate</SelectItem>
+                      <SelectItem value="4">Upper Intermediate</SelectItem>
+                      <SelectItem value="5">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-                  <select
+                 <Select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortByType)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onValueChange={(value) => setSortBy(value as SortByType)}
                   >
-                    <option value="ordering">Sort by Order</option>
-                    <option value="title">Sort by Title</option>
-                    <option value="difficulty">Sort by Difficulty</option>
-                    <option value="created_at">Sort by Date</option>
-                  </select>
+                    <SelectTrigger className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                      <SelectValue placeholder="Sort By" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ordering">Sort by Order</SelectItem>
+                      <SelectItem value="title">Sort by Title</SelectItem>
+                      <SelectItem value="difficulty">
+                        Sort by Difficulty
+                      </SelectItem>
+                      <SelectItem value="created_at">Sort by Date</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
