@@ -12,6 +12,16 @@ export interface IQuestionList {
 }
 
 export interface IQuestionOption {
+    id?: string;
+    option_text: string;
+    is_correct: boolean;
+    ordering: number;
+    point: number;
+    explanation: string;
+    matching_option_id?: string;
+}
+
+export interface IQuestionOptionCreate {
     option_text: string;
     is_correct: boolean;
     ordering: number;
@@ -24,9 +34,9 @@ export interface IQuestionCreate {
     question_type: string;
     question_text: string;
     reading_passage: string;
-    options: IQuestionOption[];
+    options: IQuestionOptionCreate[];
     correct_answer: string;
-    alternate_answers: string[];
+    alternative_answers: string[];
     points: number;
     ordering: number;
     difficulty_level: number;
@@ -39,12 +49,31 @@ export interface IQuestionUpdate {
     question_type?: string;
     question_text?: string;
     reading_passage?: string;
-    options?: IQuestionOption[];
+    options?: IQuestionOptionCreate[];
     correct_answer?: string;
-    alternate_answers?: string[];
+    alternative_answers?: string[];
     points?: number;
     ordering?: number;
     difficulty_level?: number;
     question_group?: string;
     explanation?: string;
+}
+
+export interface IQuestionDetail {
+    id: string;
+    exercise_id: string;
+    explanation: string;
+    group: {
+        id: string;
+        group_title: string;
+        question_type: string;
+    }
+    options: IQuestionOption[];
+    ordering: number;
+    points: number;
+    question_text: string;
+    question_type: string;
+    reading_passage: string;
+    difficulty_level: string;
+    audio_url: string;
 }

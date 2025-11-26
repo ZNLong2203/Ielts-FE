@@ -43,7 +43,7 @@ import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { getQuestions, deleteQuestion, getQuestion } from "@/api/question";
 import QuestionForm from "./questionForm";
-// import QuestionDetail from "./questionDetail";
+import QuestionDetail from "./questionDetail";
 
 // Question type configurations - matching with questionGroup config
 const QUESTION_TYPE_CONFIG = {
@@ -389,19 +389,15 @@ const QuestionList: React.FC<QuestionListProps> = ({
       );
 
       case "detail":
-      // return (
-      //   <QuestionDetail
-      //     exerciseId={exerciseId}
-      //     mockTestId={mockTestId}
-      //     sectionId={sectionId}
-      //     questionGroupId={questionGroupId}
-      //     questionId={selectedQuestionId}
-      //     onEdit={handleDetailEdit}
-      //     onDelete={handleDetailDelete}
-      //     onClose={handleBackToList}
-      //     embedded={true}
-      //   />
-      // );
+      return (
+        <QuestionDetail
+          exerciseId={exerciseId}
+          mockTestId={mockTestId}
+          sectionId={sectionId}
+          questionGroupId={questionGroupId}
+          questionId={selectedQuestionId!}
+        />
+      );
 
       default:
         return renderListView();

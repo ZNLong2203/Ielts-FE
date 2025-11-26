@@ -14,7 +14,9 @@ import {
   Link2,
   ArrowLeft,
   Trash2,
-  Info
+  Info,
+  Eye,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,8 +154,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
     enabled: !!exerciseId,
   });
 
-  console.log("Question Group Data", questionGroups)
-
   // Query for existing question (edit mode)
   const { data: existingQuestion, isLoading: isLoadingQuestion } = useQuery({
     queryKey: ["question", questionId],
@@ -176,14 +176,48 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         question_text: existingQuestion.question_text || "",
         reading_passage: existingQuestion.reading_passage || "",
         correct_answer: existingQuestion.correct_answer || "",
-        alternate_answers: existingQuestion.alternate_answers || [""],
+        alternate_answers:
+          existingQuestion.alternate_answers &&
+          existingQuestion.alternate_answers.length > 0
+            ? existingQuestion.alternate_answers
+            : [""],
         points: existingQuestion.points || 1,
         ordering: existingQuestion.ordering || 1,
         difficulty_level: existingQuestion.difficulty_level || 2,
         explanation: existingQuestion.explanation || "",
-        options: existingQuestion.options || [],
+        // Fix options mapping - ensure all required fields are present
+        options:
+          existingQuestion.options &&
+          Array.isArray(existingQuestion.options) &&
+          existingQuestion.options.length > 0
+            ? existingQuestion.options.map((option: any, index: number) => {
+                console.log(`Processing option ${index}:`, option);
+                return {
+                  id: option.id || undefined, // Keep existing id for updates
+                  option_text: option.option_text || "",
+                  is_correct: Boolean(option.is_correct), // Ensure boolean
+                  ordering: option.ordering || index + 1,
+                  point: Number(option.point) || 1, // Ensure number
+                  explanation: option.explanation || "",
+                  matching_option_id: option.matching_option_id || undefined,
+                };
+              })
+            : [],
       });
 
+      console.log(
+        "After mapping, options:",
+        existingQuestion.options?.map((option: any, index: number) => ({
+          id: option.id || undefined,
+          option_text: option.option_text || "",
+          is_correct: Boolean(option.is_correct),
+          ordering: option.ordering || index + 1,
+          point: Number(option.point) || 1,
+          explanation: option.explanation || "",
+        }))
+      );
+
+      // Set image preview if exists
       if (existingQuestion.image_url) {
         setImagePreview(existingQuestion.image_url);
       }
@@ -201,6 +235,34 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
       }
     }
   }, [existingQuestion, questionGroups, questionGroupId, exerciseId]);
+
+  // Thêm useEffect để ensure options exist for option-based question types
+  useEffect(() => {
+    const questionType =
+      QUESTION_TYPE_CONFIG[
+        formData.question_type as keyof typeof QUESTION_TYPE_CONFIG
+      ];
+
+    if (
+      questionType?.hasOptions &&
+      formData.options.length === 0 &&
+      !questionId
+    ) {
+    
+      setFormData((prev) => ({
+        ...prev,
+        options: [
+          {
+            option_text: "",
+            is_correct: false,
+            ordering: 1,
+            point: 1,
+            explanation: "",
+          },
+        ],
+      }));
+    }
+  }, [formData.question_type, formData.options.length, questionId]);
 
   // Create mutation
   const createMutation = useMutation({
@@ -410,6 +472,34 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         }
       }
 
+      // Process options - preserve existing IDs for updates, remove for new options
+      const processedOptions = formData.options.map((option) => {
+        const processedOption: any = {
+          option_text: option.option_text || "",
+          is_correct: Boolean(option.is_correct),
+          ordering: Number(option.ordering) || 1,
+          point: Number(option.point) || 1,
+          explanation: option.explanation || "",
+        };
+
+        // Include ID only if it's an existing option (for updates)
+        if (
+          questionId &&
+          option.id &&
+          typeof option.id === "string" &&
+          option.id.length > 10
+        ) {
+          processedOption.id = option.id;
+        }
+
+        // Include matching_option_id if present
+        if (option.matching_option_id) {
+          processedOption.matching_option_id = option.matching_option_id;
+        }
+
+        return processedOption;
+      });
+
       const submissionData = {
         ...formData,
         exercise_id: exerciseId,
@@ -419,11 +509,11 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
         alternate_answers: formData.alternate_answers.filter(
           (answer) => answer.trim() !== ""
         ),
-        // Keep null for create; will convert to undefined for update
+        options: processedOptions,
         question_group_id: formData.question_group_id,
       };
 
-      console.log("Submitting data:", submissionData);
+      console.log("Final submission data:", submissionData);
 
       if (questionId) {
         const updateData: IQuestionUpdate = {
@@ -435,8 +525,13 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
           data: updateData,
         });
       } else {
+        // For create, remove any temp IDs
+        const createData = {
+          ...submissionData,
+          options: submissionData.options.map(({ id, ...rest }) => rest),
+        };
         await createMutation.mutateAsync(
-          submissionData as unknown as IQuestionCreate
+          createData as unknown as IQuestionCreate
         );
       }
     } finally {
@@ -820,95 +915,142 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                       Add Option
                     </Button>
                   </div>
-                  {formData.options.map((option, index) => (
-                    <Card key={index} className="p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">
-                            Option {index + 1}
-                          </Label>
-                          {formData.options.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeOption(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Option Text *</Label>
-                            <Input
-                              value={option.option_text}
-                              onChange={(e) =>
-                                handleOptionChange(
-                                  index,
-                                  "option_text",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Enter option text..."
-                            />
-                          </div>
+                  {/* Debug information */}
+                  {process.env.NODE_ENV === "development" && (
+                    <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                      Debug: Options count: {formData.options.length} | Question
+                      Type: {formData.question_type} | Has Options:{" "}
+                      {questionTypeConfig?.hasOptions ? "Yes" : "No"}
+                    </div>
+                  )}
 
-                          <div className="space-y-2">
-                            <Label>Points</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              value={option.point}
-                              onChange={(e) =>
-                                handleOptionChange(
-                                  index,
-                                  "point",
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                              placeholder="Points"
-                            />
-                          </div>
-                        </div>
+                  {formData.options.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                      <Circle className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg font-medium mb-2">
+                        No options added yet
+                      </p>
+                      <p className="text-sm">
+                        Click "Add Option" to create answer choices
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {formData.options.map((option, index) => {
+                        console.log(`Rendering option ${index}:`, option); // Debug log
+                        return (
+                          <Card
+                            key={option.id || `option-${index}`}
+                            className="p-4"
+                          >
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">
+                                  Option {index + 1}
+                                </Label>
+                                {formData.options.length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => removeOption(index)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
 
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`correct-${index}`}
-                              checked={option.is_correct}
-                              onCheckedChange={(checked) =>
-                                handleOptionChange(index, "is_correct", checked)
-                              }
-                            />
-                            <Label
-                              htmlFor={`correct-${index}`}
-                              className="text-sm"
-                            >
-                              Correct Answer
-                            </Label>
-                          </div>
-                        </div>
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label>Option Text *</Label>
+                                  <Input
+                                    value={option.option_text || ""} // Fallback to empty string
+                                    onChange={(e) =>
+                                      handleOptionChange(
+                                        index,
+                                        "option_text",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="Enter option text..."
+                                  />
+                                  {/* Debug display */}
+                                  {process.env.NODE_ENV === "development" && (
+                                    <div className="text-xs text-gray-400">
+                                      Value: "{option.option_text}" | ID:{" "}
+                                      {option.id || "none"}
+                                    </div>
+                                  )}
+                                </div>
 
-                        <div className="space-y-2">
-                          <Label>Option Explanation</Label>
-                          <Textarea
-                            value={option.explanation}
-                            onChange={(e) =>
-                              handleOptionChange(
-                                index,
-                                "explanation",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Explain why this option is correct/incorrect..."
-                            className="min-h-[60px]"
-                          />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                                <div className="space-y-2">
+                                  <Label>Points</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={option.point || 1} // Fallback to 1
+                                    onChange={(e) =>
+                                      handleOptionChange(
+                                        index,
+                                        "point",
+                                        parseInt(e.target.value) || 1
+                                      )
+                                    }
+                                    placeholder="Points"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`correct-${index}`}
+                                    checked={Boolean(option.is_correct)} // Ensure boolean
+                                    onCheckedChange={(checked) =>
+                                      handleOptionChange(
+                                        index,
+                                        "is_correct",
+                                        Boolean(checked)
+                                      )
+                                    }
+                                  />
+                                  <Label
+                                    htmlFor={`correct-${index}`}
+                                    className="text-sm"
+                                  >
+                                    Correct Answer
+                                  </Label>
+                                </div>
+                                {/* Debug display for is_correct */}
+                                {process.env.NODE_ENV === "development" && (
+                                  <div className="text-xs text-gray-400">
+                                    is_correct: {String(option.is_correct)}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>Option Explanation</Label>
+                                <Textarea
+                                  value={option.explanation || ""} // Fallback to empty string
+                                  onChange={(e) =>
+                                    handleOptionChange(
+                                      index,
+                                      "explanation",
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder="Explain why this option is correct/incorrect..."
+                                  className="min-h-[60px]"
+                                />
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
