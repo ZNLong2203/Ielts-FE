@@ -43,7 +43,7 @@ import {
   uploadCourseQuestionAudio
 } from "@/api/courseQuestion";
 import { CourseQuestionFormSchema } from "@/validation/courseQuestion";
-import { QUESTION_TYPES, DIFFICULTY_LEVELS } from "@/constants/courseQuestion";
+import { QUESTION_TYPES } from "@/constants/courseQuestion";
 
 type CourseQuestionFormData = z.infer<typeof CourseQuestionFormSchema>;
 
@@ -106,7 +106,6 @@ const CourseQuestionForm = ({
     defaultValues: {
       question_text: question?.question_text || "",
       question_type: question?.question_type || "multiple_choice",
-      difficulty_level: question?.difficulty_level || 1,
       explanation: question?.explanation || "",
       correct_answer: question?.correct_answer || "",
       points: question?.points || "1",
@@ -170,7 +169,6 @@ const CourseQuestionForm = ({
       const questionData: ICourseQuestionCreate = {
         question_text: data.question_text,
         question_type: data.question_type,
-        difficulty_level: data.difficulty_level,
         explanation: data.explanation || "",
         correct_answer: data.correct_answer || "",
         points: data.points,
@@ -220,7 +218,6 @@ const CourseQuestionForm = ({
       const updateData: ICourseQuestionUpdate = {
         question_text: data.question_text,
         question_type: data.question_type,
-        difficulty_level: data.difficulty_level,
         explanation: data.explanation,
         points: data.points,
         options: validOptions,
@@ -373,14 +370,6 @@ const CourseQuestionForm = ({
                 label="Question Type"
                 placeholder="Select type"
                 options={QUESTION_TYPES}
-              />
-
-              <SelectField
-                control={form.control}
-                name="difficulty_level"
-                label="Difficulty Level"
-                placeholder="Select level"
-                options={DIFFICULTY_LEVELS}
               />
 
               <TextField

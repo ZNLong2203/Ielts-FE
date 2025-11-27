@@ -57,7 +57,7 @@ type FilterType =
   | "fill_blank"
   | "listening"
   | "reading";
-type SortType = "ordering" | "points" | "difficulty" | "type" | "created_at";
+type SortType = "ordering" | "points" | "type" | "created_at";
 
 const QuestionList = ({
   exercise,
@@ -125,16 +125,6 @@ const QuestionList = ({
           return (a.ordering ?? 999) - (b.ordering ?? 999);
         case "points":
           return Number(b.points || 0) - Number(a.points || 0);
-        case "difficulty":
-          const difficultyOrder = { easy: 1, medium: 2, hard: 3 };
-          return (
-            (difficultyOrder[
-              a.difficulty_level as keyof typeof difficultyOrder
-            ] || 2) -
-            (difficultyOrder[
-              b.difficulty_level as keyof typeof difficultyOrder
-            ] || 2)
-          );
         case "type":
           return (a.question_type || "").localeCompare(b.question_type || "");
         case "created_at":
@@ -167,18 +157,11 @@ const QuestionList = ({
       return acc;
     }, {} as Record<string, number>);
 
-    const difficultyStats = questions.reduce((acc, q) => {
-      const difficulty = q.difficulty_level || "medium";
-      acc[difficulty] = (acc[difficulty] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
     return {
       total: questions.length,
       totalPoints,
       avgPoints,
       typeStats,
-      difficultyStats,
     };
   };
 
@@ -386,7 +369,6 @@ const QuestionList = ({
                   <SelectContent>
                     <SelectItem value="ordering">Order</SelectItem>
                     <SelectItem value="points">Points</SelectItem>
-                    <SelectItem value="difficulty">Difficulty</SelectItem>
                     <SelectItem value="type">Type</SelectItem>
                     <SelectItem value="created_at">Created</SelectItem>
                   </SelectContent>

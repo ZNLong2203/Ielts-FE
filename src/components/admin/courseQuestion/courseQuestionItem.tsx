@@ -134,20 +134,6 @@ const CourseQuestionItem = ({
           </Badge>
         )}
 
-        {question.difficulty_level && (
-          <Badge 
-            variant="outline" 
-            className={`${
-              Number(question.difficulty_level) === 1 
-                ? "bg-green-50 text-green-700" 
-                : Number(question.difficulty_level) === 2
-                ? "bg-yellow-50 text-yellow-700"
-                : "bg-red-50 text-red-700"
-            }`}
-          >
-            Level {question.difficulty_level}
-          </Badge>
-        )}
       </div>
 
       {/* Media Section */}

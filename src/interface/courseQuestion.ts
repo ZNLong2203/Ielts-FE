@@ -2,7 +2,6 @@ export interface ICourseQuestionCreate {
     question_text: string;
     question_type: string;
     options: ICourseQuestionOption[];
-    difficulty_level: number;
     explanation: string;
     correct_answer: string;
     points: string;
@@ -14,7 +13,6 @@ export interface ICourseQuestionUpdate {
     question_text?: string;
     question_type?: string;
     points?: string;
-    difficulty_level?: number;
     explanation?: string;
     options?: ICourseQuestionOption[];
     correct_answer?: string;
@@ -32,7 +30,6 @@ export interface ICourseQuestion {
     explanation?: string;
     audio_duration?: number;
     deleted: boolean;
-    difficulty_level: string;
     reading_passage: string;
     question_group: string;
     question_options: ICourseQuestionOption[];

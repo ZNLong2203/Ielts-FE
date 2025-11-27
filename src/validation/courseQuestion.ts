@@ -14,7 +14,6 @@ const CourseQuestionOptionSchema = z.object({
 export const CourseQuestionFormSchema = z.object({
   question_text: z.string().min(5, "Question text must be at least 5 characters"),
   question_type: z.string().min(1, "Please select a question type"),
-  difficulty_level: z.any(),
   explanation: z.string().optional(),
   correct_answer: z.string().optional(),
   points: z.string().min(1, "Points is required"),
