@@ -80,7 +80,7 @@ const TeacherSidebar = ({
                     <GraduationCap className="h-5 w-5 text-white" />
                   </div>
                   <div className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                    TLL Teacher
+                    Teacher
                   </div>
                 </div>
               </div>

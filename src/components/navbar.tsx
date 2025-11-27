@@ -100,16 +100,20 @@ const LandingNavbar = () => {
               <a href="/" className="md:max-lg:order-1 flex items-center gap-2">
                 <div className="mr-0 rounded-[140px] px-3 py-2.5 max-md:bg-[rgba(5,6,15,0.17)] md:mr-5 md:px-0 md:py-2.5 lg:mr-1 lg:px-5 lg:py-3 flex items-center gap-2">
                   <img
-                    src="/icons/logo.png" 
-                    alt="TLL Logo" 
-                    className="h-8 w-8 object-contain"
+                    src="/icons/logo.png"
+                    alt="TLL Logo"
+                    className="h-12 w-12 object-contain rounded-lg"
                   />
-                  <span className="font-bold text-xl text-white">TLL</span>
+                  <span className="font-bold text-xl text-white">IELTS</span>
                 </div>
               </a>
 
-              <a href="/" className="md:max-lg:order-1" style={{display: 'none'}}>
-                <div style={{display: 'none'}}>
+              <a
+                href="/"
+                className="md:max-lg:order-1"
+                style={{ display: "none" }}
+              >
+                <div style={{ display: "none" }}>
                   {/* SVG logo đã thay thế */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -207,10 +211,7 @@ const LandingNavbar = () => {
                   </div>
                 </NavbarTitle> */}
 
-                <NavbarLink
-                  text="Blog"
-                  href="/blogs"
-                />
+                <NavbarLink text="Blog" href="/blogs" />
               </div>
             </div>
 
@@ -226,10 +227,7 @@ const LandingNavbar = () => {
                         <div className="flex flex-col">
                           <NavbarLink text="Login" href={ROUTES.LOGIN} />
                           <div className="border-t border-white/20 my-1"></div>
-                          <NavbarLink
-                            text="Admin Portal"
-                            href={ROUTES.ADMIN}
-                          />
+                          <NavbarLink text="Admin Portal" href={ROUTES.ADMIN} />
                         </div>
                       </div>
                     </div>
@@ -244,10 +242,6 @@ const LandingNavbar = () => {
                           <NavbarLink
                             text="Join as Student"
                             href={ROUTES.STUDENT_REGISTER}
-                          />
-                          <NavbarLink
-                            text="Join as Teacher"
-                            href={ROUTES.TEACHER_REGISTER}
                           />
                         </div>
                       </div>
@@ -294,18 +288,20 @@ const LandingNavbar = () => {
                       {/* Menu Items */}
                       <div className="space-y-1">
                         {/* Profile Link */}
-                        <a
-                          href={
-                            user?.role === "teacher"
-                              ? ROUTES.TEACHER_PROFILE
-                              : ROUTES.STUDENT_PROFILE
-                          }
-                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
-                        >
-                          <User className="h-4 w-4" />
-                          <span>My Profile</span>
-                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
+                        {user?.role !== "admin" && (
+                          <a
+                            href={
+                              user?.role === "teacher"
+                                ? ROUTES.TEACHER_PROFILE
+                                : ROUTES.STUDENT_PROFILE
+                            }
+                            className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                          >
+                            <User className="h-4 w-4" />
+                            <span>My Profile</span>
+                            <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        )}
 
                         {/* My Learning (Student) */}
                         {user?.role === "student" && (
@@ -331,7 +327,7 @@ const LandingNavbar = () => {
                           </a>
                         )}
 
-                        {/* Achievements */}
+                        {/* Achievements
                         <a
                           href="/achievements"
                           className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
@@ -339,7 +335,7 @@ const LandingNavbar = () => {
                           <Award className="h-4 w-4" />
                           <span>Achievements</span>
                           <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
+                        </a> */}
 
                         {/* Settings */}
                         <a
@@ -407,12 +403,12 @@ const LandingNavbar = () => {
               href="/practice"
               className="block py-2 text-white/70 hover:text-white"
             >
-            <a
-              href="/placement"
-              className="block py-2 text-white/70 hover:text-white"
-            >
-              Placement Test
-            </a>
+              <a
+                href="/placement"
+                className="block py-2 text-white/70 hover:text-white"
+              >
+                Placement Test
+              </a>
               Test Practice
             </a>
             <a
