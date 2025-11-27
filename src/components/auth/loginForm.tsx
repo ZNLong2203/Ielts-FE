@@ -235,7 +235,7 @@ const LoginForm = ({
           >
             Don&apos;t have an account?{" "}
             <a
-              // href={ROUTES.REGISTER}
+              href={ROUTES.STUDENT_REGISTER}
               className="text-blue-700 hover:text-blue-800 transition-colors font-medium"
             >
               Create an account
