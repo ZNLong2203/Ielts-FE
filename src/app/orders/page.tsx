@@ -15,7 +15,7 @@ import OrderProgress from "@/components/orders/OrderProgress"
 import OrderSummary from "@/components/orders/OrderSummary"
 import PersonalInfo from "@/components/orders/PersonalInfo"
 import PaymentMethods from "@/components/orders/PaymentMethods"
-import CouponSection from "@/components/orders/CouponSection"
+import CouponSection, { AppliedCoupon } from "@/components/orders/CouponSection"
 
 // Types
 import { IComboCourse } from "@/interface/course"
@@ -37,7 +37,7 @@ const mockUserInfo = {
 
 export default function OrderPage() {
   const [currentStep] = useState(2)
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
   const [comboCourseData, setComboCourseData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
@@ -45,6 +45,16 @@ export default function OrderPage() {
   // Get user from Redux store
   const user = useSelector((state: RootState) => state.user.user)
   const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated)
+
+  // Debug: Log authentication state
+  useEffect(() => {
+    console.log("[OrderPage] Authentication state:", {
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+      accessToken: localStorage.getItem("accessToken") ? "exists" : "missing",
+    });
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -135,14 +145,15 @@ export default function OrderPage() {
 
   // Calculate prices from combo course data
   const comboCourse = comboCourseData?.comboCourse as IComboCourse
-  const totalOriginalPrice = comboCourse?.original_price || 0
-  const totalComboPrice = comboCourse?.combo_price || 0
-  const comboDiscount = comboCourse ? Math.round(((totalOriginalPrice - totalComboPrice) / totalOriginalPrice) * 100) : 0
+  const totalOriginalPrice = comboCourse ? Number(comboCourse.original_price) || 0 : 0
+  const totalComboPrice = comboCourse ? Number(comboCourse.combo_price) || 0 : 0
+  const comboDiscount =
+    totalOriginalPrice > 0
+      ? Math.round(((totalOriginalPrice - totalComboPrice) / totalOriginalPrice) * 100)
+      : 0
   let finalPrice = totalComboPrice
-
-  // Apply coupon discount
   if (appliedCoupon) {
-    finalPrice = Math.round(finalPrice * (1 - appliedCoupon.discount / 100))
+    finalPrice = Math.max(0, Math.round((totalComboPrice - appliedCoupon.discountAmount) * 100) / 100)
   }
 
   // Convert combo course to display format for OrderSummary component
@@ -182,7 +193,7 @@ export default function OrderPage() {
 
       const orderData: IOrderCreate = {
         comboId: comboCourseData.comboCourseId,
-        couponId: appliedCoupon?.code || undefined,
+        couponId: appliedCoupon?.id || undefined,
         paymentMethod: method.toLowerCase(),
         notes: `Combo course purchase: ${comboCourseData.comboCourseName}`
       }
@@ -252,12 +263,8 @@ export default function OrderPage() {
     }
   }
 
-  const handleCouponApply = (code: string, discount: number) => {
-    if (code && discount > 0) {
-      setAppliedCoupon({ code, discount })
-    } else {
-      setAppliedCoupon(null)
-    }
+  const handleCouponApply = (coupon: AppliedCoupon | null) => {
+    setAppliedCoupon(coupon)
   }
 
   // Determine user info to display
@@ -343,9 +350,11 @@ export default function OrderPage() {
             />
 
             <CouponSection 
+              comboId={comboCourseData?.comboCourseId}
+              comboPrice={totalComboPrice}
               onApply={handleCouponApply} 
-              currentCoupon={appliedCoupon?.code || ""} 
-              currentDiscount={appliedCoupon?.discount || 0} 
+              appliedCoupon={appliedCoupon}
+              isAuthenticated={isAuthenticated}
             />
           </motion.div>
 

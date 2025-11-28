@@ -7,27 +7,71 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { getOrder } from "@/api/order"
+import { IOrder } from "@/interface/order"
+import { useSelector } from "react-redux"
+import { RootState } from "@/redux/store"
 
 export default function PaymentSuccessPage() {
   const [showConfetti, setShowConfetti] = useState(false)
+  const [order, setOrder] = useState<IOrder | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const searchParams = useSearchParams()
+  const user = useSelector((state: RootState) => state.user.user)
+
+  const formatPrice = (price: number | string) => {
+    const numPrice = typeof price === 'string' ? Number(price) : price
+    return `${numPrice.toLocaleString('vi-VN')} ₫`
+  }
 
   useEffect(() => {
     setShowConfetti(true)
-    // Auto-hide confetti after animation
     const timer = setTimeout(() => setShowConfetti(false), 3000)
     return () => clearTimeout(timer)
   }, [])
 
-  const orderDetails = {
-    orderId: "ORD-2024-001234",
-    amount: 627,
-    courses: [
-      { title: "IELTS Foundation: From Beginner to Band 4.0", level: "3.0 → 4.0" },
-      { title: "IELTS Intermediate: Achieving Band 5.5", level: "4.0 → 5.5" },
-      { title: "IELTS Advanced: Mastering Band 7.0+", level: "5.5 → 7.5+" },
-    ],
-    email: "john.doe@example.com"
+  useEffect(() => {
+    const orderId = searchParams.get('orderId')
+    if (orderId) {
+      getOrder(orderId)
+        .then((orderData) => {
+          setOrder(orderData)
+          setIsLoading(false)
+        })
+        .catch((error) => {
+          console.error('Error fetching order:', error)
+          setIsLoading(false)
+        })
+    } else {
+      setIsLoading(false)
+    }
+  }, [searchParams])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    )
   }
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 flex items-center justify-center">
+        <Card className="p-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Order Not Found</h2>
+          <p className="text-gray-600 mb-6">We couldn't find your order. Please contact support.</p>
+          <Link href="/">
+            <Button>Back to Home</Button>
+          </Link>
+        </Card>
+      </div>
+    )
+  }
+
+  const finalAmount = Number(order.final_amount) || 0
+  const courses = order.order_items?.filter(item => item.course_title) || []
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 relative overflow-hidden">
@@ -126,50 +170,56 @@ export default function PaymentSuccessPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-2xl font-semibold text-gray-900">Order Confirmation</h3>
-                  <p className="text-gray-600">Order ID: {orderDetails.orderId}</p>
+                  <p className="text-gray-600">Order ID: {order.order_code}</p>
                 </div>
                 <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 text-lg">
-                  ${orderDetails.amount}
+                  {formatPrice(finalAmount)}
                 </Badge>
               </div>
 
               {/* Course List */}
-              <div className="space-y-4 mb-6">
-                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-blue-600" />
-                  Your IELTS Learning Path
-                </h4>
-                {orderDetails.courses.map((course, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
-                  >
-                    <div>
-                      <div className="font-medium text-gray-900">{course.title}</div>
-                      <div className="text-sm text-gray-600">Band Score Progress: {course.level}</div>
-                    </div>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                      ✓ Enrolled
-                    </Badge>
-                  </motion.div>
-                ))}
-              </div>
+              {courses.length > 0 && (
+                <div className="space-y-4 mb-6">
+                  <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    Your IELTS Learning Path
+                  </h4>
+                  {courses.map((item, index) => (
+                    <motion.div
+                      key={item.id || index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-900">{item.course_title || 'Course'}</div>
+                        {item.combo_name && (
+                          <div className="text-sm text-gray-600">Combo: {item.combo_name}</div>
+                        )}
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                        ✓ Enrolled
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
               {/* Email Confirmation */}
-              <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <div className="font-medium text-blue-900">Confirmation Email Sent</div>
-                    <div className="text-sm text-blue-700">
-                      Receipt and course access details sent to {orderDetails.email}
+              {user?.email && (
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <div className="font-medium text-blue-900">Confirmation Email Sent</div>
+                      <div className="text-sm text-blue-700">
+                        Receipt and course access details sent to {user.email}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

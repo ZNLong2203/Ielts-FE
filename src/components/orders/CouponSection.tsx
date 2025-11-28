@@ -1,66 +1,176 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Tag, CheckCircle, X, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getAvailableCoupons, validateCouponCode } from "@/api/coupon";
+import { ICoupon } from "@/interface/coupon";
 
-interface CouponSectionProps {
-  onApply: (code: string, discount: number) => void;
-  currentCoupon: string;
-  currentDiscount: number;
+export interface AppliedCoupon {
+  id: string;
+  code: string;
+  discountAmount: number;
+  discountType: string;
+  discountValue: number;
+  name?: string;
 }
 
-export default function CouponSection({ onApply, currentCoupon, currentDiscount }: CouponSectionProps) {
-  const [couponCode, setCouponCode] = useState("");
+interface CouponSectionProps {
+  comboId?: string;
+  comboPrice: number;
+  onApply: (coupon: AppliedCoupon | null) => void;
+  appliedCoupon: AppliedCoupon | null;
+  isAuthenticated?: boolean;
+}
+
+export default function CouponSection({
+  comboId,
+  comboPrice,
+  onApply,
+  appliedCoupon,
+  isAuthenticated = false,
+}: CouponSectionProps) {
+  const [couponCode, setCouponCode] = useState(appliedCoupon?.code ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [availableCoupons, setAvailableCoupons] = useState<ICoupon[]>([]);
+  const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
 
-  // Mock coupon validation - in real app, this would be an API call
-  const validateCoupon = async (code: string) => {
+  useEffect(() => {
+    setCouponCode(appliedCoupon?.code ?? "");
+    if (!appliedCoupon) {
+      setSuccess("");
+    }
+  }, [appliedCoupon]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !comboId) {
+      setAvailableCoupons([]);
+      setIsFetchingCoupons(false);
+      return;
+    }
+
+    let mounted = true;
+    setIsFetchingCoupons(true);
+
+    console.log("[CouponSection] Fetching available coupons for comboId:", comboId);
+
+    getAvailableCoupons([comboId])
+      .then((data) => {
+        if (!mounted) return;
+        console.log("[CouponSection] Received available coupons:", data);
+        setAvailableCoupons(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        if (err?.response?.status === 403 || err?.response?.status === 401) {
+          console.log("[CouponSection] Authentication required to view available coupons");
+        } else {
+          console.error("[CouponSection] Failed to fetch available coupons", err);
+          console.error("[CouponSection] Error details:", {
+            status: err?.response?.status,
+            data: err?.response?.data,
+            message: err?.message,
+          });
+        }
+        setAvailableCoupons([]);
+      })
+      .finally(() => {
+        if (mounted) {
+          setIsFetchingCoupons(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [comboId, isAuthenticated]);
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!couponCode.trim()) return;
+    if (!isAuthenticated) {
+      setError("Please log in to apply coupons.");
+      return;
+    }
+    if (!comboId) {
+      setError("No combo selected. Please pick a combo package first.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
     setSuccess("");
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      console.log("[CouponSection] Validating coupon:", {
+        code: couponCode.trim().toUpperCase(),
+        comboId,
+        comboPrice,
+      });
 
-    const validCoupons = {
-      "WELCOME10": { discount: 10, message: "Welcome discount applied!" },
-      "SAVE20": { discount: 20, message: "20% off your order!" },
-      "COMBO15": { discount: 15, message: "Combo course discount applied!" },
-      "NEWUSER": { discount: 25, message: "New user special discount!" }
-    };
+      const validation = await validateCouponCode({
+        code: couponCode.trim().toUpperCase(),
+        combo_ids: [comboId],
+        total_amount: comboPrice,
+      });
 
-    const coupon = validCoupons[code.toUpperCase() as keyof typeof validCoupons];
-    
-    if (coupon) {
-      setSuccess(coupon.message);
-      onApply(code.toUpperCase(), coupon.discount);
-    } else {
-      setError("Invalid coupon code. Please try again.");
-    }
+      console.log("[CouponSection] Validation result:", validation);
 
-    setIsLoading(false);
-  };
+      if (!validation?.isValid || !validation?.coupon) {
+        setError(
+          validation?.errorMessage || "Invalid coupon code. Please try again."
+        );
+        onApply(null);
+        return;
+      }
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (couponCode.trim()) {
-      validateCoupon(couponCode.trim());
+      const discountAmount = validation.discount_amount || 0;
+      const coupon = validation.coupon;
+
+      onApply({
+        id: coupon.id,
+        code: coupon.code,
+        discountAmount,
+        discountType: coupon.discount_type,
+        discountValue: Number(coupon.discount_value),
+        name: coupon.name,
+      });
+
+      setSuccess(
+        `Coupon applied! You saved ${formatPrice(discountAmount)}.`
+      );
+      setError("");
+    } catch (err: unknown) {
+      // Handle authentication errors
+      const axiosError = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      if (axiosError?.response?.status === 403 || axiosError?.response?.status === 401) {
+        setError("Please log in to apply coupons.");
+      } else {
+        const message =
+          axiosError?.response?.data?.message ||
+          axiosError?.message ||
+          "Failed to validate coupon. Please try again.";
+        setError(message);
+      }
+      onApply(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRemoveCoupon = () => {
-    onApply("", 0);
+    onApply(null);
     setCouponCode("");
     setError("");
     setSuccess("");
   };
 
   const formatPrice = (price: number) => {
-    return price.toLocaleString('vi-VN') + ' ₫';
+    if (!price) return "0 ₫";
+    return `${Number(price).toLocaleString("vi-VN")} ₫`;
   };
 
   return (
@@ -77,12 +187,14 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Apply Coupon</h3>
-          <p className="text-gray-600 text-sm">Enter your discount code</p>
+          <p className="text-gray-600 text-sm">
+            Enter your discount code or pick one from the list below
+          </p>
         </div>
       </div>
 
       {/* Current Coupon Applied */}
-      {currentCoupon && currentDiscount > 0 && (
+      {appliedCoupon && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -92,8 +204,12 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
             <div className="flex items-center space-x-3">
               <CheckCircle className="h-5 w-5 text-green-400" />
               <div>
-                <div className="text-green-300 font-medium">{currentCoupon}</div>
-                <div className="text-green-400 text-sm">-{currentDiscount}% discount applied</div>
+                <div className="text-green-300 font-medium">
+                  {appliedCoupon.code}
+                </div>
+                <div className="text-green-400 text-sm">
+                  Saved {formatPrice(appliedCoupon.discountAmount)}
+                </div>
               </div>
             </div>
             <Button
@@ -109,8 +225,15 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
       )}
 
       {/* Coupon Input Form */}
-      {!currentCoupon && (
+      {!appliedCoupon && (
         <form onSubmit={handleApplyCoupon} className="space-y-4">
+          {!isAuthenticated && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-yellow-800">
+                Please log in to view and apply coupons.
+              </p>
+            </div>
+          )}
           <div className="flex space-x-3">
             <div className="flex-1 relative">
               <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -120,13 +243,13 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
                 value={couponCode}
                 onChange={(e) => setCouponCode(e.target.value)}
                 className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                disabled={isLoading}
+                disabled={isLoading || !isAuthenticated}
               />
             </div>
             <Button
               type="submit"
-              disabled={!couponCode.trim() || isLoading}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6"
+              disabled={!couponCode.trim() || isLoading || !comboId || !isAuthenticated}
+              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -166,35 +289,55 @@ export default function CouponSection({ onApply, currentCoupon, currentDiscount 
       )}
 
       {/* Available Coupons */}
-      <div className="mt-6">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Available Coupons:</h4>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { code: "WELCOME10", discount: "10%" },
-            { code: "SAVE20", discount: "20%" },
-            { code: "COMBO15", discount: "15%" },
-            { code: "NEWUSER", discount: "25%" }
-          ].map((coupon) => (
-            <motion.div
-              key={coupon.code}
-              whileHover={{ scale: 1.02 }}
-              className="bg-gray-50 border border-gray-200 rounded-lg p-2 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all duration-200"
-              onClick={() => setCouponCode(coupon.code)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-gray-900 font-medium text-sm">{coupon.code}</div>
-                <div className="text-green-600 font-bold text-sm">{coupon.discount}</div>
+      {isAuthenticated && (
+        <div className="mt-6">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">
+            Available Coupons:
+          </h4>
+          <div className="grid grid-cols-2 gap-2">
+            {availableCoupons.length > 0 ? (
+              availableCoupons.map((coupon) => (
+                <motion.div
+                  key={coupon.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="bg-gray-50 border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-100 hover:border-gray-300 transition-all duration-200"
+                  onClick={() => {
+                    setCouponCode(coupon.code);
+                    setError("");
+                    setSuccess("");
+                  }}
+                >
+                  <div className="text-gray-900 font-semibold text-sm mb-1">
+                    {coupon.code}
+                  </div>
+                  <div className="text-green-600 font-bold text-sm mb-1">
+                    {coupon.discount_type === "percentage"
+                      ? `${coupon.discount_value}%`
+                      : formatPrice(Number(coupon.discount_value))}
+                  </div>
+                  {coupon.description && (
+                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                      {coupon.description}
+                    </p>
+                  )}
+                </motion.div>
+              ))
+            ) : (
+              <div className="col-span-2 text-sm text-gray-500">
+                {isFetchingCoupons
+                  ? "Loading available coupons..."
+                  : "No active coupons for this combo right now."}
               </div>
-            </motion.div>
-          ))}
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Terms */}
       <div className="mt-4 text-xs text-gray-500">
         <p>• Coupons can only be used once per order</p>
         <p>• Cannot be combined with other promotions</p>
-        <p>• Valid for new and existing customers</p>
+        <p>• Valid coupons are pulled directly from your account</p>
       </div>
     </motion.div>
   );

@@ -58,3 +58,10 @@ export interface ICoupons {
   result: ICoupon[];
 }
 
+export interface IValidateCouponResponse {
+  isValid: boolean;
+  errorMessage?: string;
+  discount_amount?: number;
+  coupon?: ICoupon;
+}
+
