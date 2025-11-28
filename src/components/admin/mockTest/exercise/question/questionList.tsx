@@ -37,6 +37,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// ✅ Import AlertDialog components
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import toast from "react-hot-toast";
@@ -180,9 +192,12 @@ const QuestionList: React.FC<QuestionListProps> = ({
     refetch(); // Refresh the list
   };
 
-  const handleDelete = async (questionId: string, questionText: string) => {
-    if (window.confirm(`Are you sure you want to delete this question?`)) {
+  // ✅ Updated delete handler using AlertDialog
+  const handleDelete = async (questionId: string) => {
+    try {
       await deleteQuestionMutation.mutateAsync(questionId);
+    } catch (error) {
+      console.error("Delete error:", error);
     }
   };
 
@@ -570,15 +585,41 @@ const QuestionList: React.FC<QuestionListProps> = ({
                             Edit Question
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleDelete(question.id, question.question_text)
-                            }
-                            className="text-red-600 focus:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
+                          
+                          {/* ✅ Replace DropdownMenuItem with AlertDialog */}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <DropdownMenuItem
+                                onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                                className="text-red-600 focus:text-red-600 cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Question?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to permanently delete this question? 
+                                  <br />
+                                  <span className="font-medium mt-2 block">"{question.question_text}"</span>
+                                  <br />
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(question.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                  disabled={deleteQuestionMutation.isPending}
+                                >
+                                  {deleteQuestionMutation.isPending ? "Deleting..." : "Delete Question"}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

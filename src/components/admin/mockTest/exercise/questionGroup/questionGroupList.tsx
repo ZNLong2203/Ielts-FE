@@ -35,6 +35,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+// ✅ Import AlertDialog components
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import toast from "react-hot-toast";
@@ -112,7 +124,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
   const deleteQuestionGroupMutation = useMutation({
     mutationFn: deleteQuestionGroup,
     onSuccess: () => {
-      toast.success("Question group deleted successfully!");
+      toast.success("Question group deleted successfully! 🗑️");
       queryClient.invalidateQueries({
         queryKey: ["questionGroups", exerciseId],
       });
@@ -173,9 +185,12 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
     );
   };
 
-  const handleDelete = async (questionGroupId: string, groupTitle: string) => {
-    if (window.confirm(`Are you sure you want to delete "${groupTitle}"?`)) {
+  // ✅ Updated delete handler using AlertDialog
+  const handleDelete = async (questionGroupId: string) => {
+    try {
       await deleteQuestionGroupMutation.mutateAsync(questionGroupId);
+    } catch (error) {
+      console.error("Delete error:", error);
     }
   };
 
@@ -510,15 +525,38 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                           Edit Group
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleDelete(group.id, group.group_title)
-                          }
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                        
+                        {/* ✅ Replace DropdownMenuItem with AlertDialog */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem
+                              onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                              className="text-red-600 focus:text-red-600 cursor-pointer"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Question Group?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to permanently delete "{group.group_title}"? 
+                                This will also delete all associated questions. This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(group.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                                disabled={deleteQuestionGroupMutation.isPending}
+                              >
+                                {deleteQuestionGroupMutation.isPending ? "Deleting..." : "Delete Group"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
