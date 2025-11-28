@@ -1,0 +1,53 @@
+import { CheckCircle, Circle, FileText, Link2 } from "lucide-react";
+
+// Question type configurations
+export const QUESTION_TYPE_CONFIG = {
+  fill_blank: {
+    type: "fill_blank",
+    label: "Fill in Blanks",
+    icon: FileText,
+    color: "bg-blue-100 text-blue-800 border-blue-200",
+    description: "Students fill in missing words or phrases",
+    hasOptions: false,
+    hasCorrectAnswer: true,
+    hasAlternateAnswers: true,
+    hasTrueFalseNotGiven: false,
+    hasMatching: false,
+  },
+  true_false: {
+    type: "true_false",
+    label: "True/False/Not Given",
+    icon: CheckCircle,
+    color: "bg-green-100 text-green-800 border-green-200",
+    description: "Students choose between true, false, or not given",
+    hasOptions: false,
+    hasCorrectAnswer: false,
+    hasAlternateAnswers: false,
+    hasTrueFalseNotGiven: true,
+    hasMatching: false,
+  },
+  multiple_choice: {
+    type: "multiple_choice",
+    label: "Multiple Choice",
+    icon: Circle,
+    color: "bg-purple-100 text-purple-800 border-purple-200",
+    description: "Students choose from multiple options",
+    hasOptions: true,
+    hasCorrectAnswer: false,
+    hasAlternateAnswers: false,
+    hasTrueFalseNotGiven: false,
+    hasMatching: false,
+  },
+  matching: {
+    type: "matching",
+    label: "Matching",
+    icon: Link2,
+    color: "bg-orange-100 text-orange-800 border-orange-200",
+    description: "Students match items together",
+    hasOptions: false,
+    hasCorrectAnswer: false,
+    hasAlternateAnswers: false,
+    hasTrueFalseNotGiven: false,
+    hasMatching: true,
+  },
+} as const;

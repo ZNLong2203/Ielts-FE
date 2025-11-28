@@ -1,30 +1,30 @@
 "use client";
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useParams } from "next/navigation";
-import {
-  FileText,
-  CheckCircle,
-  Circle,
-  Link2,
-  Volume2,
-  Target,
-  Hash,
-  AlertCircle,
-  Info,
-  Play,
-  Download,
-} from "lucide-react";
+import { deleteQuestion, getQuestion } from "@/api/question";
+import { getQuestionGroup } from "@/api/questionGroup";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
-import toast from "react-hot-toast";
+import Loading from "@/components/ui/loading";
+import { Separator } from "@/components/ui/separator";
 import ROUTES from "@/constants/route";
-import { getQuestion, deleteQuestion } from "@/api/question";
-import { getQuestionGroup } from "@/api/questionGroup";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  AlertCircle,
+  CheckCircle,
+  Circle,
+  Download,
+  FileText,
+  Hash,
+  Info,
+  Link2,
+  Play,
+  Target,
+  Volume2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
 
 // Question type configurations
 const QUESTION_TYPE_CONFIG = {
@@ -35,10 +35,10 @@ const QUESTION_TYPE_CONFIG = {
     description: "Students fill in missing words or phrases",
   },
   true_false: {
-    label: "True/False",
+    label: "True/False/Not Given",
     icon: CheckCircle,
     color: "bg-green-100 text-green-800 border-green-200",
-    description: "Students choose between true or false",
+    description: "Students choose between true, false, or not given",
   },
   multiple_choice: {
     label: "Multiple Choice",

@@ -1,36 +1,37 @@
 "use client";
-import React, { useState } from "react";
 import { getReadingExercise } from "@/api/reading";
+import QuestionList from "@/components/admin/mockTest/exercise/question/questionList";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
-import { useQuery } from "@tanstack/react-query";
-import { useSearchParams, useRouter, useParams } from "next/navigation";
-import {
-  BookOpen,
-  Edit3,
-  Clock,
-  Target,
-  Hash,
-  FileText,
-  Eye,
-  BarChart3,
-  Layers,
-  Copy,
-  Share2,
-  Settings,
-  Info,
-  Timer,
-  Award,
-  BookMarked,
-  List,
-  CheckCircle,
-} from "lucide-react";
+import Loading from "@/components/ui/loading";
 import ROUTES from "@/constants/route";
-import toast from "react-hot-toast";
 import { IReadingExercise } from "@/interface/reading";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Award,
+  BarChart3,
+  BookMarked,
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Copy,
+  Edit3,
+  Eye,
+  FileText,
+  Hash,
+  Info,
+  Layers,
+  List,
+  Settings,
+  Share2,
+  Target,
+  Timer,
+} from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import QuestionGroupList from "../questionGroup/questionGroupList";
 
 const DIFFICULTY_LABELS = {
@@ -70,10 +71,15 @@ const ReadingDetail = () => {
   const readingExerciseId = Array.isArray(params.readingId)
     ? params.readingId[0]
     : params.readingId;
-  const sectionId = searchParams?.get("sectionId");
+  const sectionId = searchParams?.get("sectionId") ?? undefined;
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "passage" | "questionGroup" | "question" | "paragraphs" | "preview"
+    | "overview"
+    | "passage"
+    | "questionGroup"
+    | "question"
+    | "paragraphs"
+    | "preview"
   >("overview");
   const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
     null
@@ -549,6 +555,14 @@ const ReadingDetail = () => {
           <QuestionGroupList
             exerciseId={readingExercise.id}
             mockTestId={mockTestId}
+          />
+        )}
+
+        {activeTab === "question" && (
+          <QuestionList
+            exerciseId={readingExerciseId}
+            mockTestId={mockTestId}
+            sectionId={sectionId}
           />
         )}
 

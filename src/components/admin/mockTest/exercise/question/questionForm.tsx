@@ -1,29 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Minus,
-  Save,
-  FileText,
-  Volume2,
-  Image as ImageIcon,
-  CheckCircle,
-  Circle,
-  Link2,
-  ArrowLeft,
-  Trash2,
-  Info,
-  Eye,
-  X,
-} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import Heading from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import Loading from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -31,71 +14,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import Loading from "@/components/ui/loading";
-import Error from "@/components/ui/error";
-import Heading from "@/components/ui/heading";
-import toast from "react-hot-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { QUESTION_TYPE_CONFIG } from "@/constants/question";
 import ROUTES from "@/constants/route";
 import {
-  getQuestion,
-  createQuestion,
-  updateQuestion,
-  uploadQuestionImage,
-  uploadQuestionAudio,
-} from "@/api/question";
-import { getQuestionGroups } from "@/api/questionGroup";
+  useCreateQuestionMutation,
+  useQuestionGroupsQuery,
+  useQuestionQuery,
+  useUpdateQuestionMutation,
+} from "@/hooks/useQuestionHooks";
 import {
   IQuestionCreate,
-  IQuestionUpdate,
   IQuestionOption,
+  IQuestionUpdate,
 } from "@/interface/question";
-
-// Question type configurations
-const QUESTION_TYPE_CONFIG = {
-  fill_blank: {
-    label: "Fill in Blanks",
-    icon: FileText,
-    color: "bg-blue-100 text-blue-800 border-blue-200",
-    description: "Students fill in missing words or phrases",
-    hasOptions: false,
-    hasCorrectAnswer: true,
-    hasAlternateAnswers: true,
-  },
-  true_false: {
-    label: "True/False",
-    icon: CheckCircle,
-    color: "bg-green-100 text-green-800 border-green-200",
-    description: "Students choose between true or false",
-    hasOptions: false,
-    hasCorrectAnswer: true,
-    hasAlternateAnswers: false,
-  },
-  multiple_choice: {
-    label: "Multiple Choice",
-    icon: Circle,
-    color: "bg-purple-100 text-purple-800 border-purple-200",
-    description: "Students choose from multiple options",
-    hasOptions: true,
-    hasCorrectAnswer: false,
-    hasAlternateAnswers: false,
-  },
-  matching: {
-    label: "Matching",
-    icon: Link2,
-    color: "bg-orange-100 text-orange-800 border-orange-200",
-    description: "Students match items together",
-    hasOptions: true,
-    hasCorrectAnswer: false,
-    hasAlternateAnswers: false,
-  },
-} as const;
-
-const DIFFICULTY_LEVELS = {
-  1: { label: "Easy", color: "bg-green-100 text-green-800", value: 1 },
-  2: { label: "Medium", color: "bg-yellow-100 text-yellow-800", value: 2 },
-  3: { label: "Hard", color: "bg-red-100 text-red-800", value: 3 },
-};
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Circle,
+  FileText,
+  Info,
+  Minus,
+  Plus,
+  Save,
+  Trash2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 interface QuestionFormProps {
   exerciseId: string;
@@ -127,20 +73,16 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
     question_group_id: questionGroupId || null,
     question_type: "",
     question_text: "",
-    reading_passage: "",
     correct_answer: "",
-    alternate_answers: [""],
+    alternative_answers: [""],
     points: 1,
     ordering: 1,
-    difficulty_level: 2,
     explanation: "",
     options: [] as IQuestionOption[],
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isPopulated = useRef(false);
 
   // Query for question groups
   const {
@@ -148,17 +90,32 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
     isLoading,
     isError,
     refetch,
-  } = useQuery({
-    queryKey: ["questionGroups", exerciseId],
-    queryFn: () => getQuestionGroups(exerciseId),
-    enabled: !!exerciseId,
-  });
+  } = useQuestionGroupsQuery(exerciseId);
 
   // Query for existing question (edit mode)
-  const { data: existingQuestion, isLoading: isLoadingQuestion } = useQuery({
-    queryKey: ["question", questionId],
-    queryFn: () => getQuestion(questionId!),
-    enabled: !!questionId,
+  const { data: existingQuestion, isLoading: isLoadingQuestion } =
+    useQuestionQuery(questionId ?? null);
+
+  // Create mutation
+  const createMutation = useCreateQuestionMutation({
+    onSuccess: (data) => {
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        handleBack();
+      }
+    },
+  });
+
+  // Update mutation
+  const updateMutation = useUpdateQuestionMutation(questionId || "", {
+    onSuccess: (data) => {
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        handleBack();
+      }
+    },
   });
 
   // Get selected question group
@@ -167,172 +124,108 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
   );
 
   // Populate form data when editing or when question groups are loaded
+
   useEffect(() => {
+    if (isPopulated.current) return;
+    if (!questionGroups || (questionId && !existingQuestion)) return;
+
+    let formatData: any = {
+      exercise_id: exerciseId,
+      question_group_id: "",
+      question_type: "",
+      question_text: "",
+      correct_answer: "",
+      alternative_answers: [""],
+      points: 1,
+      ordering: 1,
+      explanation: "",
+      options: [],
+    };
+
     if (existingQuestion) {
-      setFormData({
-        exercise_id: exerciseId,
-        question_group_id: existingQuestion.question_group_id || null,
-        question_type: existingQuestion.question_type || "",
+      const selectedGroup = questionGroups.groups.find(
+        (g: any) => g.id === existingQuestion.question_group_id
+      );
+
+      formatData = {
+        ...formatData,
+        question_group_id: selectedGroup?.id || null,
+        question_type:
+          selectedGroup?.question_type || existingQuestion.question_type || "",
         question_text: existingQuestion.question_text || "",
-        reading_passage: existingQuestion.reading_passage || "",
         correct_answer: existingQuestion.correct_answer || "",
-        alternate_answers:
-          existingQuestion.alternate_answers &&
-          existingQuestion.alternate_answers.length > 0
-            ? existingQuestion.alternate_answers
+        alternative_answers:
+          existingQuestion.alternative_answers?.length > 0
+            ? existingQuestion.alternative_answers
             : [""],
         points: existingQuestion.points || 1,
         ordering: existingQuestion.ordering || 1,
-        difficulty_level: existingQuestion.difficulty_level || 2,
         explanation: existingQuestion.explanation || "",
-        // Fix options mapping - ensure all required fields are present
         options:
-          existingQuestion.options &&
-          Array.isArray(existingQuestion.options) &&
-          existingQuestion.options.length > 0
-            ? existingQuestion.options.map((option: any, index: number) => {
-                console.log(`Processing option ${index}:`, option);
-                return {
-                  id: option.id || undefined, // Keep existing id for updates
-                  option_text: option.option_text || "",
-                  is_correct: Boolean(option.is_correct), // Ensure boolean
-                  ordering: option.ordering || index + 1,
-                  point: Number(option.point) || 1, // Ensure number
-                  explanation: option.explanation || "",
-                  matching_option_id: option.matching_option_id || undefined,
-                };
-              })
-            : [],
-      });
+          existingQuestion.options?.map((option: any, index: number) => ({
+            id: option.id,
+            option_text: option.option_text || "",
+            is_correct: Boolean(option.is_correct),
+            ordering: option.ordering || index + 1,
+            point: Number(option.point) || 1,
+            explanation: option.explanation || "",
+            matching_option_id: option.matching_option_id || undefined,
+          })) || [],
+      };
 
-      console.log(
-        "After mapping, options:",
-        existingQuestion.options?.map((option: any, index: number) => ({
-          id: option.id || undefined,
-          option_text: option.option_text || "",
-          is_correct: Boolean(option.is_correct),
-          ordering: option.ordering || index + 1,
-          point: Number(option.point) || 1,
-          explanation: option.explanation || "",
-        }))
-      );
-
-      // Set image preview if exists
-      if (existingQuestion.image_url) {
-        setImagePreview(existingQuestion.image_url);
+      if (
+        existingQuestion.question_type === QUESTION_TYPE_CONFIG.fill_blank.type
+      ) {
+        formatData.correct_answer =
+          existingQuestion.options[0]?.option_text || "";
+        formatData.alternative_answers = existingQuestion.options
+          .filter((option: any) => option.ordering !== 0)
+          .map((option: any) => option.option_text);
       }
-    } else if (questionGroupId && questionGroups?.groups) {
-      // Auto-select question group if passed as prop
+
+      if (
+        existingQuestion.question_type === QUESTION_TYPE_CONFIG.true_false.type
+      ) {
+        formatData.correct_answer =
+          existingQuestion.options[0]?.option_text || "";
+      }
+    } else if (questionGroupId) {
       const selectedGroup = questionGroups.groups.find(
         (g: any) => g.id === questionGroupId
       );
       if (selectedGroup) {
-        setFormData((prev) => ({
-          ...prev,
-          question_type: selectedGroup.question_type,
-          question_group_id: selectedGroup.id,
-        }));
+        formatData.question_group_id = selectedGroup.id;
+        formatData.question_type = selectedGroup.question_type;
       }
     }
-  }, [existingQuestion, questionGroups, questionGroupId, exerciseId]);
 
-  // Thêm useEffect để ensure options exist for option-based question types
-  useEffect(() => {
-    const questionType =
+    // Tạo options mặc định nếu cần cho question type có options
+    const questionTypeConfig =
       QUESTION_TYPE_CONFIG[
-        formData.question_type as keyof typeof QUESTION_TYPE_CONFIG
+        formatData.question_type as keyof typeof QUESTION_TYPE_CONFIG
       ];
-
-    if (
-      questionType?.hasOptions &&
-      formData.options.length === 0 &&
-      !questionId
-    ) {
-    
-      setFormData((prev) => ({
-        ...prev,
-        options: [
-          {
-            option_text: "",
-            is_correct: false,
-            ordering: 1,
-            point: 1,
-            explanation: "",
-          },
-        ],
-      }));
+    if (questionTypeConfig?.hasOptions && formatData.options.length === 0) {
+      formatData.options = [
+        {
+          option_text: "",
+          is_correct: false,
+          ordering: 1,
+          point: 1,
+          explanation: "",
+        },
+      ];
     }
-  }, [formData.question_type, formData.options.length, questionId]);
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: (data: IQuestionCreate) => createQuestion(data),
-    onSuccess: async (response) => {
-      const newQuestionId = response.data.id;
-
-      // Upload files if provided
-      if (imageFile) {
-        const imageFormData = new FormData();
-        imageFormData.append("image", imageFile);
-        await uploadQuestionImage(newQuestionId, imageFormData);
-      }
-
-      if (audioFile) {
-        const audioFormData = new FormData();
-        audioFormData.append("audio", audioFile);
-        await uploadQuestionAudio(newQuestionId, audioFormData);
-      }
-
-      toast.success("Question created successfully! 🎉");
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
-
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        handleBack();
-      }
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to create question"
-      );
-    },
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: IQuestionUpdate }) =>
-      updateQuestion(id, data),
-    onSuccess: async () => {
-      // Upload files if provided
-      if (imageFile && questionId) {
-        const imageFormData = new FormData();
-        imageFormData.append("image", imageFile);
-        await uploadQuestionImage(questionId, imageFormData);
-      }
-
-      if (audioFile && questionId) {
-        const audioFormData = new FormData();
-        audioFormData.append("audio", audioFile);
-        await uploadQuestionAudio(questionId, audioFormData);
-      }
-
-      toast.success("Question updated successfully! ✅");
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
-      queryClient.invalidateQueries({ queryKey: ["question", questionId] });
-
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        handleBack();
-      }
-    },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update question"
-      );
-    },
-  });
+    setFormData(formatData);
+    isPopulated.current = true;
+    console.log("FormData populated:", formatData);
+  }, [
+    existingQuestion,
+    questionGroups,
+    questionGroupId,
+    exerciseId,
+    questionId,
+  ]);
 
   // Handlers
   const handleInputChange = (field: string, value: any) => {
@@ -395,46 +288,29 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
   };
 
   const handleAlternateAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...formData.alternate_answers];
+    const newAnswers = [...formData.alternative_answers];
     newAnswers[index] = value;
     setFormData((prev) => ({
       ...prev,
-      alternate_answers: newAnswers,
+      alternative_answers: newAnswers,
     }));
   };
 
   const addAlternateAnswer = () => {
     setFormData((prev) => ({
       ...prev,
-      alternate_answers: [...prev.alternate_answers, ""],
+      alternative_answers: [...prev.alternative_answers, ""],
     }));
   };
 
   const removeAlternateAnswer = (index: number) => {
-    if (formData.alternate_answers.length > 1) {
+    if (formData.alternative_answers.length > 1) {
       setFormData((prev) => ({
         ...prev,
-        alternate_answers: prev.alternate_answers.filter((_, i) => i !== index),
+        alternative_answers: prev.alternative_answers.filter(
+          (_, i) => i !== index
+        ),
       }));
-    }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAudioFile(file);
     }
   };
 
@@ -503,10 +379,9 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
       const submissionData = {
         ...formData,
         exercise_id: exerciseId,
-        difficulty_level: Number(formData.difficulty_level),
         points: Number(formData.points),
         ordering: Number(formData.ordering),
-        alternate_answers: formData.alternate_answers.filter(
+        alternative_answers: formData.alternative_answers.filter(
           (answer) => answer.trim() !== ""
         ),
         options: processedOptions,
@@ -553,7 +428,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
     }
   };
 
-  if (isLoadingQuestion || isLoading) {
+  if (isLoadingQuestion || isLoading || !isPopulated.current) {
     return <Loading />;
   }
 
@@ -746,41 +621,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                   )}
                 </div>
 
-                {/* Difficulty Level */}
-                <div className="space-y-2">
-                  <Label htmlFor="difficulty_level">Difficulty Level *</Label>
-                  <Select
-                    value={String(formData.difficulty_level)}
-                    onValueChange={(value) =>
-                      handleInputChange("difficulty_level", parseInt(value, 10))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select difficulty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(DIFFICULTY_LEVELS).map(
-                        ([key, config]) => (
-                          <SelectItem key={key} value={key}>
-                            <div className="flex items-center space-x-2">
-                              <div
-                                className={`w-2 h-2 rounded-full ${
-                                  config.color.includes("green")
-                                    ? "bg-green-500"
-                                    : config.color.includes("yellow")
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
-                                }`}
-                              ></div>
-                              <span>{config.label}</span>
-                            </div>
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Points */}
                 <div className="space-y-2">
                   <Label htmlFor="points">Points *</Label>
@@ -825,19 +665,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                   className="min-h-[100px]"
                 />
               </div>
-
-              {/* Reading Passage Reference */}
-              <div className="space-y-2">
-                <Label htmlFor="reading_passage">Passage Reference</Label>
-                <Textarea
-                  value={formData.reading_passage}
-                  onChange={(e) =>
-                    handleInputChange("reading_passage", e.target.value)
-                  }
-                  placeholder="Reference to specific passage or text (optional)..."
-                  className="min-h-[80px]"
-                />
-              </div>
             </CardContent>
           </Card>
 
@@ -861,6 +688,141 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 </div>
               )}
 
+              {/* Has selector for True/False/Not Given */}
+              {questionTypeConfig?.hasTrueFalseNotGiven && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="true_false_not_given"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Select Answer *
+                  </Label>
+                  <Select
+                    value={formData.correct_answer}
+                    onValueChange={(value) =>
+                      handleInputChange("correct_answer", value)
+                    }
+                  >
+                    <SelectTrigger className="w-full h-11 bg-white border-gray-300 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+                      <SelectValue
+                        placeholder="Select an option"
+                        className="text-gray-500"
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg">
+                      <SelectItem
+                        value="true"
+                        className="hover:bg-green-50 focus:bg-green-50 cursor-pointer transition-colors duration-150"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span className="font-medium text-gray-800">
+                            True
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem
+                        value="false"
+                        className="hover:bg-red-50 focus:bg-red-50 cursor-pointer transition-colors duration-150"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                          <span className="font-medium text-gray-800">
+                            False
+                          </span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem
+                        value="yes"
+                        className="hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          <span className="font-medium text-gray-800">Yes</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem
+                        value="no"
+                        className="hover:bg-orange-50 focus:bg-orange-50 cursor-pointer transition-colors duration-150"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                          <span className="font-medium text-gray-800">No</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem
+                        value="not_given"
+                        className="hover:bg-gray-50 focus:bg-gray-50 cursor-pointer transition-colors duration-150"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                          <span className="font-medium text-gray-800">
+                            Not Given
+                          </span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Select the correct answer for this True/False/Not Given
+                    question
+                  </p>
+                </div>
+              )}
+
+              {/* Matching Option Selector - chỉ hiển thị khi có hasMatching */}
+              {questionTypeConfig?.hasMatching &&
+                selectedQuestionGroup?.matching_options && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Match with Answer *
+                    </Label>
+                    <Select
+                      value={formData.options[0]?.matching_option_id || "none"}
+                      onValueChange={(value) =>
+                        handleOptionChange(0, "matching_option_id", value)
+                      }
+                    >
+                      <SelectTrigger className="w-full h-11 bg-white border-gray-300 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+                        <SelectValue
+                          placeholder="Select matching option"
+                          className="text-gray-500"
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg">
+                        <SelectItem value="none">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                            <span className="font-medium text-gray-500 italic">
+                              No match
+                            </span>
+                          </div>
+                        </SelectItem>
+                        {selectedQuestionGroup.matching_options
+                          .sort((a: any, b: any) => a.ordering - b.ordering)
+                          .map((matchingOption: any, matchIndex: number) => (
+                            <SelectItem
+                              key={matchingOption.id}
+                              value={matchingOption.id}
+                              className="hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                <span className="font-medium text-gray-800">
+                                  {String.fromCharCode(65 + matchIndex)}.{" "}
+                                  {matchingOption.option_text}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Select which answer this option matches with
+                    </p>
+                  </div>
+                )}
+
               {/* Alternate Answers */}
               {questionTypeConfig?.hasAlternateAnswers && (
                 <div className="space-y-4">
@@ -876,7 +838,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                       Add Alternate
                     </Button>
                   </div>
-                  {formData.alternate_answers.map((answer, index) => (
+                  {formData.alternative_answers.map((answer, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <Input
                         value={answer}
@@ -885,7 +847,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                         }
                         placeholder="Alternate answer..."
                       />
-                      {formData.alternate_answers.length > 1 && (
+                      {formData.alternative_answers.length > 1 && (
                         <Button
                           type="button"
                           variant="outline"
@@ -1062,63 +1024,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
               <CardTitle>Media & Additional Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Image Upload */}
-              <div className="space-y-4">
-                <Label>Question Image</Label>
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
-                  </div>
-                  {imagePreview && (
-                    <div className="relative w-24 h-24">
-                      <img
-                        src={imagePreview}
-                        alt="Question image preview"
-                        className="w-full h-full object-cover rounded-lg border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview(null);
-                        }}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <p className="text-sm text-gray-500">
-                  Maximum file size: 5MB. Supported formats: JPG, PNG, GIF
-                </p>
-              </div>
-
-              {/* Audio Upload */}
-              <div className="space-y-2">
-                <Label>Question Audio</Label>
-                <Input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleAudioUpload}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                />
-                {audioFile && (
-                  <div className="flex items-center space-x-2 text-sm text-green-600">
-                    <Volume2 className="h-4 w-4" />
-                    <span>{audioFile.name}</span>
-                  </div>
-                )}
-                <p className="text-sm text-gray-500">
-                  Maximum file size: 10MB. Supported formats: MP3, WAV, OGG
-                </p>
-              </div>
-
               {/* Explanation */}
               <div className="space-y-2">
                 <Label htmlFor="explanation">Explanation</Label>
