@@ -61,7 +61,7 @@ const StudentForm = () => {
       return uploadAvatar(file, userId);
     },
     onSuccess: (data) => {
-      toast.success(data.data.message);
+      toast.success("Upload avatar successfully");
       queryClient.invalidateQueries({
         queryKey: ["studentDetail", userId],
       });

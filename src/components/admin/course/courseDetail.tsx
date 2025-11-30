@@ -12,9 +12,7 @@ import Error from "@/components/ui/error";
 import { TextInfoField, DateInfoField } from "@/components/ui/info";
 import {
   Edit,
-  Eye,
   Tag,
-  Share2,
   BookOpen,
   Star,
   BarChart3,
@@ -24,23 +22,23 @@ import {
   DollarSign,
   Target,
   CheckCircle,
-  Settings,
   User,
   Award,
-  ArrowRight
+  ArrowRight,
+  Banknote
 } from "lucide-react";
 
 import { getAdminCourseDetail } from "@/api/course";
-import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import SectionDetail from "../section/sectionList";
+
+// Import the new components
+import CourseContentTabs from "./detail/courseDetailContentTab";
 
 const CourseDetail = () => {
   const router = useRouter();
   const params = useParams();
-
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
   const {
@@ -96,6 +94,11 @@ const CourseDetail = () => {
     ));
   };
 
+  const getTotalLessons = () => {
+    return courseData?.sections?.reduce((total: any, section: any) => 
+      total + (section.lessons?.length || 0), 0) || 0;
+  };
+
   if (courseLoading) {
     return <Loading />;
   }
@@ -122,7 +125,7 @@ const CourseDetail = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <BookOpen className="h-6 w-6 text-blue-600" />
               </div>
               <Heading
@@ -130,14 +133,12 @@ const CourseDetail = () => {
                 description="Course information and content overview"
               />
             </div>
-             <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
                 size={"sm"}
                 onClick={() =>
-                  router.push(
-                    `${ROUTES.ADMIN_COURSES}/${slug}/update`
-                  )
+                  router.push(`${ROUTES.ADMIN_COURSES}/${slug}/update`)
                 }
                 className="flex items-center space-x-2"
               >
@@ -163,7 +164,7 @@ const CourseDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
+            {/* Course Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -199,7 +200,6 @@ const CourseDetail = () => {
                       </Badge>
                     </div>
 
-                    {/* Rating */}
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-1 block">
                         Rating
@@ -267,7 +267,7 @@ const CourseDetail = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-green-500" />
+                      <Banknote className="h-4 w-4 text-green-500" />
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-medium">
                           {Number(courseData.price)?.toLocaleString()} VND
@@ -304,13 +304,8 @@ const CourseDetail = () => {
                     label="Updated At"
                     value={courseData.updated_at}
                   />
-                  <DateInfoField
-                    label="Published At"
-                    value={courseData.published_at}
-                  />
                 </div>
 
-                {/* Tags */}
                 {courseData.tags && courseData.tags.length > 0 && (
                   <>
                     <Separator />
@@ -319,7 +314,7 @@ const CourseDetail = () => {
                         Tags
                       </label>
                       <div className="flex flex-wrap gap-2">
-                        {courseData.tags.map((tag, index) => (
+                        {courseData.tags.map((tag: string, index: number) => (
                           <Badge
                             key={index}
                             variant="outline"
@@ -347,7 +342,6 @@ const CourseDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-start space-x-6">
-                    {/* Avatar Section */}
                     <div className="flex-shrink-0">
                       {courseData.teacher.avatar ? (
                         <div className="relative">
@@ -374,9 +368,7 @@ const CourseDetail = () => {
                       )}
                     </div>
 
-                    {/* Teacher Details */}
                     <div className="flex-1 space-y-4">
-                      {/* Name and Title */}
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
                           <h4 className="text-xl font-bold text-gray-900">
@@ -392,9 +384,7 @@ const CourseDetail = () => {
                         </p>
                       </div>
 
-                      {/* Teacher Info Grid */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Qualification Card */}
                         {courseData.teacher.qualification ? (
                           <div className="group hover:shadow-md transition-shadow duration-200">
                             <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
@@ -429,7 +419,6 @@ const CourseDetail = () => {
                           </div>
                         )}
 
-                        {/* Experience Card */}
                         {courseData.teacher.experience_years ? (
                           <div className="group hover:shadow-md transition-shadow duration-200">
                             <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
@@ -470,10 +459,8 @@ const CourseDetail = () => {
               </Card>
             )}
 
-            {/* Course Outline */}
-            {courseData?.sections && courseData?.sections.length > 0 && (
-              <SectionDetail sections={courseData.sections} courseId={slug} />
-            )}
+            {/* ✅ Use the new CourseContentTabs component */}
+            <CourseContentTabs courseData={courseData} />
 
             {/* Requirements */}
             {courseData.requirements && courseData.requirements.length > 0 && (
@@ -486,7 +473,7 @@ const CourseDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {courseData.requirements.map((requirement, index) => (
+                    {courseData.requirements.map((requirement: string, index: number) => (
                       <div
                         key={index}
                         className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg"
@@ -501,33 +488,32 @@ const CourseDetail = () => {
             )}
 
             {/* What You Learn */}
-            {courseData.what_you_learn &&
-              courseData.what_you_learn.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Target className="h-5 w-5 text-orange-600" />
-                      <span>What Students Will Learn</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {courseData.what_you_learn.map((learning, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg"
-                        >
-                          <Target className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm">{learning}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+            {courseData.what_you_learn && courseData.what_you_learn.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Target className="h-5 w-5 text-orange-600" />
+                    <span>What Students Will Learn</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {courseData.what_you_learn.map((learning: string, index: number) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg"
+                      >
+                        <Target className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm">{learning}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          {/* Right Column - Statistics & Actions */}
+          {/* Right Column - Sidebar */}
           <div className="space-y-6">
             {/* Statistics */}
             <Card>
@@ -588,7 +574,7 @@ const CourseDetail = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Sections:</span>
                     <span className="text-sm font-medium">
-                      {courseData.course_outline?.sections?.length || 0}
+                      {courseData?.sections?.length || 0}
                     </span>
                   </div>
 
@@ -597,11 +583,7 @@ const CourseDetail = () => {
                       Total Lessons:
                     </span>
                     <span className="text-sm font-medium">
-                      {courseData.course_outline?.sections?.reduce(
-                        (total, section) =>
-                          total + (section.lessons?.length || 0),
-                        0
-                      ) || 0}
+                      {getTotalLessons()}
                     </span>
                   </div>
 
@@ -631,49 +613,6 @@ const CourseDetail = () => {
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5 text-gray-600" />
-                  <span>Quick Actions</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() =>
-                    router.push(`${ROUTES.ADMIN_COURSES}/${slug}/update`)
-                  }
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Update Course
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => window.open(`/courses/${slug}`, "_blank")}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Public
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Link copied to clipboard");
-                  }}
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Copy Link
-                </Button>
               </CardContent>
             </Card>
 

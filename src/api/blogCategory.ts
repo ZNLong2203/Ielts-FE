@@ -44,7 +44,7 @@ export const updateBlogCategory = async (
 
 export const deleteBlogCategory = async (id: string) => {
   const response = await api.delete(
-    `${BASE_URL}${API_URL.ADMIN_BLOG_CATEGORY}${id}`
+    `${BASE_URL}${API_URL.ADMIN_BLOG_CATEGORY}/${id}`
   );
   console.log(response);
   return response.data;

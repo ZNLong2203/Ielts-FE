@@ -108,6 +108,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Undo/Redo */}
       <div className="flex items-center gap-1">
         <Button
+          type="button" // ✅ Add type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().undo().run()}
@@ -116,6 +117,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Undo className="h-4 w-4" />
         </Button>
         <Button
+          type="button" // ✅ Add type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().redo().run()}
@@ -146,6 +148,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Headings */}
       <div className="flex items-center gap-1">
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("heading", { level: 1 })}
           onPressedChange={() => toggleHeading(1)}
           size="sm"
@@ -154,6 +157,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Heading1 className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("heading", { level: 2 })}
           onPressedChange={() => toggleHeading(2)}
           size="sm"
@@ -162,6 +166,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Heading2 className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("heading", { level: 3 })}
           onPressedChange={() => toggleHeading(3)}
           size="sm"
@@ -176,6 +181,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Text Formatting */}
       <div className="flex items-center gap-1">
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("bold")}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           size="sm"
@@ -184,6 +190,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Bold className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("italic")}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
           size="sm"
@@ -192,6 +199,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Italic className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("underline")}
           onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
           size="sm"
@@ -200,6 +208,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <UnderlineIcon className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("strike")}
           onPressedChange={() => editor.chain().focus().toggleStrike().run()}
           size="sm"
@@ -208,6 +217,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Strikethrough className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("highlight")}
           onPressedChange={() => editor.chain().focus().toggleHighlight().run()}
           size="sm"
@@ -222,7 +232,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Text Color */}
       <Popover open={isColorOpen} onOpenChange={setIsColorOpen}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button type="button" variant="ghost" size="sm"> {/* ✅ Add type="button" */}
             <Palette className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
@@ -231,6 +241,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
             {colors.map((color) => (
               <button
                 key={color}
+                type="button" // ✅ Add type="button"
                 className="w-8 h-8 rounded border-2 border-gray-300 hover:border-gray-500"
                 style={{ backgroundColor: color }}
                 onClick={() => {
@@ -248,6 +259,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Alignment */}
       <div className="flex items-center gap-1">
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive({ textAlign: "left" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("left").run()}
           size="sm"
@@ -256,6 +268,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <AlignLeft className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive({ textAlign: "center" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("center").run()}
           size="sm"
@@ -264,6 +277,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <AlignCenter className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive({ textAlign: "right" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("right").run()}
           size="sm"
@@ -272,6 +286,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <AlignRight className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive({ textAlign: "justify" })}
           onPressedChange={() => editor.chain().focus().setTextAlign("justify").run()}
           size="sm"
@@ -286,6 +301,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Lists */}
       <div className="flex items-center gap-1">
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("bulletList")}
           onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
           size="sm"
@@ -294,6 +310,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <List className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("orderedList")}
           onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
           size="sm"
@@ -302,6 +319,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <ListOrdered className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("taskList")}
           onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
           size="sm"
@@ -316,6 +334,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Quote & Code */}
       <div className="flex items-center gap-1">
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("blockquote")}
           onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
           size="sm"
@@ -324,6 +343,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
           <Quote className="h-4 w-4" />
         </Toggle>
         <Toggle
+          type="button" // ✅ Add type="button"
           pressed={editor.isActive("code")}
           onPressedChange={() => editor.chain().focus().toggleCode().run()}
           size="sm"
@@ -339,7 +359,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       <div className="flex items-center gap-1">
         <Popover open={isLinkOpen} onOpenChange={setIsLinkOpen}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button type="button" variant="ghost" size="sm"> {/* ✅ Add type="button" */}
               <Link className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -352,8 +372,9 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
                 onKeyDown={(e) => e.key === "Enter" && addLink()}
               />
               <div className="flex gap-2">
-                <Button onClick={addLink} size="sm">Add Link</Button>
+                <Button type="button" onClick={addLink} size="sm">Add Link</Button> {/* ✅ Add type="button" */}
                 <Button 
+                  type="button" // ✅ Add type="button"
                   variant="outline" 
                   size="sm"
                   onClick={() => setIsLinkOpen(false)}
@@ -366,6 +387,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
         </Popover>
 
         <Button
+          type="button" // ✅ Add type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().unsetLink().run()}
@@ -380,7 +402,7 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       {/* Image */}
       <Popover open={isImageOpen} onOpenChange={setIsImageOpen}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button type="button" variant="ghost" size="sm"> {/* ✅ Add type="button" */}
             <ImageIcon className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
@@ -393,8 +415,9 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
               onKeyDown={(e) => e.key === "Enter" && addImage()}
             />
             <div className="flex gap-2">
-              <Button onClick={addImage} size="sm">Add Image</Button>
+              <Button type="button" onClick={addImage} size="sm">Add Image</Button> {/* ✅ Add type="button" */}
               <Button 
+                type="button" // ✅ Add type="button"
                 variant="outline" 
                 size="sm"
                 onClick={() => setIsImageOpen(false)}
@@ -409,12 +432,13 @@ export default function MenuBar({ editor }: { editor: Editor | null }) {
       <Separator orientation="vertical" className="h-6" />
 
       {/* Table */}
-      <Button variant="ghost" size="sm" onClick={addTable}>
+      <Button type="button" variant="ghost" size="sm" onClick={addTable}> {/* ✅ Add type="button" */}
         <Table className="h-4 w-4" />
       </Button>
 
       {/* Horizontal Rule */}
       <Button 
+        type="button" // ✅ Add type="button"
         variant="ghost" 
         size="sm" 
         onClick={() => editor.chain().focus().setHorizontalRule().run()}

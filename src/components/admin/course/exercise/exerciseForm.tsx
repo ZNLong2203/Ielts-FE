@@ -229,8 +229,6 @@ const ExerciseForm = ({
                 }
                 placeholder="Enter exercise description..."
                 required
-                multiline
-                rows={3}
               />
 
               <TextField
@@ -245,8 +243,6 @@ const ExerciseForm = ({
                 }
                 placeholder="Enter specific instructions for this exercise..."
                 required
-                multiline
-                rows={3}
               />
 
               <TextField
@@ -261,8 +257,6 @@ const ExerciseForm = ({
                 }
                 placeholder="Enter exercise content (questions, materials, etc.)..."
                 required
-                multiline
-                rows={4}
               />
 
               <TextField

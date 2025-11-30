@@ -19,7 +19,7 @@ export const createCourseCategory = async (data: ICourseCategoryCreate) => {
 };
 
 export const updateCourseCategory = async (id: string, data: ICourseCategoryUpdate) => {
-    const response = await api.put(`${API_URL.COURSE_CATEGORIES}/${id}`, data);
+    const response = await api.patch(`${API_URL.COURSE_CATEGORIES}/${id}`, data);
     return response.data;
 };
 

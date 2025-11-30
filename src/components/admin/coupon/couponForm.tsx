@@ -106,7 +106,7 @@ const CouponForm = () => {
       name: "",
       description: "",
       discount_type: "percentage",
-      discount_value: "",
+      discount_value: 0,
       minimum_amount: "",
       maximum_discount: "",
       usage_limit: 1,

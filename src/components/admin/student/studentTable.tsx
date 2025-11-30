@@ -204,7 +204,7 @@ const StudentTable = () => {
 
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => router.push("/admin/students/new")}
+            onClick={() => router.push("/admin/student/create")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Student

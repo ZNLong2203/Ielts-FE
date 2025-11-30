@@ -67,12 +67,18 @@ const LessonForm = ({
   };
 
   // Form setup
+  const normalizeLessonType = (value: string | undefined): LessonFormData["lesson_type"] => {
+    return value === "video" || value === "document" || value === "quiz" || value === "assignment"
+      ? value
+      : "video";
+  };
+
   const form = useForm<LessonFormData>({
     resolver: zodResolver(LessonFormSchema),
     defaultValues: {
       title: lesson?.title || "",
       description: lesson?.description || "",
-      lesson_type: lesson?.lesson_type || "video",
+      lesson_type: normalizeLessonType(lesson?.lesson_type),
       is_preview: lesson?.is_preview || false,
       ordering: lesson?.ordering || getNextOrdering(),
       document_url: lesson?.document_url || "",
@@ -224,12 +230,6 @@ const LessonForm = ({
                 }
                 placeholder="Enter lesson title..."
                 required
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onSubmitClick(e as unknown as React.MouseEvent);
-                  }
-                }}
               />
 
               <TextField
@@ -242,19 +242,13 @@ const LessonForm = ({
                 }
                 placeholder="Enter lesson description..."
                 required
-                multiline
-                rows={3}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <SelectField
                   control={form.control}
                   name="lesson_type"
-                  label={
-                    <div>
-                      Lesson Type <span className="text-red-500">*</span>
-                    </div>
-                  }
+                  label="Lesson type"
                   placeholder="Select lesson type"
                   options={LESSON_TYPES.map(type => ({
                     value: type.value,

@@ -185,6 +185,12 @@ const CouponDetail = () => {
                         </Badge>
                       </div>
                     </div>
+                    <TextInfoField
+                      label="Usage Limit"
+                      value={
+                        usageLimit > 0 ? usageLimit.toString() : "Unlimited"
+                      }
+                    />
                   </div>
                 </div>
 
@@ -377,9 +383,8 @@ const CouponDetail = () => {
                   className="w-full justify-between"
                   onClick={() => router.push(ROUTES.ADMIN_COUPONS)}
                 >
-                 
                   Back to All Coupons
-                   <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className="h-4 w-4 mr-2" />
                 </Button>
               </CardContent>
             </Card>

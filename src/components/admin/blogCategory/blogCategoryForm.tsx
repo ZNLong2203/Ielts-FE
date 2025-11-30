@@ -13,9 +13,7 @@ import {
 } from "@/components/ui/form";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
-
 import { ArrowRight, Save, FileText, FolderOpen } from "lucide-react";
-
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
@@ -97,9 +95,7 @@ const BlogCategoryForm = () => {
     defaultValues: {
       name: "",
       description: "",
-      ordering: 0,
       is_active: true,
-      slug: "",
     },
   });
 
@@ -108,9 +104,7 @@ const BlogCategoryForm = () => {
       blogCategoryForm.reset({
         name: data.name,
         description: data.description,
-        ordering: data.ordering,
         is_active: data.is_active,
-        slug: data.slug,
       });
     }
   }, [data]);
@@ -149,7 +143,7 @@ const BlogCategoryForm = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center space-x-4">
-               <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="p-2 bg-blue-100 rounded-lg">
                 <FolderOpen className="h-6 w-6 text-blue-600" />
               </div>
               <Heading title={title} description={description} />
@@ -193,29 +187,13 @@ const BlogCategoryForm = () => {
 
                   <TextField
                     control={blogCategoryForm.control}
-                    name="slug"
-                    label="Slug"
-                    placeholder="Enter URL slug"
-                    required
+                    name="description"
+                    label="Description"
+                    placeholder="Enter category description"
                   />
                 </div>
 
-                <TextField
-                  control={blogCategoryForm.control}
-                  name="description"
-                  label="Description"
-                  placeholder="Enter category description"
-                />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <TextField
-                    control={blogCategoryForm.control}
-                    name="ordering"
-                    label="Display Order"
-                    type="number"
-                    placeholder="Enter display order"
-                  />
-
                   <FormField
                     control={blogCategoryForm.control}
                     name="is_active"

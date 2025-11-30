@@ -38,7 +38,7 @@ import { ICourseQuestion } from "@/interface/courseQuestion";
 import { IExercise } from "@/interface/exercise";
 import { deleteCourseQuestion } from "@/api/courseQuestion";
 import CourseQuestionForm from "./courseQuestionForm";
-import CourseQuestionItem from "@/components/admin/courseQuestion/courseQuestionItem";
+import CourseQuestionItem from "@/components/admin/course/courseQuestion/courseQuestionItem";
 import { getExerciseByLessonId } from "@/api/exercise";
 
 interface QuestionListProps {
@@ -62,7 +62,6 @@ type SortType = "ordering" | "points" | "type" | "created_at";
 const QuestionList = ({
   exercise,
   lessonId,
-  sectionId = "",
   onBack,
 }: QuestionListProps) => {
   const [showForm, setShowForm] = useState(false);
