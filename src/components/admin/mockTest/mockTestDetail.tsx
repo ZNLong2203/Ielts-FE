@@ -127,7 +127,7 @@ const MockTestDetail = () => {
   };
 
   const handleEdit = () => {
-    router.push(`${ROUTES.ADMIN_MOCK_TESTS}/update/${mockTestId}`);
+    router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/update`);
   };
 
   if (isLoading) {

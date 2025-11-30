@@ -11,6 +11,7 @@ const SpeakingQuestionSchema = z.object({
     .max(300, "Expected duration cannot exceed 300 seconds")
     .optional(),
   instructions: z.string().optional(),
+  audio_url: z.string().optional(),
 });
 
 export const SpeakingFormSchema = z.object({

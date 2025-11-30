@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { TextBadgeInfo } from "@/components/ui/info";
 import { ArrowUpDown, Calendar, Shield } from "lucide-react";
 import CellAction from "./mockTestAction";
 import { IMockTest } from "@/interface/mockTest";
@@ -90,9 +89,29 @@ export const columns: ColumnDef<IMockTest>[] = [
     },
     cell: ({ row }) => {
       const difficultyLevel = row.original.difficulty_level;
+      
+      const difficultyMap: Record<string, string> = {
+        "easy": "beginner",
+        "medium": "intermediate",
+        "expert": "advanced",
+      };
+      
+      let displayText = difficultyLevel;
+      
+      if (difficultyLevel && typeof difficultyLevel === "string") {
+        const match = difficultyLevel.match(/Level \d+ \((.+?)\)/);
+        if (match) {
+          const label = match[1].toLowerCase();
+          displayText = difficultyMap[label] || label;
+        } else {
+          const lowerLevel = difficultyLevel.toLowerCase();
+          displayText = difficultyMap[lowerLevel] || lowerLevel;
+        }
+      }
+      
       return (
-        <div className="flex items-center gap-2">
-          <div className="font-medium">{difficultyLevel}</div>
+        <div className="text-sm font-medium capitalize">
+          {displayText || "N/A"}
         </div>
       );
     },

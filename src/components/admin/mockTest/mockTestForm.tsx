@@ -45,6 +45,33 @@ import {
   SECTION_TYPE_OPTIONS,
 } from "@/constants/mockTest";
 
+// Helper function to map old difficulty format to new format
+const mapDifficultyLevel = (level: string | undefined): string => {
+  if (!level) return "intermediate";
+  
+  const difficultyMap: Record<string, string> = {
+    "1": "beginner",
+    "2": "intermediate",
+    "3": "hard",
+    "4": "advanced",
+    "5": "master",
+    "easy": "beginner",
+    "medium": "intermediate",
+    "expert": "advanced",
+  };
+  
+  // If it's a formatted string like "Level 4 (Expert)", extract and map
+  const match = level.match(/Level \d+ \((.+?)\)/);
+  if (match) {
+    const label = match[1].toLowerCase();
+    return difficultyMap[label] || label;
+  }
+  
+  // Map numeric or old string values
+  const lowerLevel = level.toLowerCase();
+  return difficultyMap[lowerLevel] || lowerLevel || "intermediate";
+};
+
 const MockTestForm = () => {
   const router = useRouter();
   const param = useParams();
@@ -84,7 +111,7 @@ const MockTestForm = () => {
       instructions: "",
       duration: 180,
       deleted: false,
-      difficulty_level: "2",
+      difficulty_level: "intermediate",
       description: "",
       test_sections: [],
     },
@@ -293,7 +320,7 @@ const MockTestForm = () => {
         test_type: mockTestData.test_type || "full_test",
         instructions: mockTestData.instructions || "",
         duration: mockTestData.duration || 180,
-        difficulty_level: mockTestData.difficulty_level?.toString() || "2",
+        difficulty_level: mapDifficultyLevel(mockTestData.difficulty_level?.toString() || "intermediate"),
         description: mockTestData.description || "",
         deleted: mockTestData.deleted || false,
         test_sections: mockTestData.test_sections || [],
@@ -711,25 +738,6 @@ const MockTestForm = () => {
                         <span className="font-medium capitalize">
                           {selectedTestType?.replace("_", " ")}
                         </span>
-                      </div>
-
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Difficulty:</span>
-                        <div className="flex items-center space-x-1">
-                          {Array.from({ length: 5 }, (_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i <
-                                parseInt(
-                                  mockTestForm.watch("difficulty_level") || "0"
-                                )
-                                  ? "text-yellow-400 fill-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
                       </div>
 
                       <Separator />

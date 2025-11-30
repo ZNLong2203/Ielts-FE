@@ -161,11 +161,11 @@ const MockTestTable = () => {
         <Star className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
       options: [
-        { label: "Level 1 (Easy)", value: "1" },
-        { label: "Level 2 (Medium)", value: "2" },
-        { label: "Level 3 (Hard)", value: "3" },
-        { label: "Level 4 (Expert)", value: "4" },
-        { label: "Level 5 (Master)", value: "5" },
+        { label: "Beginner", value: "beginner" },
+        { label: "Intermediate", value: "intermediate" },
+        { label: "Hard", value: "hard" },
+        { label: "Advanced", value: "advanced" },
+        { label: "Master", value: "master" },
       ],
     },
     {

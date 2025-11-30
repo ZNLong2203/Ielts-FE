@@ -56,3 +56,39 @@ export const uploadAudio = async (file: File): Promise<{ url: string; fileName: 
   
   return finalResult;
 };
+
+export const uploadExerciseImage = async (file: File): Promise<{ url: string; fileName: string; etag: string }> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await api.post(`${BASE_URL}/files/upload/exercise-image`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  
+  console.log('Upload exercise image response:', JSON.stringify(response.data, null, 2));
+  
+  let result: { url: string; fileName: string; etag: string };
+  
+  if (response.data?.data?.data) {
+    result = response.data.data.data;
+  } else if (response.data?.data?.url) {
+    result = response.data.data;
+  } else if (response.data?.url) {
+    result = response.data;
+  } else {
+    console.error('Unexpected response structure:', response.data);
+    throw new Error('Invalid response structure from upload exercise image API');
+  }
+  
+  if (!result.url) {
+    console.error('Invalid url in response:', result);
+    throw new Error('Invalid URL in upload response');
+  }
+  
+  return {
+    url: String(result.url),
+    fileName: String(result.fileName || ''),
+    etag: String(result.etag || ''),
+  };
+};

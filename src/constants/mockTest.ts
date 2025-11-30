@@ -35,11 +35,11 @@ export const TEST_TYPE_OPTIONS = [
 ];
 
 export const DIFFICULTY_LEVEL_OPTIONS = [
-  { label: "Level 1 (Easy)", value: "1" },
-  { label: "Level 2 (Medium)", value: "2" },
-  { label: "Level 3 (Hard)", value: "3" },
-  { label: "Level 4 (Expert)", value: "4" },
-  { label: "Level 5 (Master)", value: "5" },
+  { label: "Beginner", value: "beginner" },
+  { label: "Intermediate", value: "intermediate" },
+  { label: "Hard", value: "hard" },
+  { label: "Advanced", value: "advanced" },
+  { label: "Master", value: "master" },
 ];
 
 export const SECTION_TYPE_OPTIONS = [

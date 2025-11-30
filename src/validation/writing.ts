@@ -32,8 +32,6 @@ export const WritingFormSchema = z.object({
     .max(100, "Passing score cannot exceed 100")
     .optional(),
   ordering: z.number().min(0, "Ordering must be at least 0").optional(),
-  keywords: z.array(z.string()).optional(),
-  sample_answers: z.array(z.string()).optional(),
 });
 
 export const WritingFormUpdateSchema = WritingFormSchema.partial();

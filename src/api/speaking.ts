@@ -123,6 +123,7 @@ export interface ISpeakingMockTestExercise {
     question_text: string;
     expected_duration?: number;
     instructions?: string;
+    audio_url?: string;
   }>;
   time_limit?: number;
   passing_score?: number;
@@ -134,6 +135,7 @@ export interface ISpeakingMockTestExercise {
       question_text: string;
       expected_duration?: number;
       instructions?: string;
+      audio_url?: string;
     }>;
     additionalInstructions?: string;
   };
@@ -150,6 +152,7 @@ export interface ISpeakingMockTestExerciseCreate {
     question_text: string;
     expected_duration?: number;
     instructions?: string;
+    audio_url?: string;
   }>;
   time_limit?: number;
   passing_score?: number;

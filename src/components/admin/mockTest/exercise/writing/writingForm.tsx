@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import Heading from "@/components/ui/heading";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
+import ImageUploadField from "@/components/form/image-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
@@ -19,10 +20,7 @@ import {
   ArrowRight,
   Calculator,
   CheckCircle,
-  Clock,
   AlertTriangle,
-  Plus,
-  Trash2,
   Loader2,
 } from "lucide-react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
@@ -34,6 +32,7 @@ import {
   createWritingMockTestExercise,
   updateWritingMockTestExercise,
 } from "@/api/writing";
+import { uploadExerciseImage } from "@/api/file";
 import { WritingFormSchema, WritingFormUpdateSchema } from "@/validation/writing";
 
 const TASK_TYPE_OPTIONS = [
@@ -96,30 +95,41 @@ const WritingForm = () => {
       word_limit: 150,
       time_limit: 20,
       ordering: 1,
-      keywords: [],
-      sample_answers: [],
     },
   });
 
-  // Keywords field array
-  const {
-    fields: keywordFields,
-    append: appendKeyword,
-    remove: removeKeyword,
-  } = useFieldArray({
-    control: writingForm.control,
-    name: "keywords",
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Image upload mutation
+  const uploadImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      return uploadExerciseImage(file);
+    },
+    onSuccess: (result) => {
+      toast.success("Image uploaded successfully!");
+      writingForm.setValue("question_image", result.url);
+      setImageFile(null);
+      setIsUploadingImage(false);
+    },
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : undefined;
+      toast.error(errorMessage || "Failed to upload image");
+      setIsUploadingImage(false);
+    },
   });
 
-  // Sample answers field array
-  const {
-    fields: sampleAnswerFields,
-    append: appendSampleAnswer,
-    remove: removeSampleAnswer,
-  } = useFieldArray({
-    control: writingForm.control,
-    name: "sample_answers",
-  });
+  const handleImageFileSelected = async (file: File) => {
+    setImageFile(file);
+    setIsUploadingImage(true);
+    try {
+      await uploadImageMutation.mutateAsync(file);
+    } catch (error) {
+      console.error("Image upload error:", error);
+    }
+  };
 
   // Main mutations
   const createWritingExerciseMutation = useMutation({
@@ -131,21 +141,22 @@ const WritingForm = () => {
       return createWritingMockTestExercise(payload);
     },
     onSuccess: () => {
-      toast.success("Writing exercise created successfully! ✍️");
+      toast.success("Writing exercise created successfully!");
       queryClient.invalidateQueries({ queryKey: ["writingExercises"] });
       router.push(
         `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/writing?sectionId=${testSectionId}`
       );
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to create writing exercise"
-      );
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : undefined;
+      toast.error(errorMessage || "Failed to create writing exercise");
     },
   });
 
   const updateWritingExerciseMutation = useMutation({
-    mutationFn: async (formData: z.infer<typeof WritingFormUpdateSchema>) => {
+    mutationFn: async (formData: z.infer<typeof WritingFormUpdateSchema>): Promise<unknown> => {
       const payload = {
         ...formData,
         test_section_id: testSectionId || formData.test_section_id,
@@ -153,7 +164,7 @@ const WritingForm = () => {
       return updateWritingMockTestExercise(writingExerciseId!, payload);
     },
     onSuccess: () => {
-      toast.success("Writing exercise updated successfully! ✍️");
+      toast.success("Writing exercise updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["writingExercises"] });
       queryClient.invalidateQueries({
         queryKey: ["writingExercise", writingExerciseId],
@@ -162,10 +173,11 @@ const WritingForm = () => {
         `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/writing?sectionId=${testSectionId}`
       );
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update writing exercise"
-      );
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : undefined;
+      toast.error(errorMessage || "Failed to update writing exercise");
     },
   });
 
@@ -185,18 +197,16 @@ const WritingForm = () => {
         word_limit: content.wordLimit || writingExerciseData.word_limit || 150,
         time_limit: writingExerciseData.time_limit || 20,
         ordering: writingExerciseData.ordering || 1,
-        keywords: content.keywords || writingExerciseData.keywords || [],
-        sample_answers: content.sampleAnswers || writingExerciseData.sample_answers || [],
       });
     }
   }, [writingExerciseData, isEditing, writingForm, testSectionId]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof schema>) => {
     try {
       if (isEditing) {
-        await updateWritingExerciseMutation.mutateAsync(data);
+        await updateWritingExerciseMutation.mutateAsync(data as z.infer<typeof WritingFormUpdateSchema>);
       } else {
-        await createWritingExerciseMutation.mutateAsync(data);
+        await createWritingExerciseMutation.mutateAsync(data as z.infer<typeof WritingFormSchema>);
       }
     } catch (error) {
       console.error("Submit error:", error);
@@ -298,7 +308,6 @@ const WritingForm = () => {
                         label="Task Type"
                         placeholder="Select task type"
                         options={TASK_TYPE_OPTIONS}
-                        required
                       />
 
                       <SelectField
@@ -307,7 +316,6 @@ const WritingForm = () => {
                         label="Question Type"
                         placeholder="Select question type"
                         options={QUESTION_TYPE_OPTIONS}
-                        required
                       />
                     </div>
 
@@ -356,12 +364,36 @@ const WritingForm = () => {
                       placeholder="150"
                     />
 
-                    <TextField
-                      control={writingForm.control}
-                      name="question_image"
-                      label="Question Image URL (optional)"
-                      placeholder="https://example.com/image.png"
-                    />
+                    <div className="space-y-2">
+                      <ImageUploadField
+                        control={writingForm.control}
+                        name="question_image"
+                        label="Question Image (optional)"
+                        currentImage={writingForm.watch("question_image")}
+                        onFileSelected={handleImageFileSelected}
+                        fallback="IMG"
+                        maxSize={2}
+                        disabled={isUploadingImage}
+                      />
+                      {isUploadingImage && (
+                        <div className="flex items-center space-x-2 text-sm text-blue-600">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Uploading image...</span>
+                        </div>
+                      )}
+                      {imageFile && !isUploadingImage && (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <div className="flex items-center space-x-2 text-sm text-amber-800">
+                            <span>
+                              New image selected: {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </div>
+                          <p className="text-xs text-amber-600 mt-1">
+                            Image will be uploaded when you save the form
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
                     <TextField
                       control={writingForm.control}
@@ -372,87 +404,6 @@ const WritingForm = () => {
                   </CardContent>
                 </Card>
 
-                {/* Keywords */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-purple-600" />
-                      <span>Keywords</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {keywordFields.map((field, index) => (
-                      <div key={field.id} className="flex items-center space-x-2">
-                        <TextField
-                          control={writingForm.control}
-                          name={`keywords.${index}`}
-                          label=""
-                          placeholder="Enter keyword..."
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeKeyword(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => appendKeyword("")}
-                      className="flex items-center space-x-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add Keyword</span>
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Sample Answers */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <FileText className="h-5 w-5 text-purple-600" />
-                      <span>Sample Answers (optional)</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {sampleAnswerFields.map((field, index) => (
-                      <div key={field.id} className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <TextField
-                            control={writingForm.control}
-                            name={`sample_answers.${index}`}
-                            label=""
-                            placeholder="Enter sample answer..."
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeSampleAnswer(index)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => appendSampleAnswer("")}
-                      className="flex items-center space-x-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add Sample Answer</span>
-                    </Button>
-                  </CardContent>
-                </Card>
               </div>
 
               {/* Sidebar */}
@@ -495,13 +446,6 @@ const WritingForm = () => {
                         </span>
                       </div>
 
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Keywords:</span>
-                        <span className="font-medium">
-                          {writingForm.watch("keywords")?.length || 0}
-                        </span>
-                      </div>
-
                       <Separator />
 
                       <div className="space-y-2 text-xs text-gray-500">
@@ -533,7 +477,7 @@ const WritingForm = () => {
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        {writingForm.watch("question_text")?.length >= 10 ? (
+                        {(writingForm.watch("question_text")?.length || 0) >= 10 ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
                           <AlertTriangle className="h-4 w-4 text-yellow-500" />
