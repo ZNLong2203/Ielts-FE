@@ -23,7 +23,6 @@ import {
 import {
   Target,
   Clock,
-  Star,
   Edit3,
   Trash2,
   ArrowRight,
@@ -532,22 +531,6 @@ const MockTestDetail = () => {
                     </span>
                   </div>
 
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Difficulty:</span>
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${
-                            i < Number(mockTest.difficulty_level)
-                              ? "text-yellow-500 fill-yellow-500"
-                              : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
                   <Separator />
 
                   <div className="flex justify-between text-lg font-bold">
@@ -559,24 +542,6 @@ const MockTestDetail = () => {
                     >
                       {mockTest.deleted ? "Inactive" : "Active"}
                     </span>
-                  </div>
-                </div>
-
-                {/* Test Info */}
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="text-sm font-medium text-blue-800 mb-2">
-                    Test Information
-                  </h4>
-                  <div className="space-y-1 text-xs text-blue-700">
-                    <p>
-                      • Visibility: {mockTest.deleted ? "Hidden" : "Public"}
-                    </p>
-                    <p>
-                      • Created: {format(new Date(mockTest.created_at), "PPP")}
-                    </p>
-                    <p>
-                      • Updated: {format(new Date(mockTest.updated_at), "PPP")}
-                    </p>
                   </div>
                 </div>
               </CardContent>

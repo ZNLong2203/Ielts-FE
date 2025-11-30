@@ -157,3 +157,101 @@ export const getWritingAssessmentById = async (id: string): Promise<WritingAsses
   const response = await api.get(`${BASE_URL}${API_URL.WRITING}/assessment/${id}`);
   return response.data.data;
 };
+
+// Mock Test Exercise APIs
+export interface IWritingMockTestExercise {
+  id: string;
+  title: string;
+  instruction?: string;
+  test_section_id: string;
+  task_type: 'task_1' | 'task_2';
+  question_type: 'essay' | 'letter' | 'report' | 'discursive';
+  question_text: string;
+  question_image?: string;
+  question_chart?: string;
+  word_limit?: number;
+  time_limit?: number;
+  passing_score?: number;
+  ordering?: number;
+  keywords?: string[];
+  sample_answers?: string[];
+  writing_content?: {
+    taskType?: string;
+    questionType?: string;
+    questionText?: string;
+    questionImage?: string;
+    questionChart?: string;
+    wordLimit?: number;
+    keywords?: string[];
+    sampleAnswers?: string[];
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IWritingMockTestExerciseCreate {
+  test_section_id: string;
+  title: string;
+  instruction?: string;
+  task_type: 'task_1' | 'task_2';
+  question_type: 'essay' | 'letter' | 'report' | 'discursive';
+  question_text: string;
+  question_image?: string;
+  question_chart?: string;
+  word_limit?: number;
+  time_limit?: number;
+  passing_score?: number;
+  ordering?: number;
+  keywords?: string[];
+  sample_answers?: string[];
+}
+
+export interface IWritingMockTestExerciseUpdate extends Partial<IWritingMockTestExerciseCreate> {}
+
+export interface IWritingMockTestExerciseList {
+  test_section: {
+    id: string;
+    section_name: string;
+    mock_test: {
+      id: string;
+      title: string;
+      test_type: string;
+    };
+  };
+  exercises: IWritingMockTestExercise[];
+}
+
+export const getWritingExercisesBySection = async (
+  testSectionId: string
+): Promise<IWritingMockTestExerciseList> => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.WRITING}/test-section/${testSectionId}`
+  );
+  return response.data.data;
+};
+
+export const getWritingMockTestExercise = async (
+  id: string
+): Promise<IWritingMockTestExercise> => {
+  const response = await api.get(`${BASE_URL}${API_URL.WRITING}/mock-test/${id}`);
+  return response.data.data;
+};
+
+export const createWritingMockTestExercise = async (
+  data: IWritingMockTestExerciseCreate
+): Promise<IWritingMockTestExercise> => {
+  const response = await api.post(`${BASE_URL}${API_URL.WRITING}/mock-test`, data);
+  return response.data.data;
+};
+
+export const updateWritingMockTestExercise = async (
+  id: string,
+  data: IWritingMockTestExerciseUpdate
+) => {
+  const response = await api.put(`${BASE_URL}${API_URL.WRITING}/mock-test/${id}`, data);
+  return response.data.data;
+};
+
+export const deleteWritingMockTestExercise = async (id: string): Promise<void> => {
+  await api.delete(`${BASE_URL}${API_URL.WRITING}/mock-test/${id}`);
+};

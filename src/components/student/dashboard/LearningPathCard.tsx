@@ -106,7 +106,12 @@ export function LearningPathCard({ path }: LearningPathCardProps) {
                 <span className="text-slate-700 font-semibold">
                   {path.completedCourses} of {path.totalCourses} courses completed
                 </span>
-                <span className="text-blue-600 font-bold text-lg">{path.progress}%</span>
+                <span className="text-blue-600 font-bold text-lg">
+                  {typeof path.progress === "number"
+                    ? path.progress.toFixed(2)
+                    : path.progress}
+                  %
+                </span>
               </div>
               
               <div className="relative">

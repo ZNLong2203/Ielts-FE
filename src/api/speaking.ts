@@ -112,3 +112,98 @@ export const transcribeAndGrade = async (
   return response.data.data;
 };
 
+// Mock Test Exercise APIs
+export interface ISpeakingMockTestExercise {
+  id: string;
+  title: string;
+  instruction?: string;
+  test_section_id: string;
+  part_type: 'part_1' | 'part_2' | 'part_3';
+  questions: Array<{
+    question_text: string;
+    expected_duration?: number;
+    instructions?: string;
+  }>;
+  time_limit?: number;
+  passing_score?: number;
+  ordering?: number;
+  additional_instructions?: string;
+  speaking_content?: {
+    partType?: string;
+    questions?: Array<{
+      question_text: string;
+      expected_duration?: number;
+      instructions?: string;
+    }>;
+    additionalInstructions?: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ISpeakingMockTestExerciseCreate {
+  test_section_id: string;
+  title: string;
+  instruction?: string;
+  part_type: 'part_1' | 'part_2' | 'part_3';
+  questions: Array<{
+    question_text: string;
+    expected_duration?: number;
+    instructions?: string;
+  }>;
+  time_limit?: number;
+  passing_score?: number;
+  ordering?: number;
+  additional_instructions?: string;
+}
+
+export interface ISpeakingMockTestExerciseUpdate extends Partial<ISpeakingMockTestExerciseCreate> {}
+
+export interface ISpeakingMockTestExerciseList {
+  test_section: {
+    id: string;
+    section_name: string;
+    mock_test: {
+      id: string;
+      title: string;
+      test_type: string;
+    };
+  };
+  exercises: ISpeakingMockTestExercise[];
+}
+
+export const getSpeakingExercisesBySection = async (
+  testSectionId: string
+): Promise<ISpeakingMockTestExerciseList> => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.SPEAKING}/test-section/${testSectionId}`
+  );
+  return response.data.data;
+};
+
+export const getSpeakingMockTestExercise = async (
+  id: string
+): Promise<ISpeakingMockTestExercise> => {
+  const response = await api.get(`${BASE_URL}${API_URL.SPEAKING}/mock-test/${id}`);
+  return response.data.data;
+};
+
+export const createSpeakingMockTestExercise = async (
+  data: ISpeakingMockTestExerciseCreate
+): Promise<ISpeakingMockTestExercise> => {
+  const response = await api.post(`${BASE_URL}${API_URL.SPEAKING}/mock-test`, data);
+  return response.data.data;
+};
+
+export const updateSpeakingMockTestExercise = async (
+  id: string,
+  data: ISpeakingMockTestExerciseUpdate
+) => {
+  const response = await api.put(`${BASE_URL}${API_URL.SPEAKING}/mock-test/${id}`, data);
+  return response.data.data;
+};
+
+export const deleteSpeakingMockTestExercise = async (id: string): Promise<void> => {
+  await api.delete(`${BASE_URL}${API_URL.SPEAKING}/mock-test/${id}`);
+};
+

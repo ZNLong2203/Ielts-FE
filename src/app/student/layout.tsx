@@ -93,7 +93,7 @@ export default function StudentLayout({
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col pt-20">
+      <div className="hidden lg:fixed lg:bottom-0 lg:top-24 lg:flex lg:w-72 lg:flex-col">
         <div className="flex flex-col flex-grow bg-gradient-to-b from-white via-white to-slate-50 border-r border-slate-200 shadow-lg">
           {/* Logo */}
           <div className="flex h-20 items-center px-6 border-b border-slate-200 bg-white">
@@ -159,7 +159,7 @@ export default function StudentLayout({
       </div>
 
         {/* Main content */}
-        <div className="lg:pl-72 pt-16 flex flex-col min-h-[calc(100vh-4rem)]">
+        <div className="lg:pl-72 pt-24 md:pt-28 flex flex-col min-h-[calc(100vh-4rem)]">
           {/* Page content */}
           <main className="flex-1">
             <div className="py-6">
