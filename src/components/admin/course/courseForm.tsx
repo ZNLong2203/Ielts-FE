@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import {
   Form,
   FormField,
@@ -13,12 +12,12 @@ import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 import TagsField from "@/components/form/tags-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+
 import {
   Save,
   DollarSign,
@@ -28,14 +27,11 @@ import {
   CheckCircle,
   Settings,
   ArrowRight,
-  List,
-  Plus,
   FolderOpen,
   PlayCircle,
   FileText,
-  Users,
-  Clock,
-  BarChart3,
+  HelpCircle,
+  List,
 } from "lucide-react";
 
 import { z } from "zod";
@@ -53,18 +49,26 @@ import { createSection, getSectionsByCourseId } from "@/api/section";
 import { getCourseCategories } from "@/api/courseCategory";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ISectionCreate } from "@/interface/section";
-import SectionForm from "./section/sectionForm";
-import LessonList from "./lesson/lessonList";
+
+// Import tab components
+import SectionTab from "./form/courseSectionTab";
+import LessonTab from "./form/courseLessonTab";
+import ExerciseTab from "./form/courseExerciseTab";
+import QuestionTab from "./form/courseQuestionTab";
 
 const CourseForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
   const [newSections, setNewSections] = useState<ISectionCreate[]>([]);
+
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState("sections");
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
-  const [showSectionForm, setShowSectionForm] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
@@ -95,7 +99,7 @@ const CourseForm = () => {
   });
 
   const { data: sectionsData } = useQuery({
-    queryKey: ["sections", slug],
+    queryKey: ["section", slug],
     queryFn: () => getSectionsByCourseId(slug),
     enabled: isEditing,
   });
@@ -166,7 +170,10 @@ const CourseForm = () => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
       queryClient.invalidateQueries({ queryKey: ["course", slug] });
       queryClient.invalidateQueries({ queryKey: ["sections", slug] });
-      router.push(ROUTES.ADMIN_COURSES);
+      // Don't redirect for editing - let user continue managing content
+      if (isCreating) {
+        router.push(ROUTES.ADMIN_COURSES);
+      }
     },
     onError: (error) => {
       toast.error(error?.message || "Failed to update course");
@@ -206,12 +213,8 @@ const CourseForm = () => {
     if (courseData && isEditing) {
       courseForm.reset(courseData);
       courseForm.setValue("category_id", detailCategory?.id || "");
-      // Auto-select first section if available
-      if (courseData.sections && courseData.sections.length > 0 && !selectedSectionId) {
-        setSelectedSectionId(courseData.sections[0].id);
-      }
     }
-  }, [courseData, courseForm, detailCategory?.id, isEditing, selectedSectionId]);
+  }, [courseData, courseForm, detailCategory?.id, isEditing]);
 
   const onSubmit = async (data: z.infer<typeof CourseCreateSchema>) => {
     console.log("Course Form Submitted:", data);
@@ -222,20 +225,89 @@ const CourseForm = () => {
     }
   };
 
-  // Section handlers
-  const handleSectionFormSuccess = () => {
-    setShowSectionForm(false);
-    queryClient.invalidateQueries({ queryKey: ["sections", slug] });
-    queryClient.invalidateQueries({ queryKey: ["course", slug] });
-  };
-
+  // Tab navigation handlers
   const handleSectionSelect = (sectionId: string) => {
     setSelectedSectionId(sectionId);
+    setSelectedLessonId(null);
+    setSelectedExerciseId(null);
+    setActiveTab("lessons");
   };
 
+  const handleLessonSelect = (lessonId: string) => {
+    setSelectedLessonId(lessonId);
+    setSelectedExerciseId(null);
+    setActiveTab("exercises");
+  };
+
+  const handleExerciseSelect = (exerciseId: string) => {
+    setSelectedExerciseId(exerciseId);
+    setActiveTab("questions");
+  };
+
+  const handleBackToSections = () => {
+    setSelectedSectionId(null);
+    setSelectedLessonId(null);
+    setSelectedExerciseId(null);
+    setActiveTab("sections");
+  };
+
+  const handleBackToLessons = () => {
+    setSelectedLessonId(null);
+    setSelectedExerciseId(null);
+    setActiveTab("lessons");
+  };
+
+  const handleBackToExercises = () => {
+    setSelectedExerciseId(null);
+    setActiveTab("exercises");
+  };
+
+  // Helper functions to get selected data
+  const getSelectedSection = () => {
+    if (!selectedSectionId || !courseData?.sections) return null;
+    return courseData.sections.find((section: any) => section.id === selectedSectionId);
+  };
+
+  const getSelectedLesson = () => {
+    if (!selectedLessonId) return null;
+    const section = getSelectedSection();
+    if (!section?.lessons) return null;
+    return section.lessons.find((lesson: any) => lesson.id === selectedLessonId);
+  };
+
+  const getSelectedExercise = () => {
+    if (!selectedExerciseId) return null;
+    const lesson = getSelectedLesson();
+    if (!lesson?.exercises) return null;
+    return lesson.exercises.find((exercise: any) => exercise.id === selectedExerciseId);
+  };
+
+  // Helper functions to get counts
+  const getTotalSections = () => courseData?.sections?.length || 0;
+  
   const getTotalLessons = () => {
-    return courseData?.sections?.reduce((total: any, section: any) => 
-      total + (section.lessons?.length || 0), 0) || 0;
+    if (!selectedSectionId) return 0;
+    const section = getSelectedSection();
+    return section?.lessons?.length || 0;
+  };
+
+  const getTotalExercises = () => {
+    if (!selectedLessonId) return 0;
+    const lesson = getSelectedLesson();
+    return lesson?.exercises?.length || 0;
+  };
+
+  const getTotalQuestions = () => {
+    if (!selectedExerciseId) return 0;
+    const exercise = getSelectedExercise();
+    return exercise?.questions?.length || 0;
+  };
+
+  // Refresh handler
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["course", slug] });
+    queryClient.invalidateQueries({ queryKey: ["sections", slug] });
+    refetch();
   };
 
   if (isEditing && isLoading) {
@@ -285,465 +357,387 @@ const CourseForm = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Course Form Section */}
-            <Form {...courseForm}>
-              <form onSubmit={courseForm.handleSubmit(onSubmit)} className="space-y-6">
-                
-                {/* Course Information */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <BookOpen className="h-5 w-5 text-blue-600" />
-                      <span>Course Information</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <TextField
-                        control={courseForm.control}
-                        name="title"
-                        label="Course Title"
-                        placeholder="Enter course title..."
-                        className="md:col-span-2"
-                      />
+        <div className="space-y-8">
+          {/* Course Form Section */}
+          <Form {...courseForm}>
+            <form
+              onSubmit={courseForm.handleSubmit(onSubmit)}
+              className="space-y-8"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content Area */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* Basic Information */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <BookOpen className="h-5 w-5 text-blue-600" />
+                        <span>Course Information</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <TextField
+                          control={courseForm.control}
+                          name="title"
+                          label="Course Title"
+                          placeholder="Enter course title..."
+                          className="md:col-span-2"
+                        />
 
-                      <TextField
-                        control={courseForm.control}
-                        name="description"
-                        label="Description"
-                        placeholder="Course description..."
-                        className="md:col-span-2"
-                      />
+                        <TextField
+                          control={courseForm.control}
+                          name="description"
+                          label="Description"
+                          placeholder="Course description..."
+                          className="md:col-span-2"
+                        />
 
-                      <SelectField
-                        control={courseForm.control}
-                        name="category_id"
-                        label="Category"
-                        placeholder="Select category"
-                        options={categoryOptions}
-                      />
+                        <SelectField
+                          control={courseForm.control}
+                          name="category_id"
+                          label="Category"
+                          placeholder="Select category"
+                          options={categoryOptions}
+                        />
 
-                      <SelectField
-                        control={courseForm.control}
-                        name="skill_focus"
-                        label="Skill Focus"
-                        placeholder="Select skill"
-                        options={skillFocusOptions}
-                      />
-                      
-                      <SelectField
-                        control={courseForm.control}
-                        name="difficulty_level"
-                        label="Difficulty Level"
-                        placeholder="Select difficulty"
-                        options={difficultyLevelOptions}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Pricing & Duration */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <DollarSign className="h-5 w-5 text-green-600" />
-                      <span>Pricing & Duration</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <TextField
-                        control={courseForm.control}
-                        name="price"
-                        label="Price (VND)"
-                        placeholder="Enter price..."
-                      />
-
-                      <TextField
-                        control={courseForm.control}
-                        name="discount_price"
-                        label="Discount Price (VND)"
-                        placeholder="Enter discount price..."
-                      />
-
-                      <TextField
-                        control={courseForm.control}
-                        name="estimated_duration"
-                        label="Duration (hours)"
-                        type="number"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Requirements */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <CheckCircle className="h-5 w-5 text-purple-600" />
-                      <span>Requirements</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <TagsField
-                      control={courseForm.control}
-                      name="requirements"
-                      label="Course Requirements"
-                      placeholder="Type requirement and press Enter..."
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* What You Learn */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Target className="h-5 w-5 text-orange-600" />
-                      <span>What Students Will Learn</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <TagsField
-                      control={courseForm.control}
-                      name="what_you_learn"
-                      label="What Students Will Learn"
-                      placeholder="Type learning outcome and press Enter..."
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Tags */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Tag className="h-5 w-5 text-pink-600" />
-                      <span>Tags</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <TagsField
-                      control={courseForm.control}
-                      name="tags"
-                      label="Course Tags"
-                      placeholder="Type tag and press Enter..."
-                    />
-                  </CardContent>
-                </Card>
-              </form>
-            </Form>
-
-            {/* Course Content Management - Tab Interface */}
-            {isEditing && courseData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <List className="h-5 w-5 text-purple-600" />
-                      <span>Course Content Management</span>
-                      {courseData.sections && (
-                        <Badge variant="outline">
-                          {courseData.sections.length} sections
-                        </Badge>
-                      )}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowSectionForm(!showSectionForm)}
-                      className="flex items-center space-x-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>Add Section</span>
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                  {/* Section Form */}
-                  {showSectionForm && (
-                    <>
-                      <SectionForm
-                        courseId={courseData.id}
-                        existingSections={courseData.sections || []}
-                        onSuccess={handleSectionFormSuccess}
-                        onCancel={() => setShowSectionForm(false)}
-                      />
-                      <Separator className="my-6" />
-                    </>
-                  )}
-
-                  {/* Tabs for Sections */}
-                  {courseData.sections && courseData.sections.length > 0 ? (
-                    <Tabs value={selectedSectionId || ""} onValueChange={handleSectionSelect}>
-                      <TabsList className="grid w-full grid-cols-auto gap-1 h-auto p-1 overflow-x-auto">
-                        {courseData.sections
-                          .sort((a, b) => (a.ordering || 999) - (b.ordering || 999))
-                          .map((section, index) => (
-                            <TabsTrigger
-                              key={section.id}
-                              value={section.id}
-                              className="flex items-center space-x-2 px-3 py-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 min-w-fit"
-                            >
-                              <FolderOpen className="h-4 w-4 flex-shrink-0" />
-                              <span className="truncate max-w-32">
-                                {section.title || `Section ${index + 1}`}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {section.lessons?.length || 0}
-                              </Badge>
-                            </TabsTrigger>
-                          ))}
-                      </TabsList>
-
-                      {courseData.sections.map((section) => (
-                        <TabsContent key={section.id} value={section.id} className="mt-6">
-                          <div className="space-y-6">
-                            {/* Section Info Header */}
-                            <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-3">
-                                  <div className="p-2 bg-purple-100 rounded-lg">
-                                    <FolderOpen className="h-5 w-5 text-purple-600" />
-                                  </div>
-                                  <div>
-                                    <h3 className="text-lg font-bold text-purple-900">
-                                      {section.title}
-                                    </h3>
-                                    <div className="flex items-center space-x-4 mt-1">
-                                      <Badge variant="outline" className="bg-white">
-                                        Section {section.ordering}
-                                      </Badge>
-                                      <Badge variant="outline" className="bg-white">
-                                        {section.lessons?.length || 0} lessons
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              {section.description && (
-                                <p className="text-purple-700 text-sm">
-                                  {section.description}
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Lesson Management for Selected Section */}
-                            <LessonList 
-                              section={section} 
-                              courseId={courseData.id}
-                            />
-                          </div>
-                        </TabsContent>
-                      ))}
-                    </Tabs>
-                  ) : (
-                    // Empty state
-                    <div className="text-center py-12">
-                      <div className="bg-gray-50 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                        <FolderOpen className="h-10 w-10 text-gray-400" />
+                        <SelectField
+                          control={courseForm.control}
+                          name="skill_focus"
+                          label="Skill Focus"
+                          placeholder="Select skill"
+                          options={skillFocusOptions}
+                        />
+                        <SelectField
+                          control={courseForm.control}
+                          name="difficulty_level"
+                          label="Difficulty Level"
+                          placeholder="Select difficulty"
+                          options={difficultyLevelOptions}
+                        />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No sections yet
-                      </h3>
-                      <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                        Create your first section to organize your course lessons and content.
-                      </p>
-                      <Button
-                        onClick={() => setShowSectionForm(true)}
-                        className="bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create First Section
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    </CardContent>
+                  </Card>
 
-          {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            {/* Course Settings */}
+                  {/* Pricing & Duration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <DollarSign className="h-5 w-5 text-green-600" />
+                        <span>Pricing & Duration</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <TextField
+                          control={courseForm.control}
+                          name="price"
+                          label="Price (VND)"
+                          placeholder="Enter price..."
+                        />
+
+                        <TextField
+                          control={courseForm.control}
+                          name="discount_price"
+                          label="Discount Price (VND)"
+                          placeholder="Enter discount price..."
+                        />
+
+                        <TextField
+                          control={courseForm.control}
+                          name="estimated_duration"
+                          label="Duration (hours)"
+                          type="number"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Requirements */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <CheckCircle className="h-5 w-5 text-purple-600" />
+                        <span>Requirements</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <TagsField
+                        control={courseForm.control}
+                        name="requirements"
+                        label="Course Requirements"
+                        placeholder="Type requirement and press Enter..."
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* What You Learn */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Target className="h-5 w-5 text-orange-600" />
+                        <span>What Students Will Learn</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <TagsField
+                        control={courseForm.control}
+                        name="what_you_learn"
+                        label="What Students Will Learn"
+                        placeholder="Type learning outcome and press Enter..."
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Tags */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Tag className="h-5 w-5 text-pink-600" />
+                        <span>Tags</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <TagsField
+                        control={courseForm.control}
+                        name="tags"
+                        label="Course Tags"
+                        placeholder="Type tag and press Enter..."
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-6">
+                  {/* Course Settings */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Settings className="h-5 w-5 text-gray-600" />
+                        <span>Course Settings</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <FormField
+                        control={courseForm.control}
+                        name="is_featured"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-medium">
+                                Featured Course
+                              </FormLabel>
+                              <p className="text-sm text-muted-foreground">
+                                Display this course prominently
+                              </p>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        <Button
+                          type="submit"
+                          className="w-full flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                          disabled={
+                            createCourseMutation.isPending ||
+                            updateCourseMutation.isPending
+                          }
+                        >
+                          <Save className="h-4 w-4" />
+                          <span>
+                            {createCourseMutation.isPending ||
+                            updateCourseMutation.isPending
+                              ? isEditing
+                                ? "Updating..."
+                                : "Creating..."
+                              : isEditing
+                              ? "Update Course"
+                              : "Create Course"}
+                          </span>
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => router.back()}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </form>
+          </Form>
+
+          {/* Content Management Tabs - Only show when editing */}
+          {isEditing && courseData && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Settings className="h-5 w-5 text-gray-600" />
-                  <span>Course Settings</span>
+                  <List className="h-5 w-5 text-purple-600" />
+                  <span>Course Content Management</span>
+                  <Badge variant="outline">
+                    {getTotalSections()} sections
+                  </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <FormField
-                  control={courseForm.control}
-                  name="is_featured"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base font-medium">
-                          Featured Course
-                        </FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Display this course prominently
-                        </p>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+
+              <CardContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="grid w-full grid-cols-4 mb-6">
+                    <TabsTrigger 
+                      value="sections" 
+                      className="flex items-center space-x-2"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      <span>Sections</span>
+                      <Badge variant="outline" className="text-xs">
+                        {getTotalSections()}
+                      </Badge>
+                    </TabsTrigger>
+                    
+                    <TabsTrigger 
+                      value="lessons" 
+                      className="flex items-center space-x-2"
+                      disabled={!selectedSectionId}
+                    >
+                      <PlayCircle className="h-4 w-4" />
+                      <span>Lessons</span>
+                      {selectedSectionId && (
+                        <Badge variant="outline" className="text-xs">
+                          {getTotalLessons()}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    
+                    <TabsTrigger 
+                      value="exercises" 
+                      className="flex items-center space-x-2"
+                      disabled={!selectedLessonId}
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Exercises</span>
+                      {selectedLessonId && (
+                        <Badge variant="outline" className="text-xs">
+                          {getTotalExercises()}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    
+                    <TabsTrigger 
+                      value="questions" 
+                      className="flex items-center space-x-2"
+                      disabled={!selectedExerciseId}
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      <span>Questions</span>
+                      {selectedExerciseId && (
+                        <Badge variant="outline" className="text-xs">
+                          {getTotalQuestions()}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Breadcrumb Navigation */}
+                  <div className="mb-4 flex items-center space-x-2 text-sm text-gray-600">
+                    <button 
+                      onClick={handleBackToSections}
+                      className="hover:text-blue-600 transition-colors"
+                    >
+                      Sections
+                    </button>
+                    
+                    {selectedSectionId && (
+                      <>
+                        <span>/</span>
+                        <button 
+                          onClick={handleBackToLessons}
+                          className="hover:text-blue-600 transition-colors"
+                        >
+                          {getSelectedSection()?.title || "Section"} - Lessons
+                        </button>
+                      </>
+                    )}
+                    
+                    {selectedLessonId && (
+                      <>
+                        <span>/</span>
+                        <button 
+                          onClick={handleBackToExercises}
+                          className="hover:text-blue-600 transition-colors"
+                        >
+                          {getSelectedLesson()?.title || "Lesson"} - Exercises
+                        </button>
+                      </>
+                    )}
+                    
+                    {selectedExerciseId && (
+                      <>
+                        <span>/</span>
+                        <span className="text-gray-900 font-medium">
+                          {getSelectedExercise()?.title || "Exercise"} - Questions
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  <TabsContent value="sections">
+                    <SectionTab
+                      courseData={courseData}
+                      selectedSectionId={selectedSectionId}
+                      onSectionSelect={handleSectionSelect}
+                      onRefresh={handleRefresh}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="lessons">
+                    <LessonTab
+                      section={getSelectedSection()}
+                      selectedLessonId={selectedLessonId}
+                      onLessonSelect={handleLessonSelect}
+                      onBack={handleBackToSections}
+                      onRefresh={handleRefresh}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="exercises">
+                    <ExerciseTab
+                      lesson={getSelectedLesson()}
+                      selectedExerciseId={selectedExerciseId}
+                      onExerciseSelect={handleExerciseSelect}
+                      onBack={handleBackToLessons}
+                      onRefresh={handleRefresh}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="questions">
+                    <QuestionTab
+                      exercise={getSelectedExercise()}
+                      onBack={handleBackToExercises}
+                      onRefresh={handleRefresh}
+                    />
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
-
-            {/* Statistics (when editing) */}
-            {isEditing && courseData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5 text-blue-600" />
-                    <span>Statistics</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Duration:</span>
-                      <span className="text-sm font-medium">
-                        {courseData.estimated_duration} hours
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Price:</span>
-                      <span className="text-sm font-medium">
-                        {Number(courseData.price)?.toLocaleString()} VND
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Sections:</span>
-                      <span className="text-sm font-medium">
-                        {courseData?.sections?.length || 0}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">
-                        Total Lessons:
-                      </span>
-                      <span className="text-sm font-medium">
-                        {getTotalLessons()}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Featured:</span>
-                      <span className="text-sm font-medium">
-                        {courseData.is_featured ? "Yes" : "No"}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Tags:</span>
-                      <span className="text-sm font-medium">
-                        {courseData.tags?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Action Buttons */}
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-3">
-                  <Button
-                    type="submit"
-                    form="course-form"
-                    className="w-full flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                    disabled={
-                      createCourseMutation.isPending ||
-                      updateCourseMutation.isPending
-                    }
-                    onClick={courseForm.handleSubmit(onSubmit)}
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>
-                      {createCourseMutation.isPending ||
-                      updateCourseMutation.isPending
-                        ? isEditing
-                          ? "Updating..."
-                          : "Creating..."
-                        : isEditing
-                        ? "Update Course"
-                        : "Create Course"}
-                    </span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => router.back()}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Course Preview (when editing) */}
-            {isEditing && courseData && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <BookOpen className="h-5 w-5 text-green-600" />
-                    <span>Course Preview</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="text-sm">
-                    <div className="font-medium text-gray-900 mb-2">
-                      {courseData.title}
-                    </div>
-                    <div className="text-gray-600 line-clamp-3">
-                      {courseData.description}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
-                    <div className="flex items-center space-x-1">
-                      <BookOpen className="h-3 w-3" />
-                      <span>{courseData.skill_focus}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-3 w-3" />
-                      <span>{courseData.difficulty_level}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{courseData.estimated_duration}h</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="h-3 w-3" />
-                      <span>
-                        {Number(courseData.price)?.toLocaleString()} VND
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>

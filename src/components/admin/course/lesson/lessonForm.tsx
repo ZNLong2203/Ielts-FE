@@ -1,11 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,7 +27,7 @@ import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 
 import { ILesson, ILessonCreate, ILessonUpdate } from "@/interface/lesson";
-import { createLesson, updateLesson } from "@/api/lesson";
+import { createLesson, updateLesson, getLessonById } from "@/api/lesson";
 import VideoUploadSection from "@/components/form/video-upload-field";
 import { LessonFormSchema } from "@/validation/lesson";
 import { LESSON_TYPES } from "@/constants/lesson";
@@ -67,11 +66,27 @@ const LessonForm = ({
   };
 
   // Form setup
-  const normalizeLessonType = (value: string | undefined): LessonFormData["lesson_type"] => {
-    return value === "video" || value === "document" || value === "quiz" || value === "assignment"
+  const normalizeLessonType = (
+    value: string | undefined
+  ): LessonFormData["lesson_type"] => {
+    return value === "video" ||
+      value === "document" ||
+      value === "quiz" ||
+      value === "assignment"
       ? value
       : "video";
   };
+
+
+  const {
+    data: lessonData,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["lesson", sectionId, lesson?.id],
+    queryFn: () => getLessonById(sectionId, lesson?.id),
+    enabled: isEditing,
+  });
 
   const form = useForm<LessonFormData>({
     resolver: zodResolver(LessonFormSchema),
@@ -85,11 +100,27 @@ const LessonForm = ({
     },
   });
 
+  // Reset form when lesson changes (for editing different lessons)
+  useEffect(() => {
+    if (lesson) {
+      form.reset({
+        title: lesson.title || "",
+        description: lesson.description || "",
+        lesson_type: normalizeLessonType(lesson.lesson_type),
+        is_preview: lesson.is_preview || false,
+        ordering: lesson.ordering || getNextOrdering(),
+        document_url: lesson.document_url || "",
+      });
+    }
+  }, [lesson, form]);
+
   const selectedLessonType = form.watch("lesson_type");
 
   const invalidateQueries = () => {
     queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
-    queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lesson?.id] });
+    queryClient.invalidateQueries({
+      queryKey: ["lesson", sectionId, lesson?.id],
+    });
     queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
   };
 
@@ -108,14 +139,13 @@ const LessonForm = ({
     },
     onSuccess: (response) => {
       toast.success("Lesson created successfully! 📚");
-      setSavedLessonId(response.data?.id || response.id);
+      const newLessonId = response.data?.id || response.id;
+      setSavedLessonId(newLessonId);
       invalidateQueries();
 
-      // Don't close form immediately for video lessons to allow upload
-      if (selectedLessonType !== "video") {
-        onSuccess?.();
-        form.reset();
-      }
+      // Always close form after successful creation
+      onSuccess?.();
+      form.reset();
     },
     onError: (error: Error) => {
       toast.error(error?.message || "Failed to create lesson");
@@ -139,6 +169,8 @@ const LessonForm = ({
     onSuccess: () => {
       toast.success("Lesson updated successfully! ✨");
       invalidateQueries();
+
+      // Always close form after successful update
       onSuccess?.();
     },
     onError: (error: Error) => {
@@ -168,7 +200,8 @@ const LessonForm = ({
 
   const adjustOrdering = (direction: "up" | "down") => {
     const currentOrdering = form.getValues("ordering");
-    const newOrdering = direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
+    const newOrdering =
+      direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
     if (newOrdering >= 1) {
       form.setValue("ordering", newOrdering);
     }
@@ -184,7 +217,8 @@ const LessonForm = ({
     console.error("Video upload error:", error);
   };
 
-  const isLoading = createLessonMutation.isPending || updateLessonMutation.isPending;
+  const isLoading =
+    createLessonMutation.isPending || updateLessonMutation.isPending;
 
   return (
     <Card className={className}>
@@ -250,7 +284,7 @@ const LessonForm = ({
                   name="lesson_type"
                   label="Lesson type"
                   placeholder="Select lesson type"
-                  options={LESSON_TYPES.map(type => ({
+                  options={LESSON_TYPES.map((type) => ({
                     value: type.value,
                     label: type.label,
                     icon: type.icon,
@@ -303,7 +337,9 @@ const LessonForm = ({
                   ) : (
                     <EyeOff className="h-4 w-4 text-gray-400" />
                   )}
-                  <label className="text-sm font-semibold">Preview Lesson</label>
+                  <label className="text-sm font-semibold">
+                    Preview Lesson
+                  </label>
                 </div>
                 <div className="text-sm text-gray-600">
                   Allow users to preview this lesson without enrollment
@@ -311,7 +347,9 @@ const LessonForm = ({
               </div>
               <Switch
                 checked={form.watch("is_preview")}
-                onCheckedChange={(checked) => form.setValue("is_preview", checked)}
+                onCheckedChange={(checked) =>
+                  form.setValue("is_preview", checked)
+                }
               />
             </div>
 
@@ -319,9 +357,11 @@ const LessonForm = ({
             <div className="space-y-4">
               {selectedLessonType === "video" ? (
                 <VideoUploadSection
-                  lessonId={savedLessonId || lesson?.id}
+                  key={`video-${savedLessonId || "new"}`} // Force re-render when lesson changes
+                  lessonId={savedLessonId}
                   sectionId={sectionId}
-                  currentHlsUrl={lesson?.hlsUrl}
+                  currentHlsUrl={lessonData?.hlsUrl}
+                  currentVideoUrl={lessonData?.video_url}
                   onUploadSuccess={handleVideoUploadSuccess}
                   onUploadError={handleVideoUploadError}
                 />
@@ -428,25 +468,6 @@ const LessonForm = ({
                     : "Create Lesson"}
                 </span>
               </Button>
-
-              {/* Finish Button for video lessons after creation */}
-              {savedLessonId &&
-                selectedLessonType === "video" &&
-                !isEditing && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      onSuccess?.();
-                      form.reset();
-                      setSavedLessonId(null);
-                    }}
-                    className="flex items-center space-x-2"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Finish</span>
-                  </Button>
-                )}
             </div>
           </div>
         </Form>
