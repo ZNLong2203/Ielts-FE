@@ -87,7 +87,48 @@ const SpeakingDetail = () => {
 
   const content = speakingExercise.speaking_content || {};
   const partType = content.partType || speakingExercise.part_type || "part_1";
-  const questions = content.questions || speakingExercise.questions || [];
+  
+  // Try to load from question_groups first (new structure), fallback to content JSON (old structure)
+  interface QuestionGroup {
+    id: string;
+    group_instruction?: string;
+    questions?: Array<{
+      question_text?: string;
+      expected_duration?: number;
+      instructions?: string;
+      audio_url?: string;
+    }>;
+  }
+  const questionGroups = ((speakingExercise as unknown) as { question_groups?: QuestionGroup[] }).question_groups || [];
+  let questions: Array<{ question_text: string; expected_duration?: number; instructions?: string; audio_url?: string }> = [];
+  
+  if (questionGroups.length > 0) {
+    // Load from question_groups (new structure)
+    // Flatten all questions from all groups
+    questions = questionGroups.flatMap((group: QuestionGroup) => {
+      if (group.questions && group.questions.length > 0) {
+        // If group has questions, map each question
+        return group.questions.map((question) => ({
+          question_text: question.question_text || group.group_instruction || '',
+          expected_duration: question.expected_duration,
+          instructions: group.group_instruction || question.instructions,
+          audio_url: question.audio_url,
+        }));
+      } else {
+        // If group has no questions, create one from group_instruction
+        return [{
+          question_text: group.group_instruction || '',
+          expected_duration: undefined,
+          instructions: group.group_instruction,
+          audio_url: undefined,
+        }];
+      }
+    });
+  } else {
+    // Fallback to content JSON (old structure)
+    questions = content.questions || speakingExercise.questions || [];
+  }
+  
   const additionalInstructions = content.additionalInstructions || speakingExercise.additional_instructions;
 
   const getPartTypeLabel = (part: string) => {

@@ -5,7 +5,6 @@ export const ListeningFormSchema = z.object({
   test_section_id: z.string().min(1, "Section ID is required"),
   audio_url: z.any().optional(),
   time_limit: z.number().min(1, "Time limit must be at least 1 minute").max(180, "Time limit cannot exceed 180 minutes"),
-  passing_score: z.string().min(0, "Passing score must be at least 0").max(100, "Passing score cannot exceed 100"),
   ordering: z.number().min(1, "Ordering must be at least 1"),
   passage: z.object({
     title: z.string().min(1, "Passage title is required"),

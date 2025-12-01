@@ -118,8 +118,8 @@ export interface ISpeakingMockTestExercise {
   title: string;
   instruction?: string;
   test_section_id: string;
-  part_type: 'part_1' | 'part_2' | 'part_3';
-  questions: Array<{
+  part_type?: 'part_1' | 'part_2' | 'part_3';
+  questions?: Array<{
     question_text: string;
     expected_duration?: number;
     instructions?: string;
@@ -139,6 +139,18 @@ export interface ISpeakingMockTestExercise {
     }>;
     additionalInstructions?: string;
   };
+  question_groups?: Array<{
+    id: string;
+    group_title?: string;
+    group_instruction?: string;
+    question_type: string;
+    questions?: Array<{
+      id: string;
+      question_text: string;
+      question_type: string;
+      audio_url?: string;
+    }>;
+  }>;
   created_at: string;
   updated_at: string;
 }

@@ -92,14 +92,24 @@ const QuizPage = () => {
     }
   };
 
-  // Get difficulty from difficulty_level
+  // Get difficulty from difficulty_level (string-based, aligned with admin mock test setup)
   const getDifficulty = (quiz: IMockTest) => {
-    const level = quiz.difficulty_level;
-    if (level === "5" || level === "advanced") return "Advanced";
-    if (level === "4" || level === "upper_intermediate") return "Upper Intermediate";
-    if (level === "3" || level === "intermediate") return "Intermediate";
-    if (level === "2" || level === "elementary") return "Elementary";
-    return "Beginner";
+    const raw = quiz.difficulty_level?.toLowerCase();
+    if (!raw) return "Beginner";
+
+    // New canonical values from admin side
+    if (raw === "beginner") return "Beginner";
+    if (raw === "intermediate") return "Intermediate";
+    if (raw === "hard") return "Upper Intermediate";
+    if (raw === "advanced") return "Advanced";
+    if (raw === "master") return "Master";
+
+    // Backward‑compatibility for some older string formats
+    if (raw === "upper_intermediate") return "Upper Intermediate";
+    if (raw === "elementary") return "Elementary";
+
+    // Fallback: capitalize first letter
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
   };
 
   // Get section type from quiz

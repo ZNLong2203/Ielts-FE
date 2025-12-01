@@ -213,8 +213,6 @@ const filteredAndSortedExercises = useMemo(() => {
       return {
         totalExercises: 0,
         avgTimeLimit: 0,
-        avgPassingScore: 0,
-        totalDuration: 0,
       };
     }
 
@@ -225,17 +223,9 @@ const filteredAndSortedExercises = useMemo(() => {
       ) / totalExercises
     );
 
-    const avgPassingScore = Math.round(
-      exercises.reduce(
-        (acc: number, ex: any) => acc + Number(ex.passing_score || 0),
-        0
-      ) / totalExercises
-    );
-
     return {
       totalExercises,
       avgTimeLimit,
-      avgPassingScore,
     };
   }, [listeningExercises]);
 
@@ -371,7 +361,7 @@ const filteredAndSortedExercises = useMemo(() => {
         </div>
 
         {/* Exercise Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -402,25 +392,6 @@ const filteredAndSortedExercises = useMemo(() => {
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.avgTimeLimit} min
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Avg Passing Score
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.avgPassingScore}
                   </p>
                 </div>
               </div>
@@ -479,7 +450,7 @@ const filteredAndSortedExercises = useMemo(() => {
                       <div className="flex-1">
                         <div className="flex items-start space-x-4">
                           <div className="flex-shrink-0">
-                            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl flex items-center justify-center text-lg font-bold shadow-lg">
+                            <div className="w-12 h-12 bg-purple-600 text-white rounded-xl flex items-center justify-center text-lg font-bold shadow-md">
                               {exercise.ordering || 0}
                             </div>
                           </div>
@@ -498,22 +469,24 @@ const filteredAndSortedExercises = useMemo(() => {
                               </Badge>
                             </div>
 
-                            <p className="text-gray-600 mb-4 line-clamp-2">
-                              <span className="font-medium">Audio:</span>{" "}
-                              {exercise.reading_passage?.title ||
-                                "Untitled Audio"}
-                            </p>
+                            <div className="flex items-center space-x-2 mb-4">
+                              <Headphones className="h-4 w-4 text-purple-600" />
+                              <span className="text-gray-600">
+                                <span className="font-medium">Audio:</span>{" "}
+                                {exercise.audio_url ? (
+                                  <span className="text-purple-600 font-medium">
+                                    Available
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400 italic">No audio file</span>
+                                )}
+                              </span>
+                            </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                               <div className="flex items-center space-x-2">
                                 <Clock className="h-4 w-4" />
                                 <span>{exercise.time_limit || 0} minutes</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Target className="h-4 w-4" />
-                                <span>
-                                  {exercise.passing_score || 0} to pass
-                                </span>
                               </div>
                             </div>
                           </div>

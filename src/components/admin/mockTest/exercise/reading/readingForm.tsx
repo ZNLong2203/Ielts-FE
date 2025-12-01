@@ -16,7 +16,6 @@ import {
   Save,
   BookOpen,
   FileText,
-  Star,
   ArrowRight,
   Plus,
   Trash2,
@@ -89,12 +88,10 @@ const ReadingForm = () => {
       title: "",
       test_section_id: testSectionId || "",
       time_limit: 20,
-      passing_score: "65",
       ordering: 1,
       passage: {
         title: "",
         content: "",
-        word_count: 0,
         difficulty_level: "3",
         paragraphs: [],
       },
@@ -102,7 +99,7 @@ const ReadingForm = () => {
   });
 
   // Paragraphs field array
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: readingForm.control,
     name: "passage.paragraphs",
   });
@@ -110,14 +107,23 @@ const ReadingForm = () => {
   // Mutations
   const createReadingExerciseMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof ReadingFormSchema>) => {
+      // Combine paragraphs content into passage content
+      const combinedContent = paragraphs
+        .map((para) => para.content)
+        .filter((content) => content.trim())
+        .join("\n\n");
+
       const payload = {
         ...formData,
         passage: {
           ...formData.passage,
-          paragraphs: paragraphs,
-          word_count: wordCount,
+          content: combinedContent, // Set content from paragraphs
+          paragraphs,
+          // word_count will be auto-calculated by backend from content
         },
-      };
+        // For IELTS mock tests we don't use a passing score; backend field will use its default
+        passing_score: undefined,
+      } as any;
       console.log("Creating with payload:", payload);
       return createReadingExercise(payload);
     },
@@ -142,10 +148,11 @@ const ReadingForm = () => {
           title: formData.passage?.title || "",
           content: formData.passage?.content || "",
           difficulty_level: formData.passage?.difficulty_level || "3",
-          paragraphs: paragraphs,
-          word_count: wordCount,
+          paragraphs,
+          // word_count will be auto-calculated by backend from content
         },
-      };
+        passing_score: undefined,
+      } as any;
       console.log("Updating with payload:", payload);
       return updateReadingExercise(readingExerciseId!, payload);
     },
@@ -162,19 +169,19 @@ const ReadingForm = () => {
     },
   });
 
-  // Calculate word count from content
+  // Calculate word count from paragraphs
   const calculateWordCount = (content: string) => {
     if (!content.trim()) return 0;
     return content.trim().split(/\s+/).length;
   };
 
-  // Update word count when content changes
-  const passageContent = readingForm.watch("passage.content");
+  // Calculate total word count from all paragraphs
   useEffect(() => {
-    const count = calculateWordCount(passageContent || "");
-    setWordCount(count);
-    readingForm.setValue("passage.word_count", count);
-  }, [passageContent, readingForm]);
+    const totalWords = paragraphs.reduce((sum, para) => {
+      return sum + calculateWordCount(para.content || "");
+    }, 0);
+    setWordCount(totalWords);
+  }, [paragraphs]);
 
   // Paragraph management functions
   const addParagraph = () => {
@@ -222,33 +229,90 @@ const ReadingForm = () => {
   useEffect(() => {
     if (readingExerciseData && isEditing) {
       console.log("Loading existing reading exercise data:", readingExerciseData);
+      console.log("Reading passage data:", readingExerciseData.reading_passage);
+      console.log("Paragraphs from backend:", readingExerciseData.reading_passage?.paragraphs);
+
+      // Check if reading_passage exists
+      if (!readingExerciseData.reading_passage) {
+        console.warn("Reading passage is null or undefined. Data structure:", readingExerciseData);
+      }
 
       // Reset form with existing data
       readingForm.reset({
         title: readingExerciseData.title || "",
         test_section_id: testSectionId || "",
         time_limit: readingExerciseData.time_limit || 20,
-        passing_score: readingExerciseData.passing_score || "",
         ordering: readingExerciseData.ordering || 1,
         passage: {
           title: readingExerciseData.reading_passage?.title || "",
           content: readingExerciseData.reading_passage?.content || "",
-          word_count: readingExerciseData.reading_passage.word_count || 0,
-          difficulty_level: readingExerciseData.reading_passage?.difficulty_level.toString() || "3",
+          // word_count is auto-calculated by backend, not needed in form
+          difficulty_level: readingExerciseData.reading_passage?.difficulty_level?.toString() || "3",
           paragraphs: readingExerciseData.reading_passage?.paragraphs || [],
         },
       });
 
-      // Set paragraphs state
+      // Set paragraphs state and form field array
       if (
         readingExerciseData.reading_passage?.paragraphs &&
-        Array.isArray(readingExerciseData.reading_passage.paragraphs)
+        Array.isArray(readingExerciseData.reading_passage.paragraphs) &&
+        readingExerciseData.reading_passage.paragraphs.length > 0
       ) {
-        console.log("Setting paragraphs:", readingExerciseData.reading_passage.paragraphs);
-        setParagraphs(readingExerciseData.reading_passage.paragraphs);
+        console.log("Setting paragraphs from backend:", readingExerciseData.reading_passage.paragraphs);
+        // Map backend paragraphs to frontend format
+        const mappedParagraphs: IReadingParagraph[] = readingExerciseData.reading_passage.paragraphs.map(
+          (para: any) => ({
+            id: para.id || crypto.randomUUID(),
+            label: para.label || "A",
+            content: para.content || "",
+          })
+        );
+        console.log("Mapped paragraphs:", mappedParagraphs);
+        setParagraphs(mappedParagraphs);
+        
+        // Replace all fields in the form field array
+        replace(mappedParagraphs);
+        console.log("Replaced form fields with paragraphs");
+      } else if (readingExerciseData.reading_passage?.content) {
+        // If no paragraphs but has content, split content into paragraphs
+        const content = readingExerciseData.reading_passage.content;
+        console.log("No paragraphs found, splitting content:", content);
+        // Split by double newlines or create single paragraph
+        const contentParts = content.split(/\n\n+/).filter(part => part.trim());
+        
+        if (contentParts.length > 0) {
+          const splitParagraphs: IReadingParagraph[] = contentParts.map((part, index) => ({
+            id: crypto.randomUUID(),
+            label: String.fromCharCode(65 + index), // A, B, C, ...
+            content: part.trim(),
+          }));
+          console.log("Split paragraphs:", splitParagraphs);
+          setParagraphs(splitParagraphs);
+          replace(splitParagraphs);
+        } else {
+          // Single paragraph from content
+          const initialParagraph: IReadingParagraph = {
+            id: crypto.randomUUID(),
+            label: "A",
+            content: content.trim(),
+          };
+          console.log("Single paragraph from content:", initialParagraph);
+          setParagraphs([initialParagraph]);
+          replace([initialParagraph]);
+        }
+      } else {
+        // Initialize empty paragraph if none exist
+        console.log("No content or paragraphs, initializing empty paragraph");
+        const initialParagraph: IReadingParagraph = {
+          id: crypto.randomUUID(),
+          label: "A",
+          content: "",
+        };
+        setParagraphs([initialParagraph]);
+        replace([initialParagraph]);
       }
     }
-  }, [readingExerciseData, isEditing, readingForm]);
+  }, [readingExerciseData, isEditing, readingForm, testSectionId, replace]);
 
   // Initialize first paragraph for new exercises
   useEffect(() => {
@@ -266,10 +330,24 @@ const ReadingForm = () => {
   const onSubmit = async (data: any) => {
     console.log("Form submit data:", data);
     try {
+      // Combine paragraphs content into passage content
+      const combinedContent = paragraphs
+        .map((para) => para.content)
+        .filter((content) => content.trim())
+        .join("\n\n");
+
+      const formDataWithContent = {
+        ...data,
+        passage: {
+          ...data.passage,
+          content: combinedContent, // Set content from paragraphs
+        },
+      };
+
       if (isEditing) {
-        await updateReadingExerciseMutation.mutateAsync(data);
+        await updateReadingExerciseMutation.mutateAsync(formDataWithContent);
       } else {
-        await createReadingExerciseMutation.mutateAsync(data);
+        await createReadingExerciseMutation.mutateAsync(formDataWithContent);
       }
     } catch (error) {
       console.error("Submit error:", error);
@@ -344,11 +422,6 @@ const ReadingForm = () => {
                 <CardTitle className="flex items-center justify-between">
                   <span>{readingForm.watch("title") || "Untitled Exercise"}</span>
                   <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: Number(selectedDifficulty) }, (_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
                     <Clock className="h-3 w-3 mr-1" />
                     <span>{readingForm.watch("time_limit")} min</span>
                   </div>
@@ -424,22 +497,13 @@ const ReadingForm = () => {
                         required
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <TextField
                           control={readingForm.control}
                           name="time_limit"
                           label="Time Limit (minutes)"
                           type="number"
                           placeholder="20"
-                          required
-                        />
-
-                        <TextField
-                          control={readingForm.control}
-                          name="passing_score"
-                          label="Passing Score"
-                          type="text"
-                          placeholder="65"
                           required
                         />
 
@@ -486,16 +550,14 @@ const ReadingForm = () => {
                         <div className="flex items-center justify-between">
                           <label className="text-sm font-medium text-gray-700">Passage Content</label>
                           <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <span>Words: {wordCount}</span>
+                            <span>Total Words: {wordCount}</span>
                           </div>
                         </div>
-                        <TextField
-                          control={readingForm.control}
-                          name="passage.content"
-                          label
-                          placeholder="Enter the reading passage content here..."
-                          required
-                        />
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <p className="text-sm text-blue-800">
+                            💡 Passage content will be automatically generated from the paragraphs below.
+                          </p>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -556,7 +618,7 @@ const ReadingForm = () => {
                                 <div className="flex items-center justify-between mb-6">
                                   <div className="flex items-center space-x-4">
                                     <div className="relative">
-                                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg">
+                                      <div className="w-10 h-10 bg-purple-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-md">
                                         {paragraph.label}
                                       </div>
                                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
@@ -706,21 +768,11 @@ const ReadingForm = () => {
                           </span>
                         </div>
 
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Passing Score:</span>
-                          <span className="font-medium">
-                            {readingForm.watch("passing_score")}
-                          </span>
-                        </div>
-
-
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-600">Difficulty:</span>
-                          <div className="flex items-center space-x-1">
-                            {Array.from({ length: Number(selectedDifficulty) }, (_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
-                          </div>
+                          <span className="font-medium">
+                            {DIFFICULTY_OPTIONS.find(opt => Number(opt.value) === Number(selectedDifficulty))?.label?.replace(/⭐/g, '').trim() || "Intermediate"}
+                          </span>
                         </div>
 
                         <Separator />

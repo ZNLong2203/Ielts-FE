@@ -164,9 +164,9 @@ export interface IWritingMockTestExercise {
   title: string;
   instruction?: string;
   test_section_id: string;
-  task_type: 'task_1' | 'task_2';
-  question_type: 'essay' | 'letter' | 'report' | 'discursive';
-  question_text: string;
+  task_type?: 'task_1' | 'task_2';
+  question_type?: 'essay' | 'letter' | 'report' | 'discursive';
+  question_text?: string;
   question_image?: string;
   question_chart?: string;
   word_limit?: number;
@@ -185,6 +185,19 @@ export interface IWritingMockTestExercise {
     keywords?: string[];
     sampleAnswers?: string[];
   };
+  question_groups?: Array<{
+    id: string;
+    group_title?: string;
+    group_instruction?: string;
+    image_url?: string;
+    question_type: string;
+    questions?: Array<{
+      id: string;
+      question_text: string;
+      question_type: string;
+      image_url?: string;
+    }>;
+  }>;
   created_at: string;
   updated_at: string;
 }

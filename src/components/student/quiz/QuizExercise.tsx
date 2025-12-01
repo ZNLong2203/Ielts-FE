@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Pin, PinOff, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PassageWithHighlight from "./PassageWithHighlight";
+import ReadingPassageWithParagraphs from "./ReadingPassageWithParagraphs";
 import QuizQuestionGroup from "./QuizQuestionGroup";
 
 interface Question {
@@ -27,11 +28,19 @@ interface QuestionGroup {
   questions: Question[];
 }
 
+interface Paragraph {
+  id: string;
+  label: string;
+  content: string;
+}
+
 interface Exercise {
   id: string;
   title: string;
   instruction?: string;
   passage?: string;
+  passageTitle?: string;
+  paragraphs?: Paragraph[];
   image_url?: string;
   audio_url?: string;
   question_groups: QuestionGroup[];
@@ -112,13 +121,24 @@ export default function QuizExercise({
       </div>
 
       {/* Exercise Passage (from exercise.content) */}
-      {exercise.passage && (
-        <PassageWithHighlight
-          passageId={passageId}
-          passageText={exercise.passage}
-          onPin={() => onPinPassage(isPassagePinned ? "" : passageId)}
-          isPinned={isPassagePinned}
-        />
+      {(exercise.passage || exercise.paragraphs) && (
+        exercise.paragraphs && exercise.paragraphs.length > 0 ? (
+          <ReadingPassageWithParagraphs
+            passageId={passageId}
+            passageTitle={exercise.passageTitle}
+            passageContent={exercise.passage}
+            paragraphs={exercise.paragraphs}
+            onPin={() => onPinPassage(isPassagePinned ? "" : passageId)}
+            isPinned={isPassagePinned}
+          />
+        ) : (
+          <PassageWithHighlight
+            passageId={passageId}
+            passageText={exercise.passage || ""}
+            onPin={() => onPinPassage(isPassagePinned ? "" : passageId)}
+            isPinned={isPassagePinned}
+          />
+        )
       )}
 
       {/* Exercise Image (from exercise.content) */}

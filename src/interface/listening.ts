@@ -15,6 +15,7 @@ export interface ExerciseContent {
   time_limit: number; // in minutes
   passing_score: string;
   ordering: number;
+  audio_url?: string;
 }
 
 export interface IListeningSection {

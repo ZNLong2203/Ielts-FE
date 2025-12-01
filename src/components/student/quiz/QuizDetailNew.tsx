@@ -62,6 +62,12 @@ interface QuestionGroup {
   }>;
 }
 
+interface Paragraph {
+  id: string;
+  label: string;
+  content: string;
+}
+
 interface Exercise {
   id: string;
   title: string;
@@ -69,6 +75,8 @@ interface Exercise {
   content?: string; // JSON string containing passage, image_url, audio_url, etc.
   audio_url?: string;
   passage?: string;
+  passageTitle?: string;
+  paragraphs?: Paragraph[];
   image_url?: string;
   question_groups: QuestionGroup[];
   total_questions: number;
@@ -312,13 +320,22 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
 
             const exerciseTotalQuestions = questionGroups.reduce((sum, g) => sum + g.questions.length, 0);
 
+            // Extract reading passage data (for reading exercises)
+            const readingPassage = exerciseContent.reading_passage as {
+              title?: string;
+              content?: string;
+              paragraphs?: Array<{ id: string; label: string; content: string }>;
+            } | undefined;
+
             exercises.push({
               id: exercise.id,
               title: exercise.title,
               instruction: exercise.instruction || undefined,
               content: exercise.content || undefined,
               audio_url: exercise.audio_url || (exerciseContent.audio_url as string) || undefined,
-              passage: (exerciseContent.passage as string) || undefined,
+              passage: readingPassage?.content || (exerciseContent.passage as string) || undefined,
+              passageTitle: readingPassage?.title || undefined,
+              paragraphs: readingPassage?.paragraphs || undefined,
               image_url: (exerciseContent.chart_url as string) || (exerciseContent.image_url as string) || undefined,
               question_groups: questionGroups,
               total_questions: exerciseTotalQuestions,

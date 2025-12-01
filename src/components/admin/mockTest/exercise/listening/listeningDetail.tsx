@@ -382,18 +382,6 @@ const ListeningDetail = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Award className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-gray-700">
-                        Passing Score
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-green-600">
-                      {listeningExercise.passing_score}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
                       <Hash className="h-4 w-4 text-orange-600" />
                       <span className="text-sm font-medium text-gray-700">
                         Total Points
@@ -529,7 +517,7 @@ const ListeningDetail = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Target className="h-4 w-4" />
-                    <span>Pass: {listeningExercise.passing_score}</span>
+                    {/* Passing score removed for IELTS mock tests */}
                   </div>
 
                   <Badge className={`${difficulty.color} border`}>

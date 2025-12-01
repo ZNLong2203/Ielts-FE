@@ -17,7 +17,6 @@ import {
   Save,
   Headphones,
   FileText,
-  Star,
   ArrowRight,
   Calculator,
   CheckCircle,
@@ -102,7 +101,6 @@ const ListeningForm = () => {
       title: "",
       test_section_id: testSectionId || "",
       time_limit: 30,
-      passing_score: "65",
       ordering: 1,
       audio_url: undefined,
       passage: {
@@ -202,7 +200,6 @@ const ListeningForm = () => {
       const payload: IListeningExerciseUpdate = {
         title: formData.title || "",
         time_limit: formData.time_limit ?? 30,
-        passing_score: formData.passing_score || "",
         ordering: formData.ordering ?? 1,
         audio_url: formData.audio_url,
         passage: {
@@ -385,7 +382,6 @@ const ListeningForm = () => {
         title: listeningExerciseData.title || "",
         test_section_id: testSectionId || "",
         time_limit: listeningExerciseData.time_limit || 30,
-        passing_score: listeningExerciseData.passing_score || "",
         ordering: listeningExerciseData.ordering || 1,
         audio_url: listeningExerciseData.audio_url,
         passage: {
@@ -498,17 +494,6 @@ const ListeningForm = () => {
                     {listeningForm.watch("title") || "Untitled Exercise"}
                   </span>
                   <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      {Array.from(
-                        { length: Number(selectedDifficulty) },
-                        (_, i) => (
-                          <Star
-                            key={i}
-                            className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                          />
-                        )
-                      )}
-                    </div>
                     <Clock className="h-3 w-3 mr-1" />
                     <span>{listeningForm.watch("time_limit")} min</span>
                   </div>
@@ -582,22 +567,13 @@ const ListeningForm = () => {
                         required
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <TextField
                           control={listeningForm.control}
                           name="time_limit"
                           label="Time Limit (minutes)"
                           type="number"
                           placeholder="30"
-                          required
-                        />
-
-                        <TextField
-                          control={listeningForm.control}
-                          name="passing_score"
-                          label="Passing Score"
-                          type="text"
-                          placeholder="65"
                           required
                         />
 
@@ -887,17 +863,9 @@ const ListeningForm = () => {
 
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-600">Difficulty:</span>
-                          <div className="flex items-center space-x-1">
-                            {Array.from(
-                              { length: Number(selectedDifficulty) },
-                              (_, i) => (
-                                <Star
-                                  key={i}
-                                  className="h-3 w-3 fill-yellow-400 text-yellow-400"
-                                />
-                              )
-                            )}
-                          </div>
+                          <span className="font-medium">
+                            {DIFFICULTY_OPTIONS.find(opt => Number(opt.value) === Number(selectedDifficulty))?.label?.replace(/⭐/g, '').trim() || "Intermediate"}
+                          </span>
                         </div>
 
                         <Separator />

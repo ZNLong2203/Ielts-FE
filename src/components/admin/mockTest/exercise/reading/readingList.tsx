@@ -37,7 +37,6 @@ import {
   Clock,
   Target,
   Hash,
-  Star,
   FileText,
   Eye,
   Search,
@@ -46,19 +45,17 @@ import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
 
 const DIFFICULTY_LABELS = {
-  "1": { label: "Beginner", color: "bg-green-100 text-green-800", stars: 1 },
-  "2": { label: "Elementary", color: "bg-blue-100 text-blue-800", stars: 2 },
+  "1": { label: "Beginner", color: "bg-green-100 text-green-800" },
+  "2": { label: "Elementary", color: "bg-blue-100 text-blue-800" },
   "3": {
     label: "Intermediate",
     color: "bg-yellow-100 text-yellow-800",
-    stars: 3,
   },
   "4": {
     label: "Upper Intermediate",
     color: "bg-orange-100 text-orange-800",
-    stars: 4,
   },
-  "5": { label: "Advanced", color: "bg-red-100 text-red-800", stars: 5 },
+  "5": { label: "Advanced", color: "bg-red-100 text-red-800" },
 } as const;
 
 type SortByType = "title" | "difficulty" | "ordering" | "created_at";
@@ -214,7 +211,6 @@ const ReadingList = () => {
       return {
         totalExercises: 0,
         avgTimeLimit: 0,
-        avgPassingScore: 0,
         totalWords: 0,
       };
     }
@@ -222,13 +218,6 @@ const ReadingList = () => {
     const avgTimeLimit = Math.round(
       exercises.reduce(
         (acc: number, ex: any) => acc + Number(ex.time_limit || 0),
-        0
-      ) / totalExercises
-    );
-
-    const avgPassingScore = Math.round(
-      exercises.reduce(
-        (acc: number, ex: any) => acc + Number(ex.passing_score || 0),
         0
       ) / totalExercises
     );
@@ -241,7 +230,6 @@ const ReadingList = () => {
     return {
       totalExercises,
       avgTimeLimit,
-      avgPassingScore,
       totalWords,
     };
   }, [readingExercises]);
@@ -378,7 +366,7 @@ const ReadingList = () => {
         </div>
 
         {/* Exercise Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -409,24 +397,6 @@ const ReadingList = () => {
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {stats.avgTimeLimit} min
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Target className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
-                    Avg Passing Score
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.avgPassingScore}
                   </p>
                 </div>
               </div>
@@ -484,7 +454,7 @@ const ReadingList = () => {
                       <div className="flex-1">
                         <div className="flex items-start space-x-4">
                           <div className="flex-shrink-0">
-                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl flex items-center justify-center text-lg font-bold shadow-lg">
+                            <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-lg font-bold shadow-md">
                               {exercise.ordering || 0}
                             </div>
                           </div>
@@ -495,20 +465,7 @@ const ReadingList = () => {
                                 {exercise.title || "Untitled Exercise"}
                               </h3>
                               <Badge className={`${difficulty.color} border-0`}>
-                                <div className="flex items-center space-x-1">
-                                  {Array.from(
-                                    { length: difficulty.stars },
-                                    (_, i) => (
-                                      <Star
-                                        key={i}
-                                        className="h-3 w-3 fill-current"
-                                      />
-                                    )
-                                  )}
-                                  <span className="ml-1">
-                                    {difficulty.label}
-                                  </span>
-                                </div>
+                                {difficulty.label}
                               </Badge>
                             </div>
 
@@ -523,21 +480,15 @@ const ReadingList = () => {
                                 <span>{exercise.time_limit || 0} minutes</span>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <Target className="h-4 w-4" />
-                                <span>
-                                  {exercise.passing_score || 0} to pass
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2">
                                 <Hash className="h-4 w-4" />
                                 <span>
-                                  {exercise.reading_passage.word_count || 0} words
+                                  {exercise.reading_passage?.word_count || 0} words
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <FileText className="h-4 w-4" />
                                 <span>
-                                  {exercise.reading_passage.paragraphs?.length || 0}{" "}
+                                  {exercise.reading_passage?.paragraphs?.length || 0}{" "}
                                   paragraphs
                                 </span>
                               </div>

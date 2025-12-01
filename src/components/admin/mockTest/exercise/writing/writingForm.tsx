@@ -185,14 +185,26 @@ const WritingForm = () => {
   useEffect(() => {
     if (writingExerciseData && isEditing) {
       const content = writingExerciseData.writing_content || {};
+      // Try to load from question_groups first (new structure), fallback to content JSON (old structure)
+      const firstQuestionGroup = (writingExerciseData as any).question_groups?.[0];
+      const firstQuestion = firstQuestionGroup?.questions?.[0];
+      
       writingForm.reset({
         title: writingExerciseData.title || "",
         test_section_id: testSectionId || "",
         instruction: writingExerciseData.instruction || "",
         task_type: (content.taskType as "task_1" | "task_2") || writingExerciseData.task_type || "task_1",
-        question_type: (content.questionType as "essay" | "letter" | "report" | "discursive") || writingExerciseData.question_type || "essay",
-        question_text: content.questionText || writingExerciseData.question_text || "",
-        question_image: content.questionImage || writingExerciseData.question_image || "",
+        question_type: (firstQuestion?.question_type as "essay" | "letter" | "report" | "discursive") || 
+                      (content.questionType as "essay" | "letter" | "report" | "discursive") || 
+                      writingExerciseData.question_type || "essay",
+        question_text: firstQuestionGroup?.group_instruction || 
+                      firstQuestion?.question_text || 
+                      content.questionText || 
+                      writingExerciseData.question_text || "",
+        question_image: firstQuestionGroup?.image_url || 
+                       firstQuestion?.image_url || 
+                       content.questionImage || 
+                       writingExerciseData.question_image || "",
         question_chart: content.questionChart || writingExerciseData.question_chart || "",
         word_limit: content.wordLimit || writingExerciseData.word_limit || 150,
         time_limit: writingExerciseData.time_limit || 20,

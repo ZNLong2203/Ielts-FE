@@ -109,14 +109,13 @@ const ReadingDetail = () => {
 
   const handleEdit = () => {
     router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading/${readingExerciseId}?sectionId=${sectionId}`
+      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading/${readingExerciseId}/update?sectionId=${sectionId}`
     );
   };
 
   const handlePreview = () => {
-    router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/reading/${readingExerciseId}/preview?sectionId=${sectionId}`
-    );
+    // Preview is just switching to the "preview" tab
+    setActiveTab("preview");
   };
 
   // Utility functions
@@ -147,6 +146,11 @@ const ReadingDetail = () => {
     ] || DIFFICULTY_LABELS["3"];
   const wordCount = readingExercise.reading_passage?.word_count || 0;
   const paragraphs = readingExercise.reading_passage?.paragraphs || [];
+  
+  // Debug logging
+  console.log("Reading exercise:", readingExercise);
+  console.log("Reading passage:", readingExercise.reading_passage);
+  console.log("Paragraphs:", paragraphs);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -377,18 +381,6 @@ const ReadingDetail = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Award className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-gray-700">
-                        Passing Score
-                      </span>
-                    </div>
-                    <span className="text-lg font-bold text-green-600">
-                      {readingExercise.passing_score}%
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
                       <Hash className="h-4 w-4 text-purple-600" />
                       <span className="text-sm font-medium text-gray-700">
                         Total Points
@@ -456,13 +448,13 @@ const ReadingDetail = () => {
         )}
 
         {activeTab === "passage" && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <BookMarked className="h-5 w-5 text-green-600" />
-                    <span>{readingExercise.reading_passage?.title}</span>
+                    <span>{readingExercise.reading_passage?.title || "Reading Passage"}</span>
                   </div>
                   <Button
                     variant="outline"
@@ -474,16 +466,44 @@ const ReadingDetail = () => {
                     }
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    Copy
+                    Copy All
                   </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose prose-gray max-w-none">
-                  <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {readingExercise.reading_passage?.content}
+                {paragraphs.length > 0 ? (
+                  // Display paragraphs
+                  <div className="space-y-4">
+                    {paragraphs.map((paragraph) => (
+                      <Card
+                        key={paragraph.id}
+                        className="border-l-4 border-l-purple-500"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold shadow-md">
+                                {paragraph.label}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                                {paragraph.content}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  // Fallback to single content
+                  <div className="prose prose-gray max-w-none">
+                    <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
+                      {readingExercise.reading_passage?.content}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -586,7 +606,7 @@ const ReadingDetail = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Target className="h-4 w-4" />
-                    <span>Pass: {readingExercise.passing_score}</span>
+                    {/* Passing score removed for IELTS mock tests */}
                   </div>
                   <Badge className={`${difficulty.color} border`}>
                     <div className="flex items-center space-x-1">
@@ -615,15 +635,43 @@ const ReadingDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">
-                  {readingExercise.reading_passage?.title}
+                  {readingExercise.reading_passage?.title || "Reading Passage"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose prose-gray max-w-none">
-                  <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
-                    {readingExercise.reading_passage?.content}
+                {paragraphs.length > 0 ? (
+                  // Display paragraphs
+                  <div className="space-y-4">
+                    {paragraphs.map((paragraph) => (
+                      <Card
+                        key={paragraph.id}
+                        className="border-l-4 border-l-purple-500"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold shadow-md">
+                                {paragraph.label}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                                {paragraph.content}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  // Fallback to single content
+                  <div className="prose prose-gray max-w-none">
+                    <div className="whitespace-pre-line text-gray-700 leading-relaxed text-md">
+                      {readingExercise.reading_passage?.content}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

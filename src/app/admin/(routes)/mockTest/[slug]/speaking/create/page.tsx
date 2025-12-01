@@ -1,11 +1,14 @@
+"use client";
+import { Suspense } from "react";
 import SpeakingForm from "@/components/admin/mockTest/exercise/speaking/speakingForm";
+import Loading from "@/components/ui/loading";
 
 const SpeakingExerciseFormPage = () => {
-    return(
-        <div>
-            <SpeakingForm />
-        </div>
-    )
+  return (
+    <Suspense fallback={<Loading />}>
+      <SpeakingForm />
+    </Suspense>
+  );
 }
 
 export default SpeakingExerciseFormPage;
