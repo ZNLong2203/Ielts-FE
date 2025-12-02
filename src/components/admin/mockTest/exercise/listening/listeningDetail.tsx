@@ -73,8 +73,15 @@ const ListeningDetail = () => {
     ? params.listeningId[0]
     : params.listeningId;
   const sectionId = searchParams?.get("sectionId") ?? undefined;
+  const questionGroupId = searchParams?.get("questionGroupId") ?? undefined;
+  const tabParam = (searchParams?.get("tab") as TabType) || "overview";
 
-  const [activeTab, setActiveTab] = useState<TabType>("overview");
+  const [activeTab, setActiveTab] = useState<TabType>(tabParam);
+
+  // Keep tab in sync with URL param
+  useEffect(() => {
+    setActiveTab(tabParam);
+  }, [tabParam]);
 
   // Query
   const {
@@ -144,7 +151,7 @@ const ListeningDetail = () => {
       listeningExercise.reading_passage
         ?.difficulty_level as keyof typeof DIFFICULTY_LABELS
     ] || DIFFICULTY_LABELS["3"];
-  const wordCount = listeningExercise.reading_passage?.word_count || 0;
+  const questionGroupsCount = listeningExercise.question_groups?.length || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -321,17 +328,10 @@ const ListeningDetail = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {wordCount}
-                      </div>
-                      <div className="text-sm text-gray-600">Words</div>
-                    </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-600">
-                        {/* This would come from question groups count */}
-                        0
+                        {questionGroupsCount}
                       </div>
                       <div className="text-sm text-gray-600">Question Groups</div>
                     </div>
@@ -486,14 +486,16 @@ const ListeningDetail = () => {
           <QuestionGroupList
             exerciseId={listeningExerciseId}
             mockTestId={mockTestId}
+            sectionId={sectionId}
           />
         )}
 
-         {activeTab === "questions" && (
+        {activeTab === "questions" && (
           <QuestionList
             exerciseId={listeningExerciseId}
             mockTestId={mockTestId}
             sectionId={sectionId}
+            questionGroupId={questionGroupId || undefined}
           />
         )}
 

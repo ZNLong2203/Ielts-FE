@@ -166,7 +166,7 @@ const MatchingSettings: React.FC<MatchingSettingsProps> = ({
             <div className="flex items-center justify-between text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
               <span>Total Options: {matchingFields.length}</span>
               <span>
-                Status: {matchingFields.length >= 2 ? "✅ Ready" : "⚠️ Need more options"}
+                Status: {matchingFields.length >= 2 ? "Ready" : "Need more options"}
               </span>
             </div>
           )}

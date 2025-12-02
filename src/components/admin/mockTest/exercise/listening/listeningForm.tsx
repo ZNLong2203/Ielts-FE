@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
@@ -112,21 +112,12 @@ const ListeningForm = () => {
     },
   });
 
-  // Paragraphs field array
-  const { fields, append, remove } = useFieldArray({
-    control: listeningForm.control,
-    name: "passage.paragraphs",
-  });
+  // Paragraphs are not used for listening transcript anymore
 
   // Audio upload mutation
   const uploadAudioMutation = useMutation({
-    mutationFn: async ({
-      exerciseId,
-      formData,
-    }: {
-      exerciseId: string;
-      formData: FormData;
-    }) => {
+    mutationFn: async (params: { exerciseId: string; formData: FormData }) => {
+      const { exerciseId, formData } = params;
       return uploadListeningAudio(exerciseId, formData);
     },
     onSuccess: (response) => {
@@ -141,10 +132,13 @@ const ListeningForm = () => {
         refetch();
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Audio upload error:", error);
       setIsUploadingAudio(false);
-      toast.error(error?.response?.data?.message || "Failed to upload audio");
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to upload audio";
+      toast.error(message);
     },
   });
 
@@ -158,6 +152,8 @@ const ListeningForm = () => {
           ...formData.passage,
           word_count: wordCount,
         },
+        // Use default passing_score for mock tests (not used in IELTS mode)
+        passing_score: "0",
       };
       return createListeningExercise(payload);
     },
@@ -188,10 +184,11 @@ const ListeningForm = () => {
         `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`
       );
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to create listening exercise"
-      );
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to create listening exercise";
+      toast.error(message);
     },
   });
 
@@ -241,18 +238,13 @@ const ListeningForm = () => {
         `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_LISTENING}?sectionId=${testSectionId}`
       );
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update listening exercise"
-      );
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to update listening exercise";
+      toast.error(message);
     },
   });
-
-  // Utility functions
-  const calculateWordCount = (content: string) => {
-    if (!content.trim()) return 0;
-    return content.trim().split(/\s+/).length;
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -260,13 +252,17 @@ const ListeningForm = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Update word count when content changes
+  // Word count is no longer required for listening transcript.
+  // Keep state only for optional display if content is provided.
   const passageContent = listeningForm.watch("passage.content");
   useEffect(() => {
-    const count = calculateWordCount(passageContent || "");
-    setWordCount(count);
-    listeningForm.setValue("passage.word_count", count);
-  }, [passageContent, listeningForm]);
+    if (!passageContent) {
+      setWordCount(0);
+      return;
+    }
+    const count = passageContent.trim().split(/\s+/).length;
+    setWordCount(isNaN(count) ? 0 : count);
+  }, [passageContent]);
 
   // Audio handling
   const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -403,7 +399,7 @@ const ListeningForm = () => {
     }
   }, [listeningExerciseData, isEditing, listeningForm, testSectionId]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof schema>) => {
     try {
       if (isEditing) {
         await updateListeningExerciseMutation.mutateAsync(data);
@@ -589,12 +585,12 @@ const ListeningForm = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Audio & Passage Information */}
+                {/* Audio Information */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
                         <Headphones className="h-5 w-5 text-purple-600" />
-                        <span>Audio & Transcript</span>
+                        <span>Audio Information</span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -804,28 +800,7 @@ const ListeningForm = () => {
                         )}
                       </div>
 
-                      {/* Audio Transcript */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium text-gray-700">
-                            Audio Transcript
-                          </label>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <span>Words: {wordCount}</span>
-                          </div>
-                        </div>
-                        <TextField
-                          control={listeningForm.control}
-                          name="passage.content"
-                          label=""
-                          placeholder="Enter the audio transcript here..."
-                          required
-                        />
-                        <div className="text-xs text-gray-500">
-                          💡 Tip: The transcript helps students follow along and
-                          serves as reference material.
-                        </div>
-                      </div>
+                      {/* Transcript input removed as per requirement */}
                     </CardContent>
                   </Card>
                 </div>
@@ -843,11 +818,6 @@ const ListeningForm = () => {
                     <CardContent className="space-y-4">
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Word Count:</span>
-                          <span className="font-medium">{wordCount}</span>
-                        </div>
-
-                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Time Limit:</span>
                           <span className="font-medium">
                             {listeningForm.watch("time_limit")} min
@@ -864,7 +834,10 @@ const ListeningForm = () => {
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-600">Difficulty:</span>
                           <span className="font-medium">
-                            {DIFFICULTY_OPTIONS.find(opt => Number(opt.value) === Number(selectedDifficulty))?.label?.replace(/⭐/g, '').trim() || "Intermediate"}
+                            {DIFFICULTY_OPTIONS.find(
+                              (opt) =>
+                                Number(opt.value) === Number(selectedDifficulty)
+                            )?.label || "Intermediate"}
                           </span>
                         </div>
 
@@ -924,14 +897,7 @@ const ListeningForm = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                          {wordCount >= 5 ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                          )}
-                          <span>Transcript content ({wordCount}/5+ words)</span>
-                        </div>
+                        {/* Transcript validation removed */}
                       </div>
                     </CardContent>
                   </Card>

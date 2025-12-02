@@ -770,56 +770,90 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
                 </div>
               )}
 
-              {/* Matching Option Selector - chỉ hiển thị khi có hasMatching */}
+              {/* Matching Headings / Options – for IELTS style matching tasks */}
               {questionTypeConfig?.hasMatching &&
                 selectedQuestionGroup?.matching_options && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">
-                      Match with Answer *
-                    </Label>
-                    <Select
-                      value={formData.options[0]?.matching_option_id || "none"}
-                      onValueChange={(value) =>
-                        handleOptionChange(0, "matching_option_id", value)
-                      }
-                    >
-                      <SelectTrigger className="w-full h-11 bg-white border-gray-300 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-                        <SelectValue
-                          placeholder="Select matching option"
-                          className="text-gray-500"
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg">
-                        <SelectItem value="none">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                            <span className="font-medium text-gray-500 italic">
-                              No match
-                            </span>
-                          </div>
-                        </SelectItem>
+                  <div className="space-y-4">
+                    {/* Overview of all matching headings/options in this group */}
+                    <div className="rounded-lg border border-dashed border-blue-200 bg-blue-50/40 p-4">
+                      <p className="text-sm font-medium text-blue-900 mb-2">
+                        Matching set for this group
+                      </p>
+                      <p className="text-xs text-blue-800 mb-3">
+                        These are the headings / options that candidates will match to
+                        in this IELTS-style matching task. You can edit this list in
+                        the <span className="font-semibold">Question Group</span>{" "}
+                        (Matching options).
+                      </p>
+                      <div className="grid gap-1 sm:grid-cols-2 md:grid-cols-3">
                         {selectedQuestionGroup.matching_options
                           .sort((a: any, b: any) => a.ordering - b.ordering)
                           .map((matchingOption: any, matchIndex: number) => (
-                            <SelectItem
-                              key={matchingOption.id}
-                              value={matchingOption.id}
-                              className="hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
+                            <div
+                              key={matchingOption.id || matchIndex}
+                              className="flex items-start space-x-2 text-xs text-blue-900"
                             >
-                              <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                <span className="font-medium text-gray-800">
-                                  {String.fromCharCode(65 + matchIndex)}.{" "}
-                                  {matchingOption.option_text}
-                                </span>
+                              <div className="mt-0.5 h-5 w-5 rounded-full bg-blue-100 text-[11px] font-semibold text-blue-700 flex items-center justify-center">
+                                {String.fromCharCode(65 + matchIndex)}
                               </div>
-                            </SelectItem>
+                              <span className="leading-snug">
+                                {matchingOption.option_text}
+                              </span>
+                            </div>
                           ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Select which answer this option matches with
-                    </p>
+                      </div>
+                    </div>
+
+                    {/* Selector: which heading does this question map to */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Match with heading / option *
+                      </Label>
+                      <Select
+                        value={formData.options[0]?.matching_option_id || "none"}
+                        onValueChange={(value) =>
+                          handleOptionChange(0, "matching_option_id", value)
+                        }
+                      >
+                        <SelectTrigger className="w-full h-11 bg-white border-gray-300 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+                          <SelectValue
+                            placeholder="Select matching heading / option"
+                            className="text-gray-500"
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg">
+                          <SelectItem value="none">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                              <span className="font-medium text-gray-500 italic">
+                                No match
+                              </span>
+                            </div>
+                          </SelectItem>
+                          {selectedQuestionGroup.matching_options
+                            .sort((a: any, b: any) => a.ordering - b.ordering)
+                            .map((matchingOption: any, matchIndex: number) => (
+                              <SelectItem
+                                key={matchingOption.id}
+                                value={matchingOption.id}
+                                className="hover:bg-blue-50 focus:bg-blue-50 cursor-pointer transition-colors duration-150"
+                              >
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                  <span className="font-medium text-gray-800">
+                                    {String.fromCharCode(65 + matchIndex)}.{" "}
+                                    {matchingOption.option_text}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Choose which heading / option this question should be matched
+                        with. Each question should map to exactly one heading.
+                      </p>
+                    </div>
                   </div>
                 )}
 

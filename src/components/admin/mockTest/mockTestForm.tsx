@@ -13,7 +13,6 @@ import {
   Save,
   Target,
   FileText,
-  Star,
   ArrowRight,
   Plus,
   Trash2,
@@ -46,10 +45,10 @@ import {
 } from "@/constants/mockTest";
 
 // Helper function to map old difficulty format to new format
-const mapDifficultyLevel = (level: string | undefined): string => {
+const mapDifficultyLevel = (level: string | undefined): "beginner" | "intermediate" | "hard" | "advanced" | "master" => {
   if (!level) return "intermediate";
   
-  const difficultyMap: Record<string, string> = {
+  const difficultyMap: Record<string, "beginner" | "intermediate" | "hard" | "advanced" | "master"> = {
     "1": "beginner",
     "2": "intermediate",
     "3": "hard",
@@ -64,12 +63,12 @@ const mapDifficultyLevel = (level: string | undefined): string => {
   const match = level.match(/Level \d+ \((.+?)\)/);
   if (match) {
     const label = match[1].toLowerCase();
-    return difficultyMap[label] || label;
+    return difficultyMap[label] || "intermediate";
   }
   
   // Map numeric or old string values
   const lowerLevel = level.toLowerCase();
-  return difficultyMap[lowerLevel] || lowerLevel || "intermediate";
+  return difficultyMap[lowerLevel] || "intermediate";
 };
 
 const MockTestForm = () => {
@@ -107,9 +106,9 @@ const MockTestForm = () => {
     resolver: zodResolver(schema),
     defaultValues: {
       title: "",
-      test_type: "full_test",
+      test_type: "reading",
       instructions: "",
-      duration: 180,
+      duration: 60,
       deleted: false,
       difficulty_level: "intermediate",
       description: "",
@@ -139,10 +138,11 @@ const MockTestForm = () => {
       queryClient.invalidateQueries({ queryKey: ["mockTests"] });
       router.push(ROUTES.ADMIN_MOCK_TESTS);
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to create mock test"
-      );
+    onError: (error: unknown) => {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+        : undefined;
+      toast.error(errorMessage || "Failed to create mock test");
     },
   });
 
@@ -167,43 +167,50 @@ const MockTestForm = () => {
       queryClient.invalidateQueries({ queryKey: ["mockTest", mockTestId] });
       router.push(ROUTES.ADMIN_MOCK_TESTS);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Update error:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to update mock test"
-      );
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+        : undefined;
+      toast.error(errorMessage || "Failed to update mock test");
     },
   });
 
   // Section management functions
   const addSection = () => {
+    // Only allow 1 section per test
+    if (sections.length >= 1) {
+      toast.error("Each mock test can only have one section");
+      return;
+    }
+    
+    const testType = selectedTestType || "reading";
     const newSection: IMockTestSection = {
-      section_name: `Section ${sections.length + 1}`,
-      section_type: "reading",
-      duration: 60,
-      ordering: sections.length + 1,
-      description: "",
+      section_name: getInitialSections(testType)[0]?.section_name || `Section 1`,
+      section_type: testType,
+      duration: getInitialSections(testType)[0]?.duration || 60,
+      ordering: 1,
+      description: getInitialSections(testType)[0]?.description || "",
     };
-    mockTestForm.setValue("test_sections", [...sections, newSection]);
-    setSections([...sections, newSection]);
+    mockTestForm.setValue("test_sections", [newSection]);
+    setSections([newSection]);
   };
 
   const removeSection = (index: number) => {
-    if (sections.length > 1) {
-      const newSections = sections.filter((_, i) => i !== index);
-      const updatedSections = newSections.map((section, i) => ({
-        ...section,
-        ordering: i + 1,
-      }));
-      setSections(updatedSections);
-      mockTestForm.setValue("test_sections", updatedSections);
-    }
+    // Always allow removing, even if it's the last one
+    const newSections = sections.filter((_, i) => i !== index);
+    const updatedSections = newSections.map((section, i) => ({
+      ...section,
+      ordering: i + 1,
+    }));
+    setSections(updatedSections);
+    mockTestForm.setValue("test_sections", updatedSections);
   };
 
   const updateSection = (
     index: number,
     field: keyof IMockTestSection,
-    value: any
+    value: string | number
   ) => {
     const newSections = [...sections];
     newSections[index] = { ...newSections[index], [field]: value };
@@ -214,37 +221,6 @@ const MockTestForm = () => {
   // Get initial sections based on test type
   const getInitialSections = (testType: string): IMockTestSection[] => {
     const sectionsMap: Record<string, IMockTestSection[]> = {
-      full_test: [
-        {
-          section_name: "Listening",
-          section_type: "listening",
-          duration: 40,
-          ordering: 1,
-          description:
-            "Listen carefully to the audio recordings and answer the questions.",
-        },
-        {
-          section_name: "Reading",
-          section_type: "reading",
-          duration: 60,
-          ordering: 2,
-          description: "Read the passages and answer the questions.",
-        },
-        {
-          section_name: "Writing",
-          section_type: "writing",
-          duration: 40,
-          ordering: 3,
-          description: "Write at least 250 words on the given topic.",
-        },
-        {
-          section_name: "Speaking",
-          section_type: "speaking",
-          duration: 15,
-          ordering: 4,
-          description: "Answer questions about yourself and familiar topics.",
-        },
-      ],
       listening: [
         {
           section_name: "Listening Test",
@@ -308,7 +284,32 @@ const MockTestForm = () => {
       console.log("Initializing sections for:", selectedTestType);
       setSections(getInitialSections(selectedTestType));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestType, isEditing, mockTestData]);
+
+  // Update section when test_type changes (for new tests only)
+  useEffect(() => {
+    if (
+      selectedTestType &&
+      sections.length === 1 &&
+      !isEditing &&
+      !mockTestData
+    ) {
+      const initialSections = getInitialSections(selectedTestType);
+      if (initialSections.length > 0) {
+        const updatedSection = {
+          ...sections[0],
+          section_type: selectedTestType,
+          section_name: initialSections[0].section_name,
+          duration: initialSections[0].duration,
+          description: initialSections[0].description,
+        };
+        setSections([updatedSection]);
+        mockTestForm.setValue("test_sections", [updatedSection]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTestType]);
 
   // Load existing data
   useEffect(() => {
@@ -317,7 +318,7 @@ const MockTestForm = () => {
       // Reset form with existing data
       mockTestForm.reset({
         title: mockTestData.title || "",
-        test_type: mockTestData.test_type || "full_test",
+        test_type: mockTestData.test_type || "reading",
         instructions: mockTestData.instructions || "",
         duration: mockTestData.duration || 180,
         difficulty_level: mapDifficultyLevel(mockTestData.difficulty_level?.toString() || "intermediate"),
@@ -342,7 +343,7 @@ const MockTestForm = () => {
   }, [mockTestData, isEditing, mockTestForm]);
 
   // Update onSubmit to use correct types
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: z.infer<typeof schema>) => {
     if (sections.length === 0) {
       toast.error("Please add at least one section to the test");
       return;
@@ -350,9 +351,9 @@ const MockTestForm = () => {
 
     try {
       if (isEditing) {
-        await updateMockTestMutation.mutateAsync(data);
+        await updateMockTestMutation.mutateAsync(data as z.infer<typeof MockTestFormUpdateSchema>);
       } else {
-        await createMockTestMutation.mutateAsync(data);
+        await createMockTestMutation.mutateAsync(data as z.infer<typeof MockTestFormSchema>);
       }
     } catch (error) {
       console.error("Submit error:", error);
@@ -484,16 +485,18 @@ const MockTestForm = () => {
                           </h3>
                         </div>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addSection}
-                        className="flex items-center space-x-2 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Add Section</span>
-                      </Button>
+                      {sections.length < 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addSection}
+                          className="flex items-center space-x-2 bg-white hover:bg-gray-50 border-gray-300 shadow-sm"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Add Section</span>
+                        </Button>
+                      )}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -527,11 +530,8 @@ const MockTestForm = () => {
                               {/* Section Header */}
                               <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center space-x-4">
-                                  <div className="relative">
-                                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg">
-                                      {index + 1}
-                                    </div>
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                                  <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-md">
+                                    {index + 1}
                                   </div>
                                   <div>
                                     <h4 className="text-lg font-semibold text-gray-900">
@@ -548,17 +548,15 @@ const MockTestForm = () => {
                                   </div>
                                 </div>
 
-                                {sections.length > 1 && (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeSection(index)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeSection(index)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
 
                               {/* Section Form Fields */}
@@ -579,7 +577,7 @@ const MockTestForm = () => {
                                           e.target.value
                                         )
                                       }
-                                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                                      className="w-full h-[42px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
                                       placeholder="e.g., Listening Comprehension"
                                     />
                                   </div>
@@ -589,26 +587,40 @@ const MockTestForm = () => {
                                       <Settings className="h-4 w-4 text-gray-500" />
                                       <span>Section Type</span>
                                     </label>
-                                    <select
-                                      value={section.section_type}
-                                      onChange={(e) =>
-                                        updateSection(
-                                          index,
-                                          "section_type",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
-                                    >
-                                      {SECTION_TYPE_OPTIONS.map((option) => (
-                                        <option
-                                          key={option.value}
-                                          value={option.value}
-                                        >
-                                          {option.label}
-                                        </option>
-                                      ))}
-                                    </select>
+                                    <div className="relative">
+                                      <select
+                                        value={section.section_type}
+                                        onChange={(e) => {
+                                          // Ensure section_type matches test_type
+                                          const newSectionType = e.target.value;
+                                          if (newSectionType !== selectedTestType) {
+                                            toast.error(`Section type must match test type (${selectedTestType})`);
+                                            return;
+                                          }
+                                          updateSection(
+                                            index,
+                                            "section_type",
+                                            newSectionType
+                                          );
+                                        }}
+                                        className="w-full h-[42px] pl-4 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white disabled:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-75 appearance-none text-gray-900 truncate"
+                                        disabled={true}
+                                      >
+                                        {SECTION_TYPE_OPTIONS.map((option) => (
+                                          <option
+                                            key={option.value}
+                                            value={option.value}
+                                          >
+                                            {option.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
 
@@ -631,7 +643,7 @@ const MockTestForm = () => {
                                             parseInt(e.target.value) || 0
                                           )
                                         }
-                                        className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
+                                        className="w-full h-[42px] px-4 py-3 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white"
                                         placeholder="60"
                                       />
                                       <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -688,20 +700,6 @@ const MockTestForm = () => {
                             )}
                           </div>
                         ))}
-
-                        <div className="flex justify-center pt-6">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addSection}
-                            className="flex items-center space-x-2 px-6 py-3 border-2 border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
-                          >
-                            <Plus className="h-5 w-5 text-gray-500" />
-                            <span className="text-gray-600 font-medium">
-                              Add Another Section
-                            </span>
-                          </Button>
-                        </div>
                       </div>
                     )}
                   </CardContent>

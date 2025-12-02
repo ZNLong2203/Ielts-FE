@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Plus,
   Edit3,
@@ -97,6 +97,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
   sectionId,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -180,9 +181,12 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
   };
 
   const handleViewQuestions = (questionGroupId: string) => {
-    router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/exercises/${exerciseId}/question-groups/${questionGroupId}/questions?sectionId=${sectionId}`
-    );
+    const params = new URLSearchParams();
+    if (sectionId) params.set("sectionId", sectionId);
+    params.set("tab", "questions");
+    params.set("questionGroupId", questionGroupId);
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   // ✅ Updated delete handler using AlertDialog

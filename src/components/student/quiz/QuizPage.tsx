@@ -34,9 +34,11 @@ const QuizPage = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Convert to array and filter
+  // Convert to array and filter out full_test
   const quizList: IMockTest[] = useMemo(() => {
-    return mockTestsData?.result || [];
+    return (mockTestsData?.result || []).filter(
+      (quiz) => quiz.test_type !== "full_test"
+    );
   }, [mockTestsData]);
 
   // Filter quizzes based on search and filters
@@ -45,12 +47,10 @@ const QuizPage = () => {
     const matchesSearch = quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            quiz.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Get section type from test_type or first section
-      const sectionType = quiz.test_type === "full_test" 
-        ? "all" 
-        : (quiz.test_type && quiz.test_type !== "full_test" 
-          ? quiz.test_type 
-          : quiz.test_sections?.[0]?.section_type);
+      // Get section type from test_type or first section (no full_test)
+      const sectionType = quiz.test_type && quiz.test_type !== "full_test" 
+        ? quiz.test_type 
+        : quiz.test_sections?.[0]?.section_type;
       const matchesSection = selectedSection === "all" || sectionType === selectedSection;
     
     return matchesSearch && matchesSection;
@@ -114,7 +114,6 @@ const QuizPage = () => {
 
   // Get section type from quiz
   const getQuizSection = (quiz: IMockTest): string => {
-    if (quiz.test_type === "full_test") return "full_test";
     // Use test_type directly if available, otherwise fallback to test_sections
     if (quiz.test_type && quiz.test_type !== "full_test") {
       return quiz.test_type;

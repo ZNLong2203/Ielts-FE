@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams, usePathname } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -92,6 +92,7 @@ const QuestionGroupDetail: React.FC<QuestionGroupDetailProps> = ({
   onClose,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -179,15 +180,22 @@ const QuestionGroupDetail: React.FC<QuestionGroupDetailProps> = ({
   };
 
   const handleCreateQuestion = () => {
-    router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/exercises/${exerciseId}/question-groups/${questionGroupId}/questions/create?sectionId=${sectionId}`
-    );
+    const params = new URLSearchParams();
+    if (sectionId) params.set("sectionId", sectionId);
+    params.set("tab", "question");
+    params.set("questionGroupId", questionGroupId || "");
+    params.set("mode", "create");
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleViewQuestions = () => {
-    router.push(
-      `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/exercises/${exerciseId}/question-groups/${questionGroupId}/questions?sectionId=${sectionId}`
-    );
+    const params = new URLSearchParams();
+    if (sectionId) params.set("sectionId", sectionId);
+    params.set("tab", "question");
+    params.set("questionGroupId", questionGroupId || "");
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   // Loading state

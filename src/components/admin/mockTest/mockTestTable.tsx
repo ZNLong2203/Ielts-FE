@@ -85,9 +85,6 @@ const MockTestTable = () => {
   const speakingTests = filteredData.filter(
     (test) => test.test_type === "speaking"
   ).length;
-  const fullTests = filteredData.filter(
-    (test) => test.test_type === "full_test"
-  ).length;
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
@@ -135,7 +132,6 @@ const MockTestTable = () => {
         { label: "Reading", value: "reading" },
         { label: "Writing", value: "writing" },
         { label: "Speaking", value: "speaking" },
-        { label: "Full Test", value: "full_test" },
       ],
     },
     {

@@ -3,12 +3,6 @@ import { BookOpen, Mic, PenTool, Target, Volume2 } from "lucide-react";
 // Test type options
 export const TEST_TYPE_OPTIONS = [
   {
-    label: "Full Test",
-    value: "full_test",
-    icon: Target,
-    description: "Complete IELTS test with all sections",
-  },
-  {
     label: "Listening",
     value: "listening",
     icon: Volume2,

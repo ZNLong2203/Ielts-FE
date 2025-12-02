@@ -30,7 +30,7 @@ import {
   Timer,
 } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import QuestionGroupList from "../questionGroup/questionGroupList";
 
@@ -72,6 +72,14 @@ const ReadingDetail = () => {
     ? params.readingId[0]
     : params.readingId;
   const sectionId = searchParams?.get("sectionId") ?? undefined;
+  const questionGroupId = searchParams?.get("questionGroupId") ?? undefined;
+  const tabParam = (searchParams?.get("tab") as
+    | "overview"
+    | "passage"
+    | "questionGroup"
+    | "question"
+    | "paragraphs"
+    | "preview") || "overview";
 
   const [activeTab, setActiveTab] = useState<
     | "overview"
@@ -80,10 +88,14 @@ const ReadingDetail = () => {
     | "question"
     | "paragraphs"
     | "preview"
-  >("overview");
+  >(tabParam);
   const [selectedParagraph, setSelectedParagraph] = useState<string | null>(
     null
   );
+
+  useEffect(() => {
+    setActiveTab(tabParam);
+  }, [tabParam]);
 
   // Query
   const {
@@ -575,6 +587,7 @@ const ReadingDetail = () => {
           <QuestionGroupList
             exerciseId={readingExercise.id}
             mockTestId={mockTestId}
+            sectionId={sectionId}
           />
         )}
 
@@ -583,6 +596,7 @@ const ReadingDetail = () => {
             exerciseId={readingExerciseId}
             mockTestId={mockTestId}
             sectionId={sectionId}
+            questionGroupId={questionGroupId || undefined}
           />
         )}
 

@@ -78,7 +78,6 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [audioPlaying, setAudioPlaying] = useState(false);
 
   // Query for question details
   const {
@@ -158,24 +157,6 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
 
       navigator.clipboard.writeText(questionText);
       toast.success("Question copied to clipboard! 📋");
-    }
-  };
-
-  const playAudio = () => {
-    if (question?.audio_url) {
-      const audio = new Audio(question.audio_url);
-      setAudioPlaying(true);
-
-      audio.onended = () => setAudioPlaying(false);
-      audio.onerror = () => {
-        setAudioPlaying(false);
-        toast.error("Failed to play audio");
-      };
-
-      audio.play().catch(() => {
-        setAudioPlaying(false);
-        toast.error("Failed to play audio");
-      });
     }
   };
 
@@ -274,48 +255,16 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Question Media */}
-              {(question.image_url || question.audio_url) && (
+              {/* Question Media (image only – audio is handled at exercise level for IELTS) */}
+              {question.image_url && (
                 <div className="space-y-4">
-                  {question.image_url && (
-                    <div className="text-center">
-                      <img
-                        src={question.image_url}
-                        alt="Question image"
-                        className="max-w-full h-auto mx-auto rounded-lg border shadow-sm"
-                      />
-                    </div>
-                  )}
-
-                  {question.audio_url && (
-                    <div className="flex items-center justify-center space-x-3 p-4 bg-purple-50 rounded-lg border-2 border-dashed border-purple-200">
-                      <Volume2 className="h-5 w-5 text-purple-600" />
-                      <span className="text-sm text-purple-600 font-medium">
-                        Audio Available
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={playAudio}
-                        disabled={audioPlaying}
-                        className="border-purple-300 text-purple-600 hover:bg-purple-100"
-                      >
-                        <Play className="h-4 w-4 mr-1" />
-                        {audioPlaying ? "Playing..." : "Play"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          window.open(question.audio_url, "_blank")
-                        }
-                        className="border-purple-300 text-purple-600 hover:bg-purple-100"
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
-                    </div>
-                  )}
+                  <div className="text-center">
+                    <img
+                      src={question.image_url}
+                      alt="Question image"
+                      className="max-w-full h-auto mx-auto rounded-lg border shadow-sm"
+                    />
+                  </div>
                 </div>
               )}
 

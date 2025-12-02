@@ -555,12 +555,6 @@ const QuestionList: React.FC<QuestionListProps> = ({
                                 Image
                               </Badge>
                             )}
-                            {question.audio_url && (
-                              <Badge variant="outline" className="text-xs">
-                                <Volume2 className="h-3 w-3 mr-1" />
-                                Audio
-                              </Badge>
-                            )}
                           </div>
                         </div>
                       </div>

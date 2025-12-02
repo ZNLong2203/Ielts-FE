@@ -50,7 +50,7 @@ const QuizCard = ({
                 {quiz.title}
               </CardTitle>
               <p className="text-xs text-gray-500 capitalize">
-                {quiz.test_type === "full_test" ? "Complete IELTS Test" : `${section || "Test"} Practice`}
+                {`${section || "Test"} Practice`}
               </p>
             </div>
           </div>
@@ -58,7 +58,7 @@ const QuizCard = ({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+        <p className="text-sm text-gray-600 line-clamp-1">
           {quiz.description || "Comprehensive IELTS practice test"}
         </p>
 
@@ -68,7 +68,7 @@ const QuizCard = ({
             "text-xs font-medium px-2.5 py-1",
             sectionColor
           )}>
-            {quiz.test_type === "full_test" ? "FULL TEST" : (section || "TEST").toUpperCase()}
+            {(section || "TEST").toUpperCase()}
           </Badge>
           <Badge variant="outline" className="text-xs font-medium border-gray-300 text-gray-600 bg-white">
             {difficulty}
@@ -119,8 +119,7 @@ const QuizCard = ({
               section === "listening" && "bg-blue-600 hover:bg-blue-700",
               section === "reading" && "bg-green-600 hover:bg-green-700",
               section === "writing" && "bg-purple-600 hover:bg-purple-700",
-              section === "speaking" && "bg-orange-600 hover:bg-orange-700",
-              section === "full_test" && "bg-gray-700 hover:bg-gray-800"
+              section === "speaking" && "bg-orange-600 hover:bg-orange-700"
             )}
             onClick={(e) => {
               e.stopPropagation();
