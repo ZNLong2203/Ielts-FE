@@ -1,36 +1,99 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  HelpCircle, 
-  Plus, 
-  ArrowLeft, 
-  CheckCircle,
-  Edit,
+import {
+  HelpCircle,
+  ArrowLeft,
+  Loader2,
+  AlertCircle,
+  Plus,
+  FileText,
 } from "lucide-react";
-import QuestionForm from "@/components/admin/course/courseQuestion/courseQuestionForm";
+import CourseQuestionItem from "../courseQuestion/courseQuestionItem";
+import CourseQuestionForm from "../courseQuestion/courseQuestionForm";
+import { useQuery } from "@tanstack/react-query";
+import { getExerciseByLessonId } from "@/api/exercise"; // Import correct function
 
 interface QuestionTabProps {
   exercise: any;
+  lesson?: any;
+  exerciseData?: any;
+  isExerciseLoading?: boolean;
+  isExerciseError?: boolean;
   onBack: () => void;
   onRefresh?: () => void;
 }
 
 const QuestionTab: React.FC<QuestionTabProps> = ({
   exercise,
+  lesson,
+  exerciseData,
+  isExerciseLoading = false,
+  isExerciseError = false,
   onBack,
-  onRefresh
+  onRefresh,
 }) => {
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any>(null);
 
-  const handleQuestionFormSuccess = () => {
+  // Fetch questions for the exercise with better key management
+  const {
+    data: detailExerciseData,
+    isLoading: isQuestionsLoading,
+    isError: isQuestionsError,
+    refetch: refetchQuestions,
+  } = useQuery({
+    queryKey: ["exercise-details", lesson?.id, exercise?.id], // Better query key
+    queryFn: () => getExerciseByLessonId(lesson.id, exercise?.id),
+    enabled: !!exercise?.id && !!lesson?.id,
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+  });
+
+  console.log("Exercise Details Data:", detailExerciseData);
+
+  // Get exercise details from exerciseData if available
+  const getExerciseDetails = () => {
+    if (!exercise) return null;
+
+    if (!exerciseData) return exercise;
+
+    const exercises = exerciseData?.data || exerciseData || [];
+
+    if (Array.isArray(exercises)) {
+      const foundExercise = exercises.find((ex: any) => ex.id === exercise.id);
+      return foundExercise || exercise;
+    }
+
+    if (exercises.id === exercise.id) {
+      return exercises;
+    }
+    return exercise;
+  };
+
+  const exerciseDetails = getExerciseDetails();
+
+  // Get questions array from API response
+  const questions =
+    detailExerciseData?.data?.questions || detailExerciseData?.questions || [];
+  const sortedQuestions = Array.isArray(questions)
+    ? [...questions].sort((a, b) => (a.ordering || 999) - (b.ordering || 999))
+    : [];
+
+  // Enhanced success handler with better refresh logic
+  const handleQuestionFormSuccess = async () => {
     setShowQuestionForm(false);
     setEditingQuestion(null);
-    onRefresh?.();
+
+    try {
+      await refetchQuestions();
+
+      onRefresh?.();
+    } catch (error) {
+      console.error("❌ Failed to refetch questions:", error);
+    }
   };
 
   const handleEditQuestion = (question: any) => {
@@ -38,29 +101,35 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
     setShowQuestionForm(true);
   };
 
-  const getQuestionTypeColor = (type: string) => {
-    switch (type?.toLowerCase()) {
-      case "multiple_choice":
-        return "bg-blue-100 text-blue-800";
-      case "true_false":
-        return "bg-green-100 text-green-800";
-      case "fill_blank":
-        return "bg-purple-100 text-purple-800";
-      case "essay":
-        return "bg-orange-100 text-orange-800";
-      case "matching":
-        return "bg-pink-100 text-pink-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+  const handleCreateQuestion = () => {
+    setEditingQuestion(null);
+    setShowQuestionForm(true);
+  };
+
+  const handleCancelForm = () => {
+    setShowQuestionForm(false);
+    setEditingQuestion(null);
+  };
+
+  // Enhanced refresh handler
+  const handleRefreshQuestions = async () => {
+    console.log("🔄 Manual refresh triggered...");
+    try {
+      await refetchQuestions();
+      onRefresh?.();
+      console.log("✅ Manual refresh completed");
+    } catch (error) {
+      console.error("❌ Manual refresh failed:", error);
     }
   };
 
-  const formatQuestionType = (type: string) => {
-    return type?.replace(/_/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ') || 'Unknown';
-  };
+  // Force refresh when exercise changes
+  useEffect(() => {
+    if (exercise?.id && lesson?.id) {
+      console.log("🔄 Exercise changed, refetching questions...");
+      refetchQuestions();
+    }
+  }, [exercise?.id, lesson?.id, refetchQuestions]);
 
   if (!exercise) {
     return (
@@ -68,8 +137,12 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
             <HelpCircle className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Exercise Selected</h3>
-            <p className="text-gray-500 mb-4">Please select an exercise to view its questions.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Exercise Selected
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Please select an exercise to view its questions.
+            </p>
             <Button onClick={onBack} variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Exercises
@@ -80,9 +153,108 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
     );
   }
 
+  // Loading state - combine both loading states
+  if (isExerciseLoading || isQuestionsLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Exercises
+            </Button>
+            <div>
+              <h3 className="text-lg font-semibold">
+                {exercise.title} - Questions
+              </h3>
+              <p className="text-sm text-gray-600">
+                Manage questions for this exercise
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleCreateQuestion}
+            className="flex items-center space-x-2"
+            disabled={showQuestionForm}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Question</span>
+          </Button>
+        </div>
+
+        {/* Loading State */}
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Loading questions...
+              </h3>
+              <p className="text-gray-500">
+                Please wait while we fetch the questions.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state - combine both error states
+  if (isExerciseError || isQuestionsError) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" size="sm" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Exercises
+            </Button>
+            <div>
+              <h3 className="text-lg font-semibold">
+                {exercise.title} - Questions
+              </h3>
+              <p className="text-sm text-gray-600">
+                Manage questions for this exercise
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={handleCreateQuestion}
+            className="flex items-center space-x-2"
+            disabled={showQuestionForm}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Question</span>
+          </Button>
+        </div>
+
+        {/* Error State */}
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-500" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Failed to load questions
+              </h3>
+              <p className="text-gray-500 mb-4">
+                There was an error loading the questions for this exercise.
+              </p>
+              <Button onClick={() => refetchQuestions()} variant="outline">
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with manual refresh button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Button variant="outline" size="sm" onClick={onBack}>
@@ -90,174 +262,82 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
             Back to Exercises
           </Button>
           <div>
-            <h3 className="text-lg font-semibold">{exercise.title} - Questions</h3>
+            <h3 className="text-lg font-semibold">
+              {exerciseDetails.title} - Questions
+            </h3>
             <p className="text-sm text-gray-600">
               Manage questions for this exercise
+              {sortedQuestions.length > 0 && (
+                <Badge variant="outline" className="ml-2">
+                  {sortedQuestions.length} questions
+                </Badge>
+              )}
             </p>
           </div>
         </div>
-        <Button
-          onClick={() => {
-            setEditingQuestion(null);
-            setShowQuestionForm(!showQuestionForm);
-          }}
-          className="flex items-center space-x-2"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Question</span>
-        </Button>
-      </div>
+        <div className="flex items-center space-x-2">
+          {/* Manual Refresh Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshQuestions}
+            className="flex items-center space-x-1"
+          >
+            <Loader2
+              className={`h-3 w-3 ${isQuestionsLoading ? "animate-spin" : ""}`}
+            />
+            <span>Refresh</span>
+          </Button>
 
-      {/* Exercise Info */}
-      <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <HelpCircle className="h-5 w-5 text-orange-600" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-orange-900">{exercise.title}</h4>
-              <div className="flex items-center space-x-4 mt-1">
-                <Badge variant="outline" className="bg-white text-xs">
-                  Exercise {exercise.ordering}
-                </Badge>
-                <Badge variant="outline" className="bg-white text-xs">
-                  {exercise.questions?.length || 0} questions
-                </Badge>
-                <Badge variant="outline" className="bg-white text-xs">
-                  Max Score: {exercise.max_score || 0}
-                </Badge>
-                <Badge variant="outline" className="bg-white text-xs capitalize">
-                  {exercise.exercise_type}
-                </Badge>
-              </div>
-            </div>
-          </div>
-          {exercise.description && (
-            <p className="text-orange-700 text-sm mt-2">{exercise.description}</p>
-          )}
-        </CardContent>
-      </Card>
+          <Button
+            onClick={handleCreateQuestion}
+            className="flex items-center space-x-2"
+            disabled={showQuestionForm}
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Question</span>
+          </Button>
+        </div>
+      </div>
 
       {/* Question Form */}
       {showQuestionForm && (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {editingQuestion ? "Edit Question" : "Create New Question"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <QuestionForm
-                exerciseId={exercise.id}
-                lessonId={exercise.lesson_id}
-                existingQuestions={exercise.questions || []}
-                onSuccess={handleQuestionFormSuccess}
-                onCancel={() => {
-                  setShowQuestionForm(false);
-                  setEditingQuestion(null);
-                }}
-              />
-            </CardContent>
-          </Card>
-          <Separator />
+          <CourseQuestionForm
+            exerciseId={exercise.id}
+            lessonId={lesson?.id}
+            sectionId={lesson?.section_id}
+            question={editingQuestion}
+            existingQuestions={sortedQuestions}
+            onSuccess={handleQuestionFormSuccess}
+            onCancel={handleCancelForm}
+          />
         </>
       )}
 
       {/* Questions List */}
-      {exercise.questions && exercise.questions.length > 0 ? (
+      {sortedQuestions.length > 0 ? (
         <div className="space-y-4">
-          {exercise.questions
-            .sort((a: any, b: any) => (a.ordering || 999) - (b.ordering || 999))
-            .map((question: any, index: number) => (
-              <Card key={question.id} className="hover:shadow-md transition-all">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-lg font-bold flex-shrink-0">
-                        {index + 1}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Badge 
-                            className={`text-xs ${getQuestionTypeColor(question.question_type)}`}
-                          >
-                            {formatQuestionType(question.question_type)}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {question.points || 1} {question.points === 1 ? 'point' : 'points'}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            Order #{question.ordering || index + 1}
-                          </Badge>
-                        </div>
-                        
-                        <div className="mb-3">
-                          <p className="font-medium text-gray-900 mb-1">
-                            {question.question_text || "No question text"}
-                          </p>
-                          {question.explanation && (
-                            <p className="text-sm text-gray-600">
-                              <strong>Explanation:</strong> {question.explanation}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Show options for multiple choice questions */}
-                        {question.question_type === 'multiple_choice' && question.options && (
-                          <div className="space-y-1">
-                            <p className="text-xs font-medium text-gray-700">Options:</p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-                              {question.options.map((option: any, optIndex: number) => (
-                                <div 
-                                  key={optIndex}
-                                  className={`text-xs px-2 py-1 rounded ${
-                                    option.is_correct 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-gray-100 text-gray-700'
-                                  }`}
-                                >
-                                  <span className="font-medium">
-                                    {String.fromCharCode(65 + optIndex)}.
-                                  </span> {option.text}
-                                  {option.is_correct && (
-                                    <CheckCircle className="h-3 w-3 inline ml-1" />
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Show correct answer for other types */}
-                        {question.question_type !== 'multiple_choice' && question.correct_answer && (
-                          <div className="mt-2">
-                            <p className="text-xs">
-                              <span className="font-medium text-gray-700">Correct Answer:</span>
-                              <span className="ml-1 px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                                {question.correct_answer}
-                              </span>
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditQuestion(question)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          {sortedQuestions.map((question: any, index: number) => (
+            <div
+              key={question.id}
+              className={
+                editingQuestion?.id === question.id
+                  ? "ring-2 ring-orange-500 bg-orange-50 rounded-lg p-1"
+                  : ""
+              }
+            >
+              <CourseQuestionItem
+                question={question}
+                questionIndex={index}
+                exerciseId={exercise.id}
+                lessonId={lesson?.id}
+                sectionId={lesson?.section_id}
+                handleEditQuestion={handleEditQuestion}
+                onRefresh={handleRefreshQuestions}
+              />
+            </div>
+          ))}
         </div>
       ) : (
         <Card>
@@ -271,12 +351,32 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
                 Create your first question to start building exercise content.
               </p>
               <Button
-                onClick={() => setShowQuestionForm(true)}
-                className="bg-orange-600 hover:bg-orange-700"
+                onClick={handleCreateQuestion}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={showQuestionForm}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create First Question
               </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Status Information */}
+      {showQuestionForm && (
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 text-sm text-green-800">
+              <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+              <span>
+                {editingQuestion
+                  ? `Editing question: "${editingQuestion.question_text?.substring(
+                      0,
+                      50
+                    )}..."`
+                  : "Creating new question"}
+              </span>
             </div>
           </CardContent>
         </Card>

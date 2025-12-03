@@ -31,8 +31,9 @@ import {
 } from "lucide-react";
 import LessonForm from "../lesson/lessonForm";
 import SortableLessonItem from "../lesson/sortableLessonItem";
-import { reorderLesson } from "@/api/lesson";
+import { reorderLesson, deleteLesson } from "@/api/lesson";
 import { ILesson } from "@/interface/lesson";
+import { AlertModal } from "@/components/modal/alert-modal";
 
 interface LessonTabProps {
   section: any;
@@ -56,6 +57,10 @@ const LessonTab: React.FC<LessonTabProps> = ({
   // Drag and Drop state
   const [localLessons, setLocalLessons] = useState<ILesson[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<ILesson | null>(null);
 
   // Update local lessons when section data changes
   useEffect(() => {
@@ -117,6 +122,32 @@ const LessonTab: React.FC<LessonTabProps> = ({
     },
   });
 
+  // Delete lesson mutation
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      return deleteLesson(section.id, lessonId);
+    },
+    onSuccess: () => {
+      toast.success("Lesson deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["lessons", section.id] });
+      queryClient.invalidateQueries({ queryKey: ["sections", section.course_id] });
+      queryClient.invalidateQueries({ queryKey: ["course", section.course_id] });
+      setDeleteModalOpen(false);
+      setLessonToDelete(null);
+      onRefresh?.();
+      
+      // If the deleted lesson was selected, clear the selection
+      if (selectedLessonId === lessonToDelete?.id) {
+        // Clear the selection in parent component if needed
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Failed to delete lesson");
+      setDeleteModalOpen(false);
+      setLessonToDelete(null);
+    },
+  });
+
   // Drag end handler
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -157,6 +188,23 @@ const LessonTab: React.FC<LessonTabProps> = ({
   const handleCancelForm = () => {
     setShowLessonForm(false);
     setEditingLesson(null);
+  };
+
+  // Delete handlers
+  const handleDeleteLesson = (lesson: ILesson) => {
+    setLessonToDelete(lesson);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (lessonToDelete) {
+      deleteLessonMutation.mutate(lessonToDelete.id);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setLessonToDelete(null);
   };
 
   // Save and reset handlers
@@ -269,7 +317,6 @@ const LessonTab: React.FC<LessonTabProps> = ({
         </div>
       )}
 
-     
       {/* Lesson Form */}
       {showLessonForm && (
         <>
@@ -310,6 +357,7 @@ const LessonTab: React.FC<LessonTabProps> = ({
                     selectedLessonId={selectedLessonId}
                     editingLesson={editingLesson}
                     onEditLesson={handleEditLesson}
+                    onDeleteLesson={handleDeleteLesson}
                     onLessonSelect={onLessonSelect}
                     showLessonForm={showLessonForm}
                     hasUnsavedChanges={hasChanged}
@@ -358,6 +406,20 @@ const LessonTab: React.FC<LessonTabProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Delete confirmation modal */}
+      <AlertModal
+        isOpen={deleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLessonMutation.isPending}
+        title="Delete Lesson"
+        description={
+          lessonToDelete
+            ? `Are you sure you want to delete "${lessonToDelete.title}"? This action cannot be undone and will also delete all exercises in this lesson.`
+            : "Are you sure you want to delete this lesson?"
+        }
+      />
     </div>
   );
 };

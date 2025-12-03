@@ -10,6 +10,7 @@ import {
   FileText,
   Video,
   Edit,
+  Trash2,
   ArrowRight,
   Eye,
   GripVertical,
@@ -26,6 +27,7 @@ interface SortableLessonItemProps {
   selectedLessonId: string | null;
   editingLesson: any;
   onEditLesson: (lesson: ILesson) => void;
+  onDeleteLesson?: (lesson: ILesson) => void; // Add delete handler
   onLessonSelect: (lessonId: string) => void;
   showLessonForm: boolean;
   hasUnsavedChanges?: boolean;
@@ -37,6 +39,7 @@ const SortableLessonItem: React.FC<SortableLessonItemProps> = ({
   selectedLessonId,
   editingLesson,
   onEditLesson,
+  onDeleteLesson,
   onLessonSelect,
   showLessonForm,
   hasUnsavedChanges = false,
@@ -61,10 +64,10 @@ const SortableLessonItem: React.FC<SortableLessonItemProps> = ({
   // Helper functions (same as original tab)
   const formatDuration = (duration: number) => {
     if (!duration) return "~30 min";
-    const hours = Math.floor(duration / 60);
-    const minutes = duration % 60;
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
     }
     return `${minutes}m`;
   };
@@ -91,9 +94,9 @@ const SortableLessonItem: React.FC<SortableLessonItemProps> = ({
         // Reorder state styling
         hasUnsavedChanges && !isDragging && "ring-2 ring-orange-300 bg-orange-50",
         // Selection state styling
-        !isDragging && !hasUnsavedChanges && selectedLessonId === lesson.id && "ring-2 ring-blue-500 bg-blue-50",
+        !isDragging && !hasUnsavedChanges && selectedLessonId === lesson.id && "ring-1 ring-black",
         // Editing state styling
-        !isDragging && !hasUnsavedChanges && editingLesson?.id === lesson.id && "ring-2 ring-orange-500 bg-orange-50",
+        !isDragging && !hasUnsavedChanges && editingLesson?.id === lesson.id && "ring-1 ring-orange-500 bg-orange-50",
         // Default hover state
         !isDragging && !hasUnsavedChanges && selectedLessonId !== lesson.id && editingLesson?.id !== lesson.id && "hover:bg-gray-50 hover:shadow-md"
       )}
@@ -117,7 +120,7 @@ const SortableLessonItem: React.FC<SortableLessonItemProps> = ({
             </div>
 
             {/* Lesson Number */}
-            <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg font-bold">
+            <div className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-lg font-bold">
               {lessonIndex + 1}
             </div>
             
@@ -180,9 +183,27 @@ const SortableLessonItem: React.FC<SortableLessonItemProps> = ({
                   ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
                   : "hover:bg-blue-50 text-gray-600 hover:text-blue-700"
               )}
+              title="Edit lesson"
             >
               <Edit className="h-4 w-4" />
             </Button>
+
+            {/* Delete Button */}
+            {onDeleteLesson && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteLesson(lesson);
+                }}
+                disabled={showLessonForm}
+                className="hover:bg-red-50 text-gray-600 hover:text-red-700 transition-colors"
+                title="Delete lesson"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
             
             <Button
               size="sm"

@@ -47,6 +47,7 @@ import {
 } from "@/api/course";
 import { createSection, getSectionsByCourseId } from "@/api/section";
 import { getCourseCategories } from "@/api/courseCategory";
+import { getExercisesByLessonId } from "@/api/exercise"; // Add this import
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { useEffect, useState } from "react";
@@ -66,9 +67,13 @@ const CourseForm = () => {
 
   // Tab navigation state
   const [activeTab, setActiveTab] = useState("sections");
-  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(
+    null
+  );
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(
+    null
+  );
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
@@ -107,6 +112,18 @@ const CourseForm = () => {
   const { data: categoryData } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCourseCategories({ page: 1 }),
+  });
+
+  // Fetch exercises for selected lesson
+  const {
+    data: exerciseData,
+    isLoading: isExerciseLoading,
+    isError: isExerciseError,
+    refetch: refetchExercises,
+  } = useQuery({
+    queryKey: ["exercises", selectedLessonId],
+    queryFn: () => getExercisesByLessonId(selectedLessonId || ""),
+    enabled: isEditing && selectedLessonId !== null,
   });
 
   const skillFocusOptions = [
@@ -265,26 +282,42 @@ const CourseForm = () => {
   // Helper functions to get selected data
   const getSelectedSection = () => {
     if (!selectedSectionId || !courseData?.sections) return null;
-    return courseData.sections.find((section: any) => section.id === selectedSectionId);
+    return courseData.sections.find(
+      (section: any) => section.id === selectedSectionId
+    );
   };
 
   const getSelectedLesson = () => {
     if (!selectedLessonId) return null;
     const section = getSelectedSection();
     if (!section?.lessons) return null;
-    return section.lessons.find((lesson: any) => lesson.id === selectedLessonId);
+    return section.lessons.find(
+      (lesson: any) => lesson.id === selectedLessonId
+    );
   };
 
+  // Get selected exercise from exerciseData instead of lesson.exercises
   const getSelectedExercise = () => {
-    if (!selectedExerciseId) return null;
-    const lesson = getSelectedLesson();
-    if (!lesson?.exercises) return null;
-    return lesson.exercises.find((exercise: any) => exercise.id === selectedExerciseId);
+    if (!selectedExerciseId || !exerciseData) return null;
+    
+    // Handle both array and object response formats
+    const exercises = exerciseData?.data || exerciseData || [];
+    
+    if (Array.isArray(exercises)) {
+      return exercises.find((exercise: any) => exercise.id === selectedExerciseId);
+    }
+    
+    // If it's a single exercise object
+    if (exercises.id === selectedExerciseId) {
+      return exercises;
+    }
+    
+    return null;
   };
 
   // Helper functions to get counts
   const getTotalSections = () => courseData?.sections?.length || 0;
-  
+
   const getTotalLessons = () => {
     if (!selectedSectionId) return 0;
     const section = getSelectedSection();
@@ -292,14 +325,14 @@ const CourseForm = () => {
   };
 
   const getTotalExercises = () => {
-    if (!selectedLessonId) return 0;
-    const lesson = getSelectedLesson();
-    return lesson?.exercises?.length || 0;
+    if (!exerciseData) return 0;
+    const exercises = exerciseData?.data || exerciseData || [];
+    return Array.isArray(exercises) ? exercises.length : exercises.id ? 1 : 0;
   };
 
   const getTotalQuestions = () => {
-    if (!selectedExerciseId) return 0;
     const exercise = getSelectedExercise();
+    if (!exercise) return 0;
     return exercise?.questions?.length || 0;
   };
 
@@ -307,7 +340,13 @@ const CourseForm = () => {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["course", slug] });
     queryClient.invalidateQueries({ queryKey: ["sections", slug] });
+    if (selectedLessonId) {
+      queryClient.invalidateQueries({ queryKey: ["exercises", selectedLessonId] });
+    }
     refetch();
+    if (selectedLessonId) {
+      refetchExercises();
+    }
   };
 
   if (isEditing && isLoading) {
@@ -592,63 +631,58 @@ const CourseForm = () => {
                 <CardTitle className="flex items-center space-x-2">
                   <List className="h-5 w-5 text-purple-600" />
                   <span>Course Content Management</span>
-                  <Badge variant="outline">
-                    {getTotalSections()} sections
-                  </Badge>
+                  <Badge variant="outline">{getTotalSections()} sections</Badge>
                 </CardTitle>
               </CardHeader>
 
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-4 mb-6">
-                    <TabsTrigger 
-                      value="sections" 
+                    <TabsTrigger
+                      value="sections"
                       className="flex items-center space-x-2"
                     >
                       <FolderOpen className="h-4 w-4" />
                       <span>Sections</span>
-                      <Badge variant="outline" className="text-xs">
-                        {getTotalSections()}
-                      </Badge>
                     </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="lessons" 
+
+                    <TabsTrigger
+                      value="lessons"
                       className="flex items-center space-x-2"
                       disabled={!selectedSectionId}
                     >
                       <PlayCircle className="h-4 w-4" />
                       <span>Lessons</span>
-                      {selectedSectionId && (
-                        <Badge variant="outline" className="text-xs">
+                      {selectedSectionId && getTotalLessons() > 0 && (
+                        <Badge variant="outline" className="ml-1">
                           {getTotalLessons()}
                         </Badge>
                       )}
                     </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="exercises" 
+
+                    <TabsTrigger
+                      value="exercises"
                       className="flex items-center space-x-2"
                       disabled={!selectedLessonId}
                     >
                       <FileText className="h-4 w-4" />
                       <span>Exercises</span>
-                      {selectedLessonId && (
-                        <Badge variant="outline" className="text-xs">
+                      {selectedLessonId && getTotalExercises() > 0 && (
+                        <Badge variant="outline" className="ml-1">
                           {getTotalExercises()}
                         </Badge>
                       )}
                     </TabsTrigger>
-                    
-                    <TabsTrigger 
-                      value="questions" 
+
+                    <TabsTrigger
+                      value="questions"
                       className="flex items-center space-x-2"
                       disabled={!selectedExerciseId}
                     >
                       <HelpCircle className="h-4 w-4" />
                       <span>Questions</span>
-                      {selectedExerciseId && (
-                        <Badge variant="outline" className="text-xs">
+                      {selectedExerciseId && getTotalQuestions() > 0 && (
+                        <Badge variant="outline" className="ml-1">
                           {getTotalQuestions()}
                         </Badge>
                       )}
@@ -657,17 +691,17 @@ const CourseForm = () => {
 
                   {/* Breadcrumb Navigation */}
                   <div className="mb-4 flex items-center space-x-2 text-sm text-gray-600">
-                    <button 
+                    <button
                       onClick={handleBackToSections}
                       className="hover:text-blue-600 transition-colors"
                     >
                       Sections
                     </button>
-                    
+
                     {selectedSectionId && (
                       <>
                         <span>/</span>
-                        <button 
+                        <button
                           onClick={handleBackToLessons}
                           className="hover:text-blue-600 transition-colors"
                         >
@@ -675,11 +709,11 @@ const CourseForm = () => {
                         </button>
                       </>
                     )}
-                    
+
                     {selectedLessonId && (
                       <>
                         <span>/</span>
-                        <button 
+                        <button
                           onClick={handleBackToExercises}
                           className="hover:text-blue-600 transition-colors"
                         >
@@ -687,12 +721,13 @@ const CourseForm = () => {
                         </button>
                       </>
                     )}
-                    
+
                     {selectedExerciseId && (
                       <>
                         <span>/</span>
                         <span className="text-gray-900 font-medium">
-                          {getSelectedExercise()?.title || "Exercise"} - Questions
+                          {getSelectedExercise()?.title || "Exercise"} -
+                          Questions
                         </span>
                       </>
                     )}
@@ -730,6 +765,10 @@ const CourseForm = () => {
                   <TabsContent value="questions">
                     <QuestionTab
                       exercise={getSelectedExercise()}
+                      lesson={getSelectedLesson()}
+                      exerciseData={exerciseData}
+                      isExerciseLoading={isExerciseLoading}
+                      isExerciseError={isExerciseError}
                       onBack={handleBackToExercises}
                       onRefresh={handleRefresh}
                     />

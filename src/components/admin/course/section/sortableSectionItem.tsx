@@ -9,6 +9,7 @@ import {
   Clock,
   BookOpen,
   Edit,
+  Trash2,
   GripVertical,
   ArrowRight,
   FolderOpen,
@@ -24,6 +25,7 @@ interface SortableSectionItemProps {
   selectedSectionId: string | null;
   editingSection: any;
   onEditSection: (section: ISection) => void;
+  onDeleteSection?: (section: ISection) => void; // Add delete handler
   onSectionSelect: (sectionId: string) => void;
   showSectionForm: boolean;
   hasUnsavedChanges?: boolean;
@@ -36,6 +38,7 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
   selectedSectionId,
   editingSection,
   onEditSection,
+  onDeleteSection,
   onSectionSelect,
   showSectionForm,
   hasUnsavedChanges = false,
@@ -70,10 +73,10 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
 
   const formatDuration = (duration: number) => {
     if (!duration) return "~30 min";
-    const hours = Math.floor(duration / 60);
-    const minutes = duration % 60;
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
     }
     return `${minutes}m`;
   };
@@ -168,9 +171,27 @@ const SortableSectionItem: React.FC<SortableSectionItemProps> = ({
                   ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
                   : "hover:bg-blue-50 text-gray-600 hover:text-blue-700"
               )}
+              title="Edit section"
             >
               <Edit className="h-4 w-4" />
             </Button>
+
+            {/* Delete Button */}
+            {onDeleteSection && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteSection(section);
+                }}
+                disabled={showSectionForm}
+                className="hover:bg-red-50 text-gray-600 hover:text-red-700 transition-colors"
+                title="Delete section"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 

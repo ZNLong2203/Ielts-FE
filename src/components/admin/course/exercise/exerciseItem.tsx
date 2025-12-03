@@ -1,8 +1,20 @@
 "use client";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Clock,
   Trophy,
@@ -18,31 +30,53 @@ import {
   FileText,
   Users,
   BarChart3,
+  ArrowRight,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { IExercise } from "@/interface/exercise";
-import { getExerciseByLessonId } from "@/api/exercise";
+import { getExerciseByLessonId, deleteExercise } from "@/api/exercise";
 
-const formatDuration = (seconds: number) => {
-  if (!seconds || isNaN(seconds) || seconds <= 0) return "0 s";
+const formatDuration = (minutes: number) => {
+  if (!minutes || isNaN(minutes) || minutes <= 0) return "No limit";
 
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-
-  const parts = [];
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
 
   if (hours > 0) {
-    parts.push(`${hours} h`);
-  }
-  if (minutes > 0) {
-    parts.push(`${minutes} m`);
-  }
-  if (remainingSeconds > 0 || parts.length === 0) {
-    parts.push(`${remainingSeconds} s`);
+    return remainingMinutes > 0 
+      ? `${hours}h ${remainingMinutes}m` 
+      : `${hours}h`;
   }
 
-  return parts.join(" ");
+  return `${remainingMinutes}m`;
+};
+
+const getExerciseTypeColor = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case "reading":
+      return "bg-blue-100 text-blue-800";
+    case "listening":
+      return "bg-orange-100 text-orange-800";
+    case "writing":
+      return "bg-purple-100 text-purple-800";
+    case "speaking":
+      return "bg-pink-100 text-pink-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty?.toLowerCase()) {
+    case "easy":
+      return "bg-green-100 text-green-800";
+    case "medium":
+      return "bg-yellow-100 text-yellow-800";
+    case "hard":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
 };
 
 interface ExerciseItemProps {
@@ -52,6 +86,9 @@ interface ExerciseItemProps {
   handleEditExercise: (exercise: IExercise) => void;
   handleDeleteExercise: (exercise: IExercise) => void;
   onManageQuestions?: (exercise: IExercise) => void;
+  isSelected?: boolean;
+  isEditing?: boolean;
+  onRefresh?: () => void;
 }
 
 const ExerciseItem = ({
@@ -59,10 +96,16 @@ const ExerciseItem = ({
   exerciseIndex,
   lessonId,
   handleEditExercise,
-  handleDeleteExercise,
+  handleDeleteExercise: _,
   onManageQuestions,
+  isSelected = false,
+  isEditing = false,
+  onRefresh,
 }: ExerciseItemProps) => {
   const [showQuestionDetails, setShowQuestionDetails] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const queryClient = useQueryClient();
 
   // Fetch exercise details including questions
   const {
@@ -79,6 +122,41 @@ const ExerciseItem = ({
   const questions = exerciseData && Array.isArray(exerciseData.questions)
     ? exerciseData.questions.filter((q: any) => q.deleted === false)
     : [];
+
+  // Delete exercise mutation - handle internally
+  const deleteExerciseMutation = useMutation({
+    mutationFn: () => deleteExercise(lessonId, exercise.id),
+    onSuccess: () => {
+      toast.success("Exercise deleted successfully");
+      
+      // Enhanced invalidation for course form context
+      queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
+      
+      // Also invalidate lesson and section data
+      const sectionId = exercise.section_id || exercise.lesson?.section_id;
+      if (sectionId) {
+        queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
+        queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lessonId] });
+        queryClient.invalidateQueries({ queryKey: ["sections", sectionId] });
+      }
+      
+      setDeleteDialogOpen(false);
+      onRefresh?.();
+    },
+    onError: (error: Error) => {
+      console.error("❌ Delete exercise error:", error);
+      toast.error(error.message || "Failed to delete exercise");
+      setDeleteDialogOpen(false);
+    },
+  });
+
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    deleteExerciseMutation.mutate();
+  };
 
   if (isLoading) {
     return (
@@ -101,275 +179,120 @@ const ExerciseItem = ({
   }
 
   return (
-    <div className="border rounded-lg p-4 transition-all duration-200 bg-white hover:shadow-sm hover:border-gray-300">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600 border border-blue-200">
-            <Target className="h-4 w-4" />
+    <>
+      <div className="border rounded-lg p-4 transition-all duration-200 bg-white hover:shadow-sm hover:border-gray-300">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-4">
+            {/* Exercise Number */}
+            <div className="flex items-center justify-center w-10 h-10 bg-black text-white rounded-lg font-bold">
+              {exerciseIndex + 1}
+            </div>
+
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-semibold text-gray-900">
+                  {exercise.title}
+                </h4>
+                <Badge
+                  className={`text-xs ${getExerciseTypeColor(
+                    exercise.exercise_type
+                  )}`}
+                >
+                  {exercise.exercise_type}
+                </Badge>
+             
+                {isEditing && (
+                  <Badge className="bg-orange-100 text-orange-800 text-xs">
+                    Currently Editing
+                  </Badge>
+                )}
+                {isSelected && (
+                  <Badge className="bg-green-100 text-green-800 text-xs">
+                    Selected
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                <div className="flex items-center space-x-1">
+                  <Target className="h-4 w-4" />
+                  <span>Score: {exercise.passing_score || 0}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="h-4 w-4" />
+                  <span>{formatDuration(exercise.time_limit)}</span>
+                </div>
+                <span>Order #{exercise.ordering || exerciseIndex + 1}</span>
+                <span>{questions.length} questions</span>
+              </div>
+            </div>
           </div>
 
-          <Badge
-            variant="secondary"
-            className="bg-blue-100 text-blue-800"
-          >
-            Exercise {exercise.ordering ?? exerciseIndex + 1}
-          </Badge>
-
-          {/* Exercise title */}
-          <h4 className="font-semibold text-gray-900">
-            {exercise.title || `Untitled Exercise ${exerciseIndex + 1}`}
-          </h4>
-
-          {/* Active status badge */}
-          <Badge
-            variant="outline"
-            className={`text-xs ${
-              exercise.is_active
-                ? "bg-green-50 text-green-700 border-green-200"
-                : "bg-gray-50 text-gray-700 border-gray-200"
-            }`}
-          >
-            {exercise.is_active ? (
-              <>
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Active
-              </>
-            ) : (
-              <>
-                <XCircle className="h-3 w-3 mr-1" />
-                Inactive
-              </>
-            )}
-          </Badge>
-        </div>
-
-        {/* Actions - giống sortableLessonItem */}
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1">
-            {/* Toggle question details button */}
-            {questions.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowQuestionDetails(!showQuestionDetails)}
-                className="h-8 px-2 text-xs hover:bg-blue-50 text-blue-700 hover:text-blue-800"
-                title="Toggle question details"
-              >
-                <HelpCircle className="h-3 w-3 mr-1" />
-                {showQuestionDetails ? "Hide" : "Show"} Questions
-              </Button>
-            )}
-
-            {/* Manage questions button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onManageQuestions?.(exercise)}
-              className="h-8 px-2 text-xs hover:bg-green-50 text-green-700 hover:text-green-800"
-              title="Manage questions"
-            >
-              <HelpCircle className="h-3 w-3 mr-1" />
-              Manage Questions
-            </Button>
-
-            {/* Edit button */}
+          {/* Actions */}
+          <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleEditExercise(exercise)}
-              className="h-8 w-8 p-0 hover:bg-blue-50"
+              className={
+                isEditing
+                  ? "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                  : "hover:bg-blue-50 text-gray-600 hover:text-blue-700"
+              }
               title="Edit exercise"
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-4 w-4" />
             </Button>
 
-            {/* Delete button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDeleteExercise(exercise)}
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={handleDelete}
+              className="hover:bg-red-50 text-gray-600 hover:text-red-700 transition-colors"
               title="Delete exercise"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-4 w-4" />
             </Button>
-          </div>
-        </div>
-      </div>
 
-      {/* Exercise Metadata - giống sortableLessonItem */}
-      <div className="flex items-center space-x-3 mb-4">
-      
-        {/* Time limit */}
-        {exercise.time_limit && (
-          <div className="flex items-center space-x-1 text-xs text-gray-500">
-            <Clock className="h-3 w-3" />
-            <span>{formatDuration(exercise.time_limit)}</span>
-          </div>
-        )}
-
-        {/* Passing score */}
-        {exercise.passing_score && (
-          <div className="flex items-center space-x-1 text-xs text-gray-500">
-            <Trophy className="h-3 w-3" />
-            <span>{exercise.passing_score}</span>
-          </div>
-        )}
-
-        {/* Max attempts */}
-        {exercise.max_attempts && (
-          <Badge variant="outline" className="text-xs">
-            <Users className="h-3 w-3 mr-1" />
-            {exercise.max_attempts} attempt{exercise.max_attempts > 1 ? 's' : ''}
-          </Badge>
-        )}
-
-        {/* Question count */}
-        {questions.length > 0 && (
-          <Badge variant="outline" className="bg-green-50 text-green-700">
-            <HelpCircle className="h-3 w-3 mr-1" />
-            {questions.length} question{questions.length > 1 ? 's' : ''}
-          </Badge>
-        )}
-      </div>
-
-      {questions && questions.length > 0 ? (
-        <div className="space-y-3">
-          <Separator />
-          <div className="flex items-center justify-between">
-            <h5 className="text-sm font-medium text-gray-700 flex items-center space-x-1">
-              <HelpCircle className="h-3 w-3" />
-              <span>Questions</span>
-              <Badge variant="outline" className="text-xs ml-2">
-                {questions.length} total
-              </Badge>
-            </h5>
-            
-            {/* Toggle visibility button */}
             <Button
-              variant="ghost"
               size="sm"
-              onClick={() => setShowQuestionDetails(!showQuestionDetails)}
-              className="h-6 px-2 text-xs"
+              variant={isSelected ? "default" : "outline"}
+              onClick={() => onManageQuestions?.(exercise)}
+              className="flex items-center space-x-1"
             >
-              {showQuestionDetails ? (
-                <>
-                  <EyeOff className="h-3 w-3 mr-1" />
-                  Hide
-                </>
-              ) : (
-                <>
-                  <Eye className="h-3 w-3 mr-1" />
-                  Show
-                </>
-              )}
+              <span>
+                {isSelected ? "Managing Questions" : "View Questions"}
+              </span>
+              <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
-
-          {/* Question details - collapsible */}
-          {showQuestionDetails && (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {questions
-                .sort((a, b) => (a.ordering ?? 999) - (b.ordering ?? 999))
-                .map((question: any, questionIndex: number) => (
-                  <div
-                    key={question.id || questionIndex}
-                    className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors group"
-                  >
-                    <div className="flex items-start space-x-3 flex-1 min-w-0">
-                      <Badge
-                        variant="outline"
-                        className="text-xs w-8 justify-center flex-shrink-0 mt-0.5"
-                      >
-                        {question.ordering ?? questionIndex + 1}
-                      </Badge>
-
-                      <div className="flex-shrink-0 mt-0.5">
-                        <HelpCircle className="h-4 w-4 text-green-600" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 break-words">
-                          {question.question_text || `Question ${questionIndex + 1}`}
-                        </p>
-                        
-                        {question.question_type && (
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {question.question_type}
-                            </Badge>
-                            
-                            {question.points && (
-                              <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                <BarChart3 className="h-3 w-3" />
-                                <span>{question.points} pts</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Question options preview */}
-                        {question.question_options && question.question_options.length > 0 && (
-                          <div className="mt-2 text-xs text-gray-500">
-                            <span className="font-medium">Options: </span>
-                            <span>{question.question_options.length} choices</span>
-                          </div>
-                        )}
-
-                        {/* Question explanation/answer key preview */}
-                        {question.explanation && (
-                          <div className="mt-2 text-xs text-gray-400 italic">
-                            Has explanation
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
         </div>
-      ) : (
-        <div className="mt-3">
-          <Separator />
-          <div className="mt-3 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 text-center">
-            <HelpCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-            <p className="text-xs text-gray-500 mb-2">
-              No questions in this exercise
-            </p>
-            {onManageQuestions && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onManageQuestions(exercise)}
-                className="mt-2 text-xs"
-              >
-                <Plus className="h-3 w-3 mr-1" />
-                Add Questions
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Exercise Content Preview */}
-      {exercise.content && (
-        <div className="mt-4">
-          <Separator className="mb-3" />
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="flex items-center space-x-2 mb-2">
-              <FileText className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Content Preview</span>
-            </div>
-            <p className="text-sm text-gray-600 line-clamp-3 break-words">
-              {typeof exercise.content === 'string' 
-                ? exercise.content 
-                : exercise.content?.main_content || exercise.content?.description || 'No content available'}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Exercise</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &ldquo;{exercise.title}&rdquo;? 
+              This action cannot be undone and will also delete all questions in this exercise.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteExerciseMutation.isPending}
+            >
+              {deleteExerciseMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

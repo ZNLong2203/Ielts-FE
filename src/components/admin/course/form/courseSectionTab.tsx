@@ -29,8 +29,9 @@ import {
 } from "lucide-react";
 import SectionForm from "../section/sectionForm";
 import SortableSectionItem from "../section/sortableSectionItem";
-import { reorderSections } from "@/api/section";
+import { reorderSections, deleteSection } from "@/api/section";
 import { ISection } from "@/interface/section";
+import { AlertModal } from "@/components/modal/alert-modal";
 
 interface SectionTabProps {
   courseData: any;
@@ -52,6 +53,10 @@ const SectionTab: React.FC<SectionTabProps> = ({
   // Drag and Drop state
   const [localSections, setLocalSections] = useState<ISection[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [sectionToDelete, setSectionToDelete] = useState<ISection | null>(null);
 
   // Update local sections when courseData changes
   useEffect(() => {
@@ -111,6 +116,32 @@ const SectionTab: React.FC<SectionTabProps> = ({
     },
   });
 
+  // Delete section mutation
+  const deleteSectionMutation = useMutation({
+    mutationFn: async (sectionId: string) => {
+      return deleteSection(sectionId, courseData.id);
+    },
+    onSuccess: () => {
+      toast.success("Section deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["sections", courseData.id] });
+      queryClient.invalidateQueries({ queryKey: ["course", courseData.id] });
+      setDeleteModalOpen(false);
+      setSectionToDelete(null);
+      onRefresh?.();
+      
+      // If the deleted section was selected, clear the selection
+      if (selectedSectionId === sectionToDelete?.id) {
+        // You might want to call a callback to clear the selection in the parent
+        // For now, we'll just refresh
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Failed to delete section");
+      setDeleteModalOpen(false);
+      setSectionToDelete(null);
+    },
+  });
+
   // Drag end handler
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -151,6 +182,23 @@ const SectionTab: React.FC<SectionTabProps> = ({
   const handleCancelForm = () => {
     setShowSectionForm(false);
     setEditingSection(null);
+  };
+
+  // Delete handlers
+  const handleDeleteSection = (section: ISection) => {
+    setSectionToDelete(section);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (sectionToDelete) {
+      deleteSectionMutation.mutate(sectionToDelete.id);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setSectionToDelete(null);
   };
 
   // Save and reset handlers
@@ -276,6 +324,7 @@ const SectionTab: React.FC<SectionTabProps> = ({
                     selectedSectionId={selectedSectionId}
                     editingSection={editingSection}
                     onEditSection={handleEditSection}
+                    onDeleteSection={handleDeleteSection}
                     onSectionSelect={onSectionSelect}
                     showSectionForm={showSectionForm}
                     hasUnsavedChanges={hasChanged}
@@ -311,6 +360,20 @@ const SectionTab: React.FC<SectionTabProps> = ({
           </CardContent>
         </Card>
       )}
+
+      {/* Delete confirmation modal */}
+      <AlertModal
+        isOpen={deleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        loading={deleteSectionMutation.isPending}
+        title="Delete Section"
+        description={
+          sectionToDelete
+            ? `Are you sure you want to delete "${sectionToDelete.title}"? This action cannot be undone and will also delete all lessons and exercises in this section.`
+            : "Are you sure you want to delete this section?"
+        }
+      />
     </div>
   );
 };

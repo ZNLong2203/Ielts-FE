@@ -36,11 +36,11 @@ import {
   ICourseQuestionUpdate,
   ICourseQuestionOption,
 } from "@/interface/courseQuestion";
-import { 
-  createCourseQuestion, 
+import {
+  createCourseQuestion,
   updateCourseQuestion,
   uploadCourseQuestionImage,
-  uploadCourseQuestionAudio
+  uploadCourseQuestionAudio,
 } from "@/api/courseQuestion";
 import { CourseQuestionFormSchema } from "@/validation/courseQuestion";
 import { QUESTION_TYPES } from "@/constants/courseQuestion";
@@ -73,7 +73,9 @@ const CourseQuestionForm = ({
   const [uploadingFiles, setUploadingFiles] = React.useState(false);
 
   // Helper functions
-  const getQuestionOptions = (question: ICourseQuestion | null): ICourseQuestionOption[] => {
+  const getQuestionOptions = (
+    question: ICourseQuestion | null
+  ): ICourseQuestionOption[] => {
     if (!question?.question_options?.length) {
       return Array.from({ length: 4 }, (_, i) => ({
         option_text: "",
@@ -94,11 +96,11 @@ const CourseQuestionForm = ({
   };
 
   // Helper function to determine file type
-  const getFileType = (file: File): 'image' | 'audio' | 'unknown' => {
+  const getFileType = (file: File): "image" | "audio" | "unknown" => {
     const type = file.type.toLowerCase();
-    if (type.startsWith('image/')) return 'image';
-    if (type.startsWith('audio/')) return 'audio';
-    return 'unknown';
+    if (type.startsWith("image/")) return "image";
+    if (type.startsWith("audio/")) return "audio";
+    return "unknown";
   };
 
   const form = useForm<CourseQuestionFormData>({
@@ -120,26 +122,54 @@ const CourseQuestionForm = ({
   const mediaFile = form.watch("media_url" as any) as File | undefined; // Watch media_url instead
 
   const invalidateQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ["exercise", lessonId, exerciseId] });
-    queryClient.refetchQueries({ queryKey: ["exercise", lessonId, exerciseId] });
-  };
+  // Invalidate multiple query patterns to ensure refresh
+  queryClient.invalidateQueries({
+    queryKey: ["exercise-details", lessonId, exerciseId],
+  });
+  queryClient.invalidateQueries({
+    queryKey: ["exercise", lessonId, exerciseId],
+  });
+  queryClient.invalidateQueries({
+    queryKey: ["courseQuestions", exerciseId],
+  });
+  
+  // Force refetch immediately
+  queryClient.refetchQueries({
+    queryKey: ["exercise-details", lessonId, exerciseId],
+  });
+};
 
   // File upload mutation - automatically detects file type
   const uploadFileMutation = useMutation({
-    mutationFn: async ({ questionId, mediaFile }: { 
-      questionId: string; 
-      mediaFile: File; 
+    mutationFn: async ({
+      questionId,
+      mediaFile,
+    }: {
+      questionId: string;
+      mediaFile: File;
     }) => {
       const fileType = getFileType(mediaFile);
       const formData = new FormData();
-      formData.append('file', mediaFile);
-      
-      if (fileType === 'image') {
-        return uploadCourseQuestionImage(lessonId, exerciseId, questionId, formData);
-      } else if (fileType === 'audio') {
-        return uploadCourseQuestionAudio(lessonId, exerciseId, questionId, formData);
+      formData.append("file", mediaFile);
+
+      if (fileType === "image") {
+        return uploadCourseQuestionImage(
+          lessonId,
+          exerciseId,
+          questionId,
+          formData
+        );
+      } else if (fileType === "audio") {
+        return uploadCourseQuestionAudio(
+          lessonId,
+          exerciseId,
+          questionId,
+          formData
+        );
       } else {
-        throw new Error('Unsupported file type. Please upload an image or audio file.');
+        throw new Error(
+          "Unsupported file type. Please upload an image or audio file."
+        );
       }
     },
     onSuccess: () => {
@@ -180,17 +210,21 @@ const CourseQuestionForm = ({
       return createCourseQuestion(lessonId, exerciseId, questionData);
     },
     onSuccess: async (data) => {
+      invalidateQueries();
+      if (onSuccess) {
+        onSuccess();
+      }
       toast.success("Question created successfully! 🎯");
-      
+
       // Upload media file if exists
       if (mediaFile) {
         setUploadingFiles(true);
-        uploadFileMutation.mutate({ 
-          questionId: data.id, 
-          mediaFile 
+        uploadFileMutation.mutate({
+          questionId: data.id,
+          mediaFile,
         });
       }
-      
+
       invalidateQueries();
       onSuccess?.();
       form.reset();
@@ -225,20 +259,29 @@ const CourseQuestionForm = ({
         ordering: data.ordering,
       };
 
-      return updateCourseQuestion(lessonId, exerciseId, question.id, updateData);
+      return updateCourseQuestion(
+        lessonId,
+        exerciseId,
+        question.id,
+        updateData
+      );
     },
     onSuccess: async () => {
+      invalidateQueries();
+      if (onSuccess) {
+        onSuccess();
+      }
       toast.success("Question updated successfully! ✨");
-      
+
       // Upload media file if exists
       if (mediaFile) {
         setUploadingFiles(true);
-        uploadFileMutation.mutate({ 
-          questionId: question!.id, 
-          mediaFile 
+        uploadFileMutation.mutate({
+          questionId: question!.id,
+          mediaFile,
         });
       }
-      
+
       invalidateQueries();
       onSuccess?.();
     },
@@ -258,7 +301,8 @@ const CourseQuestionForm = ({
 
   const adjustOrdering = (direction: "up" | "down") => {
     const currentOrdering = form.getValues("ordering");
-    const newOrdering = direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
+    const newOrdering =
+      direction === "up" ? currentOrdering - 1 : currentOrdering + 1;
     if (newOrdering >= 1) {
       form.setValue("ordering", newOrdering);
     }
@@ -287,7 +331,11 @@ const CourseQuestionForm = ({
     }
   };
 
-  const updateOption = (index: number, field: keyof ICourseQuestionOption, value: any) => {
+  const updateOption = (
+    index: number,
+    field: keyof ICourseQuestionOption,
+    value: any
+  ) => {
     const currentOptions = form.getValues("question_options") || [];
     const newOptions = [...currentOptions];
 
@@ -306,14 +354,29 @@ const CourseQuestionForm = ({
     }
   };
 
-  const isLoading = createQuestionMutation.isPending || updateQuestionMutation.isPending || uploadingFiles;
+  const isLoading =
+    createQuestionMutation.isPending ||
+    updateQuestionMutation.isPending ||
+    uploadingFiles;
 
   // Initialize options based on question type
   React.useEffect(() => {
     if (questionType === "true_false") {
       form.setValue("question_options", [
-        { option_text: "True", is_correct: false, ordering: 1, explanation: "", point: "1" },
-        { option_text: "False", is_correct: false, ordering: 2, explanation: "", point: "1" },
+        {
+          option_text: "True",
+          is_correct: false,
+          ordering: 1,
+          explanation: "",
+          point: "1",
+        },
+        {
+          option_text: "False",
+          is_correct: false,
+          ordering: 2,
+          explanation: "",
+          point: "1",
+        },
       ]);
     } else if (questionType === "multiple_choice") {
       const currentOptions = form.getValues("question_options") || [];
@@ -337,7 +400,13 @@ const CourseQuestionForm = ({
             )}
           </div>
           {onCancel && (
-            <Button type="button" variant="ghost" size="sm" onClick={onCancel} className="h-8 w-8 p-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              className="h-8 w-8 p-0"
+            >
               <X className="h-4 w-4" />
             </Button>
           )}
@@ -458,7 +527,9 @@ const CourseQuestionForm = ({
             )}
 
             {/* Question Options */}
-            {(questionType === "multiple_choice" || questionType === "droplist" || questionType === "true_false") && (
+            {(questionType === "multiple_choice" ||
+              questionType === "droplist" ||
+              questionType === "true_false") && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium text-gray-700 flex items-center space-x-2">
@@ -481,28 +552,41 @@ const CourseQuestionForm = ({
 
                 <div className="space-y-3">
                   {questionOptions.map((option, index) => (
-                    <div key={index} className="space-y-2 p-4 border rounded-lg">
+                    <div
+                      key={index}
+                      className="space-y-2 p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-3">
-                        <Badge variant="outline" className="w-8 h-8 rounded-full flex items-center justify-center">
-                          {questionType === "true_false" 
-                            ? (index === 0 ? "T" : "F")
-                            : String.fromCharCode(65 + index)
-                          }
+                        <Badge
+                          variant="outline"
+                          className="w-8 h-8 rounded-full flex items-center justify-center"
+                        >
+                          {questionType === "true_false"
+                            ? index === 0
+                              ? "T"
+                              : "F"
+                            : String.fromCharCode(65 + index)}
                         </Badge>
                         <div className="flex-1">
                           <Input
                             placeholder={`Option ${index + 1} text...`}
                             value={option.option_text || ""}
-                            onChange={(e) => updateOption(index, "option_text", e.target.value)}
+                            onChange={(e) =>
+                              updateOption(index, "option_text", e.target.value)
+                            }
                             disabled={questionType === "true_false"}
                             className="focus:ring-2 focus:ring-green-500"
                           />
                         </div>
                         <div className="flex items-center space-x-2">
-                          <label className="text-sm text-gray-600">Correct:</label>
+                          <label className="text-sm text-gray-600">
+                            Correct:
+                          </label>
                           <Switch
                             checked={option.is_correct || false}
-                            onCheckedChange={(checked) => updateOption(index, "is_correct", checked)}
+                            onCheckedChange={(checked) =>
+                              updateOption(index, "is_correct", checked)
+                            }
                           />
                         </div>
                         <div className="w-20">
@@ -510,28 +594,33 @@ const CourseQuestionForm = ({
                             type="text"
                             placeholder="Points"
                             value={option.point || "0"}
-                            onChange={(e) => updateOption(index, "point", e.target.value)}
+                            onChange={(e) =>
+                              updateOption(index, "point", e.target.value)
+                            }
                             className="text-xs focus:ring-2 focus:ring-green-500"
                           />
                         </div>
-                        {questionType !== "true_false" && questionOptions.length > 2 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeOption(index)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        )}
+                        {questionType !== "true_false" &&
+                          questionOptions.length > 2 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeOption(index)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
                       </div>
 
                       <div className="ml-11">
                         <Input
                           placeholder="Option explanation (optional)..."
                           value={option.explanation || ""}
-                          onChange={(e) => updateOption(index, "explanation", e.target.value)}
+                          onChange={(e) =>
+                            updateOption(index, "explanation", e.target.value)
+                          }
                           className="text-xs focus:ring-2 focus:ring-green-500"
                         />
                       </div>
@@ -586,7 +675,12 @@ const CourseQuestionForm = ({
             {/* Form Actions */}
             <div className="flex items-center justify-end space-x-3 pt-4 border-t">
               {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                >
                   Cancel
                 </Button>
               )}
