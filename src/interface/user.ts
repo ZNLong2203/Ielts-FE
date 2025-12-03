@@ -18,8 +18,6 @@ export interface IUser {
   email_verification_token?: string;
   password_reset_token?: string;
   password_reset_expires?: Date;
-  last_login?: Date;
-  login_count?: number;
   created_at?: Date;
   updated_at?: Date;
 

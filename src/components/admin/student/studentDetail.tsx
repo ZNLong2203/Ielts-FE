@@ -289,11 +289,6 @@ const StudentDetail = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <TextInfoField
-                      label="Timezone"
-                      value={data?.students?.timezone || "Not specified"}
-                    />
-
                     <DateInfoField
                       label="Student Since"
                       value={

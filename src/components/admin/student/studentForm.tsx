@@ -129,7 +129,6 @@ const StudentForm = () => {
       language_preference: "",
       learning_goals: [],
       target_ielts_score: undefined,
-      timezone: "",
     },
   });
 
@@ -173,7 +172,6 @@ const StudentForm = () => {
         language_preference: data.students?.language_preference,
         learning_goals: data.students?.learning_goals,
         target_ielts_score: data.students?.target_ielts_score,
-        timezone: data.students?.timezone,
       });
       profileForm.reset({
         full_name: data?.full_name,
@@ -438,13 +436,6 @@ const StudentForm = () => {
                         label="Language Preference"
                         placeholder="Select language preference"
                         options={STUDENT_LANGUAGE}
-                      />
-
-                      <TextField
-                        control={studentForm.control}
-                        name="timezone"
-                        label="Timezone"
-                        placeholder="e.g., UTC+7, Asia/Ho_Chi_Minh"
                       />
                     </div>
 

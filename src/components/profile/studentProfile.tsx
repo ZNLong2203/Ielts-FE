@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { 
-  User, Mail, Calendar, Clock, Target, BookOpen, Star, Edit, 
+  User, Mail, Calendar, Target, BookOpen, Star, Edit, 
   Loader2, TrendingUp, Award, CheckCircle2, Clock3, Trophy
 } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -94,7 +94,6 @@ const StudentProfile = () => {
       target_ielts_score: studentData?.target_ielts_score,
       current_level: studentData?.current_level,
       learning_goals: studentData?.learning_goals || [],
-      timezone: studentData?.timezone || "",
       language_preference: studentData?.language_preference || "vi",
     },
   })
@@ -107,7 +106,6 @@ const StudentProfile = () => {
         target_ielts_score: studentData.target_ielts_score,
         current_level: studentData.current_level,
         learning_goals: studentData.learning_goals || [],
-        timezone: studentData.timezone || "",
         language_preference: studentData.language_preference || "vi",
       })
     }
@@ -118,18 +116,20 @@ const StudentProfile = () => {
     mutationFn: async (data: IStudentUpdate) => {
       return updateOwnStudentProfile(data)
     },
-    onSuccess: (response, variables) => {
-      toast.success(response?.data?.message || "Profile updated successfully")
+    onSuccess: (response, variables: IStudentUpdate) => {
+      const typedResponse = response as { data?: { message?: string } } | undefined
+      toast.success(typedResponse?.data?.message || "Profile updated successfully")
       
       // Optimistically update cache
-      queryClient.setQueryData(["profile"], (old: any) => {
+      queryClient.setQueryData(["profile"], (old: unknown) => {
         if (!old) return old
+        const previous = old as { students?: IStudentUpdate }
         return {
-          ...old,
+          ...previous,
           students: {
-            ...old.students,
+            ...previous.students,
             ...variables,
-          }
+          },
         }
       })
       
@@ -138,8 +138,9 @@ const StudentProfile = () => {
       
       setIsEditDialogOpen(false)
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Update failed")
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
+      toast.error(err?.response?.data?.message || "Update failed")
       // Revert optimistic update on error
       queryClient.invalidateQueries({ queryKey: ["profile"] })
     },
@@ -151,7 +152,6 @@ const StudentProfile = () => {
       target_ielts_score: data.target_ielts_score ? Number(data.target_ielts_score) : undefined,
       current_level: data.current_level ? Number(data.current_level) : undefined,
       learning_goals: data.learning_goals && data.learning_goals.length > 0 ? data.learning_goals : undefined,
-      timezone: data.timezone || undefined,
       language_preference: data.language_preference || undefined,
     }
     updateMutation.mutate(updateData)
@@ -309,16 +309,20 @@ const StudentProfile = () => {
                 {/* Quick Stats in Profile Card */}
                 <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-blue-400/30">
                   <div className="text-center group cursor-pointer">
-                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">{user?.login_count || 0}</div>
-                    <div className="text-xs text-blue-200 mt-1">Logins</div>
+                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">
+                      {ieltsData.completedLessons}
+                    </div>
+                    <div className="text-xs text-blue-200 mt-1">Lessons</div>
                   </div>
                   <div className="text-center group cursor-pointer">
                     <div className="text-3xl font-bold group-hover:scale-110 transition-transform">{ieltsData.studyStreak}</div>
                     <div className="text-xs text-blue-200 mt-1">Day Streak</div>
                   </div>
                   <div className="text-center group cursor-pointer">
-                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">{ieltsData.completedLessons}</div>
-                    <div className="text-xs text-blue-200 mt-1">Lessons</div>
+                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">
+                      {ieltsData.totalLessons}
+                    </div>
+                    <div className="text-xs text-blue-200 mt-1">Total Lessons</div>
                   </div>
                 </div>
               </CardContent>
@@ -372,22 +376,7 @@ const StudentProfile = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/50 hover:shadow-md transition-shadow">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Clock className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">Last Active</div>
-                      <div className="font-medium text-gray-800">
-                        {user?.last_login
-                          ? new Date(user.last_login).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Never"}
-                      </div>
-                    </div>
-                  </div>
+                  {/* Removed Last Active (last_login) since field is no longer tracked */}
                 </div>
               </CardContent>
             </Card>
@@ -542,13 +531,6 @@ const StudentProfile = () => {
                               placeholder="Enter a goal and press Enter"
                             />
 
-                            <TextField
-                              control={form.control}
-                              name="timezone"
-                              label="Timezone"
-                              placeholder="e.g., Asia/Ho_Chi_Minh"
-                            />
-
                             <SelectField
                               control={form.control}
                               name="language_preference"
@@ -619,7 +601,7 @@ const StudentProfile = () => {
                         Learning Goals
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {studentData.learning_goals.map((goal, index) => (
+                        {studentData.learning_goals.map((goal: string, index: number) => (
                           <Badge key={index} variant="secondary" className="text-sm px-3 py-1.5">
                             {goal}
                           </Badge>

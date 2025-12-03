@@ -5,6 +5,5 @@ export const StudentFormSchema = z.object({
     target_ielts_score: z.coerce.number().optional(),
     current_level: z.coerce.number().optional(),
     learning_goals: z.array(z.string()).optional(),
-    timezone: z.string().optional(),
     language_preference: z.string().optional(),
 });

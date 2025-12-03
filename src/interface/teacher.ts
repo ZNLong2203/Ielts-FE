@@ -13,8 +13,6 @@ export interface ITeacher {
         [key: string]: string[]; // e.g., { monday: ["9:00-10:00", "10:00-11:00"] }
     }
     ratings?: number;
-    total_students?: number;
-    total_courses?: number;
     is_verified?: boolean;
     status?: string;
     deleted?: boolean;

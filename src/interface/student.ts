@@ -7,7 +7,6 @@ export interface IStudent {
     target_ielts_score?: number;
     current_level?: number;
     learning_goals?: string[];
-    timezone?: string;
     language_preference?: string;
     deleted?: boolean;
     created_at?: Date;
@@ -19,7 +18,6 @@ export interface IStudentUpdate {
     target_ielts_score?: number;
     current_level?: number;
     learning_goals?: string[];
-    timezone?: string;
     language_preference?: string;
 }
 
