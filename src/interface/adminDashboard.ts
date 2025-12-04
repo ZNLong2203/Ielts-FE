@@ -5,6 +5,10 @@ export interface DashboardStats {
   totalCourses: number;
   totalMockTests: number;
   totalRevenue: number;
+  todayNewUsers: number;
+  todayTestsCompleted: number;
+  todayEnrollments: number;
+  todayRevenue: number;
   userGrowth: number;
   courseGrowth: number;
   mockTestGrowth: number;
@@ -12,7 +16,6 @@ export interface DashboardStats {
 }
 
 export interface RecentActivity {
-  id: string;
   type:
     | "user_registered"
     | "course_created"
@@ -22,7 +25,6 @@ export interface RecentActivity {
   description: string;
   timestamp: string;
   user?: {
-    id: string;
     name: string;
     avatar?: string;
   };

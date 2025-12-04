@@ -12,7 +12,7 @@ export default function StatCard({
   iconColor = "text-blue-600",
   className,
 }: StatCardProps) {
-  const isPositive = change > 0;
+  const isPositive = change >= 0;
   const formatChange = Math.abs(change);
 
   return (

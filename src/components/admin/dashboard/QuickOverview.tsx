@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { DashboardStats } from "@/interface/adminDashboard";
 import {
   BarChart3,
   BookOpen,
@@ -16,22 +17,26 @@ import {
 
 interface QuickOverviewProps {
   className?: string;
+  stats?: DashboardStats;
 }
 
-export default function QuickOverview({ className }: QuickOverviewProps) {
-  // These would come from real data in production
+export default function QuickOverview({
+  className,
+  stats,
+}: QuickOverviewProps) {
+  // Use real today data from API
   const todayStats = {
-    newUsers: 24,
-    testsCompleted: 12,
-    coursesEnrolled: 8,
-    revenue: 1247,
+    newUsers: stats?.todayNewUsers || 0,
+    testsCompleted: stats?.todayTestsCompleted || 0,
+    coursesEnrolled: stats?.todayEnrollments || 0,
+    revenue: stats?.todayRevenue || 0,
   };
 
   const weeklyComparison = {
-    users: +15.2,
-    tests: +8.7,
-    courses: +12.3,
-    revenue: +23.1,
+    users: stats?.userGrowth || 0,
+    tests: stats?.mockTestGrowth || 0,
+    courses: stats?.courseGrowth || 0,
+    revenue: stats?.revenueGrowth || 0,
   };
 
   return (
@@ -132,7 +137,9 @@ export default function QuickOverview({ className }: QuickOverviewProps) {
               <span className="text-xs text-muted-foreground">Revenue</span>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-lg font-semibold">${todayStats.revenue}</p>
+              <p className="text-lg font-semibold">
+                ${todayStats.revenue.toLocaleString()}
+              </p>
               <span
                 className={`text-xs flex items-center ${
                   weeklyComparison.revenue >= 0
@@ -165,7 +172,7 @@ export default function QuickOverview({ className }: QuickOverviewProps) {
                 variant="outline"
                 className="border-green-200 text-green-700"
               >
-                142 Active
+                {stats?.totalCourses || 0} Active
               </Badge>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50">
@@ -174,16 +181,16 @@ export default function QuickOverview({ className }: QuickOverviewProps) {
                 variant="outline"
                 className="border-blue-200 text-blue-700"
               >
-                78 Tests
+                {stats?.totalMockTests || 0} Tests
               </Badge>
             </div>
             <div className="flex items-center justify-between p-2 rounded-lg bg-purple-50">
-              <span className="text-sm">Active Teachers</span>
+              <span className="text-sm">Total Users</span>
               <Badge
                 variant="outline"
                 className="border-purple-200 text-purple-700"
               >
-                42 Online
+                {stats?.totalUsers || 0} Users
               </Badge>
             </div>
           </div>

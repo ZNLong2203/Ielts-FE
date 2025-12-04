@@ -8,66 +8,60 @@ export const mockDashboardStats = {
   courseGrowth: 8.3,
   mockTestGrowth: 15.7,
   revenueGrowth: 23.2,
+  todayNewUsers: 28,
+  todayTestsCompleted: 134,
+  todayEnrollments: 45,
+  todayRevenue: 980,
 };
 
 export const mockRecentActivities = [
   {
-    id: "1",
     type: "user_registered" as const,
     title: "New user registration",
     description: "John Doe joined the platform",
     timestamp: "2 minutes ago",
     user: {
-      id: "1",
       name: "John Doe",
       avatar: "/avatars/01.png",
     },
   },
   {
-    id: "2",
     type: "course_created" as const,
     title: "New course published",
     description: "IELTS Speaking Mastery course was published",
     timestamp: "15 minutes ago",
     user: {
-      id: "2",
       name: "Sarah Wilson",
       avatar: "/avatars/02.png",
     },
   },
   {
-    id: "3",
     type: "payment_received" as const,
     title: "Payment received",
     description: "Premium course purchase",
     timestamp: "1 hour ago",
     amount: 199,
     user: {
-      id: "3",
       name: "Mike Chen",
       avatar: "/avatars/03.png",
     },
   },
   {
-    id: "4",
     type: "mocktest_completed" as const,
     title: "Mock test completed",
     description: "IELTS Academic Practice Test #5",
     timestamp: "2 hours ago",
     user: {
-      id: "4",
       name: "Emma Davis",
       avatar: "/avatars/04.png",
     },
   },
   {
-    id: "5",
     type: "user_registered" as const,
     title: "New user registration",
     description: "Alex Johnson joined the platform",
     timestamp: "3 hours ago",
     user: {
-      id: "5",
       name: "Alex Johnson",
     },
   },

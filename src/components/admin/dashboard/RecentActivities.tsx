@@ -51,9 +51,9 @@ export default function RecentActivities({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {activities.map((activity) => (
+          {activities.map((activity, index) => (
             <div
-              key={activity.id}
+              key={index}
               className="flex items-start space-x-3 p-3 rounded-lg border border-dashed border-gray-200 hover:bg-muted/20 transition-colors"
             >
               <div className="flex-shrink-0 p-2 rounded-full bg-muted/10">

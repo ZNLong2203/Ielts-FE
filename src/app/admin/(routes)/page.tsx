@@ -23,6 +23,8 @@ import {
 const AdminPage = () => {
   const { data, isLoading, error, refetch } = useDashboardData();
 
+  console.log("Dashboard Data:", data);
+
   if (isLoading) return <Loading />;
   if (error) return <Error title="Failed to load dashboard data" />;
   if (!data) return <Error title="No data available" />;
@@ -122,7 +124,7 @@ const AdminPage = () => {
       </div>
       {/* Quick Overview as separate section */}
       <div className="grid gap-6 lg:grid-cols-1">
-        <QuickOverview />
+        <QuickOverview stats={data.stats} />
       </div>
       {/* Footer */}
       <div className="text-center text-sm text-muted-foreground py-4">

@@ -6,7 +6,7 @@ export const API_URL = {
   LOGOUT: "/auth/logout",
   REFRESH_TOKEN: "/auth/refresh",
 
-  DASHBOARD: "/dashboard",
+  DASHBOARD: "/admin/dashboard",
   PROFILE: "/profile",
   OWN_PROFILE: "/auth/profile",
 

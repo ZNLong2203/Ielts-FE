@@ -41,13 +41,41 @@ export default function ChartCard({
     );
   }
 
+  // Custom shape component to handle zero values
+  const CustomBarShape = (props: any) => {
+    const { payload, fill, x, y, width, height } = props;
+
+    // If value is 0, don't render the bar but keep the data for tooltip
+    if (payload && payload.value === 0) {
+      return <g />;
+    }
+
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={fill}
+        rx={4}
+        ry={4}
+      />
+    );
+  };
+
   // Calculate stats directly from data array
   const values = data.map((item) => item.value);
   const maxValue = Math.max(...values);
   const average = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
-  const growth = Math.round(
-    ((values[values.length - 1] - values[0]) / values[0]) * 100
-  );
+
+  // --- FIX PHẦN TÍNH GROWTH ---
+  const start = values[0];
+  const end = values[values.length - 1];
+
+  let growth = 0;
+  if (start === 0 && end > 0) growth = 100;
+  else if (start !== 0) growth = Math.round(((end - start) / start) * 100);
+  // --------------------------
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -113,6 +141,9 @@ export default function ChartCard({
                   tick={{ fontSize: 12, fill: "#64748b" }}
                   tickFormatter={formatYAxis}
                   width={60}
+                  // --- FIX DOMAIN YAXIS ---
+                  domain={[0, maxValue === 0 ? 100 : maxValue]}
+                  // ----------------------
                 />
                 <Tooltip
                   content={<CustomTooltip />}
@@ -121,7 +152,7 @@ export default function ChartCard({
                 <Bar
                   dataKey="value"
                   fill="url(#colorGradient)"
-                  radius={[4, 4, 0, 0]}
+                  shape={CustomBarShape}
                 />
                 <defs>
                   <linearGradient
