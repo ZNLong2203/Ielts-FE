@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 
 interface QuickOverviewProps {
   className?: string;
@@ -208,17 +209,23 @@ export default function QuickOverview({
               variant="outline"
               size="sm"
               className="w-full justify-start h-9"
+              asChild
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Course
+              <Link href="/admin/course/create">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Course
+              </Link>
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="w-full justify-start h-9"
+              asChild
             >
-              <FileText className="h-4 w-4 mr-2" />
-              Create Mock Test
+              <Link href="/admin/mockTest/create">
+                <FileText className="h-4 w-4 mr-2" />
+                Create Mock Test
+              </Link>
             </Button>
             <Button
               variant="outline"
