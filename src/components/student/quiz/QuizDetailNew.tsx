@@ -16,10 +16,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AlertCircle, X, ArrowLeft, Loader2, BookOpen, FileText, Headphones, Mic } from "lucide-react";
 
-import { startMockTest, submitSectionAnswers, TestSectionSubmission, TestAnswerSubmission } from "@/api/mockTest";
+import { startMockTest, submitSectionAnswers, TestSectionSubmission, TestAnswerSubmission, getTestResultReview } from "@/api/mockTest";
 import { uploadAudio } from "@/api/file";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
 import QuizResults from "./QuizResults";
 import QuizHeader from "./QuizHeader";
 import PinnedPassagePanel from "./PinnedPassagePanel";
@@ -27,6 +28,9 @@ import QuizInstructions from "./QuizInstructions";
 import QuizNavigation from "./QuizNavigation";
 import QuizQuestionGroup from "./QuizQuestionGroup";
 import QuizExercise from "./QuizExercise";
+import TestResultReview from "./TestResultReview";
+import GradingMethodDialog from "./GradingMethodDialog";
+import PendingTeacherGrading from "./PendingTeacherGrading";
 
 interface QuizDetailProps {
   quizId?: string;
@@ -119,14 +123,20 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [showGradingMethodDialog, setShowGradingMethodDialog] = useState(false);
+  const [selectedGradingMethod, setSelectedGradingMethod] = useState<'ai' | 'teacher' | null>(null);
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
   const [showInstructions, setShowInstructions] = useState(false);
   const [sectionResult, setSectionResult] = useState<{
-    band_score: number;
-    correct_answers: number;
+    band_score: number | null;
+    correct_answers: number | null;
     total_questions: number;
     detailed_answers?: unknown;
+    grading_method?: string;
+    message?: string;
   } | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  const [isPendingTeacherGrading, setIsPendingTeacherGrading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [pinnedPassageId, setPinnedPassageId] = useState<string | null>(null);
@@ -167,18 +177,41 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const submitSectionMutation = useMutation({
     mutationFn: (data: TestSectionSubmission) => submitSectionAnswers(data),
     onSuccess: (response) => {
-      setSectionResult(response.data);
-      setIsCompleted(true);
-      setIsStarted(false);
-      toast.success(`Section completed! Band Score: ${response.data.band_score}`, {
-        duration: 5000,
-      });
+      const resultData = response.data;
+      setSectionResult(resultData);
+      
+      // Check if this is teacher grading (pending)
+      if (resultData.grading_method === 'teacher' && !resultData.band_score) {
+        setIsPendingTeacherGrading(true);
+        setIsCompleted(true);
+        setIsStarted(false);
+        toast.success(resultData.message || 'Your writing has been submitted for teacher grading. You will receive an email notification when grading is complete.', {
+          duration: 6000,
+        });
+        setShowReview(false);
+      } else {
+        // AI grading - show results immediately
+        setIsPendingTeacherGrading(false);
+        setIsCompleted(true);
+        setIsStarted(false);
+        toast.success(`Section completed! Band Score: ${resultData.band_score || 'N/A'}`, {
+          duration: 5000,
+        });
+        setShowReview(false);
+      }
     },
     onError: (error: unknown) => {
       const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast.error(errorMessage || "Failed to submit answers");
       setIsSubmitting(false);
     },
+  });
+
+  // Fetch test result review when test is completed
+  const { data: testResultReview, isLoading: isLoadingReview } = useQuery({
+    queryKey: ["test-result-review", testResultId],
+    queryFn: () => testResultId ? getTestResultReview(testResultId) : null,
+    enabled: !!testResultId && isCompleted && showReview,
   });
 
   useEffect(() => {
@@ -398,23 +431,8 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     return allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
   }, [quiz, isQuestionAnswered]);
 
-  const handleSubmitQuiz = useCallback(async (skipConfirm = false) => {
+  const proceedWithSubmission = useCallback(async (gradingMethod: 'ai' | 'teacher' = 'ai') => {
     if (!quiz || !testResultId || !currentSection || isSubmitting) return;
-    
-    // Calculate answered count on the fly to avoid dependency issues
-    const allQuestions = quiz.sections.flatMap(s => 
-      s.exercises && s.exercises.length > 0
-        ? s.exercises.flatMap(e => e.question_groups.flatMap(g => g.questions))
-        : s.question_groups.flatMap(g => g.questions) // Fallback for backward compatibility
-    );
-    const currentAnsweredCount = allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
-    const currentTotalQuestions = quiz.total_questions || 0;
-    
-    // Show confirmation if not all questions are answered and not skipping confirm
-    if (!skipConfirm && currentAnsweredCount < currentTotalQuestions) {
-      setShowSubmitConfirm(true);
-      return;
-    }
     
     setIsSubmitting(true);
     
@@ -481,6 +499,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         test_section_id: currentSection.id,
         time_taken: timeTaken,
         answers: answerSubmissions,
+        grading_method: currentSection.type === "writing" ? gradingMethod : undefined,
       };
 
       // For speaking section, upload audio files first, then submit
@@ -558,6 +577,35 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
       setIsSubmitting(false);
     }
   }, [quiz, testResultId, currentSection, isSubmitting, timeStarted, answers, submitSectionMutation, speakingAudios, isQuestionAnswered]);
+
+  const handleSubmitQuiz = useCallback(async (skipConfirm = false) => {
+    if (!quiz || !testResultId || !currentSection || isSubmitting) return;
+    
+    // Calculate answered count on the fly to avoid dependency issues
+    const allQuestions = quiz.sections.flatMap(s => 
+      s.exercises && s.exercises.length > 0
+        ? s.exercises.flatMap(e => e.question_groups.flatMap(g => g.questions))
+        : s.question_groups.flatMap(g => g.questions) // Fallback for backward compatibility
+    );
+    const currentAnsweredCount = allQuestions.filter(q => isQuestionAnswered(q.id, q.type)).length;
+    const currentTotalQuestions = quiz.total_questions || 0;
+    
+    // Show confirmation if not all questions are answered and not skipping confirm
+    if (!skipConfirm && currentAnsweredCount < currentTotalQuestions) {
+      setShowSubmitConfirm(true);
+      return;
+    }
+    
+    // For writing section, always show grading method selection dialog (reset selected method for each submission)
+    if (currentSection.type === "writing" && !skipConfirm) {
+      setSelectedGradingMethod(null); // Reset to force showing dialog
+      setShowGradingMethodDialog(true);
+      return;
+    }
+    
+    // Proceed with submission using selected grading method (default to 'ai' if not set)
+    proceedWithSubmission(selectedGradingMethod || 'ai');
+  }, [quiz, testResultId, currentSection, isSubmitting, isQuestionAnswered, selectedGradingMethod, proceedWithSubmission]);
 
   useEffect(() => {
     if (!isStarted || isCompleted || !timeStarted) return;
@@ -889,13 +937,29 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     );
   }
 
-  if (isCompleted && sectionResult && quiz && currentSection) {
-    // Redirect to results page or show results component
+  // Show detailed review if available and loaded
+  if (isCompleted && showReview && testResultReview && testResultId && !isLoadingReview) {
     return (
-      <QuizResults
-        quiz={quiz}
-        sectionResult={sectionResult}
-        currentSection={currentSection}
+      <TestResultReview
+        testResult={testResultReview}
+        onBack={() => {
+          setShowReview(false);
+          if (onBack) {
+            onBack();
+          } else {
+            router.push("/student/dashboard/my-quizzes");
+          }
+        }}
+      />
+    );
+  }
+
+  // Show pending teacher grading message if writing was submitted for teacher grading
+  if (isCompleted && isPendingTeacherGrading && quiz && currentSection) {
+    return (
+      <PendingTeacherGrading
+        quizTitle={quiz.title}
+        sectionName={currentSection.name || "Writing Section"}
         onBack={() => {
           if (onBack) {
             onBack();
@@ -903,8 +967,63 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             router.push("/student/dashboard/my-quizzes");
           }
         }}
-        onReset={handleResetQuiz}
       />
+    );
+  }
+
+  if (isCompleted && sectionResult && quiz && currentSection && !isPendingTeacherGrading) {
+    // Show summary results first, then allow user to view detailed review
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <QuizResults
+          quiz={quiz}
+          sectionResult={sectionResult}
+          currentSection={currentSection}
+          onBack={() => {
+            if (onBack) {
+              onBack();
+            } else {
+              router.push("/student/dashboard/my-quizzes");
+            }
+          }}
+          onReset={handleResetQuiz}
+        />
+        {testResultId && (
+          <div className="max-w-6xl mx-auto px-4 py-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Review Your Answers
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      View detailed explanations for each question, see correct answers, and understand your mistakes.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowReview(true)}
+                    disabled={isLoadingReview}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isLoadingReview ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        View Detailed Review
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -1308,6 +1427,21 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Grading Method Selection Dialog for Writing */}
+      <GradingMethodDialog
+        open={showGradingMethodDialog}
+        onOpenChange={(open) => {
+          setShowGradingMethodDialog(open);
+          if (!open) {
+            setSelectedGradingMethod(null); // Reset when dialog closes without selection
+          }
+        }}
+        onSelect={(method) => {
+          setSelectedGradingMethod(method);
+          proceedWithSubmission(method);
+        }}
+      />
 
       {/* Exit Confirmation Modal */}
       {showConfirmExit && (

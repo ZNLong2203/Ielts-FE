@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   GraduationCap,
+  FileText,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectUser } from "@/redux/features/user/userSlice";
@@ -45,6 +46,12 @@ const TeacherSidebar = ({
       label: "My Blogs",
       icon: FolderOpen,
       active: pathName === ROUTES.TEACHER_BLOGS,
+    },
+    {
+      href: ROUTES.TEACHER_WRITING_GRADING,
+      label: "Writing Grading",
+      icon: FileText,
+      active: pathName === ROUTES.TEACHER_WRITING_GRADING || pathName?.startsWith(ROUTES.TEACHER_WRITING_GRADING),
     },
   ];
 

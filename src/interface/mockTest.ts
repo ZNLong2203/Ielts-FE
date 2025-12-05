@@ -106,6 +106,30 @@ export interface IMockTest {
 }
 
 // Test Result interfaces
+export interface IQuestionReview {
+  question_id: string;
+  question: IMockTestQuestion | null;
+  is_correct: boolean | null;
+  user_answer: string | string[] | null;
+  correct_answer: string | string[] | null;
+  points_earned: number;
+  max_points: number;
+  explanation?: string | null;
+  part?: string | null;
+  ai_feedback?: string | null;
+  // For writing tasks
+  task_type?: string;
+  overall_score?: number;
+  task_achievement_score?: number;
+  coherence_cohesion_score?: number;
+  lexical_resource_score?: number;
+  grammatical_range_accuracy_score?: number;
+  detailed_feedback?: string | null;
+  suggestions?: any;
+  strengths?: any;
+  weaknesses?: any;
+}
+
 export interface ISectionResult {
   id: string;
   test_result_id: string;
@@ -117,6 +141,7 @@ export interface ISectionResult {
   detailed_answers?: any;
   graded_at: Date;
   test_sections?: IMockTestSection;
+  question_reviews?: IQuestionReview[];
 }
 
 export interface ITestResult {

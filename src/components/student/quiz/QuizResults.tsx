@@ -26,10 +26,11 @@ interface QuizResultsProps {
     }>;
   };
   sectionResult: {
-    band_score: number;
-    correct_answers: number;
+    band_score: number | null;
+    correct_answers: number | null;
     total_questions: number;
     detailed_answers?: any;
+    grading_method?: string;
   };
   currentSection: {
     type: string;

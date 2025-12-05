@@ -24,6 +24,7 @@ const ROUTES = {
 
   TEACHER: "/teacher/dashboard",
   TEACHER_BLOGS: "/teacher/dashboard/blog",
+  TEACHER_WRITING_GRADING: "/teacher/dashboard/writing-grading",
 };
 
 export default ROUTES;
