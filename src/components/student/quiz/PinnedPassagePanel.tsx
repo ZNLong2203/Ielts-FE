@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { PinOff } from "lucide-react";
 import PassageWithHighlight from "./PassageWithHighlight";
+import ReadingPassageWithParagraphs from "./ReadingPassageWithParagraphs";
 
 interface PinnedPassagePanelProps {
   pinnedPassageId: string | null;
@@ -13,6 +14,16 @@ interface PinnedPassagePanelProps {
       passage_reference?: string;
     }>;
   };
+  currentExercise: {
+    id: string;
+    passage?: string;
+    passageTitle?: string;
+    paragraphs?: Array<{
+      id: string;
+      label: string;
+      content: string;
+    }>;
+  } | null;
   onUnpin: () => void;
 }
 
@@ -20,6 +31,7 @@ export default function PinnedPassagePanel({
   pinnedPassageId,
   pinnedImageUrl,
   currentSection,
+  currentExercise,
   onUnpin,
 }: PinnedPassagePanelProps) {
   if (!pinnedPassageId && !pinnedImageUrl) return null;
@@ -35,8 +47,33 @@ export default function PinnedPassagePanel({
           </Button>
         </div>
 
-        {/* Pinned Passage */}
-        {pinnedPassageId && (() => {
+        {/* Pinned Passage from Exercise */}
+        {pinnedPassageId && currentExercise && pinnedPassageId.startsWith('exercise-passage-') && (
+          currentExercise.paragraphs && currentExercise.paragraphs.length > 0 ? (
+            <div className="mb-6">
+              <ReadingPassageWithParagraphs
+                passageId={pinnedPassageId}
+                passageTitle={currentExercise.passageTitle}
+                passageContent={currentExercise.passage}
+                paragraphs={currentExercise.paragraphs}
+                onPin={onUnpin}
+                isPinned={true}
+              />
+            </div>
+          ) : currentExercise.passage ? (
+            <div className="mb-6">
+              <PassageWithHighlight
+                passageId={pinnedPassageId}
+                passageText={currentExercise.passage}
+                onPin={onUnpin}
+                isPinned={true}
+              />
+            </div>
+          ) : null
+        )}
+
+        {/* Pinned Passage from Question Group (backward compatibility) */}
+        {pinnedPassageId && !pinnedPassageId.startsWith('exercise-passage-') && (() => {
           const pinnedGroup = currentSection.question_groups.find(
             (g) => `passage-${g.id}` === pinnedPassageId
           );

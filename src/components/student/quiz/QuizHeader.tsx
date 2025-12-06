@@ -41,7 +41,7 @@ export default function QuizHeader({
   return (
     <div
       className={cn(
-        "bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10",
+        "bg-white border-b border-gray-200 px-6 py-4 sticky top-24 z-40",
         isPinned && "w-full"
       )}
     >

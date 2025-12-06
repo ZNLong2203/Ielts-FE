@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronDown, ChevronUp, Play, CheckCircle, Clock, Users } from "lucide-react"
+import { ChevronDown, ChevronUp, Play, CheckCircle, Clock } from "lucide-react"
 
 interface Course {
   id: string
@@ -64,78 +64,62 @@ export function LearningPathCard({ path }: LearningPathCardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group">
       {/* Header */}
-      <div className="p-8">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            {/* Title & Description */}
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-slate-800 mb-3">{path.title}</h3>
-              <p className="text-slate-600 text-lg leading-relaxed">{path.description}</p>
-            </div>
+      <div className="p-6">
+        {/* Title & Description */}
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-slate-800 mb-2">{path.title}</h3>
+          <p className="text-slate-600 leading-relaxed">{path.description}</p>
+        </div>
 
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-slate-50 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 font-medium">Duration</div>
-                    <div className="text-lg font-bold text-slate-800">{path.estimatedTime}</div>
-                  </div>
-                </div>
+        {/* Stats and Progress in one row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Duration Card */}
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Clock className="w-5 h-5 text-blue-600" />
               </div>
-              
-              <div className="bg-slate-50 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <Users className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-500 font-medium">Students</div>
-                    <div className="text-lg font-bold text-slate-800">{path.enrolledStudents.toLocaleString()}</div>
-                  </div>
-                </div>
+              <div>
+                <div className="text-xs text-slate-500 font-medium">Duration</div>
+                <div className="text-lg font-bold text-slate-800">{path.estimatedTime}</div>
               </div>
             </div>
+          </div>
 
-            {/* Progress Section */}
-            <div className="bg-slate-50 rounded-xl p-6 mb-6">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-slate-700 font-semibold">
-                  {path.completedCourses} of {path.totalCourses} courses completed
-                </span>
-                <span className="text-blue-600 font-bold text-lg">
-                  {typeof path.progress === "number"
-                    ? path.progress.toFixed(2)
-                    : path.progress}
-                  %
-                </span>
+          {/* Progress Card */}
+          <div className="md:col-span-2 bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-slate-700 font-medium">
+                {path.completedCourses} of {path.totalCourses} courses
+              </span>
+              <span className="text-blue-600 font-bold">
+                {typeof path.progress === "number"
+                  ? path.progress.toFixed(1)
+                  : path.progress}
+                %
+              </span>
+            </div>
+            <div className="relative">
+              <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="h-2.5 rounded-full bg-blue-600 transition-all duration-700 ease-out"
+                  style={{ width: `${path.progress}%` }}
+                />
               </div>
-              
-              <div className="relative">
-                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="h-3 rounded-full bg-blue-600 transition-all duration-700 ease-out"
-                    style={{ width: `${path.progress}%` }}
-                  />
-                </div>
-                {/* Progress milestones */}
-                <div className="flex justify-between mt-2 text-xs text-slate-400">
-                  <span>Start</span>
-                  <span>25%</span>
-                  <span>50%</span>
-                  <span>75%</span>
-                  <span>Complete</span>
-                </div>
+              {/* Progress milestones */}
+              <div className="flex justify-between mt-1.5 text-xs text-slate-400">
+                <span>Start</span>
+                <span>25%</span>
+                <span>50%</span>
+                <span>75%</span>
+                <span>Complete</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-200 font-medium"
@@ -150,7 +134,7 @@ export function LearningPathCard({ path }: LearningPathCardProps) {
               path.progress === 0
                 ? "bg-blue-600 hover:bg-blue-700"
                 : path.progress === 100
-                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  ? "bg-slate-700 hover:bg-slate-800"
                   : "bg-slate-800 hover:bg-slate-900"
             }`}
           >

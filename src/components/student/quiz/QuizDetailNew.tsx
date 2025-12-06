@@ -1099,6 +1099,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             pinnedPassageId={pinnedPassageId}
             pinnedImageUrl={pinnedImageUrl}
             currentSection={currentSection}
+            currentExercise={currentSection.exercises && currentSection.exercises.length > 0 
+              ? currentSection.exercises[currentExerciseIndex] 
+              : null}
             onUnpin={() => {
               setPinnedPassageId(null);
               setPinnedImageUrl(null);

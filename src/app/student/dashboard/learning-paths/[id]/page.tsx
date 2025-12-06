@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import { ArrowLeft, Clock, Users, CheckCircle, BookOpen, Award, TrendingUp } from "lucide-react"
+import { ArrowLeft, Clock, CheckCircle, BookOpen, Award, TrendingUp } from "lucide-react"
 import { getStudentComboEnrollments } from "@/api/student"
 import { IComboEnrollment } from "@/interface/student"
 import { selectUserId } from "@/redux/features/user/userSlice"
@@ -165,8 +165,8 @@ export default function LearningPathDetailPage() {
               </p>
 
               {/* Stats Row - Clean Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center gap-6 mb-8">
+                <div className="flex-1 bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                   <div className="flex items-center gap-4 text-gray-700">
                     <div className="p-3 bg-blue-100 rounded-xl">
                       <Clock className="w-6 h-6 text-blue-600" />
@@ -180,7 +180,7 @@ export default function LearningPathDetailPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="flex-1 bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                   <div className="flex items-center gap-4 text-gray-700">
                     <div className="p-3 bg-purple-100 rounded-xl">
                       <BookOpen className="w-6 h-6 text-purple-600" />
@@ -188,20 +188,6 @@ export default function LearningPathDetailPage() {
                     <div>
                       <div className="text-sm text-gray-500 font-medium">Courses</div>
                       <div className="text-2xl font-bold">{combo.total_courses}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-4 text-gray-700">
-                    <div className="p-3 bg-emerald-100 rounded-xl">
-                      <Users className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-500 font-medium">Students</div>
-                      <div className="text-2xl font-bold">
-                        {combo.enrollment_count?.toLocaleString()}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -295,7 +281,7 @@ export default function LearningPathDetailPage() {
                 key={course.id}
                 className={`group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
                   isCompleted
-                    ? "border-2 border-emerald-400 shadow-lg shadow-emerald-100"
+                    ? "border-2 border-slate-300 shadow-lg shadow-slate-100"
                     : hasStarted
                       ? "border-2 border-blue-400 shadow-lg shadow-blue-100"
                       : "border-2 border-gray-200 hover:border-gray-300"
@@ -307,7 +293,7 @@ export default function LearningPathDetailPage() {
                     <div
                       className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm shadow-lg ${
                         isCompleted
-                          ? "bg-gradient-to-r from-emerald-500 to-green-600 text-white"
+                          ? "bg-slate-700 text-white"
                           : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
                       }`}
                     >
@@ -331,7 +317,7 @@ export default function LearningPathDetailPage() {
                     <div
                       className={`flex-shrink-0 w-20 h-20 rounded-2xl ${
                         isCompleted
-                          ? "bg-green-500 shadow-lg"
+                          ? "bg-slate-600 shadow-lg"
                           : hasStarted
                             ? "bg-blue-500 shadow-lg"
                             : "bg-gray-300"
@@ -399,12 +385,6 @@ export default function LearningPathDetailPage() {
                           {course.total_lessons} lessons
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
-                        <Users className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-semibold text-gray-700">
-                          {course.enrollment_count?.toLocaleString() || 0}
-                        </span>
-                      </div>
                     </div>
 
                     {/* Enhanced Progress Section */}
@@ -414,7 +394,7 @@ export default function LearningPathDetailPage() {
                           <div
                             className={`w-2 h-2 rounded-full ${
                               isCompleted
-                                ? "bg-emerald-500"
+                                ? "bg-slate-600"
                                 : hasStarted
                                   ? "bg-blue-500 animate-pulse"
                                   : "bg-gray-400"
@@ -427,7 +407,7 @@ export default function LearningPathDetailPage() {
                         <span
                           className={`text-lg font-bold ${
                             isCompleted
-                              ? "text-emerald-600"
+                              ? "text-slate-700"
                               : hasStarted
                                 ? "text-blue-600"
                                 : "text-gray-500"
@@ -443,7 +423,7 @@ export default function LearningPathDetailPage() {
                           <div
                             className={`h-3 rounded-full transition-all duration-700 ease-out ${
                               isCompleted
-                                ? "bg-green-500"
+                                ? "bg-slate-600"
                                 : hasStarted
                                   ? "bg-blue-500"
                                   : "bg-gray-400"
@@ -461,7 +441,7 @@ export default function LearningPathDetailPage() {
                         <button
                           className={`group/btn px-8 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
                             isCompleted
-                              ? "bg-green-500 text-white hover:bg-green-600"
+                              ? "bg-slate-700 text-white hover:bg-slate-800"
                               : hasStarted
                                 ? "bg-blue-600 text-white hover:bg-blue-700"
                                 : "bg-gray-800 text-white hover:bg-gray-900"

@@ -55,7 +55,6 @@ export default function DashboardPage() {
     totalCourses: enrollment.combo.total_courses,
     completedCourses: enrollment.combo.completed_courses,
     estimatedTime: `${enrollment.courses.reduce((acc: number, c) => acc + (c.estimated_duration || 0), 0)} hours`,
-    enrolledStudents: enrollment.combo.enrollment_count,
     purchaseDate: new Date(enrollment.enrollment_date).toISOString().split("T")[0],
     bgColor: "bg-blue-50",
     textColor: "text-blue-600",

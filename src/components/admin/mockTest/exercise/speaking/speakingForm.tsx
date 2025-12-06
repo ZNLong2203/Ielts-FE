@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -33,10 +33,9 @@ import {
   createSpeakingMockTestExercise,
   updateSpeakingMockTestExercise,
   type ISpeakingMockTestExercise,
+  type ISpeakingMockTestExerciseUpdate,
 } from "@/api/speaking";
 import { SpeakingFormSchema, SpeakingFormUpdateSchema } from "@/validation/speaking";
-import { uploadAudio } from "@/api/file";
-import { Volume2, X, Upload } from "lucide-react";
 
 const PART_TYPE_OPTIONS = [
   { label: "Part 1 - Introduction & Interview", value: "part_1" },
@@ -90,7 +89,6 @@ const SpeakingForm = () => {
           question_text: "",
           expected_duration: 30,
           instructions: "",
-          audio_url: "",
         },
       ],
       time_limit: 5,
@@ -109,93 +107,25 @@ const SpeakingForm = () => {
     name: "questions",
   });
 
-  // Audio upload state for each question
-  const [audioFiles, setAudioFiles] = useState<Record<number, File | null>>({});
-  const [audioUrls, setAudioUrls] = useState<Record<number, string>>({});
-  const [isUploadingAudio, setIsUploadingAudio] = useState<Record<number, boolean>>({});
-
-  // Audio upload mutation
-  const uploadAudioMutation = useMutation({
-    mutationFn: async ({ file }: { file: File; questionIndex: number }) => {
-      return uploadAudio(file);
-    },
-    onSuccess: (result, variables) => {
-      const { questionIndex } = variables;
-      speakingForm.setValue(`questions.${questionIndex}.audio_url`, result.url);
-      setAudioUrls((prev: Record<number, string>) => ({ ...prev, [questionIndex]: result.url }));
-      setAudioFiles((prev: Record<number, File | null>) => ({ ...prev, [questionIndex]: null }));
-      setIsUploadingAudio((prev: Record<number, boolean>) => ({ ...prev, [questionIndex]: false }));
-      toast.success("Audio uploaded successfully!");
-    },
-    onError: (error: unknown, variables) => {
-      const { questionIndex } = variables;
-      setIsUploadingAudio((prev: Record<number, boolean>) => ({ ...prev, [questionIndex]: false }));
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
-        : undefined;
-      toast.error(errorMessage || "Failed to upload audio");
-    },
-  });
-
-  const handleAudioFileSelected = async (file: File, questionIndex: number) => {
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      toast.error(`Audio file is too large (${fileSizeMB}MB). Maximum size is 10MB.`);
-      return;
-    }
-
-    const validTypes = [
-      "audio/mpeg",
-      "audio/wav",
-      "audio/ogg",
-      "audio/mp3",
-      "audio/m4a",
-      "audio/webm",
-    ];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Invalid audio format. Please use MP3, WAV, OGG, M4A, or WEBM.");
-      return;
-    }
-
-    setAudioFiles((prev: Record<number, File | null>) => ({ ...prev, [questionIndex]: file }));
-    setIsUploadingAudio((prev: Record<number, boolean>) => ({ ...prev, [questionIndex]: true }));
-    
-    const url = URL.createObjectURL(file);
-    setAudioUrls((prev: Record<number, string>) => ({ ...prev, [questionIndex]: url }));
-
-    try {
-      await uploadAudioMutation.mutateAsync({ file, questionIndex });
-    } catch (error) {
-      console.error("Audio upload error:", error);
-      setAudioUrls((prev: Record<number, string>) => {
-        const newUrls = { ...prev };
-        delete newUrls[questionIndex];
-        return newUrls;
-      });
-    }
-  };
-
-  const removeAudio = (questionIndex: number) => {
-    setAudioFiles((prev: Record<number, File | null>) => {
-      const newFiles = { ...prev };
-      delete newFiles[questionIndex];
-      return newFiles;
-    });
-    setAudioUrls((prev: Record<number, string>) => {
-      const newUrls = { ...prev };
-      delete newUrls[questionIndex];
-      return newUrls;
-    });
-    speakingForm.setValue(`questions.${questionIndex}.audio_url`, undefined);
-  };
 
   // Main mutations
   const createSpeakingExerciseMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof SpeakingFormSchema>) => {
+      // Clean up optional fields - convert empty strings to undefined
+      const cleanedQuestions = formData.questions.map((q) => ({
+        question_text: q.question_text,
+        ...(q.expected_duration ? { expected_duration: q.expected_duration } : {}),
+        ...(q.instructions && q.instructions.trim() ? { instructions: q.instructions } : {}),
+      }));
+      
       const payload = {
         ...formData,
         test_section_id: testSectionId || formData.test_section_id,
+        questions: cleanedQuestions,
+        ...(formData.instruction && formData.instruction.trim() ? { instruction: formData.instruction } : {}),
+        ...(formData.additional_instructions && formData.additional_instructions.trim() 
+          ? { additional_instructions: formData.additional_instructions } 
+          : {}),
       };
       return createSpeakingMockTestExercise(payload);
     },
@@ -207,19 +137,51 @@ const SpeakingForm = () => {
       );
     },
     onError: (error: unknown) => {
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
-        : undefined;
+      let errorMessage: string | undefined;
+      try {
+        if (error && typeof error === 'object' && 'response' in error) {
+          const err = error as { response?: { data?: { message?: string } } };
+          errorMessage = err.response?.data?.message;
+        } else if (error && typeof error === 'object' && 'message' in error) {
+          errorMessage = String((error as { message?: unknown }).message);
+        }
+      } catch {
+        // Ignore parsing errors
+      }
       toast.error(errorMessage || "Failed to create speaking exercise");
     },
   });
 
   const updateSpeakingExerciseMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof SpeakingFormUpdateSchema>): Promise<ISpeakingMockTestExercise> => {
-      const payload = {
+      // Clean up optional fields - convert empty strings to undefined
+      const cleanedQuestions = formData.questions?.map((q) => ({
+        question_text: q.question_text,
+        ...(q.expected_duration ? { expected_duration: q.expected_duration } : {}),
+        ...(q.instructions && q.instructions.trim() ? { instructions: q.instructions } : {}),
+      }));
+      
+      const payload: ISpeakingMockTestExerciseUpdate = {
         ...formData,
         test_section_id: testSectionId || formData.test_section_id,
       };
+      
+      if (cleanedQuestions) {
+        payload.questions = cleanedQuestions;
+      }
+      
+      if (formData.instruction && formData.instruction.trim()) {
+        payload.instruction = formData.instruction;
+      } else if (formData.instruction === '') {
+        payload.instruction = undefined;
+      }
+      
+      if (formData.additional_instructions && formData.additional_instructions.trim()) {
+        payload.additional_instructions = formData.additional_instructions;
+      } else if (formData.additional_instructions === '') {
+        payload.additional_instructions = undefined;
+      }
+      
       return updateSpeakingMockTestExercise(speakingExerciseId!, payload);
     },
     onSuccess: () => {
@@ -233,9 +195,17 @@ const SpeakingForm = () => {
       );
     },
     onError: (error: unknown) => {
-      const errorMessage = error instanceof Error && 'response' in error 
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
-        : undefined;
+      let errorMessage: string | undefined;
+      try {
+        if (error && typeof error === 'object' && 'response' in error) {
+          const err = error as { response?: { data?: { message?: string } } };
+          errorMessage = err.response?.data?.message;
+        } else if (error && typeof error === 'object' && 'message' in error) {
+          errorMessage = String((error as { message?: unknown }).message);
+        }
+      } catch {
+        // Ignore parsing errors
+      }
       toast.error(errorMessage || "Failed to update speaking exercise");
     },
   });
@@ -252,11 +222,10 @@ const SpeakingForm = () => {
           question_text?: string;
           expected_duration?: number;
           instructions?: string;
-          audio_url?: string;
         }>;
       }
       const questionGroups = ((speakingExerciseData as unknown) as { question_groups?: QuestionGroup[] }).question_groups || [];
-      let questions: Array<{ question_text: string; expected_duration?: number; instructions?: string; audio_url?: string }> = [];
+      let questions: Array<{ question_text: string; expected_duration?: number; instructions?: string }> = [];
       
       if (questionGroups.length > 0) {
         // Load from question_groups (new structure)
@@ -268,7 +237,6 @@ const SpeakingForm = () => {
               question_text: question.question_text || group.group_instruction || '',
               expected_duration: question.expected_duration,
               instructions: group.group_instruction || question.instructions,
-              audio_url: question.audio_url,
             }));
           } else {
             // If group has no questions, create one from group_instruction
@@ -276,7 +244,6 @@ const SpeakingForm = () => {
               question_text: group.group_instruction || '',
               expected_duration: undefined,
               instructions: group.group_instruction,
-              audio_url: undefined,
             }];
           }
         });
@@ -285,15 +252,13 @@ const SpeakingForm = () => {
         questions = content.questions || speakingExerciseData.questions || [];
       }
       
-      const mappedQuestions = questions.length > 0 ? questions.map((q: { question_text: string; expected_duration?: number; instructions?: string; audio_url?: string }) => ({
+      const mappedQuestions = questions.length > 0 ? questions.map((q: { question_text: string; expected_duration?: number; instructions?: string }) => ({
         ...q,
-        audio_url: q.audio_url || "",
       })) : [
         {
           question_text: "",
           expected_duration: 30,
           instructions: "",
-          audio_url: "",
         },
       ];
 
@@ -308,14 +273,6 @@ const SpeakingForm = () => {
         additional_instructions: content.additionalInstructions || speakingExerciseData.additional_instructions || "",
       });
 
-      // Set audioUrls state for existing audio files
-      const audioUrlsMap: Record<number, string> = {};
-      mappedQuestions.forEach((q: { audio_url?: string }, index: number) => {
-        if (q.audio_url) {
-          audioUrlsMap[index] = q.audio_url;
-        }
-      });
-      setAudioUrls(audioUrlsMap);
     }
   }, [speakingExerciseData, isEditing, speakingForm, testSectionId]);
 
@@ -508,76 +465,6 @@ const SpeakingForm = () => {
                             />
                           </div>
 
-                          {/* Audio Upload Section */}
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              Question Audio (optional)
-                            </label>
-                            {audioUrls[index] || speakingForm.watch(`questions.${index}.audio_url`) ? (
-                              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border">
-                                <div className="flex-1 flex items-center space-x-3">
-                                  <Volume2 className="h-5 w-5 text-orange-600" />
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900">
-                                      Audio file uploaded
-                                    </p>
-                                    <audio
-                                      src={audioUrls[index] || speakingForm.watch(`questions.${index}.audio_url`) || ""}
-                                      controls
-                                      className="mt-2 w-full"
-                                    />
-                                  </div>
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeAudio(index)}
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                <input
-                                  type="file"
-                                  accept="audio/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handleAudioFileSelected(file, index);
-                                    }
-                                  }}
-                                  className="hidden"
-                                  id={`audio-upload-${index}`}
-                                />
-                                <label
-                                  htmlFor={`audio-upload-${index}`}
-                                  className="flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition-colors"
-                                >
-                                  {isUploadingAudio[index] ? (
-                                    <>
-                                      <Loader2 className="h-5 w-5 animate-spin text-orange-600" />
-                                      <span className="text-sm text-gray-600">Uploading...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Upload className="h-5 w-5 text-gray-400" />
-                                      <span className="text-sm text-gray-600">
-                                        Upload Audio File (MP3, WAV, OGG, M4A, WEBM)
-                                      </span>
-                                    </>
-                                  )}
-                                </label>
-                                {audioFiles[index] && (
-                                  <p className="text-xs text-gray-500">
-                                    Selected: {audioFiles[index]?.name}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -590,7 +477,6 @@ const SpeakingForm = () => {
                           question_text: "",
                           expected_duration: 30,
                           instructions: "",
-                          audio_url: "",
                         })
                       }
                       className="flex items-center space-x-2 w-full"

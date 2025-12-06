@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useSelector } from "react-redux"
-import { ArrowLeft, Clock, Users, BookOpen, PlayCircle, CheckCircle } from "lucide-react"
+import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle } from "lucide-react"
 import { getAdminCourseDetail } from "@/api/course"
 import { ICourse } from "@/interface/course"
 import { selectUserId } from "@/redux/features/user/userSlice"
@@ -147,8 +147,8 @@ export default function CourseDetailPage() {
                 </p>
 
                 {/* Stats - Clean Design */}
-                <div className="grid grid-cols-3 gap-6 mb-8">
-                  <div className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow">
+                <div className="flex items-center gap-6 mb-8">
+                  <div className="flex-1 bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <Clock className="w-5 h-5 text-blue-600" />
@@ -159,7 +159,7 @@ export default function CourseDetailPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow">
+                  <div className="flex-1 bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-purple-100 rounded-lg">
                         <BookOpen className="w-5 h-5 text-purple-600" />
@@ -167,17 +167,6 @@ export default function CourseDetailPage() {
                       <div>
                         <div className="text-sm text-gray-500">Sections</div>
                         <div className="text-lg font-bold text-gray-900">{course.sections?.length || 0}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-shadow">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-100 rounded-lg">
-                        <Users className="w-5 h-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-500">Students</div>
-                        <div className="text-lg font-bold text-gray-900">0</div>
                       </div>
                     </div>
                   </div>
@@ -294,12 +283,6 @@ export default function CourseDetailPage() {
                 <span className="text-slate-600 font-medium">Duration</span>
                 <span className="font-bold text-slate-800">
                   {course.estimated_duration} hours
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600 font-medium">Students</span>
-                <span className="font-bold text-slate-800">
-                  0
                 </span>
               </div>
             </div>

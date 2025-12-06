@@ -15,3 +15,10 @@ export const generateCertificate = async (comboEnrollmentId: string) => {
   return response.data.data;
 };
 
+export const getCertificateSVG = async (comboEnrollmentId: string) => {
+  const response = await api.get(`${BASE_URL}${API_URL.CERTIFICATES}/${comboEnrollmentId}/view`, {
+    responseType: 'text',
+  });
+  return response.data;
+};
+
