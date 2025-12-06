@@ -74,8 +74,8 @@ const OrderDetail = () => {
 
   // Update order status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: (status: OrderStatus) => {
-      return updateOrderStatus(slug, status);
+    mutationFn: (updates: { status?: string; paymentStatus?: string }) => {
+      return updateOrderStatus(slug, updates);
     },
     onSuccess: (data) => {
       toast.success(data?.message || "Order status updated successfully");
@@ -172,18 +172,7 @@ const OrderDetail = () => {
               />
             </div>
 
-            <div className="flex items-center space-x-3">
-              <Button
-                variant="outline"
-                size={"sm"}
-                onClick={() =>
-                  router.push(`${ROUTES.ADMIN_ORDERS}/${slug}/update`)
-                }
-                className="flex items-center space-x-2"
-              >
-                <Edit className="h-4 w-4" />
-                <span>Update Order</span>
-              </Button>
+            <div className="flex space-x-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -194,75 +183,66 @@ const OrderDetail = () => {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
-
-            <div className="flex items-center space-x-3">
-              <Dialog
-                open={isStatusDialogOpen}
-                onOpenChange={setIsStatusDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Update Status
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Update Order Status</DialogTitle>
-                    <DialogDescription>
-                      Change the order status and payment status as needed.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Order Status
-                      </label>
-                      <Select
-                        value={selectedStatus}
-                        onValueChange={setSelectedStatus}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select order status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {orderStatusOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsStatusDialogOpen(false)}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleStatusUpdate}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      {updateStatusMutation.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Updating...
-                        </>
-                      ) : (
-                        "Update Status"
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
           </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Dialog
+            open={isStatusDialogOpen}
+            onOpenChange={setIsStatusDialogOpen}
+          >
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Update Order Status</DialogTitle>
+                <DialogDescription>
+                  Change the order status and payment status as needed.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Order Status</label>
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={setSelectedStatus}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select order status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {orderStatusOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsStatusDialogOpen(false)}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleStatusUpdate}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  {updateStatusMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Status"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -537,15 +517,6 @@ const OrderDetail = () => {
                   Update Status
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Invoice
-                </Button>
-
-                <Button variant="outline" className="w-full justify-start">
-                  <Receipt className="h-4 w-4 mr-2" />
-                  View Receipt
-                </Button>
               </CardContent>
             </Card>
           </div>

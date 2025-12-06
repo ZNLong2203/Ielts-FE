@@ -301,7 +301,7 @@ const CourseComboDetail = () => {
 
                     {/* Total Value */}
                     <div className="border-t pt-4">
-                      <div className="flex justify-between items-center text-lg font-semibold">
+                      <div className="flex justify-between items-center text-md font-semibold">
                         <span className="text-gray-700">
                           Total Individual Value:
                         </span>
@@ -324,46 +324,6 @@ const CourseComboDetail = () => {
                     <p>No courses included in this combo</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Statistics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-orange-600" />
-                  <span>Statistics</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Users className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-blue-700">
-                      {data.enrollment_count || 0}
-                    </div>
-                    <div className="text-sm text-blue-600">Enrolled</div>
-                  </div>
-
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <ShoppingCart className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-purple-700">
-                      {(
-                        (data.enrollment_count || 0) *
-                        (Number(data.combo_price) || 0)
-                      ).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-purple-600">Revenue (VND)</div>
-                  </div>
-
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <BookOpen className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-yellow-700">
-                      {(data.total_lessons || 0).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-yellow-600">Total lessons</div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 

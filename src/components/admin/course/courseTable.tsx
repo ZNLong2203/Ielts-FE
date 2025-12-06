@@ -52,7 +52,7 @@ const CourseTable = () => {
   });
 
   // Add price to filter fields
-  const filterFields = ["title", "skill_focus", "difficulty_level", "is_featured", "price", "created_at"];
+  const filterFields = ["title", "skill_focus", "is_featured", "price", "created_at"];
 
   // Use the filter hook
   const {
@@ -105,20 +105,6 @@ const CourseTable = () => {
       icon: (
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
-    },
-    {
-      key: "difficulty_level",
-      label: "Difficulty Level",
-      placeholder: "Select difficulty level...",
-      type: "select" as const,
-      icon: (
-        <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-      ),
-      options: [
-        { label: "Beginner", value: "beginner" },
-        { label: "Intermediate", value: "intermediate" },
-        { label: "Advanced", value: "advanced" },
-      ],
     },
     {
       key: "is_featured",

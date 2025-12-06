@@ -64,7 +64,7 @@ export const cancelOrder = async (id: string) => {
 };
 
 // Update order status (admin)
-export const updateOrderStatus = async (id: string, data: IOrderUpdate) => {
+export const updateOrderStatus = async (id: string, data: any) => {
   const response = await api.patch(`${BASE_URL}${API_URL.ORDERS}/${id}/status`, data);
   console.log("Update order status response:", response);
   return response.data;

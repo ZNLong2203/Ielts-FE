@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
+import { Input } from "@/components/ui/input";
 
 import {
   ArrowRight,
@@ -20,11 +21,16 @@ import {
   AlertCircle,
   CheckCircle,
   Calculator,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Filter,
+  Loader2,
 } from "lucide-react";
 
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -39,12 +45,19 @@ import {
 } from "@/api/course";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const CourseComboForm = () => {
   const router = useRouter();
   const param = useParams();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+
+  // Pagination states
+  const currentCoursePage = Number(searchParams.get("coursePage")) || 1;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const coursesPerPage = 12;
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
@@ -65,10 +78,17 @@ const CourseComboForm = () => {
     enabled: slug !== undefined && slug !== "",
   });
 
-  // Get all courses for selection
-  const { data: coursesData } = useQuery({
-    queryKey: ["courses"],
-    queryFn: () => getAllCoursesForAdmin({ page: 1 }),
+  // Get all courses for selection with API pagination
+  const courseQueryParams = {
+    page: currentCoursePage,
+  };
+
+  const { 
+    data: coursesData, 
+    isLoading: isCoursesLoading 
+  } = useQuery({
+    queryKey: ["courses", courseQueryParams],
+    queryFn: () => getAllCoursesForAdmin(courseQueryParams),
   });
 
   const createComboMutation = useMutation({
@@ -127,14 +147,37 @@ const CourseComboForm = () => {
     },
   });
 
-  // Course options for selection
-  const courseOptions =
-    coursesData?.result?.map((course) => ({
+  // Process courses data with client-side filtering and get pagination info
+  const { 
+    courseOptions, 
+    paginatedCourses, 
+    // Pagination metadata from API
+    currentPage,
+    pageSize,
+    totalPages,
+    totalItems,
+  } = useMemo(() => {
+    const courses = coursesData?.result || [];
+    
+    // Map to course options
+    const options = courses.map((course: any) => ({
       id: course.id,
       title: course.title,
       price: course.price,
-      level: course.difficulty_level,
-    })) || [];
+      level: course.difficulty_level || "Unknown",
+    }));
+
+  
+    return {
+      courseOptions: options,
+      paginatedCourses: options, // Since API handles pagination, use options directly
+      // API pagination metadata
+      currentPage: coursesData?.meta?.current ?? 1,
+      pageSize: coursesData?.meta?.pageSize ?? coursesPerPage,
+      totalPages: coursesData?.meta?.pages ?? 1,
+      totalItems: coursesData?.meta?.total ?? 0,
+    };
+  }, [coursesData, selectedLevel]);
 
   useEffect(() => {
     if (data) {
@@ -208,10 +251,28 @@ const CourseComboForm = () => {
     }
   };
 
+  // Search and filter handlers
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    // Reset to first page when searching
+    handleCoursePageChange(1);
+  };
+
+  // Enhanced pagination handler like courseTable
+  const handleCoursePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    
+    // Update URL with course page parameter
+    const params = new URLSearchParams(searchParams);
+    params.set("coursePage", newPage.toString());
+    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+  };
+
   // Watch for discount percentage changes to auto-calculate combo price
   const watchDiscountPercentage = comboForm.watch("discount_percentage");
   const watchOriginalPrice = comboForm.watch("original_price");
-  const watchCourseIds = comboForm.watch("course_ids"); // Watch course_ids
+  const watchCourseIds = comboForm.watch("course_ids");
 
   useEffect(() => {
     const originalPrice = Number(watchOriginalPrice) || 0;
@@ -341,10 +402,68 @@ const CourseComboForm = () => {
                     </p>
                   </CardHeader>
                   <CardContent>
-                    {courseOptions.length > 0 ? (
-                      <div className="space-y-4">
+                    {/* Search and Filter Controls */}
+                    <div className="mb-6 space-y-4">
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Search */}
+                        <div className="flex-1">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              placeholder="Search courses..."
+                              value={searchTerm}
+                              onChange={handleSearchChange}
+                              className="pl-10"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Enhanced Results Info like courseTable */}
+                      <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <span>
+                            Showing{" "}
+                            <span className="font-medium text-gray-900">
+                              {(currentPage - 1) * pageSize + 1}
+                            </span>{" "}
+                            to{" "}
+                            <span className="font-medium text-gray-900">
+                              {Math.min(currentPage * pageSize, totalItems)}
+                            </span>{" "}
+                            of{" "}
+                            <span className="font-medium text-gray-900">
+                              {totalItems}
+                            </span>{" "}
+                            courses
+                            {searchTerm && (
+                              <span className="text-blue-600 ml-1">
+                                for "{searchTerm}"
+                              </span>
+                            )}
+                            {selectedLevel && (
+                              <span className="text-purple-600 ml-1">
+                                in {selectedLevel} level
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Page {currentPage} of {totalPages}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isCoursesLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-gray-400 mr-2" />
+                        <span className="text-gray-500">Loading courses...</span>
+                      </div>
+                    ) : paginatedCourses.length > 0 ? (
+                      <div className="space-y-6">
+                        {/* Course Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {courseOptions.map((course) => (
+                          {paginatedCourses.map((course) => (
                             <div
                               key={course.id}
                               className={`p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
@@ -383,13 +502,122 @@ const CourseComboForm = () => {
                           ))}
                         </div>
 
+                        {/* Enhanced Pagination like courseTable */}
+                        {totalPages > 1 && (
+                          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+                            <div className="flex items-center space-x-2 text-sm text-gray-600">
+                              <span>
+                                {totalItems} course{totalItems !== 1 ? "s" : ""} total
+                                {selectedLevel && (
+                                  <span className="text-purple-600 ml-1">
+                                    ({paginatedCourses.length} in {selectedLevel})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+
+                            {/* Pagination Controls */}
+                            <div className="flex items-center space-x-2">
+                              {/* First Page */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCoursePageChange(1)}
+                                disabled={currentPage <= 1}
+                                className="hidden md:flex"
+                              >
+                                First
+                              </Button>
+
+                              {/* Previous Page */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCoursePageChange(currentPage - 1)}
+                                disabled={currentPage <= 1}
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                                <span className="ml-1 hidden md:inline">Previous</span>
+                              </Button>
+
+                              {/* Page Numbers */}
+                              <div className="flex items-center space-x-1">
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                  let pageNum;
+                                  if (totalPages <= 5) {
+                                    pageNum = i + 1;
+                                  } else if (currentPage <= 3) {
+                                    pageNum = i + 1;
+                                  } else if (currentPage >= totalPages - 2) {
+                                    pageNum = totalPages - 4 + i;
+                                  } else {
+                                    pageNum = currentPage - 2 + i;
+                                  }
+
+                                  return (
+                                    <Button
+                                      key={pageNum}
+                                      type="button"
+                                      variant={
+                                        pageNum === currentPage ? "default" : "outline"
+                                      }
+                                      size="sm"
+                                      className="w-8 h-8 p-0"
+                                      onClick={() => handleCoursePageChange(pageNum)}
+                                    >
+                                      {pageNum}
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Next Page */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCoursePageChange(currentPage + 1)}
+                                disabled={currentPage >= totalPages}
+                              >
+                                <span className="mr-1 hidden md:inline">Next</span>
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
+
+                              {/* Last Page */}
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCoursePageChange(totalPages)}
+                                disabled={currentPage >= totalPages}
+                                className="hidden md:flex"
+                              >
+                                Last
+                              </Button>
+
+                              {/* Page Info */}
+                              <div className="hidden md:flex items-center space-x-2 ml-4">
+                                <span className="text-sm text-gray-600">Page</span>
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-sm font-medium">{currentPage}</span>
+                                  <span className="text-sm text-gray-600">
+                                    of {totalPages}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Selected Courses Summary */}
                         {watchCourseIds && watchCourseIds.length > 0 && (
                           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <h4 className="text-sm font-medium text-blue-900 mb-2">
                               Selected Courses ({watchCourseIds.length})
                             </h4>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-40 overflow-y-auto">
                               {selectedCoursesInfo.map((course) => (
                                 <div
                                   key={course.id}
@@ -430,13 +658,32 @@ const CourseComboForm = () => {
                     ) : (
                       <div className="text-center py-8 text-gray-500">
                         <BookOpen className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                        <p>No courses available</p>
+                        <p>
+                          {searchTerm || selectedLevel
+                            ? "No courses found matching your criteria"
+                            : "No courses available"}
+                        </p>
+                        {(searchTerm || selectedLevel) && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSearchTerm("");
+                              setSelectedLevel("");
+                              handleCoursePageChange(1);
+                            }}
+                            className="mt-2"
+                          >
+                            Clear filters
+                          </Button>
+                        )}
                       </div>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Pricing Information */}
+                {/* Pricing Information - Same as before */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -616,7 +863,7 @@ const CourseComboForm = () => {
                 </Card>
               </div>
 
-              {/* Sidebar */}
+              {/* Enhanced Sidebar */}
               <div className="space-y-6">
                 {/* Enhanced Combo Summary */}
                 <Card className="border-green-200 bg-green-50/50">
@@ -690,8 +937,7 @@ const CourseComboForm = () => {
                     <p>• Select complementary courses that work well together</p>
                     <p>• Set competitive original price based on market research</p>
                     <p>• Use appropriate discount percentage to attract students</p>
-                    <p>• Ensure final combo price provides good value</p>
-                    <p>• Consider different skill levels and progression paths</p>
+                    <p>• Navigate through pages to see all available courses</p>
                   </CardContent>
                 </Card>
               </div>

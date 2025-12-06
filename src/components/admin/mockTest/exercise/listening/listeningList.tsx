@@ -18,15 +18,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
+import AdminFilter from "@/components/filter/admin-filter";
+import { useFilter } from "@/hook/useFilter";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import {
@@ -35,10 +30,11 @@ import {
   Edit3,
   Trash2,
   Clock,
-  Target,
   Eye,
   Search,
-  CheckCircle,
+  Filter,
+  Calendar,
+  Target,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";
@@ -60,7 +56,7 @@ const DIFFICULTY_LABELS = {
   "5": { label: "Advanced", color: "bg-red-100 text-red-800", stars: 5 },
 } as const;
 
-type SortByType = "title" | "difficulty" | "ordering" | "created_at";
+type SortByType = "title" | "difficulty_level" | "ordering" | "created_at";
 
 const ListeningList = () => {
   const searchParams = useSearchParams();
@@ -75,7 +71,6 @@ const ListeningList = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<SortByType>("ordering");
-  const [filterDifficulty, setFilterDifficulty] = useState<string>("0");
 
   // Queries
   const {
@@ -90,6 +85,64 @@ const ListeningList = () => {
     },
     enabled: !!sectionId,
   });
+
+  // ✅ Prepare data for useFilter hook
+  const exercisesData = useMemo(() => {
+    if (!listeningExercises?.exercises || !Array.isArray(listeningExercises.exercises)) {
+      return [];
+    }
+
+    return listeningExercises.exercises.map((exercise: any) => ({
+      ...exercise,
+      // Map nested fields for easier filtering
+      difficulty_level: exercise.reading_passage?.difficulty_level || "3",
+      passage_title: exercise.reading_passage?.title || "",
+      has_audio: exercise.audio_url ? "yes" : "no",
+    }));
+  }, [listeningExercises]);
+
+  // ✅ Use useFilter hook
+  const {
+    filters,
+    isFilterVisible,
+    filteredData,
+    handleFilterChange,
+    handleClearFilters,
+    handleClose,
+    setIsFilterVisible,
+  } = useFilter(exercisesData, ["title", "difficulty_level", "has_audio", "created_at"]);
+
+  const filterFieldConfigs = [
+    {
+      key: "difficulty_level",
+      label: "Difficulty Level",
+      placeholder: "Select difficulty",
+      icon: <Target className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />,
+      type: "select" as const,
+      options: [
+        { label: "Beginner", value: "1" },
+        { label: "Elementary", value: "2" },
+        { label: "Intermediate", value: "3" },
+        { label: "Upper Intermediate", value: "4" },
+        { label: "Advanced", value: "5" },
+      ],
+    },
+    {
+      key: "created_at",
+      label: "Created",
+      placeholder: "Select time period",
+      icon: <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />,
+      type: "select" as const,
+      options: [
+        { label: "Last 7 days", value: "7d" },
+        { label: "Last 30 days", value: "30d" },
+        { label: "Last 3 months", value: "3m" },
+        { label: "Last 6 months", value: "6m" },
+        { label: "Last year", value: "1y" },
+        { label: "Over 1 year", value: "1y+" },
+      ],
+    },
+  ];
 
   // Delete mutation
   const deleteExerciseMutation = useMutation({
@@ -151,62 +204,49 @@ const ListeningList = () => {
     }
   };
 
- // Sửa filter logic
-const filteredAndSortedExercises = useMemo(() => {
-  if (
-    !listeningExercises?.exercises ||
-    !Array.isArray(listeningExercises.exercises)
-  ) {
-    return [];
-  }
+  const finalFilteredExercises = useMemo(() => {
+    let result = [...filteredData];
 
-  let filtered = listeningExercises.exercises.filter((exercise: any) => {
-    if (!exercise) return false;
-
-    const title = exercise.title || "";
-    const passageTitle = exercise.reading_passage?.title || "";
-
-    const matchesSearch =
-      searchTerm === "" ||
-      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      passageTitle.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Sửa logic này
-    const matchesDifficulty =
-      filterDifficulty === "0" || // "0" means "All Difficulties"
-      exercise.reading_passage?.difficulty_level === filterDifficulty;
-    return matchesSearch && matchesDifficulty;
-  });
-
-  // Sort exercises
-  filtered.sort((a: any, b: any) => {
-    if (!a || !b) return 0;
-
-    switch (sortBy) {
-      case "title":
-        return (a.title || "").localeCompare(b.title || "");
-      case "difficulty":
-        const aDiff =
-          a.reading_passage?.difficulty_level;
-        const bDiff =
-          b.reading_passage?.difficulty_level;
-        return aDiff.localeCompare(bDiff);
-      case "ordering":
-        return (a.ordering || 0) - (b.ordering || 0);
-      case "created_at":
-        const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
-        const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return bDate - aDate;
-      default:
-        return (a.ordering || 0) - (b.ordering || 0);
+    // Apply search term
+    if (searchTerm) {
+      result = result.filter((exercise: any) => {
+        const title = exercise.title || "";
+        const passageTitle = exercise.passage_title || "";
+        const searchLower = searchTerm.toLowerCase();
+        
+        return (
+          title.toLowerCase().includes(searchLower) ||
+          passageTitle.toLowerCase().includes(searchLower)
+        );
+      });
     }
-  });
 
-  return filtered;
-}, [listeningExercises, searchTerm, filterDifficulty, sortBy]);
+    // Apply sorting
+    result.sort((a: any, b: any) => {
+      if (!a || !b) return 0;
+
+      switch (sortBy) {
+        case "title":
+          return (a.title || "").localeCompare(b.title || "");
+        case "difficulty_level":
+          return (a.difficulty_level || "3").localeCompare(b.difficulty_level || "3");
+        case "ordering":
+          return (a.ordering || 0) - (b.ordering || 0);
+        case "created_at":
+          const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return bDate - aDate;
+        default:
+          return (a.ordering || 0) - (b.ordering || 0);
+      }
+    });
+
+    return result;
+  }, [filteredData, searchTerm, sortBy]);
+
   // Computed stats
   const stats = useMemo(() => {
-    const exercises = listeningExercises?.exercises || [];
+    const exercises = exercisesData;
     const totalExercises = exercises.length;
 
     if (totalExercises === 0) {
@@ -227,10 +267,10 @@ const filteredAndSortedExercises = useMemo(() => {
       totalExercises,
       avgTimeLimit,
     };
-  }, [listeningExercises]);
+  }, [exercisesData]);
 
   console.log("Listening Exercises Data:", listeningExercises);
-  console.log("Filtered Exercises:", filteredAndSortedExercises);
+  console.log("Final Filtered Exercises:", finalFilteredExercises);
 
   // Loading state
   if (isLoading) {
@@ -302,8 +342,9 @@ const filteredAndSortedExercises = useMemo(() => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search and Filters */}
-        <div className="mb-8">
+        {/* ✅ Search and Filter Controls */}
+        <div className="mb-8 space-y-4">
+          {/* Quick Search and Controls */}
           <Card>
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -312,7 +353,7 @@ const filteredAndSortedExercises = useMemo(() => {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
                       type="text"
-                      placeholder="Search exercises by title or audio..."
+                      placeholder="Quick search exercises by title or audio..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -321,47 +362,41 @@ const filteredAndSortedExercises = useMemo(() => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Select
-                    value={filterDifficulty}
-                    onValueChange={(value) => setFilterDifficulty(value)}
+                  {/* ✅ Advanced Filter Toggle */}
+                  <Button
+                    variant={isFilterVisible ? "default" : "outline"}
+                    onClick={() => setIsFilterVisible(!isFilterVisible)}
+                    className="flex items-center space-x-2"
                   >
-                    <SelectTrigger className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                      <SelectValue placeholder="All Difficulties" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">All Difficulties</SelectItem>
-                      <SelectItem value="1">Beginner</SelectItem>
-                      <SelectItem value="2">Elementary</SelectItem>
-                      <SelectItem value="3">Intermediate</SelectItem>
-                      <SelectItem value="4">Upper Intermediate</SelectItem>
-                      <SelectItem value="5">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={sortBy}
-                    onValueChange={(value) => setSortBy(value as SortByType)}
-                  >
-                    <SelectTrigger className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-                      <SelectValue placeholder="Sort By" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ordering">Sort by Order</SelectItem>
-                      <SelectItem value="title">Sort by Title</SelectItem>
-                      <SelectItem value="difficulty">
-                        Sort by Difficulty
-                      </SelectItem>
-                      <SelectItem value="created_at">Sort by Date</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <Filter className="h-4 w-4" />
+                    <span>Advanced Filters</span>
+                    {Object.values(filters).filter(v => v !== "").length > 0 && (
+                      <Badge variant="secondary" className="ml-1 px-1 py-0 text-xs">
+                        {Object.values(filters).filter(v => v !== "").length}
+                      </Badge>
+                    )}
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* ✅ Advanced Filter Panel */}
+          <AdminFilter
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+            onClose={handleClose}
+            isVisible={isFilterVisible}
+            totalItems={stats.totalExercises}
+            filteredCount={finalFilteredExercises.length}
+            label="Listening Exercises"
+            fieldConfigs={filterFieldConfigs}
+          />
         </div>
 
         {/* Exercise Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -397,11 +432,35 @@ const filteredAndSortedExercises = useMemo(() => {
               </div>
             </CardContent>
           </Card>
+
+          {/* ✅ Filtered Results Stats */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Filter className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Showing Results
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {finalFilteredExercises.length}
+                    {finalFilteredExercises.length !== stats.totalExercises && (
+                      <span className="text-sm text-gray-500 ml-1">
+                        / {stats.totalExercises}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Exercise List */}
         <div className="space-y-6">
-          {filteredAndSortedExercises.length === 0 ? (
+          {finalFilteredExercises.length === 0 ? (
             <Card>
               <CardContent className="p-12">
                 <div className="text-center">
@@ -409,16 +468,16 @@ const filteredAndSortedExercises = useMemo(() => {
                     <Headphones className="h-12 w-12 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {searchTerm || filterDifficulty
+                    {searchTerm || Object.values(filters).some(v => v !== "")
                       ? "No exercises found"
                       : "No listening exercises yet"}
                   </h3>
                   <p className="text-gray-500 mb-6 max-w-sm mx-auto">
-                    {searchTerm || filterDifficulty
+                    {searchTerm || Object.values(filters).some(v => v !== "")
                       ? "Try adjusting your search criteria or filters."
                       : "Create your first listening comprehension exercise to get started."}
                   </p>
-                  {!(searchTerm || filterDifficulty) && (
+                  {!(searchTerm || Object.values(filters).some(v => v !== "")) && (
                     <Button
                       onClick={handleCreateNew}
                       className="bg-purple-600 hover:bg-purple-700"
@@ -432,9 +491,8 @@ const filteredAndSortedExercises = useMemo(() => {
               </CardContent>
             </Card>
           ) : (
-            filteredAndSortedExercises.map((exercise: any) => {
-              const difficultyLevel =
-                exercise.listening_passage?.difficulty_level || "3";
+            finalFilteredExercises.map((exercise: any) => {
+              const difficultyLevel = exercise.difficulty_level || "3";
               const difficulty =
                 DIFFICULTY_LABELS[
                   difficultyLevel as keyof typeof DIFFICULTY_LABELS
@@ -556,12 +614,21 @@ const filteredAndSortedExercises = useMemo(() => {
           )}
         </div>
 
-        {/* Results summary */}
-        {filteredAndSortedExercises.length > 0 && (
+        {/* ✅ Enhanced Results Summary */}
+        {finalFilteredExercises.length > 0 && (
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
-              Showing {filteredAndSortedExercises.length} of{" "}
-              {stats.totalExercises} exercises
+              Showing {finalFilteredExercises.length} of {stats.totalExercises} exercises
+              {searchTerm && (
+                <span className="text-purple-600 ml-1">
+                  matching "{searchTerm}"
+                </span>
+              )}
+              {Object.values(filters).filter(v => v !== "").length > 0 && (
+                <span className="text-blue-600 ml-1">
+                  with {Object.values(filters).filter(v => v !== "").length} filter(s) applied
+                </span>
+              )}
             </p>
           </div>
         )}

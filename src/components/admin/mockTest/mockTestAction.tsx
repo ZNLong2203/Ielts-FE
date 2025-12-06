@@ -1,6 +1,5 @@
 "use client"
 import { Copy, Edit, Eye, MoreHorizontal, Trash } from "lucide-react";
-import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +8,17 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { AlertModal } from "@/components/modal/alert-modal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -26,7 +35,7 @@ interface CellActionProps {
 const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const queryClient = getQueryClient();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
     toast.success("ID copied to clipboard");
@@ -45,56 +54,76 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["mockTests"] });
-      setOpen(false);
       toast.success("Mock test deleted successfully");
     },
   });
 
-   return (
-    <>
-      <AlertModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onConfirm={() => deleteId(data.id)}
-        loading={isPending}
-      />
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => onCopy(data.id)}>
-            <Copy className="mr-1 h-4 w-4" />
-            Copy ID
-          </DropdownMenuItem>
-           <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_MOCK_TESTS + `/${data.id}`)}
-          >
-            <Eye className="mr-1 h-4 w-4" />
-            Detail
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => router.push(ROUTES.ADMIN_MOCK_TESTS + `/${data.id}/update`)}
-          >
-            <Edit className="mr-1 h-4 w-4" />
-            Update
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="text-red-500"
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            <Trash className="mr-1 h-4 w-4 text-red-500" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
+  const handleDelete = () => {
+    deleteId(data.id);
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
+          <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuItem onClick={() => onCopy(data.id)} disabled={isPending}>
+          <Copy className="mr-2 h-4 w-4" />
+          Copy ID
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push(ROUTES.ADMIN_MOCK_TESTS + `/${data.id}`)}
+          disabled={isPending}
+        >
+          <Eye className="mr-2 h-4 w-4" />
+          Detail
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push(ROUTES.ADMIN_MOCK_TESTS + `/${data.id}/update`)}
+          disabled={isPending}
+        >
+          <Edit className="mr-2 h-4 w-4" />
+          Update
+        </DropdownMenuItem>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+              className="text-red-600 focus:text-red-600 cursor-pointer"
+              disabled={isPending}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              {isPending ? "Deleting..." : "Delete"}
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Mock Test?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to permanently delete "{data.title}" mock test? 
+                This action cannot be undone and will remove this test along with all its questions and associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={isPending}
+              >
+                {isPending ? "Deleting..." : "Delete Mock Test"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

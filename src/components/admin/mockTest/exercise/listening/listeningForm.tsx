@@ -72,7 +72,6 @@ const ListeningForm = () => {
     ? "Update listening exercise information and audio content"
     : "Create a comprehensive listening comprehension exercise with audio content";
 
-  const [wordCount, setWordCount] = useState(0);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
@@ -106,7 +105,6 @@ const ListeningForm = () => {
       passage: {
         title: "",
         content: "",
-        word_count: 0,
         difficulty_level: "3",
       },
     },
@@ -150,7 +148,7 @@ const ListeningForm = () => {
         audio_url: undefined,
         passage: {
           ...formData.passage,
-          word_count: wordCount,
+          content: formData.passage?.content ?? "",
         },
         // Use default passing_score for mock tests (not used in IELTS mode)
         passing_score: "0",
@@ -203,7 +201,6 @@ const ListeningForm = () => {
           title: formData.passage?.title || "",
           content: formData.passage?.content || "",
           difficulty_level: formData.passage?.difficulty_level || "3",
-          word_count: wordCount,
         },
       };
       return updateListeningExercise(listeningExerciseId!, payload);
@@ -254,15 +251,6 @@ const ListeningForm = () => {
 
   // Word count is no longer required for listening transcript.
   // Keep state only for optional display if content is provided.
-  const passageContent = listeningForm.watch("passage.content");
-  useEffect(() => {
-    if (!passageContent) {
-      setWordCount(0);
-      return;
-    }
-    const count = passageContent.trim().split(/\s+/).length;
-    setWordCount(isNaN(count) ? 0 : count);
-  }, [passageContent]);
 
   // Audio handling
   const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -383,7 +371,6 @@ const ListeningForm = () => {
         passage: {
           title: listeningExerciseData.reading_passage?.title || "",
           content: listeningExerciseData.reading_passage?.content || "",
-          word_count: listeningExerciseData.reading_passage?.word_count || 0,
           difficulty_level:
             listeningExerciseData.reading_passage?.difficulty_level?.toString() ||
             "3",
@@ -402,9 +389,13 @@ const ListeningForm = () => {
   const onSubmit = async (data: z.infer<typeof schema>) => {
     try {
       if (isEditing) {
-        await updateListeningExerciseMutation.mutateAsync(data);
+        await updateListeningExerciseMutation.mutateAsync(
+          data as z.infer<typeof ListeningFormUpdateSchema>
+        );
       } else {
-        await createListeningExerciseMutation.mutateAsync(data);
+        await createListeningExerciseMutation.mutateAsync(
+          data as z.infer<typeof ListeningFormSchema>
+        );
       }
     } catch (error) {
       console.error("Submit error:", error);
@@ -529,7 +520,6 @@ const ListeningForm = () => {
                   )}
 
                   <div className="flex items-center space-x-6 text-sm text-gray-600 mb-4">
-                    <span>Words: {wordCount}</span>
                     <span>Duration: {formatTime(audioDuration)}</span>
                   </div>
                 </div>
@@ -610,7 +600,14 @@ const ListeningForm = () => {
                           placeholder="Select difficulty"
                           options={DIFFICULTY_OPTIONS}
                         />
+                         
                       </div>
+                       <TextField
+                          control={listeningForm.control}
+                          name="passage.content"
+                          label="Content"
+                          placeholder="Enter content..."
+                        />
 
                       {/* Current Audio - Fixed Layout to prevent button overlap */}
                       {audioUrl && (
@@ -629,7 +626,7 @@ const ListeningForm = () => {
                             </div>
 
                             {/* Upload Audio Now Button - Positioned ABOVE audio player */}
-                            {isEditing && audioFile && !isUploadingAudio && (
+                            { audioFile && !isUploadingAudio && (
                               <div className="flex justify-end">
                                 <Button
                                   type="button"
@@ -909,7 +906,7 @@ const ListeningForm = () => {
                         <Button
                           type="submit"
                           className="w-full flex items-center space-x-2 bg-purple-600 hover:bg-purple-700"
-                          disabled={isSubmitting || wordCount < 5}
+                          disabled={isSubmitting}
                         >
                           {isSubmitting ? (
                             <>

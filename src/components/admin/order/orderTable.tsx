@@ -227,13 +227,13 @@ const OrderTable = () => {
             Export
           </Button>
 
-          <Button
+          {/* <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => router.push(ROUTES.ADMIN_ORDERS + "/create")}
           >
             <Plus className="mr-2 h-4 w-4" />
             Add Order
-          </Button>
+          </Button> */}
         </div>
       </div>
 

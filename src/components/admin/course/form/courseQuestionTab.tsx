@@ -77,7 +77,7 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
 
   // Get questions array from API response
   const questions =
-    detailExerciseData?.data?.questions || detailExerciseData?.questions || [];
+    detailExerciseData?.questions || detailExerciseData?.questions || [];
   const sortedQuestions = Array.isArray(questions)
     ? [...questions].sort((a, b) => (a.ordering || 999) - (b.ordering || 999))
     : [];
@@ -306,7 +306,6 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
           <CourseQuestionForm
             exerciseId={exercise.id}
             lessonId={lesson?.id}
-            sectionId={lesson?.section_id}
             question={editingQuestion}
             existingQuestions={sortedQuestions}
             onSuccess={handleQuestionFormSuccess}

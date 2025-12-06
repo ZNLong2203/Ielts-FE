@@ -77,7 +77,7 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
             <Eye className="mr-1 h-4 w-4" />
             Detail
           </DropdownMenuItem>
-          <DropdownMenuItem
+          {/* <DropdownMenuItem
             onClick={() => router.push(ROUTES.ADMIN_ORDERS + `/${data.id}/update`)}
           >
             <Edit className="mr-1 h-4 w-4" />
@@ -91,7 +91,7 @@ const CellAction: React.FC<CellActionProps> = ({ data }) => {
           >
             <Trash className="mr-1 h-4 w-4 text-red-500" />
             Delete
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

@@ -125,7 +125,7 @@ const OrderForm = () => {
           ? coupon.discount_value + "%"
           : Number(coupon.discount_value).toLocaleString() + " VND"
       })`,
-      value: coupon.code,
+      value: coupon.id,
       code: coupon.code,
       discount_type: coupon.discount_type,
       discount_value: Number(coupon.discount_value),

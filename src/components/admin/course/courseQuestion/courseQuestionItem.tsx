@@ -59,15 +59,19 @@ const CourseQuestionItem = ({
 
   // Delete question mutation
   const deleteQuestionMutation = useMutation({
-    mutationFn: () => deleteCourseQuestion(lessonId, exerciseId, question.id),
+    mutationFn: () => {
+      if (!lessonId) {
+        throw new Error("Lesson ID is required to delete a question");
+      }
+      return deleteCourseQuestion(lessonId, exerciseId, question.id);
+    },
     onSuccess: () => {
       toast.success("Question deleted successfully");
       
       // Enhanced invalidation for course form context
       queryClient.invalidateQueries({ queryKey: ["courseQuestions", exerciseId] });
-      queryClient.invalidateQueries({ queryKey: ["exercise", lessonId, exerciseId] });
-      
       if (lessonId) {
+        queryClient.invalidateQueries({ queryKey: ["exercise", lessonId, exerciseId] });
         queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
       }
       
@@ -195,7 +199,7 @@ const CourseQuestionItem = ({
                 
                 {/* Compact Audio Player */}
                 <CompactAudioPlayer 
-                  src={question.audio_url} 
+                  src={question.audio_url || ""} 
                   title={`Question ${question.ordering ?? questionIndex + 1} Audio`}
                   showTitle={false}
                   showProgress={true}
@@ -352,12 +356,6 @@ const CourseQuestionItem = ({
               </div>
             )}
           </div>
-
-          {question.is_required && (
-            <Badge variant="outline" className="bg-red-50 text-red-700 text-xs">
-              Required
-            </Badge>
-          )}
         </div>
       </div>
 

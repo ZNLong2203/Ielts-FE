@@ -60,7 +60,6 @@ export interface IListeningPassageCreate {
   title: string;
   content: string;
   audio_url?: File;
-  word_count: number;
   difficulty_level: string;
 }
 

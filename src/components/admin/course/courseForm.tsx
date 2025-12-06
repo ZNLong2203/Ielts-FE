@@ -296,38 +296,45 @@ const CourseForm = () => {
     );
   };
 
+  // Define a minimal type for exercises returned from API
+  type Exercise = {
+    id: string;
+    title?: string;
+    questions?: any[];
+  };
+  
   // Get selected exercise from exerciseData instead of lesson.exercises
   const getSelectedExercise = () => {
     if (!selectedExerciseId || !exerciseData) return null;
-    
-    // Handle both array and object response formats
-    const exercises = exerciseData?.data || exerciseData || [];
-    
+  
+    const exercises = exerciseData as Exercise | Exercise[];
+  
     if (Array.isArray(exercises)) {
-      return exercises.find((exercise: any) => exercise.id === selectedExerciseId);
+      return exercises.find((exercise: Exercise) => exercise.id === selectedExerciseId) || null;
     }
-    
+  
     // If it's a single exercise object
-    if (exercises.id === selectedExerciseId) {
-      return exercises;
+    if (exercises && typeof exercises === "object" && "id" in exercises) {
+      return (exercises as Exercise).id === selectedExerciseId ? (exercises as Exercise) : null;
     }
-    
+  
     return null;
   };
-
+  
   // Helper functions to get counts
   const getTotalSections = () => courseData?.sections?.length || 0;
-
+  
   const getTotalLessons = () => {
     if (!selectedSectionId) return 0;
     const section = getSelectedSection();
     return section?.lessons?.length || 0;
   };
-
+  
   const getTotalExercises = () => {
     if (!exerciseData) return 0;
-    const exercises = exerciseData?.data || exerciseData || [];
-    return Array.isArray(exercises) ? exercises.length : exercises.id ? 1 : 0;
+    const exercises = exerciseData as Exercise | Exercise[];
+    if (Array.isArray(exercises)) return exercises.length;
+    return exercises && typeof exercises === "object" && "id" in exercises ? 1 : 0;
   };
 
   const getTotalQuestions = () => {

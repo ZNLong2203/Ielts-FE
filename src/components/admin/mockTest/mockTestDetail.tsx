@@ -313,10 +313,6 @@ const MockTestDetail = () => {
                           {section.section_name}
                         </h4>
 
-                        <p className="text-sm text-gray-500 mt-1">
-                          Order: {section.ordering || index + 1}
-                        </p>
-
                         {section.description && (
                           <p className="text-sm text-gray-600 mt-2">
                             {section.description}
