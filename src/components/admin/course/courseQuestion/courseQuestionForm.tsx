@@ -173,7 +173,7 @@ const CourseQuestionForm = ({
       }
     },
     onSuccess: () => {
-      toast.success("Media file uploaded successfully! 📁");
+      // toast.success("Media file uploaded successfully! ");
       setUploadingFiles(false);
       invalidateQueries();
     },
@@ -207,23 +207,27 @@ const CourseQuestionForm = ({
         media_url: undefined,
       };
 
-      return createCourseQuestion(lessonId, exerciseId, questionData);
+      const questionResponse = await createCourseQuestion(lessonId, exerciseId, questionData);
+      console.log("Question", questionResponse);
+      if (!questionResponse.data.id) {
+         throw new Error("Failed to create question - no ID returned");
+      }
+
+      if (mediaFile) {
+        setUploadingFiles(true);
+        await uploadFileMutation.mutateAsync({
+          questionId: questionResponse.data.id,
+          mediaFile,
+        });
+        setUploadingFiles(false);
+      }
     },
     onSuccess: async (data) => {
       invalidateQueries();
       if (onSuccess) {
         onSuccess();
       }
-      toast.success("Question created successfully! 🎯");
-
-      // Upload media file if exists
-      if (mediaFile) {
-        setUploadingFiles(true);
-        uploadFileMutation.mutate({
-          questionId: data.id,
-          mediaFile,
-        });
-      }
+      toast.success("Question created successfully!");
 
       invalidateQueries();
       onSuccess?.();

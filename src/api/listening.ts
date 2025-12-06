@@ -29,7 +29,7 @@ export const createListeningExercise = async (
   data: IListeningExerciseCreate
 ): Promise<IListeningExercise> => {
   const response = await api.post(`${BASE_URL}${API_URL.LISTENING}`, data);
-  return response.data;
+  return response.data.data;
 };
 
 export const updateListeningExercise = async (

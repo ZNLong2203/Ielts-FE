@@ -90,8 +90,6 @@ const ListeningForm = () => {
     enabled: !!listeningExerciseId,
   });
 
-  console.log("listening Data", listeningExerciseData);
-
   // Form setup
   const schema = isEditing ? ListeningFormUpdateSchema : ListeningFormSchema;
   const listeningForm = useForm<z.infer<typeof schema>>({
@@ -109,8 +107,6 @@ const ListeningForm = () => {
       },
     },
   });
-
-  // Paragraphs are not used for listening transcript anymore
 
   // Audio upload mutation
   const uploadAudioMutation = useMutation({
@@ -131,7 +127,6 @@ const ListeningForm = () => {
       }
     },
     onError: (error: unknown) => {
-      console.error("Audio upload error:", error);
       setIsUploadingAudio(false);
       const message =
         (error as { response?: { data?: { message?: string } } })?.response
@@ -150,17 +145,17 @@ const ListeningForm = () => {
           ...formData.passage,
           content: formData.passage?.content ?? "",
         },
-        // Use default passing_score for mock tests (not used in IELTS mode)
         passing_score: "0",
       };
       return createListeningExercise(payload);
     },
     onSuccess: async (response) => {
+      console.log(response.id)
       if (audioFile && response?.id) {
         setIsUploadingAudio(true);
         try {
           const formData = new FormData();
-          formData.append("audio", audioFile);
+          formData.append("file", audioFile);
           await uploadAudioMutation.mutateAsync({
             exerciseId: response.id,
             formData,
@@ -210,7 +205,7 @@ const ListeningForm = () => {
         setIsUploadingAudio(true);
         try {
           const formData = new FormData();
-          formData.append("audio", audioFile);
+          formData.append("file", audioFile);
           await uploadAudioMutation.mutateAsync({
             exerciseId: listeningExerciseId,
             formData,
@@ -248,9 +243,6 @@ const ListeningForm = () => {
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
-
-  // Word count is no longer required for listening transcript.
-  // Keep state only for optional display if content is provided.
 
   // Audio handling
   const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -297,7 +289,6 @@ const ListeningForm = () => {
   };
 
   const handleUploadAudioOnly = async (event: React.MouseEvent) => {
-    // Prevent event bubbling to avoid triggering other buttons
     event.preventDefault();
     event.stopPropagation();
 
@@ -306,7 +297,7 @@ const ListeningForm = () => {
       return;
     }
 
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024;
     if (audioFile.size > maxSize) {
       const fileSizeMB = (audioFile.size / (1024 * 1024)).toFixed(2);
       toast.error(
@@ -575,7 +566,7 @@ const ListeningForm = () => {
                     </CardContent>
                   </Card>
 
-                {/* Audio Information */}
+                  {/* Audio Information */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center space-x-2">
@@ -600,16 +591,16 @@ const ListeningForm = () => {
                           placeholder="Select difficulty"
                           options={DIFFICULTY_OPTIONS}
                         />
-                         
                       </div>
-                       <TextField
-                          control={listeningForm.control}
-                          name="passage.content"
-                          label="Content"
-                          placeholder="Enter content..."
-                        />
+                      
+                      <TextField
+                        control={listeningForm.control}
+                        name="passage.content"
+                        label="Content"
+                        placeholder="Enter content..."
+                      />
 
-                      {/* Current Audio - Fixed Layout to prevent button overlap */}
+                      {/* Current Audio */}
                       {audioUrl && (
                         <div className="space-y-4">
                           <div className="flex flex-col gap-3">
@@ -619,14 +610,12 @@ const ListeningForm = () => {
                               </label>
                               {audioFile && (
                                 <div className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                                  ⚠️ New audio selected - will replace current
-                                  when saved
+                                  ⚠️ New audio selected - will replace current when saved
                                 </div>
                               )}
                             </div>
 
-                            {/* Upload Audio Now Button - Positioned ABOVE audio player */}
-                            { audioFile && !isUploadingAudio && (
+                            {audioFile && !isUploadingAudio && (
                               <div className="flex justify-end">
                                 <Button
                                   type="button"
@@ -635,7 +624,6 @@ const ListeningForm = () => {
                                   onClick={handleUploadAudioOnly}
                                   disabled={uploadAudioMutation.isPending}
                                   className="whitespace-nowrap z-10 relative"
-                                  style={{ pointerEvents: "auto" }}
                                 >
                                   {uploadAudioMutation.isPending ? (
                                     <>
@@ -653,7 +641,6 @@ const ListeningForm = () => {
                             )}
                           </div>
 
-                          {/* Audio Player Container - Separate and isolated */}
                           <HLSAudioPlayer
                             src={audioUrl}
                             title={
@@ -685,15 +672,10 @@ const ListeningForm = () => {
                                       New: {audioFile.name}
                                     </div>
                                     <div className="text-sm text-gray-600">
-                                      Size:{" "}
-                                      {(audioFile.size / (1024 * 1024)).toFixed(
-                                        2
-                                      )}
-                                      MB
+                                      Size: {(audioFile.size / (1024 * 1024)).toFixed(2)}MB
                                     </div>
                                     <div className="text-xs text-amber-600 mt-1">
-                                      ⚠️{" "}
-                                      {isEditing
+                                      ⚠️ {isEditing
                                         ? "New audio will be uploaded when you save or use 'Upload Audio Now' button"
                                         : "Audio will be uploaded after creating the exercise"}
                                     </div>
@@ -704,8 +686,7 @@ const ListeningForm = () => {
                                   <audio
                                     src={URL.createObjectURL(audioFile)}
                                     onLoadedMetadata={(e) => {
-                                      const audio =
-                                        e.target as HTMLAudioElement;
+                                      const audio = e.target as HTMLAudioElement;
                                       setAudioDuration(audio.duration);
                                     }}
                                     className="w-full"
@@ -734,20 +715,16 @@ const ListeningForm = () => {
                                 </div>
                                 <div className="space-y-2">
                                   <p className="text-lg font-medium text-gray-900">
-                                    {audioUrl
-                                      ? "Replace Audio File"
-                                      : "Upload Audio File"}
+                                    {audioUrl ? "Replace Audio File" : "Upload Audio File"}
                                   </p>
                                   <p className="text-gray-500">
                                     Drag and drop or click to select audio file
                                   </p>
                                   <div className="text-sm text-gray-400">
-                                    Supported formats: MP3, WAV, OGG, M4A (Max:
-                                    10MB)
+                                    Supported formats: MP3, WAV, OGG, M4A (Max: 10MB)
                                   </div>
                                   <div className="text-xs text-red-500 bg-red-50 p-2 rounded-lg">
-                                    ⚠️ File size limit: 10MB. Larger files will
-                                    be rejected.
+                                    ⚠️ File size limit: 10MB. Larger files will be rejected.
                                   </div>
                                 </div>
                                 <input
@@ -796,8 +773,6 @@ const ListeningForm = () => {
                           </div>
                         )}
                       </div>
-
-                      {/* Transcript input removed as per requirement */}
                     </CardContent>
                   </Card>
                 </div>
@@ -832,8 +807,7 @@ const ListeningForm = () => {
                           <span className="text-gray-600">Difficulty:</span>
                           <span className="font-medium">
                             {DIFFICULTY_OPTIONS.find(
-                              (opt) =>
-                                Number(opt.value) === Number(selectedDifficulty)
+                              (opt) => Number(opt.value) === Number(selectedDifficulty)
                             )?.label || "Intermediate"}
                           </span>
                         </div>
@@ -846,8 +820,7 @@ const ListeningForm = () => {
                           <p>• Maximum file size: 10MB</p>
                           {audioFile && (
                             <p className="text-amber-600">
-                              • Audio will be uploaded on save (
-                              {(audioFile.size / (1024 * 1024)).toFixed(2)}MB)
+                              • Audio will be uploaded on save ({(audioFile.size / (1024 * 1024)).toFixed(2)}MB)
                             </p>
                           )}
                         </div>
@@ -893,8 +866,6 @@ const ListeningForm = () => {
                             Audio file {!audioFile && !audioUrl && "(optional)"}
                           </span>
                         </div>
-
-                        {/* Transcript validation removed */}
                       </div>
                     </CardContent>
                   </Card>
@@ -923,9 +894,7 @@ const ListeningForm = () => {
                             <>
                               <Save className="h-4 w-4" />
                               <span>
-                                {isEditing
-                                  ? "Update Exercise"
-                                  : "Create Exercise"}
+                                {isEditing ? "Update Exercise" : "Create Exercise"}
                               </span>
                             </>
                           )}

@@ -25,7 +25,7 @@ export const createLesson = async (data: ILessonCreate, sectionId: string) => {
     `${BASE_URL}${API_URL.SECTIONS}/${sectionId}${API_URL.LESSONS}`,
     data
   );
-  return response.data;
+  return response.data.data;
 };
 
 // Update a lesson

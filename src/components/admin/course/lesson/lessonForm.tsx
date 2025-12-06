@@ -22,12 +22,19 @@ import {
   EyeOff,
   BookOpen,
   CheckCircle2,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
 
 import { ILesson, ILessonCreate, ILessonUpdate } from "@/interface/lesson";
-import { createLesson, updateLesson, getLessonById } from "@/api/lesson";
+import {
+  createLesson,
+  updateLesson,
+  getLessonById,
+  uploadVideo,
+} from "@/api/lesson";
 import VideoUploadSection from "@/components/form/video-upload-field";
 import { LessonFormSchema } from "@/validation/lesson";
 import { LESSON_TYPES } from "@/constants/lesson";
@@ -59,6 +66,10 @@ const LessonForm = ({
     lesson?.id || null
   );
 
+  // ✅ Add video file state
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>("");
+
   // Helper function
   const getNextOrdering = () => {
     if (!existingLessons.length) return 1;
@@ -77,7 +88,6 @@ const LessonForm = ({
       : "video";
   };
 
-
   const {
     data: lessonData,
     isError,
@@ -87,7 +97,6 @@ const LessonForm = ({
     queryFn: () => getLessonById(sectionId, lesson?.id),
     enabled: isEditing,
   });
-
   const form = useForm<LessonFormData>({
     resolver: zodResolver(LessonFormSchema),
     defaultValues: {
@@ -124,7 +133,29 @@ const LessonForm = ({
     queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
   };
 
-  // Create lesson mutation
+  // ✅ Video upload mutation (separate for edit mode immediate upload)
+  const uploadVideoMutation = useMutation({
+    mutationFn: async (params: { lessonId: string; formData: FormData }) => {
+      const { lessonId, formData } = params;
+      return uploadVideo(lessonId, sectionId, formData);
+    },
+    onSuccess: (response) => {
+      toast.success("Video uploaded successfully! 🎬");
+      if (response?.data?.video_url) {
+        setVideoPreviewUrl(response.data.video_url);
+      }
+      setVideoFile(null);
+      invalidateQueries();
+    },
+    onError: (error: unknown) => {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message || "Failed to upload video";
+      toast.error(message);
+    },
+  });
+
+  // ✅ Updated: Create lesson with integrated video upload
   const createLessonMutation = useMutation({
     mutationFn: async (data: LessonFormData) => {
       const lessonData: ILessonCreate = {
@@ -135,27 +166,95 @@ const LessonForm = ({
         ordering: data.ordering,
         document_url: data.document_url || undefined,
       };
-      return createLesson(lessonData, sectionId);
+
+      // ✅ Step 1: Create lesson first
+      const lessonResponse = await createLesson(lessonData, sectionId);
+      const newLessonId = lessonResponse.data?.id || lessonResponse.id;
+
+      if (!newLessonId) {
+        throw new Error("Failed to create lesson - no ID returned");
+      }
+
+      // ✅ Step 2: If video file exists and lesson type is video, upload it immediately
+      if (videoFile && data.lesson_type === "video") {
+        try {
+          const videoResponse = await uploadVideo(
+            newLessonId,
+            sectionId,
+            videoFile
+          );
+
+          // ✅ Return combined result
+          return {
+            lesson: lessonResponse,
+            video: videoResponse?.data,
+            hasVideo: true,
+            success: true,
+            lessonId: newLessonId,
+          };
+        } catch (videoError) {
+          console.error("Video upload failed:", videoError);
+
+          // ✅ Lesson created but video failed
+          return {
+            lesson: lessonResponse,
+            video: null,
+            hasVideo: false,
+            success: false,
+            videoError: videoError,
+            lessonId: newLessonId,
+          };
+        }
+      }
+
+      // ✅ Return lesson only (no video or not video type)
+      return {
+        lesson: lessonResponse,
+        video: null,
+        hasVideo: false,
+        success: true,
+        lessonId: newLessonId,
+      };
     },
     onSuccess: (response) => {
-      toast.success("Lesson created successfully! 📚");
-      const newLessonId = response.data?.id || response.id;
+      const newLessonId = response.lessonId;
       setSavedLessonId(newLessonId);
+
+      if (response.hasVideo && response.success) {
+        toast.success("Lesson created with video successfully! 📚🎬");
+      } else if (
+        response.success &&
+        !response.hasVideo &&
+        selectedLessonType === "video"
+      ) {
+        toast.success("Lesson created successfully! 📚");
+        if (videoFile) {
+          toast.error(
+            "Video upload failed. You can upload video later from the edit page."
+          );
+        }
+      } else {
+        toast.success("Lesson created successfully! 📚");
+      }
+
       invalidateQueries();
 
       // Always close form after successful creation
       onSuccess?.();
       form.reset();
+      setVideoFile(null);
+      setVideoPreviewUrl("");
     },
     onError: (error: Error) => {
       toast.error(error?.message || "Failed to create lesson");
     },
   });
 
-  // Update lesson mutation
+  // ✅ Updated: Update lesson with integrated video upload
   const updateLessonMutation = useMutation({
     mutationFn: async (data: LessonFormData) => {
       if (!lesson?.id) throw new Error("Lesson ID is required");
+
       const updateData: ILessonUpdate = {
         title: data.title,
         description: data.description,
@@ -164,14 +263,71 @@ const LessonForm = ({
         ordering: data.ordering,
         document_url: data.document_url || undefined,
       };
-      return updateLesson(updateData, lesson.id, sectionId);
+
+      // ✅ Step 1: Update lesson first
+      const lessonResponse = await updateLesson(
+        updateData,
+        lesson.id,
+        sectionId
+      );
+
+      // ✅ Step 2: If new video file exists and lesson type is video, upload it
+      if (videoFile && data.lesson_type === "video") {
+        try {
+          const videoResponse = await uploadVideo(
+            lesson.id,
+            sectionId,
+            videoFile
+          );
+
+          return {
+            lesson: lessonResponse,
+            video: videoResponse?.data,
+            hasVideo: true,
+            success: true,
+          };
+        } catch (videoError) {
+          console.error("Video upload failed:", videoError);
+
+          return {
+            lesson: lessonResponse,
+            video: null,
+            hasVideo: false,
+            success: false,
+            videoError: videoError,
+          };
+        }
+      }
+
+      return {
+        lesson: lessonResponse,
+        video: null,
+        hasVideo: false,
+        success: true,
+      };
     },
-    onSuccess: () => {
-      toast.success("Lesson updated successfully! ✨");
+    onSuccess: (response) => {
+      if (response.hasVideo && response.success) {
+        toast.success("Lesson updated with video successfully! ✨🎬");
+      } else if (
+        response.success &&
+        !response.hasVideo &&
+        selectedLessonType === "video"
+      ) {
+        toast.success("Lesson updated successfully! ✨");
+        if (videoFile) {
+          toast.error("Video upload failed. Please try uploading video again.");
+        }
+      } else {
+        toast.success("Lesson updated successfully! ✨");
+      }
+
       invalidateQueries();
 
       // Always close form after successful update
       onSuccess?.();
+      setVideoFile(null);
+      setVideoPreviewUrl("");
     },
     onError: (error: Error) => {
       toast.error(error?.message || "Failed to update lesson");
@@ -217,6 +373,12 @@ const LessonForm = ({
     console.error("Video upload error:", error);
   };
 
+   // ✅ Handle video file selection
+  const handleVideoSelect = (file: File | null) => {
+    setVideoFile(file);
+  };
+
+  // ✅ Updated: Loading state
   const isLoading =
     createLessonMutation.isPending || updateLessonMutation.isPending;
 
@@ -357,11 +519,12 @@ const LessonForm = ({
             <div className="space-y-4">
               {selectedLessonType === "video" ? (
                 <VideoUploadSection
-                  key={`video-${savedLessonId || "new"}`} // Force re-render when lesson changes
-                  lessonId={savedLessonId}
+                  key={`video-${savedLessonId || "new"}`}
+                  lessonId={savedLessonId} 
                   sectionId={sectionId}
                   currentHlsUrl={lessonData?.hlsUrl}
-                  currentVideoUrl={lessonData?.video_url}
+                  selectedVideoFile={videoFile} 
+                  onVideoSelect={handleVideoSelect} 
                   onUploadSuccess={handleVideoUploadSuccess}
                   onUploadError={handleVideoUploadError}
                 />
@@ -466,6 +629,10 @@ const LessonForm = ({
                     : isEditing
                     ? "Update Lesson"
                     : "Create Lesson"}
+                  {videoFile &&
+                    selectedLessonType === "video" &&
+                    !isEditing &&
+                    " with Video"}
                 </span>
               </Button>
             </div>

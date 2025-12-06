@@ -28,6 +28,8 @@ interface VideoUploadSectionProps {
   currentHlsUrl?: string;
   onUploadSuccess?: (videoData: any) => void;
   onUploadError?: (error: string) => void;
+  onVideoSelect?: (file: File | null) => void; // ✅ Add callback for file selection
+  selectedVideoFile?: File | null; // ✅ Add prop for externally selected file
   className?: string;
 }
 
@@ -44,6 +46,8 @@ const VideoUploadSection = ({
   currentHlsUrl,
   onUploadSuccess,
   onUploadError,
+  onVideoSelect, 
+  selectedVideoFile, 
   className = "",
 }: VideoUploadSectionProps) => {
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -51,16 +55,20 @@ const VideoUploadSection = ({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedVideo, setUploadedVideo] = useState<UploadedVideoData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [localVideoFile, setLocalVideoFile] = useState<File | null>(null); 
+  const [previewUrl, setPreviewUrl] = useState<string>(""); 
   const queryClient = useQueryClient();
 
-  // Upload video mutation
+  const currentVideoFile = selectedVideoFile || localVideoFile;
+
+  // Upload video mutation (only when lessonId exists)
   const uploadVideoMutation = useMutation({
     mutationFn: async (file: File) => {
       if (!lessonId) {
-        throw new Error("Lesson must be created before uploading video");
+        throw new Error("Lesson ID is required for video upload");
       }
       
-      console.log(" Starting video upload:", {
+      console.log("🎬 Starting video upload:", {
         lessonId,
         sectionId,
         fileName: file.name,
@@ -75,7 +83,7 @@ const VideoUploadSection = ({
       setUploadProgress(0);
     },
     onSuccess: (data) => {
-      console.log(" Video upload successful:", data);
+      console.log("✅ Video upload successful:", data);
       
       const videoData: UploadedVideoData = {
         videoUrl: data.videoUrl || data.video_url,
@@ -89,24 +97,32 @@ const VideoUploadSection = ({
       setUploadProgress(100);
       setIsUploading(false);
       
+      // ✅ Clear selected file after successful upload
+      setLocalVideoFile(null);
+      setPreviewUrl("");
+      onVideoSelect?.(null);
+      
       toast.success("Video uploaded and processed successfully! 🎉");
       onUploadSuccess?.(videoData);
     },
     onError: (error: any) => {
-      console.error(" Video upload error:", error);
+      console.error("❌ Video upload error:", error);
       
       const errorMessage = error?.message || error?.response?.data?.message || "Failed to upload video";
       setUploadError(errorMessage);
       setIsUploading(false);
       setUploadProgress(0);
       
-      queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] });
+      if (lessonId) {
+        queryClient.invalidateQueries({ queryKey: ["lesson", lessonId] });
+      }
+      
       toast.error(`Upload failed: ${errorMessage}`);
       onUploadError?.(errorMessage);
     },
   });
 
-  // Handle file drop
+  // ✅ Handle file drop/selection
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: any[]) => {
       // Handle rejected files
@@ -156,27 +172,46 @@ const VideoUploadSection = ({
         return;
       }
 
-      // Start upload
+      // ✅ Store file and create preview
+      setLocalVideoFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      
+      // ✅ Notify parent component
+      onVideoSelect?.(file);
+      
       setUploadError(null);
       
-      // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 85) {
-            clearInterval(progressInterval);
-            return 85; // Let the real upload finish
-          }
-          return prev + Math.random() * 15; // Random increment for realism
-        });
-      }, 800);
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      if (lessonId) {
+        // ✅ If lesson exists, upload immediately
+        const progressInterval = setInterval(() => {
+          setUploadProgress((prev) => {
+            if (prev >= 85) {
+              clearInterval(progressInterval);
+              return 85;
+            }
+            return prev + Math.random() * 15;
+          });
+        }, 800);
 
-      uploadVideoMutation.mutate(file);
-      
-      // Cleanup interval when component unmounts or upload completes
-      return () => clearInterval(progressInterval);
+        uploadVideoMutation.mutate(file);
+        
+        return () => clearInterval(progressInterval);
+      } else {
+        // ✅ If no lesson yet, just show selection message
+        toast.success(`Video file "${file.name}" selected! It will be uploaded when you create the lesson.`);
+      }
     },
-    [lessonId, sectionId, uploadVideoMutation]
+    [lessonId, sectionId, uploadVideoMutation, onVideoSelect]
   );
+
+  // ✅ Upload selected video (for immediate upload when lessonId becomes available)
+  const uploadSelectedVideo = () => {
+    if (currentVideoFile && lessonId) {
+      uploadVideoMutation.mutate(currentVideoFile);
+    }
+  };
 
   // Dropzone configuration
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
@@ -186,16 +221,25 @@ const VideoUploadSection = ({
     },
     maxFiles: 1,
     maxSize: 2 * 1024 * 1024 * 1024, // 2GB
-    disabled: !lessonId || isUploading,
+    disabled: isUploading,
     multiple: false,
   });
 
-  // Determine video URL to display
+  // ✅ Determine video URL to display
   const displayHlsUrl = uploadedVideo?.hlsUrl || currentHlsUrl;
-  const hasVideo = !!(displayHlsUrl);
+  const hasVideo = !!(displayHlsUrl || previewUrl || currentVideoFile);
 
-  // Get upload status for UI
+  // ✅ Get upload status for UI
   const getUploadStatusInfo = () => {
+    if (currentVideoFile && !lessonId) {
+      return {
+        type: "selected" as const,
+        title: "Video file selected",
+        description: `"${currentVideoFile.name}" will be uploaded when lesson is created`,
+        showHlsBadge: false,
+      };
+    }
+
     if (uploadedVideo) {
       return {
         type: "success" as const,
@@ -207,7 +251,7 @@ const VideoUploadSection = ({
       };
     }
     
-    if ( currentHlsUrl) {
+    if (currentHlsUrl) {
       return {
         type: "current" as const,
         title: "Current video available",
@@ -221,6 +265,15 @@ const VideoUploadSection = ({
 
   const statusInfo = getUploadStatusInfo();
 
+  // ✅ Cleanup preview URL
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   return (
     <div className={cn("space-y-4", className)}>
       {/* Header */}
@@ -231,9 +284,12 @@ const VideoUploadSection = ({
         </FormLabel>
         {hasVideo && (
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700">
+            <Badge variant="outline" className={cn(
+              "text-green-700",
+              currentVideoFile && !lessonId ? "bg-yellow-50" : "bg-green-50"
+            )}>
               <CheckCircle2 className="h-3 w-3 mr-1" />
-              Video Available
+              {currentVideoFile && !lessonId ? "File Selected" : "Video Available"}
             </Badge>
             {statusInfo?.showHlsBadge && (
               <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -249,6 +305,28 @@ const VideoUploadSection = ({
               <Eye className="h-3 w-3 mr-1" />
               {showPreview ? "Hide Preview" : "Preview Video"}
             </Button>
+            {/* ✅ Upload now button (only show when file selected but lesson exists) */}
+            {currentVideoFile && lessonId && !uploadedVideo && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={uploadSelectedVideo}
+                disabled={isUploading}
+                className="text-xs"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3 w-3 mr-1" />
+                    Upload Now
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -256,9 +334,26 @@ const VideoUploadSection = ({
       {/* Video Preview */}
       {showPreview && hasVideo && (
         <div className="mb-4">
-           
+          {previewUrl ? (
+            // ✅ Preview selected file (not uploaded yet)
+            <div className="relative">
+              <video 
+                src={previewUrl} 
+                controls 
+                className="w-full max-h-64 rounded-lg"
+              />
+              {currentVideoFile && !lessonId && (
+                <div className="absolute top-2 right-2">
+                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                    Preview - Will Upload Later
+                  </Badge>
+                </div>
+              )}
+            </div>
+          ) : displayHlsUrl ? (
+            // ✅ HLS player for uploaded video
             <VideoPlayer
-              hlsUrl={displayHlsUrl || ""}
+              hlsUrl={displayHlsUrl}
               title="Video Preview"
               description="Preview of the uploaded video"
               isPreview={true}
@@ -267,138 +362,148 @@ const VideoUploadSection = ({
               }}
               className="rounded-lg overflow-hidden"
             />
+          ) : null}
         </div>
       )}
 
-      {/* Upload Section */}
-      {!lessonId ? (
-        <div className="p-6 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50">
-          <div className="text-center text-gray-500">
-            <Video className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm font-medium">Save the lesson first to upload video</p>
-            <p className="text-xs mt-1">You need to create the lesson before adding video content</p>
+      {/* Upload Area */}
+      <div
+        {...getRootProps()}
+        className={cn(
+          "p-6 border-2 border-dashed rounded-lg transition-all cursor-pointer",
+          isDragActive
+            ? "border-blue-400 bg-blue-50"
+            : uploadError
+            ? "border-red-300 bg-red-50"
+            : "border-gray-300 hover:border-gray-400 hover:bg-gray-50",
+          isUploading && "cursor-not-allowed opacity-50"
+        )}
+      >
+        <input {...getInputProps()} />
+        <div className="text-center">
+          {isUploading ? (
+            <Loader2 className="h-8 w-8 mx-auto mb-3 text-blue-600 animate-spin" />
+          ) : (
+            <Upload className="h-8 w-8 mx-auto mb-3 text-gray-400" />
+          )}
+          
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-900">
+              {isUploading
+                ? "Processing video..."
+                : isDragActive
+                ? "Drop the video here"
+                : hasVideo
+                ? "Upload a new video to replace current one"
+                : "Drag & drop a video file here"}
+            </p>
+            <p className="text-xs text-gray-500">
+              {isUploading
+                ? "Please wait while we process and optimize your video"
+                : "or click to browse (max 2GB)"}
+            </p>
+            <p className="text-xs text-gray-400">
+              Supported formats: MP4, AVI, MOV, WMV, FLV, WebM, MKV
+            </p>
+            {!lessonId && (
+              <p className="text-xs text-blue-600 bg-blue-50 p-1 rounded">
+                💡 You can select a video now, it will be uploaded when you create the lesson
+              </p>
+            )}
           </div>
         </div>
-      ) : (
-        <>
-          {/* Upload Area */}
-          <div
-            {...getRootProps()}
-            className={cn(
-              "p-6 border-2 border-dashed rounded-lg transition-all cursor-pointer",
-              isDragActive
-                ? "border-blue-400 bg-blue-50"
-                : uploadError
-                ? "border-red-300 bg-red-50"
-                : "border-gray-300 hover:border-gray-400 hover:bg-gray-50",
-              (!lessonId || isUploading) && "cursor-not-allowed opacity-50"
-            )}
-          >
-            <input {...getInputProps()} />
-            <div className="text-center">
-              {isUploading ? (
-                <Loader2 className="h-8 w-8 mx-auto mb-3 text-blue-600 animate-spin" />
-              ) : (
-                <Upload className="h-8 w-8 mx-auto mb-3 text-gray-400" />
-              )}
-              
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-900">
-                  {isUploading
-                    ? "Processing video..."
-                    : isDragActive
-                    ? "Drop the video here"
-                    : hasVideo
-                    ? "Upload a new video to replace current one"
-                    : "Drag & drop a video file here"}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {isUploading
-                    ? "Please wait while we process and optimize your video"
-                    : "or click to browse (max 2GB)"}
-                </p>
-                <p className="text-xs text-gray-400">
-                  Supported formats: MP4, AVI, MOV, WMV, FLV, WebM, MKV
-                </p>
-              </div>
-            </div>
+      </div>
+
+      {/* Upload Progress */}
+      {isUploading && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 flex items-center space-x-2">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span>Uploading and processing...</span>
+            </span>
+            <span className="font-medium text-blue-600">{Math.round(uploadProgress)}%</span>
           </div>
+          <Progress value={uploadProgress} className="h-2" />
+          <p className="text-xs text-gray-500">
+            Your video is being uploaded and optimized for streaming
+          </p>
+        </div>
+      )}
 
-          {/* Upload Progress */}
-          {isUploading && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 flex items-center space-x-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Uploading and processing...</span>
-                </span>
-                <span className="font-medium text-blue-600">{Math.round(uploadProgress)}%</span>
-              </div>
-              <Progress value={uploadProgress} className="h-2" />
-              <p className="text-xs text-gray-500">
-                Your video is being uploaded and optimized for streaming
-              </p>
-            </div>
+      {/* Upload Error */}
+      {uploadError && (
+        <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-900">Upload Error</p>
+            <p className="text-sm text-red-700">{uploadError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Status Display */}
+      {statusInfo && (
+        <div className={cn(
+          "flex items-start space-x-2 p-3 border rounded-lg",
+          statusInfo.type === "success" 
+            ? "bg-green-50 border-green-200"
+            : statusInfo.type === "selected"
+            ? "bg-yellow-50 border-yellow-200"
+            : "bg-blue-50 border-blue-200"
+        )}>
+          {statusInfo.type === "success" ? (
+            <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
+          ) : statusInfo.type === "selected" ? (
+            <Upload className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+          ) : (
+            <Video className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
           )}
-
-          {/* Upload Error */}
-          {uploadError && (
-            <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-900">Upload Error</p>
-                <p className="text-sm text-red-700">{uploadError}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Status Display */}
-          {statusInfo && (
-            <div className={cn(
-              "flex items-start space-x-2 p-3 border rounded-lg",
+          <div className="flex-1">
+            <p className={cn(
+              "text-sm font-medium",
               statusInfo.type === "success" 
-                ? "bg-green-50 border-green-200" 
-                : "bg-blue-50 border-blue-200"
+                ? "text-green-900"
+                : statusInfo.type === "selected"
+                ? "text-yellow-900"
+                : "text-blue-900"
             )}>
-              {statusInfo.type === "success" ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0 mt-0.5" />
-              ) : (
-                <Video className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-              )}
-              <div className="flex-1">
-                <p className={cn(
-                  "text-sm font-medium",
-                  statusInfo.type === "success" ? "text-green-900" : "text-blue-900"
-                )}>
-                  {statusInfo.title}
-                </p>
-                <p className={cn(
-                  "text-xs",
-                  statusInfo.type === "success" ? "text-green-700" : "text-blue-700"
-                )}>
-                  {statusInfo.description}
-                </p>
-                {uploadedVideo?.duration && (
-                  <p className="text-xs text-gray-600 mt-1">
-                    Duration: {Math.round(uploadedVideo.duration / 60)} minutes
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+              {statusInfo.title}
+            </p>
+            <p className={cn(
+              "text-xs",
+              statusInfo.type === "success" 
+                ? "text-green-700"
+                : statusInfo.type === "selected"
+                ? "text-yellow-700"
+                : "text-blue-700"
+            )}>
+              {statusInfo.description}
+            </p>
+            {currentVideoFile && (
+              <p className="text-xs text-gray-600 mt-1">
+                File: {currentVideoFile.name} ({(currentVideoFile.size / (1024 * 1024)).toFixed(2)} MB)
+              </p>
+            )}
+            {uploadedVideo?.duration && (
+              <p className="text-xs text-gray-600 mt-1">
+                Duration: {Math.round(uploadedVideo.duration / 60)} minutes
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
-          {/* File Rejection Errors */}
-          {fileRejections.length > 0 && (
-            <div className="space-y-2">
-              {fileRejections.map(({ file, errors }) => (
-                <div key={file.name} className="flex items-center space-x-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                  <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">{file.name}: {errors[0].message}</span>
-                </div>
-              ))}
+      {/* File Rejection Errors */}
+      {fileRejections.length > 0 && (
+        <div className="space-y-2">
+          {fileRejections.map(({ file, errors }) => (
+            <div key={file.name} className="flex items-center space-x-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              <AlertCircle className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{file.name}: {errors[0].message}</span>
             </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
     </div>
   );
