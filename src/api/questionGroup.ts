@@ -23,7 +23,7 @@ export const getQuestionGroup = async (id: string) => {
 // Create a new Question Group
 export const createQuestionGroup = async (data: IQuestionGroupCreate): Promise<IQuestionGroupCreate> => {
     const response = await api.post(`${BASE_URL}${API_URL.QUESTION_GROUPS}`, data);
-    return response.data;
+    return response.data.data;
 };
 
 // Update an existing Question Group

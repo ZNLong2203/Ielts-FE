@@ -180,15 +180,6 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
     refetch(); // Refresh the list
   };
 
-  const handleViewQuestions = (questionGroupId: string) => {
-    const params = new URLSearchParams();
-    if (sectionId) params.set("sectionId", sectionId);
-    params.set("tab", "questions");
-    params.set("questionGroupId", questionGroupId);
-
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
   // ✅ Updated delete handler using AlertDialog
   const handleDelete = async (questionGroupId: string) => {
     try {
@@ -518,12 +509,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleViewQuestions(group.id)}
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          View Questions
-                        </DropdownMenuItem>
+                      
                         <DropdownMenuItem onClick={() => handleEdit(group.id)}>
                           <Edit3 className="h-4 w-4 mr-2" />
                           Edit Group
@@ -634,15 +620,6 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                       >
                         <Eye className="h-3 w-3" />
                         <span>View</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewQuestions(group.id)}
-                        className="flex items-center space-x-1"
-                      >
-                        <Users className="h-3 w-3" />
-                        <span>Questions</span>
                       </Button>
                       <Button
                         variant="outline"

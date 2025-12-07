@@ -218,7 +218,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
 
     setFormData(formatData);
     isPopulated.current = true;
-    console.log("FormData populated:", formatData);
   }, [
     existingQuestion,
     questionGroups,
@@ -1055,7 +1054,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
           {/* Media & Additional Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Media & Additional Information</CardTitle>
+              <CardTitle>Additional Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Explanation */}

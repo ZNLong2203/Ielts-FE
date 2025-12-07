@@ -141,8 +141,6 @@ const QuestionGroupForm: React.FC<QuestionGroupFormProps> = ({
     enabled: !!questionGroupId,
   });
 
-  console.log("Question Group Data:", questionGroupData);
-
   // Form setup - Fixed: Always use QuestionGroupFormData type
   const questionGroupForm = useForm<QuestionGroupFormData>({
     resolver: zodResolver(QuestionGroupSchema), // Always use full schema
@@ -182,7 +180,7 @@ const QuestionGroupForm: React.FC<QuestionGroupFormProps> = ({
       return uploadQuestionGroupImage(questionGroupId, formData);
     },
     onSuccess: (response) => {
-      toast.success("Image uploaded successfully! 🖼️");
+      // toast.success("Image uploaded successfully! 🖼️");
       setIsUploadingImage(false);
       if (response?.data?.image_url) {
         questionGroupForm.setValue("image_url", response.data.image_url);
@@ -213,17 +211,17 @@ const QuestionGroupForm: React.FC<QuestionGroupFormProps> = ({
         ordering: formData.ordering,
         matching_options: formData.matching_options || [],
       };
-      console.log("Create payload:", payload);
-      return createQuestionGroup(payload);
+      const response = await createQuestionGroup(payload);
+      return response;
     },
     onSuccess: async (response) => {
-      if (imageFile && questionGroupId) {
+      if (imageFile && response?.id) {
         setIsUploadingImage(true);
         try {
           const formData = new FormData();
           formData.append("file", imageFile);
           await uploadImageMutation.mutateAsync({
-            questionGroupId: questionGroupId,
+            questionGroupId: response?.id,
             formData,
           });
           toast.success("Question group created and image uploaded successfully! 📝");
