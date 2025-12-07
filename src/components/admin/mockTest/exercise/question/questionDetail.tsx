@@ -447,13 +447,6 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Difficulty:</span>
-                  <Badge className={`${difficultyConfig?.color} text-xs`}>
-                    {difficultyConfig?.icon} {difficultyConfig?.label}
-                  </Badge>
-                </div>
-
-                <div className="flex justify-between items-center">
                   <span className="text-gray-600">Points:</span>
                   <span className="font-semibold text-green-600">
                     {question.points}
@@ -466,28 +459,6 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
                 </div>
 
                 <Separator />
-
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Has Image:</span>
-                  <span
-                    className={
-                      question.image_url ? "text-green-600" : "text-gray-400"
-                    }
-                  >
-                    {question.image_url ? "✓ Yes" : "✗ No"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Has Audio:</span>
-                  <span
-                    className={
-                      question.audio_url ? "text-green-600" : "text-gray-400"
-                    }
-                  >
-                    {question.audio_url ? "✓ Yes" : "✗ No"}
-                  </span>
-                </div>
 
                 {question.options && (
                   <div className="flex justify-between items-center">
