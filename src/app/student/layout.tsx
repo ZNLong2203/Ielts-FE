@@ -9,6 +9,7 @@ import {
   ClipboardList, 
   Award, 
   Calendar, 
+  MessageSquare,
   // Settings,
   X,
   User,
@@ -24,6 +25,7 @@ const navigation = [
   { name: "My Quizzes", href: "/student/dashboard/my-quizzes", icon: ClipboardList },
   { name: "Certificates", href: "/student/dashboard/certificates", icon: Award },
   { name: "Schedule", href: "/student/dashboard/schedule", icon: Calendar },
+  { name: "AI Assistant", href: "/student/chatbot", icon: MessageSquare },
   // { name: "Settings", href: "/student/dashboard/settings", icon: Settings },
 ]
 
