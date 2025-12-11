@@ -6,7 +6,7 @@ const ROUTES = {
   LOGIN: "/auth/login",
 
   STUDENT_PROFILE: "/profile/student",
-  TEACHER_PROFILE: "/profile/teacher",
+  TEACHER_PROFILE: "/teacher/dashboard/profile",
 
   ADMIN: "/admin",
   ADMIN_STUDENTS: "/admin/student",

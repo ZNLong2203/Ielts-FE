@@ -10,6 +10,7 @@ export const API_URL = {
   TEACHER_DASHBOARD: "/teacher/dashboard",
   PROFILE: "/profile",
   OWN_PROFILE: "/auth/profile",
+  CHANGE_PASSWORD: "/auth/change-password",
 
   STUDENT: "/students",
   TEACHER: "/teachers",
