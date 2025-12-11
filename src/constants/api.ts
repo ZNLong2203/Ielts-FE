@@ -7,6 +7,7 @@ export const API_URL = {
   REFRESH_TOKEN: "/auth/refresh",
 
   DASHBOARD: "/admin/dashboard",
+  TEACHER_DASHBOARD: "/teacher/dashboard",
   PROFILE: "/profile",
   OWN_PROFILE: "/auth/profile",
 
