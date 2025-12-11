@@ -182,7 +182,7 @@ const LandingNavbar = () => {
                     </div>
                   </div>
                 </NavbarTitle>
-
+{/* 
                 <NavbarTitle text="Test Practice">
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                     <div className="h-3 w-full"></div>
@@ -195,7 +195,7 @@ const LandingNavbar = () => {
                       </div>
                     </div>
                   </div>
-                </NavbarTitle>
+                </NavbarTitle> */}
 
                 {/* <NavbarTitle text="Placement Test">
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
@@ -326,26 +326,6 @@ const LandingNavbar = () => {
                             <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
-
-                        {/* Achievements
-                        <a
-                          href="/achievements"
-                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
-                        >
-                          <Award className="h-4 w-4" />
-                          <span>Achievements</span>
-                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a> */}
-
-                        {/* Settings */}
-                        <a
-                          href="/settings"
-                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
-                        >
-                          <Settings className="h-4 w-4" />
-                          <span>Settings</span>
-                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
 
                         {/* Admin Dashboard (Admin only) */}
                         {user?.role === "admin" && (
