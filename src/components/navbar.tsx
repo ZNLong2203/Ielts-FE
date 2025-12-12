@@ -330,7 +330,7 @@ const LandingNavbar = () => {
                         {/* Admin Dashboard (Admin only) */}
                         {user?.role === "admin" && (
                           <>
-                            <div className="border-t border-white/10 my-2"></div>
+                            <div className=""></div>
                             <a
                               href={ROUTES.ADMIN}
                               className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
