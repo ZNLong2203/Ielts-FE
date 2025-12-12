@@ -20,7 +20,7 @@ const RegisterTeacherPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl text-white bg-blue-700 shadow-lg">
               <GalleryVerticalEnd className="size-4" />
             </div>
-            <span className="text-lg font-semibold">TLL</span>
+            <span className="text-lg font-semibold">Ielts</span>
           </Link>
         </motion.div>
         

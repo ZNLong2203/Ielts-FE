@@ -35,12 +35,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <I18nProvider>
-          <QueryClientProviderWarpper>
-            <ReduxProviderWrapper>
-              <Toaster/>
-              <PersistProvider>{children}</PersistProvider>
-            </ReduxProviderWrapper>
-          </QueryClientProviderWarpper>
+        <QueryClientProviderWarpper>
+          <ReduxProviderWrapper>
+            <Toaster/>
+            <PersistProvider>{children}</PersistProvider>
+          </ReduxProviderWrapper>
+        </QueryClientProviderWarpper>
         </I18nProvider>
       </body>
     </html>

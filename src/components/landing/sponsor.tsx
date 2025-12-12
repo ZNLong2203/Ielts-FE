@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Handshake, CheckCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/context/I18nContext";
 
 // Import logo images
 import idp from "../../../public/icons/idp.png";
@@ -22,6 +23,7 @@ import workshop from "../../../public/icons/workshop.png";
 import cam from '../../../public/icons/cam.png';
 
 const Sponsor = () => {
+  const { t } = useI18n();
   // Partner logos configuration with categories
   const sponsors = [
     { 
@@ -135,10 +137,10 @@ const Sponsor = () => {
 
   // Benefits of partnership
   const benefits = [
-    "Access to premium IELTS preparation materials",
-    "Co-branded educational events and webinars",
-    "Priority placement for your students in our courses",
-    "Exclusive discounts for your organization"
+    t("sponsor.accessToPremium"),
+    t("sponsor.coBrandedEvents"),
+    t("sponsor.priorityPlacement"),
+    t("sponsor.exclusiveDiscounts")
   ];
 
   return (
@@ -159,11 +161,11 @@ const Sponsor = () => {
           className="text-center mb-16 max-w-7xl mx-auto"
         >
           <div className="inline-block bg-blue-400/10 text-blue-600 px-4 py-1 rounded-full text-sm font-medium mb-4">
-            Trusted Globally
+            {t("sponsor.trustedGlobally")}
           </div>
           
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight bg-gradient-to-r text-blue-800 bg-clip-text mb-6">
-            Our Partners & Collaborations
+            {t("sponsor.ourPartnersCollaborations")}
           </h2>
           
           <motion.p
@@ -173,9 +175,7 @@ const Sponsor = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-3xl mx-auto text-lg text-gray-600"
           >
-            We are proud to be supported by leading educational institutions and
-            organizations committed to quality education. Their collaboration strengthens our mission to
-            provide the best learning experience for your success.
+            {t("sponsor.proudToBeSupported")}
           </motion.p>
         </motion.div>
       
@@ -234,12 +234,11 @@ const Sponsor = () => {
         >
           <motion.div variants={itemVariants} className="flex flex-col justify-center">
             <h3 className="text-2xl md:text-3xl font-bold text-blue-900 mb-6">
-              Why Partner With Us?
+              {t("sponsor.whyPartnerWithUs")}
             </h3>
             
             <p className="text-gray-600 mb-8">
-              Join our network of educational partners and help your students achieve their language learning goals. 
-              Our partnership program offers numerous benefits and resources to support your institution.
+              {t("sponsor.joinOurNetwork")}
             </p>
             
             <div className="space-y-4">
@@ -262,18 +261,18 @@ const Sponsor = () => {
               <div className="bg-blue-500 p-2 rounded-full mr-3">
                 <Handshake className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-blue-900">Become a Partner</h3>
+              <h3 className="text-xl font-bold text-blue-900">{t("sponsor.becomeAPartner")}</h3>
             </div>
             
             <p className="text-gray-600 mb-6">
-              Interested in exploring partnership opportunities? Fill out our simple form and our partnership team will get back to you within 48 hours.
+              {t("sponsor.interestedInExploring")}
             </p>
             
             <form className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Organization Name
+                    {t("sponsor.organizationName")}
                   </label>
                   <input 
                     type="text" 
@@ -282,7 +281,7 @@ const Sponsor = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Your Name
+                    {t("sponsor.yourName")}
                   </label>
                   <input 
                     type="text" 
@@ -293,7 +292,7 @@ const Sponsor = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                  {t("sponsor.emailAddress")}
                 </label>
                 <input 
                   type="email" 
@@ -302,7 +301,7 @@ const Sponsor = () => {
               </div>
               
               <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg flex items-center justify-center">
-                Submit Partnership Request
+                {t("sponsor.submitPartnershipRequest")}
                 <ExternalLink className="h-4 w-4 ml-2" />
               </Button>
             </form>
@@ -320,7 +319,7 @@ const Sponsor = () => {
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-2/3 mb-6 md:mb-0 md:pr-8">
               <h3 className="text-2xl font-bold mb-4">
-                "The partnership with this IELTS preparation platform has significantly elevated the quality of our language training programs."
+                "{t("sponsor.partnershipQuote")}"
               </h3>
               <p className="font-medium">
                 Dr. Rebecca Chen, Academic Director at Cambridge Language Institute
@@ -328,7 +327,7 @@ const Sponsor = () => {
             </div>
             <div className="md:w-1/3 flex justify-center md:justify-end">
               <Button className="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-xl font-medium">
-                Read Success Stories
+                {t("sponsor.readSuccessStories")}
               </Button>
             </div>
           </div>

@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Heart, Quote, Star, StarHalf, StarIcon } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 // Import avatar images
 import avatar1 from "../../../public/images/avatar-1.png";
@@ -235,6 +236,7 @@ const TestimonialsColumn = ({
 
 // Main testimonials component
 export const Testimonials = () => {
+  const { t } = useI18n();
   // Animation variants for the section heading
   const headerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -263,25 +265,24 @@ export const Testimonials = () => {
           className="text-center mb-16"
         >
           <div className="inline-block bg-blue-400/10 text-blue-600 px-4 py-1 rounded-full text-sm font-medium mb-4">
-            Student Testimonials
+            {t("testimonials.studentTestimonials")}
           </div>
           
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r text-blue-800 bg-clip-text mb-6 px-4">
-            Join thousands of satisfied students
+            {t("testimonials.joinThousands")}
           </h2>
           
           <p className="max-w-2xl mx-auto text-gray-600 text-lg">
-            Our students have achieved remarkable success in their IELTS journey.
-            Here's what they have to say about their experience with our courses.
+            {t("testimonials.remarkableSuccess")}
           </p>
         </motion.div>
       
         {/* Stats banner */}
         <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-16">
           {[
-            { value: "98%", label: "Satisfaction Rate" },
-            { value: "15K+", label: "Active Students" },
-            { value: "4.8/5", label: "Average Rating" },
+            { value: "98%", label: t("testimonials.satisfactionRate") },
+            { value: "15K+", label: t("testimonials.activeStudents") },
+            { value: "4.8/5", label: t("testimonials.averageRating") },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-900 to-blue-500 bg-clip-text text-transparent">
@@ -311,10 +312,10 @@ export const Testimonials = () => {
         {/* CTA section */}
         <div className="mt-16 text-center">
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
-            Start Your IELTS Journey Today
+            {t("testimonials.startYourIELTSJourney")}
           </button>
           <p className="mt-4 text-sm text-gray-500">
-            Join our community of successful IELTS test-takers
+            {t("testimonials.joinCommunity")}
           </p>
         </div>
       </div>

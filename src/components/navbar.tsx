@@ -103,7 +103,7 @@ const LandingNavbar = () => {
                 <div className="mr-0 rounded-[140px] px-3 py-2.5 max-md:bg-[rgba(5,6,15,0.17)] md:mr-5 md:px-0 md:py-2.5 lg:mr-1 lg:px-5 lg:py-3 flex items-center gap-2">
                   <img
                     src="/icons/logo.png"
-                    alt="TLL Logo"
+                    alt="Ielts Logo"
                     className="h-12 w-12 object-contain rounded-lg"
                   />
                   <span className="font-bold text-xl text-white">IELTS</span>

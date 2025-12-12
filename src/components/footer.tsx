@@ -60,7 +60,7 @@ const Footer = () => {
                 <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">P</span>
                 </div>
-                <span className="text-2xl font-bold text-gray-900">TLL</span>
+                <span className="text-2xl font-bold text-gray-900">Ielts</span>
               </div>
               
               <p className="text-gray-600 text-sm">
@@ -174,7 +174,7 @@ const Footer = () => {
             {/* Usage Guide */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                {t("footer.usingTLL")}
+                {t("footer.usingIelts")}
               </h3>
               <ul className="space-y-3">
                 {[
@@ -202,7 +202,7 @@ const Footer = () => {
             {/* About & Policies */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                {t("footer.aboutTLL")}
+                {t("footer.aboutIelts")}
               </h3>
               <ul className="space-y-3">
                 {[

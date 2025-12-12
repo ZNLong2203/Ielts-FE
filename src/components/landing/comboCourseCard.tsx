@@ -14,6 +14,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { IComboCourse } from "@/interface/course";
+import { useI18n } from "@/context/I18nContext";
 
 interface ComboCourseCardProps {
   comboCourse: IComboCourse;
@@ -26,6 +27,7 @@ export default function ComboCourseCard({
   selectedLevel,
   selectedTarget
 }: ComboCourseCardProps) {
+  const { t } = useI18n();
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -87,11 +89,11 @@ export default function ComboCourseCard({
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
               <span className="text-sm font-medium text-purple-300">
-                Combo Course
+                {t("comboCourse.comboCourse")}
               </span>
             </div>
             <div className="bg-green-500/20 text-green-300 px-3 py-1 rounded-full text-xs font-medium">
-              {comboCourse.discount_percentage}% OFF
+              {t("comboCourse.off", { percent: comboCourse.discount_percentage })}
             </div>
           </div>
 
@@ -110,7 +112,7 @@ export default function ComboCourseCard({
             <div className="mb-4 flex-grow">
               <h4 className="text-sm font-medium text-blue-200 mb-2 flex items-center">
                 <BookOpen className="h-4 w-4 mr-2" />
-                Included Courses ({comboCourse.courses.length})
+                {t("comboCourse.includedCourses", { count: comboCourse.courses.length })}
               </h4>
               <div className="space-y-2">
                 {comboCourse.courses.slice(0, 3).map((course) => (
@@ -121,7 +123,7 @@ export default function ComboCourseCard({
                 ))}
                 {comboCourse.courses.length > 3 && (
                   <div className="text-xs text-blue-300">
-                    +{comboCourse.courses.length - 3} more courses
+                    {t("comboCourse.moreCourses", { count: comboCourse.courses.length - 3 })}
                   </div>
                 )}
               </div>
@@ -143,7 +145,7 @@ export default function ComboCourseCard({
                 <BookOpen className="h-4 w-4 text-blue-300" />
               </div>
               <div className="text-xs text-blue-200">
-                {comboCourse.total_lessons || 0} lessons
+                {t("comboCourse.lessons", { count: comboCourse.total_lessons || 0 })}
               </div>
             </div>
             <div className="text-center">
@@ -151,7 +153,7 @@ export default function ComboCourseCard({
                 <Users className="h-4 w-4 text-blue-300" />
               </div>
               <div className="text-xs text-blue-200">
-                {comboCourse.enrollment_count || 0}
+                {t("comboCourse.students", { count: comboCourse.enrollment_count || 0 })}
               </div>
             </div>
           </div>
@@ -169,10 +171,10 @@ export default function ComboCourseCard({
               </div>
               <div className="text-right">
                 <div className="text-sm text-green-400 font-medium">
-                  Save {formatPrice(calculateSavings())}
+                  {t("comboCourse.save", { amount: formatPrice(calculateSavings()) })}
                 </div>
                 <div className="text-xs text-blue-300">
-                  {comboCourse.discount_percentage}% discount
+                  {t("comboCourse.discount", { percent: comboCourse.discount_percentage })}
                 </div>
               </div>
             </div>
@@ -199,7 +201,7 @@ export default function ComboCourseCard({
               onClick={() => setShowModal(true)}
             >
               <span className="flex items-center justify-center">
-                View Details
+                {t("comboCourse.viewDetails")}
                 <BookOpen className="ml-2 h-4 w-4" />
               </span>
             </Button>
@@ -246,7 +248,7 @@ export default function ComboCourseCard({
                       {comboCourse.name}
                     </h2>
                     <p className="text-blue-100 text-sm">
-                      Level Range: {selectedLevel} - {selectedTarget}
+                    {t("comboCourse.levelRange", { from: selectedLevel, to: selectedTarget })}
                     </p>
                   </div>
                 </div>
@@ -265,7 +267,7 @@ export default function ComboCourseCard({
             <div className="p-6 space-y-6">
               {/* Description */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">{t("comboCourse.description")}</h3>
                 <p className="text-gray-700 leading-relaxed">{comboCourse.description}</p>
               </div>
 
@@ -274,7 +276,7 @@ export default function ComboCourseCard({
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
-                    Included Courses ({comboCourse.courses.length})
+                    {t("comboCourse.includedCourses", { count: comboCourse.courses.length })}
                   </h3>
                   <div className="grid gap-4">
                     {comboCourse.courses.map((course, index) => (
@@ -283,9 +285,9 @@ export default function ComboCourseCard({
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-2">
                               <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                                Course {index + 1}
+                                {t("comboCourse.course", { index: index + 1 })}
                               </span>
-                              <span className="text-sm text-gray-500">• {course.difficulty_level || 'All Levels'}</span>
+                              <span className="text-sm text-gray-500">• {course.difficulty_level || t("comboCourse.allLevels")}</span>
                             </div>
                             <h4 className="font-semibold text-gray-900 mb-2">{course.title}</h4>
                             <p className="text-gray-600 text-sm mb-3 line-clamp-2">{course.description}</p>
@@ -308,7 +310,7 @@ export default function ComboCourseCard({
                             <div className="text-lg font-bold text-gray-900">
                               {formatPrice(course.price || 0)}
                             </div>
-                            <div className="text-sm text-gray-500">Individual price</div>
+                            <div className="text-sm text-gray-500">{t("comboCourse.individualPrice")}</div>
                           </div>
                         </div>
                       </div>
@@ -319,47 +321,47 @@ export default function ComboCourseCard({
 
               {/* Stats Summary */}
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Package Summary</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("comboCourse.packageSummary")}</h3>
                 <div className="grid grid-cols-3 gap-6">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">
                       {comboCourse.total_duration || 0}h
                     </div>
-                    <div className="text-sm text-gray-600">Total Duration</div>
+                    <div className="text-sm text-gray-600">{t("comboCourse.totalDuration")}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-purple-600">
                       {comboCourse.total_lessons || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Total Lessons</div>
+                    <div className="text-sm text-gray-600">{t("comboCourse.totalLessons")}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-3xl font-bold text-green-600">
                       {comboCourse.enrollment_count || 0}
                     </div>
-                    <div className="text-sm text-gray-600">Enrolled Students</div>
+                    <div className="text-sm text-gray-600">{t("comboCourse.enrolledStudents")}</div>
                   </div>
                 </div>
               </div>
 
               {/* Pricing */}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Summary</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("comboCourse.pricingSummary")}</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-700">Original Price (Individual):</span>
+                    <span className="text-gray-700">{t("comboCourse.originalPriceIndividual")}</span>
                     <span className="text-gray-500 line-through text-lg">
                       {formatPrice(comboCourse.original_price)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-green-700 font-medium text-lg">Combo Package Price:</span>
+                    <span className="text-green-700 font-medium text-lg">{t("comboCourse.comboPackagePrice")}</span>
                     <span className="text-2xl font-bold text-green-600">
                       {formatPrice(comboCourse.combo_price)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-green-200">
-                    <span className="text-green-700 font-semibold">You Save:</span>
+                    <span className="text-green-700 font-semibold">{t("comboCourse.youSave")}</span>
                     <span className="text-xl font-bold text-green-600">
                       {formatPrice(calculateSavings())} ({comboCourse.discount_percentage}%)
                     </span>
@@ -370,7 +372,7 @@ export default function ComboCourseCard({
               {/* Tags */}
               {comboCourse.tags && comboCourse.tags.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{t("comboCourse.tags")}</h3>
                   <div className="flex flex-wrap gap-2">
                     {comboCourse.tags.map((tag, index) => (
                       <span
@@ -388,24 +390,24 @@ export default function ComboCourseCard({
               <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <CheckCircle className="h-5 w-5 mr-2 text-yellow-600" />
-                  Package Benefits
+                  {t("comboCourse.packageBenefits")}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-700">Lifetime access to all courses</span>
+                    <span className="text-gray-700">{t("comboCourse.lifetimeAccess")}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-700">Structured learning path</span>
+                    <span className="text-gray-700">{t("comboCourse.structuredPath")}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-700">Progress tracking</span>
+                    <span className="text-gray-700">{t("comboCourse.progressTracking")}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-700">Certificate upon completion</span>
+                    <span className="text-gray-700">{t("comboCourse.certificate")}</span>
                   </div>
                 </div>
               </div>
@@ -419,14 +421,14 @@ export default function ComboCourseCard({
                   className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100"
                   onClick={() => setShowModal(false)}
                 >
-                  Close
+                  {t("comboCourse.close")}
                 </Button>
                 <Button
                   className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
                   onClick={handlePurchase}
                 >
                   <ShoppingCart className="mr-2 h-4 w-4" />
-                  Purchase Complete Package
+                  {t("comboCourse.startPurchase")}
                 </Button>
               </div>
             </div>

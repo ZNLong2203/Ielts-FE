@@ -10,8 +10,10 @@ import CourseCard from "./courseCard";
 import ComboCourseCard from "./comboCourseCard";
 import { getComboCoursesByLevel } from "@/api/course";
 import { IComboCourse } from "@/interface/course";
+import { useI18n } from "@/context/I18nContext";
 
 export default function CourseSection() {
+  const { t } = useI18n();
   const level = [3.5, 4.0, 5.0, 6.0];
   const target = useMemo(() => [5.0, 6.0, 7.0], []);
   const [selectedLevel, setSelectedLevel] = useState<number>(3.5);
@@ -100,22 +102,22 @@ export default function CourseSection() {
         >
           <div className="md:w-1/2 mb-8 md:mb-0">
             <div className="inline-block bg-blue-400/30 text-blue-100 px-4 py-1 rounded-full text-sm font-medium mb-4">
-              Personalized Learning Path
+              {t("course.personalizedLearningPath")}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-              Design your IELTS
+              {t("course.designYourIELTS")}
               <br /> 
-              <span className="text-yellow-300">success journey</span>
+              <span className="text-yellow-300">{t("course.successJourney")}</span>
             </h1>
             <p className="text-blue-100 text-lg mb-6">
-              Our AI-powered system creates a customized roadmap based on your current level and target score.
+              {t("course.aiPoweredSystem")}
             </p>
             <div className="flex space-x-4">
               <Button className="bg-white text-blue-800 hover:bg-blue-50 font-medium px-6">
-                Start Learning
+                {t("course.startLearning")}
               </Button>
               <Button variant="outline" className="border-white text-blue-800 hover:bg-blue-50">
-                Learn More
+                {t("course.learnMore")}
               </Button>
             </div>
           </div>
@@ -131,14 +133,14 @@ export default function CourseSection() {
                 <div className="bg-blue-500 p-2 rounded-full">
                   <Target className="h-5 w-5 text-white" />
                 </div>
-                <h3 className="text-xl font-semibold ml-3">Set Your IELTS Goals</h3>
+                <h3 className="text-xl font-semibold ml-3">{t("course.setYourIELTSGoals")}</h3>
               </div>
 
               {/* IELTS Level Selection */}
               <div className="mb-6">
                 <label className="text-sm font-medium mb-2 flex items-center">
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Current IELTS Level
+                  {t("course.currentIELTSLevel")}
                 </label>
                 <div className="grid grid-cols-4 gap-2">
                   {level.map((lv) => (
@@ -162,7 +164,7 @@ export default function CourseSection() {
               <div className="mb-6">
                 <label className="text-sm font-medium mb-2 flex items-center">
                   <TrendingUp className="h-4 w-4 mr-2" />
-                  Target IELTS Score
+                  {t("course.targetIELTSScore")}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {target.map((tar) => (
@@ -185,14 +187,14 @@ export default function CourseSection() {
               
               <div className="flex items-center justify-between text-sm mt-4">
                 <span className="text-blue-200">
-                  {stageQuantity} stages to reach your goal
+                  {t("course.stagesToReachGoal", { count: stageQuantity })}
                 </span>
                 <motion.button 
                   onClick={() => setShowCourseDetails(!showCourseDetails)}
                   whileHover={{ x: 5 }}
                   className="flex items-center text-yellow-300 font-medium hover:text-yellow-100 transition-colors"
                 >
-                  View your path
+                  {t("course.viewYourPath")}
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </motion.button>
               </div>
@@ -215,7 +217,7 @@ export default function CourseSection() {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold flex items-center">
                   <Sparkles className="h-5 w-5 mr-2 text-yellow-300" />
-                  Your Learning Journey
+                  {t("course.yourLearningJourney")}
                 </h2>
                 <div className="bg-blue-700/50 px-4 py-1 rounded-full text-sm">
                   <span className="text-yellow-300 font-medium">{selectedLevel}</span>
@@ -239,11 +241,11 @@ export default function CourseSection() {
         >
           <div className="flex flex-col md:flex-row items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Choose the Right Course</h2>
+              <h2 className="text-3xl font-bold mb-2">{t("course.chooseTheRightCourse")}</h2>
               <p className="text-xl text-blue-100">
-                Conquer the roadmap{" "}
+                {t("course.conquerTheRoadmap")}{" "}
                 <span className="text-yellow-300 font-bold">
-                  from IELTS {selectedLevel.toFixed(1)} to {selectedTarget.toFixed(1)}
+                  {t("course.fromIELTS", { from: selectedLevel.toFixed(1), to: selectedTarget.toFixed(1) })}
                 </span>
               </p>
             </div>
@@ -263,7 +265,7 @@ export default function CourseSection() {
                   } rounded-xl px-8 py-3 font-medium transition-all duration-300`}
                 >
                   <Package className="h-5 w-5 mr-2" />
-                  Combo Courses
+                  {t("course.comboCourses")}
                 </Button>
                 {/* <Button
                   onClick={() => setActiveTab('individual')}
@@ -287,7 +289,7 @@ export default function CourseSection() {
               {loading ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto"></div>
-                  <p className="text-blue-200 mt-4">Loading combo courses...</p>
+                  <p className="text-blue-200 mt-4">{t("course.loadingComboCourses")}</p>
                 </div>
               ) : comboCourses.length > 0 ? (
                 <div>
@@ -297,7 +299,7 @@ export default function CourseSection() {
                       <div className="flex items-center justify-between mb-6">
                         <h3 className="text-2xl font-bold text-white flex items-center">
                           <Package className="h-6 w-6 mr-3 text-blue-400" />
-                          Combo Package Summary
+                          {t("course.comboPackageSummary")}
                         </h3>
                         <div className="bg-blue-600/40 px-4 py-2 rounded-full text-sm border border-blue-400/30">
                           <span className="text-blue-100 font-semibold">{comboPricing.levelRange}</span>
@@ -309,23 +311,23 @@ export default function CourseSection() {
                           <div className="text-4xl font-bold text-white mb-2 tracking-tight">
                             {comboPricing.totalComboPrice.toLocaleString('vi-VN')} ₫
                           </div>
-                          <div className="text-lg text-slate-300 font-medium">Combo Price</div>
+                          <div className="text-lg text-slate-300 font-medium">{t("course.comboPrice")}</div>
                         </div>
                         <div className="lg:col-span-2 text-center lg:text-right">
                           <div className="text-2xl text-gray-400 line-through mb-1">
                             {comboPricing.totalOriginalPrice.toLocaleString('vi-VN')} ₫
                           </div>
-                          <div className="text-sm text-gray-300 mb-3">Original Price</div>
+                          <div className="text-sm text-gray-300 mb-3">{t("course.originalPrice")}</div>
                           <div className="text-xl text-emerald-500 font-bold">
-                            Save {comboPricing.totalSavings.toLocaleString('vi-VN')} ₫
+                            {t("course.save", { amount: comboCourses.length > 0 ? comboCourses[0].combo_price.toLocaleString('vi-VN') + ' ₫' : '0 ₫' })}
                           </div>
-                          <div className="text-sm text-emerald-400">Total Savings</div>
+                          <div className="text-sm text-emerald-400">{t("course.totalSavings")}</div>
                         </div>
                       </div>
 
                       {/* Included Level Ranges */}
                       <div className="mb-6">
-                        <h4 className="text-sm font-medium text-slate-300 mb-3 uppercase tracking-wide">Included Level Ranges:</h4>
+                        <h4 className="text-sm font-medium text-slate-300 mb-3 uppercase tracking-wide">{t("course.includedLevelRanges")}</h4>
                         <div className="flex flex-wrap gap-3">
                           {comboPricing.includedLevels.map((level, index) => (
                             <span
@@ -363,7 +365,7 @@ export default function CourseSection() {
                         }}
                         className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 text-white font-semibold py-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.01] transition-all duration-300"
                       >
-                        Purchase Complete Package
+                        {t("course.purchaseCompletePackage")}
                       </Button>
                     </div>
                   )}
@@ -390,15 +392,15 @@ export default function CourseSection() {
               ) : (
                 <div className="text-center py-12">
                   <Package className="h-16 w-16 text-blue-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-white mb-2">No Combo Courses Available</h3>
+                  <h3 className="text-xl font-semibold text-white mb-2">{t("course.noComboCoursesAvailable")}</h3>
                   <p className="text-blue-200 mb-6">
-                    We&apos;re working on creating the perfect combo courses for your level range.
+                    {t("course.workingOnCreating")}
                   </p>
                   <Button 
                     onClick={() => setActiveTab('individual')}
                     className="bg-yellow-400 text-blue-900 hover:bg-yellow-300"
                   >
-                    View Individual Courses
+                    {t("course.viewIndividualCourses")}
                   </Button>
                 </div>
               )}
