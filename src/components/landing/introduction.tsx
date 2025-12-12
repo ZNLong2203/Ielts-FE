@@ -2,34 +2,37 @@
 
 import { motion } from "framer-motion"
 import { ArrowRight, Headphones, BookOpen, Pencil, MessageSquare } from "lucide-react"
+import { useI18n } from "@/context/I18nContext"
 
 const IntroductionSection = () => {
+  const { t } = useI18n();
+  
   // Skills data for better maintenance
   const skills = [
     {
-      title: "Listening",
-      description: "Enhance your listening skills with expert feedback. Improve your comprehension and response time with every lesson!",
+      title: t("introduction.listening"),
+      description: t("introduction.listeningDesc"),
       icon: Headphones,
       gradient: "bg-gradient-to-br from-blue-700 via-blue-500 to-blue-400",
       delay: 0
     },
     {
-      title: "Reading",
-      description: "Master reading comprehension strategies. Learn to analyze complex texts and answer questions with precision and confidence.",
+      title: t("introduction.reading"),
+      description: t("introduction.readingDesc"),
       icon: BookOpen,
       gradient: "bg-gradient-to-br from-indigo-700 via-indigo-500 to-indigo-400",
       delay: 1
     },
     {
-      title: "Writing",
-      description: "Build a solid foundation from the basics. Practice writing with AI and see noticeable progress with each lesson.",
+      title: t("introduction.writing"),
+      description: t("introduction.writingDesc"),
       icon: Pencil,
       gradient: "bg-gradient-to-br from-emerald-700 via-emerald-500 to-emerald-400",
       delay: 2
     },
     {
-      title: "Speaking",
-      description: "Communicate flexibly with highly practical topics. Practice and receive corrections in various real-world scenarios.",
+      title: t("introduction.speaking"),
+      description: t("introduction.speakingDesc"),
       icon: MessageSquare,
       gradient: "bg-gradient-to-br from-amber-600 via-amber-500 to-amber-400",
       delay: 3
@@ -92,23 +95,22 @@ const IntroductionSection = () => {
             variants={titleVariants}
             className="inline-block bg-blue-400/10 text-blue-600 px-4 py-1 rounded-full text-sm font-medium mb-4"
           >
-            Complete IELTS Preparation
+            {t("introduction.completePreparation")}
           </motion.div>
           
           <motion.h2 
             variants={titleVariants}
             className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight bg-gradient-to-r text-blue-800 bg-clip-text mb-6"
           >
-            Master all skills with a high-quality <br className="hidden md:block" />
-            training program tailored to your goals
+            {t("introduction.masterAllSkills")} <br className="hidden md:block" />
+            {t("introduction.trainingProgram")}
           </motion.h2>
           
           <motion.p 
             variants={titleVariants}
             className="max-w-3xl mx-auto text-lg text-gray-600"
           >
-            Learning a foreign language is easy with a comprehensive, personalized 
-            Study & Test Preparation plan designed specifically for your needs.
+            {t("introduction.learningEasy")}
           </motion.p>
         </motion.div>
 
@@ -169,12 +171,12 @@ const IntroductionSection = () => {
           className="mt-16 bg-white border border-blue-100 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between"
         >
           <div className="text-center md:text-left mb-6 md:mb-0">
-            <h3 className="text-xl md:text-2xl font-bold text-blue-900 mb-2">Ready to improve your IELTS score?</h3>
-            <p className="text-gray-600">Take a free assessment test to see your current level</p>
+            <h3 className="text-xl md:text-2xl font-bold text-blue-900 mb-2">{t("introduction.readyToImprove")}</h3>
+            <p className="text-gray-600">{t("introduction.takeFreeAssessment")}</p>
           </div>
           
           <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-medium transition-all duration-300 whitespace-nowrap flex items-center">
-            Start Free Assessment
+            {t("introduction.startFreeAssessment")}
             <ArrowRight className="ml-2 h-4 w-4" />
           </button>
         </motion.div>

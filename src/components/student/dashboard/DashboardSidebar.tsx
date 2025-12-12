@@ -18,19 +18,11 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useStudent } from "@/context/StudentContext"
+import { useI18n } from "@/context/I18nContext"
 import Image from "next/image"
 
-const navigation = [
-  { name: "Dashboard", href: "/student/dashboard", icon: Home },
-  { name: "My Courses", href: "/student/dashboard/my-courses", icon: ShoppingBag },
-  { name: "My Quizs", href: "/student/dashboard/my-quizs", icon: FileQuestion },
-  { name: "Progress", href: "/student/dashboard/progress", icon: BarChart3 },
-  { name: "Certificates", href: "/student/dashboard/certificates", icon: Award },
-  { name: "Schedule", href: "/student/dashboard/schedule", icon: Clock },
-  { name: "Settings", href: "/student/dashboard/settings", icon: Settings },
-]
-
 export function DashboardSidebar() {
+  const { t } = useI18n();
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { studentData } = useStudent()
@@ -45,6 +37,16 @@ export function DashboardSidebar() {
     ? Number(student.target_ielts_score).toFixed(1)
     : "N/A"
   const avatar = student?.avatar
+
+  const navigation = [
+    { name: t("sidebar.dashboard"), href: "/student/dashboard", icon: Home },
+    { name: t("sidebar.myCourses"), href: "/student/dashboard/my-courses", icon: ShoppingBag },
+    { name: t("sidebar.myQuizzes"), href: "/student/dashboard/my-quizs", icon: FileQuestion },
+    { name: t("sidebar.progress"), href: "/student/dashboard/progress", icon: BarChart3 },
+    { name: t("sidebar.certificates"), href: "/student/dashboard/certificates", icon: Award },
+    { name: t("sidebar.schedule"), href: "/student/dashboard/schedule", icon: Clock },
+    { name: t("sidebar.settings"), href: "/student/dashboard/settings", icon: Settings },
+  ]
 
   return (
     <div
@@ -61,8 +63,8 @@ export function DashboardSidebar() {
           </div>
           {!isCollapsed && (
             <div>
-              <h2 className="font-semibold text-gray-900">IELTS Academy</h2>
-              <p className="text-sm text-gray-500">Student Portal</p>
+              <h2 className="font-semibold text-gray-900">{t("sidebar.ieltsAcademy")}</h2>
+              <p className="text-sm text-gray-500">{t("sidebar.studentPortal")}</p>
             </div>
           )}
         </div>
@@ -83,7 +85,7 @@ export function DashboardSidebar() {
           {!isCollapsed && (
             <div className="flex-1">
               <h3 className="font-medium text-gray-900 truncate">{displayName}</h3>
-              <p className="text-sm text-gray-500">Target: Band {targetScore}</p>
+              <p className="text-sm text-gray-500">{t("sidebar.target")}: Band {targetScore}</p>
               <div className="mt-2">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-gray-200 rounded-full h-2">

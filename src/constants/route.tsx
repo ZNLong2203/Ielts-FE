@@ -21,7 +21,8 @@ const ROUTES = {
   ADMIN_MOCK_TESTS: "/admin/mockTest",
   ADMIN_READING: "/reading",
   ADMIN_LISTENING: "/listening",
-
+  ADMIN_SETTINGS: "/admin/settings",
+  
   TEACHER: "/teacher/dashboard",
   TEACHER_BLOGS: "/teacher/dashboard/blog",
   TEACHER_WRITING_GRADING: "/teacher/dashboard/writing-grading",

@@ -6,6 +6,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import QueryClientProviderWarpper from "@/provider/queryClientProvider";
 import ReduxProviderWrapper from "@/provider/reduxProvider";
 import PersistProvider from "@/provider/persistProvider";
+import { I18nProvider } from "@/context/I18nContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,12 +34,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <QueryClientProviderWarpper>
-          <ReduxProviderWrapper>
-            <Toaster/>
-            <PersistProvider>{children}</PersistProvider>
-          </ReduxProviderWrapper>
-        </QueryClientProviderWarpper>
+        <I18nProvider>
+          <QueryClientProviderWarpper>
+            <ReduxProviderWrapper>
+              <Toaster/>
+              <PersistProvider>{children}</PersistProvider>
+            </ReduxProviderWrapper>
+          </QueryClientProviderWarpper>
+        </I18nProvider>
       </body>
     </html>
   );

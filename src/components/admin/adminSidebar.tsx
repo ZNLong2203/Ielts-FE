@@ -4,6 +4,7 @@ import Link from "next/link";
 import ROUTES from "@/constants/route";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/context/I18nContext";
 import {
   X,
   LayoutDashboard,
@@ -36,74 +37,81 @@ const AdminSidebar = ({
   isCollapsed,
   onCollapse,
 }: AdminSidebarProps) => {
+  const { t } = useI18n();
   const pathName = usePathname();
 
   const routes = [
     {
       href: ROUTES.ADMIN,
-      label: "Overview",
+      label: t("sidebar.overview"),
       icon: LayoutDashboard,
       active: pathName === ROUTES.ADMIN,
     },
     {
       href: ROUTES.ADMIN_STUDENTS,
-      label: "Students",
+      label: t("sidebar.students"),
       icon: Users,
       active: pathName === ROUTES.ADMIN_STUDENTS,
     },
     {
       href: ROUTES.ADMIN_TEACHERS,
-      label: "Teachers",
+      label: t("sidebar.teachers"),
       icon: GraduationCap,
       active: pathName === ROUTES.ADMIN_TEACHERS,
     },
     {
       href: ROUTES.ADMIN_BLOG_CATEGORIES,
-      label: "Blog Categories",
+      label: t("sidebar.blogCategories"),
       icon: FolderOpen,
       active: pathName === ROUTES.ADMIN_BLOG_CATEGORIES,
     },
     {
       href: ROUTES.ADMIN_BLOGS,
-      label: "Blogs",
+      label: t("sidebar.blogs"),
       icon: FileText,
       active: pathName === ROUTES.ADMIN_BLOGS,
     },
     {
       href: ROUTES.ADMIN_COURSE_CATEGORIES,
-      label: "Course Categories",
+      label: t("sidebar.courseCategories"),
       icon: FolderOpen,
       active: pathName === ROUTES.ADMIN_COURSE_CATEGORIES,
     },
     {
       href: ROUTES.ADMIN_COURSES,
-      label: "Courses",
+      label: t("sidebar.courses"),
       icon: BookOpen,
       active: pathName === ROUTES.ADMIN_COURSES,
     },
     {
       href: ROUTES.ADMIN_COUPONS,
-      label: "Coupons",
+      label: t("sidebar.coupons"),
       icon: Ticket,
       active: pathName === ROUTES.ADMIN_COUPONS,
     },
     {
       href: ROUTES.ADMIN_COURSE_COMBO,
-      label: "Combo Courses",
+      label: t("sidebar.comboCourses"),
       icon: Package,
       active: pathName === ROUTES.ADMIN_COURSE_COMBO,
     },
     {
       href: ROUTES.ADMIN_ORDERS,
-      label: "Orders",
+      label: t("sidebar.orders"),
       icon: NotepadText,
       active: pathName === ROUTES.ADMIN_ORDERS,
     },
     {
       href: ROUTES.ADMIN_MOCK_TESTS,
-      label: "Mock Tests",
+      label: t("sidebar.mockTests"),
       icon: BookCheck,
       active: pathName === ROUTES.ADMIN_MOCK_TESTS,
+    },
+    {
+      href: ROUTES.ADMIN_SETTINGS,
+      label: t("sidebar.settings"),
+      icon: Settings,
+      active: pathName === ROUTES.ADMIN_SETTINGS,
     },
   ];
 

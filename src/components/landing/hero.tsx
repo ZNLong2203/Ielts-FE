@@ -3,8 +3,10 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check, ChevronRight, Star } from "lucide-react";
+import { useI18n } from "@/context/I18nContext";
 
 const HeroSection = () => {
+  const { t } = useI18n();
   return (
     <div className="w-full overflow-hidden bg-gradient-to-b from-blue-50/50 to-white pt-36 md:pt-40 lg:pt-48 pb-16 md:pb-20 lg:pb-24">
       <div className="container mx-auto px-6">
@@ -21,25 +23,24 @@ const HeroSection = () => {
                 <Star className="w-3 h-3" />
               </span>
               <span className="text-blue-700 text-sm font-medium">
-                #1 Rated IELTS Preparation Platform
+                {t("hero.ratedPlatform")}
               </span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r text-blue-800 bg-clip-text">
-              Master IELTS with <br />
-              AI-Powered Learning
+              {t("hero.masterIELTS")} <br />
+              {t("hero.aiPoweredLearning")}
             </h1>
 
             <p className="text-lg text-gray-700 mb-8 max-w-lg">
-              Join over 10,000 successful students who achieved their target
-              scores with our comprehensive study and practice platform.
+              {t("hero.joinStudents")}
             </p>
 
             <div className="space-y-4 mb-10">
               {[
-                "Personalized learning with advanced AI technology",
-                "Realistic test simulations for all IELTS modules",
-                "Expert guidance and proven strategies",
+                t("hero.personalizedLearning"),
+                t("hero.realisticSimulations"),
+                t("hero.expertGuidance"),
               ].map((feature, index) => (
                 <motion.div
                   key={index}
@@ -60,7 +61,7 @@ const HeroSection = () => {
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-base px-6 py-6 shadow-lg hover:shadow-blue-200 transition-all duration-300"
               >
-                Start Free Assessment
+                {t("hero.startFreeAssessment")}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
 
@@ -68,7 +69,7 @@ const HeroSection = () => {
                 variant="outline"
                 className="border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl text-base px-6 py-6"
               >
-                Explore Courses
+                {t("hero.exploreCourses")}
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -85,7 +86,7 @@ const HeroSection = () => {
                   <span className="text-blue-600 font-bold ml-1">4.9</span>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  From 10,000+ student reviews
+                  {t("hero.fromReviews")}
                 </p>
               </div>
             </div>
@@ -139,9 +140,9 @@ const HeroSection = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Average time to</p>
+                  <p className="text-xs text-gray-500">{t("hero.averageTimeTo")}</p>
                   <p className="text-sm font-semibold text-gray-900">
-                    Improve 1.0 Band Score
+                    {t("hero.improveBandScore")}
                   </p>
                 </div>
               </motion.div>
@@ -177,11 +178,11 @@ const HeroSection = () => {
                     </svg>
                   </div>
                   <h4 className="font-semibold text-gray-900">
-                    Progress Tracking
+                    {t("hero.progressTracking")}
                   </h4>
                 </div>
                 <p className="text-xs text-gray-600">
-                  AI-powered analytics to monitor your improvements in real-time
+                  {t("hero.aiAnalytics")}
                 </p>
               </motion.div>
 
@@ -191,9 +192,9 @@ const HeroSection = () => {
                 transition={{ delay: 0.7, duration: 0.5 }}
                 className="absolute bottom-24 left-6 bg-blue-600/95 backdrop-blur-sm p-4 rounded-xl shadow-lg max-w-[180px]"
               >
-                <h4 className="font-semibold text-white mb-1">AI Feedback</h4>
+                <h4 className="font-semibold text-white mb-1">{t("hero.aiFeedback")}</h4>
                 <p className="text-xs text-blue-100">
-                  Get instant evaluations for speaking and writing tasks
+                  {t("hero.instantEvaluations")}
                 </p>
               </motion.div>
             </div>

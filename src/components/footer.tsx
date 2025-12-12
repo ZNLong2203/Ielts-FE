@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -11,11 +13,13 @@ import {
   Shield, 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/context/I18nContext";
 
 import appstoreIcon from "../../public/icons/appstore.png";
 import googlePlayIcon from "../../public/icons/googlePlay.png";
 
 const Footer = () => {
+  const { t } = useI18n();
   const currentYear = new Date().getFullYear();
   
   return (
@@ -25,20 +29,20 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-white max-w-xl">
-              <h2 className="text-2xl font-bold mb-2">Stay updated with our latest courses</h2>
+              <h2 className="text-2xl font-bold mb-2">{t("footer.stayUpdated")}</h2>
               <p className="text-blue-100">
-                Get exclusive offers, test preparation tips, and updates on our courses directly to your inbox.
+                {t("footer.getExclusiveOffers")}
               </p>
             </div>
             <div className="w-full md:w-auto">
               <div className="flex flex-col sm:flex-row gap-3">
                 <input 
                   type="email" 
-                  placeholder="Enter your email" 
+                  placeholder={t("common.enterYourEmail")}
                   className="px-4 py-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[250px]"
                 />
                 <Button className="bg-white hover:bg-gray-100 text-blue-600 font-medium px-6 py-6 rounded-lg transition-all">
-                  Subscribe
+                  {t("common.subscribe")}
                 </Button>
               </div>
             </div>
@@ -60,13 +64,13 @@ const Footer = () => {
               </div>
               
               <p className="text-gray-600 text-sm">
-                TLL is the leading IELTS preparation platform, helping students achieve their target scores through innovative technology and expert guidance.
+                {t("footer.description")}
               </p>
 
               {/* App Download */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-800 text-sm">
-                  Download the mobile app
+                  {t("footer.downloadMobileApp")}
                 </h3>
                 <div className="flex flex-wrap gap-3">
                   <Link href="#" className="transition-transform hover:scale-105">
@@ -75,8 +79,8 @@ const Footer = () => {
                         <Image src={googlePlayIcon} alt="Google Play" width={24} height={24} />
                       </div>
                       <div className="text-white">
-                        <p className="text-xs opacity-80">Download on</p>
-                        <p className="text-sm font-semibold">Google Play</p>
+                        <p className="text-xs opacity-80">{t("footer.downloadOn")}</p>
+                        <p className="text-sm font-semibold">{t("footer.googlePlay")}</p>
                       </div>
                     </div>
                   </Link>
@@ -86,8 +90,8 @@ const Footer = () => {
                         <Image src={appstoreIcon} alt="App Store" width={24} height={24} />
                       </div>
                       <div className="text-white">
-                        <p className="text-xs opacity-80">Download on</p>
-                        <p className="text-sm font-semibold">App Store</p>
+                        <p className="text-xs opacity-80">{t("footer.downloadOn")}</p>
+                        <p className="text-sm font-semibold">{t("footer.appStore")}</p>
                       </div>
                     </div>
                   </Link>
@@ -97,7 +101,7 @@ const Footer = () => {
               {/* Social Media */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-800 text-sm">
-                  Connect with us
+                  {t("footer.connectWithUs")}
                 </h3>
                 <div className="flex items-center space-x-3">
                   <Link
@@ -142,17 +146,17 @@ const Footer = () => {
             {/* Study Programs */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                Study Programs
+                {t("footer.studyPrograms")}
               </h3>
               <ul className="space-y-3">
                 {[
-                  "IELTS Academic",
-                  "IELTS General Training",
-                  "TOEIC Preparation",
-                  "HSK Courses",
-                  "English Communication",
-                  "Business English",
-                  "Exam Simulation"
+                  t("footer.ieltsAcademic"),
+                  t("footer.ieltsGeneralTraining"),
+                  t("footer.toeicPreparation"),
+                  t("footer.hskCourses"),
+                  t("footer.englishCommunication"),
+                  t("footer.businessEnglish"),
+                  t("footer.examSimulation")
                 ].map((item) => (
                   <li key={item}>
                     <Link
@@ -170,17 +174,17 @@ const Footer = () => {
             {/* Usage Guide */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                Using TLL
+                {t("footer.usingTLL")}
               </h3>
               <ul className="space-y-3">
                 {[
-                  "Getting Started Guide",
-                  "Practice Rooms Tutorial",
-                  "Building a Learning Path",
-                  "Payment & Activation",
-                  "Mobile App Guide",
-                  "Frequently Asked Questions",
-                  "Student Support Center"
+                  t("footer.gettingStartedGuide"),
+                  t("footer.practiceRoomsTutorial"),
+                  t("footer.buildingLearningPath"),
+                  t("footer.paymentActivation"),
+                  t("footer.mobileAppGuide"),
+                  t("footer.frequentlyAskedQuestions"),
+                  t("footer.studentSupportCenter")
                 ].map((item) => (
                   <li key={item}>
                     <Link
@@ -198,18 +202,18 @@ const Footer = () => {
             {/* About & Policies */}
             <div className="space-y-5">
               <h3 className="font-semibold text-gray-800">
-                About TLL
+                {t("footer.aboutTLL")}
               </h3>
               <ul className="space-y-3">
                 {[
-                  "Our Story",
-                  "Our Team",
-                  "AI Technology Policy",
-                  "Terms & Conditions",
-                  "Privacy Policy",
-                  "Payment Policy",
-                  "Refund Policy",
-                  "Career Opportunities"
+                  t("footer.ourStory"),
+                  t("footer.ourTeam"),
+                  t("footer.aiTechnologyPolicy"),
+                  t("footer.termsConditions"),
+                  t("footer.privacyPolicy"),
+                  t("footer.paymentPolicy"),
+                  t("footer.refundPolicy"),
+                  t("footer.careerOpportunities")
                 ].map((item) => (
                   <li key={item}>
                     <Link
@@ -232,7 +236,7 @@ const Footer = () => {
                 <MapPin className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-800 mb-1">Main Campus</h4>
+                <h4 className="font-medium text-gray-800 mb-1">{t("footer.mainCampus")}</h4>
                 <p className="text-sm text-gray-600">
                   Km10, Nguyen Trai, Cau Giay District, Hanoi, Vietnam
                 </p>
@@ -244,7 +248,7 @@ const Footer = () => {
                 <Phone className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-800 mb-1">Contact</h4>
+                <h4 className="font-medium text-gray-800 mb-1">{t("footer.contact")}</h4>
                 <p className="text-sm text-gray-600">
                   Hotline: 0903 324 4242<br />
                   Email: support@tll.edu.vn
@@ -257,7 +261,7 @@ const Footer = () => {
                 <Shield className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-800 mb-1">Certifications</h4>
+                <h4 className="font-medium text-gray-800 mb-1">{t("footer.certifications")}</h4>
                 <p className="text-sm text-gray-600">
                   Training and Education Certification No. 1309/QD-SGDDT<br />
                   Issued on July 31, 2023
@@ -269,7 +273,7 @@ const Footer = () => {
           {/* Copyright */}
           <div className="mt-12 pt-6 border-t border-gray-200 text-center">
             <p className="text-sm text-gray-500">
-              © {currentYear} TLL - Posts and Telecommunications Institute of Technology. All rights reserved.
+              {t("footer.copyright", { year: currentYear })}
             </p>
           </div>
         </div>

@@ -26,11 +26,13 @@ import {
 import toast from "react-hot-toast";
 import { Logout } from "@/api/auth";
 import Link from "next/link";
+import { useI18n } from "@/context/I18nContext";
 
 const LandingNavbar = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useI18n();
 
   // Redux selectors
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -40,13 +42,13 @@ const LandingNavbar = () => {
     Logout()
       .then(() => {
         console.log("Logout successful");
-        toast.success("Logged out successfully");
+        toast.success(t("common.loggedOutSuccessfully"));
         router.push(ROUTES.HOME);
         dispatch(logout());
       })
       .catch((error) => {
         console.error("Logout failed:", error);
-        toast.error("Logout failed. Please try again.");
+        toast.error(t("common.logoutFailed"));
       });
 
     setMobileMenuOpen(false);
@@ -56,7 +58,7 @@ const LandingNavbar = () => {
   const getUserDisplayName = () => {
     if (user?.full_name) return user.full_name;
     if (user?.email) return user.email.split("@")[0];
-    return "User";
+    return t("common.user");
   };
 
   // Get user avatar initials
@@ -169,27 +171,27 @@ const LandingNavbar = () => {
                   href={ROUTES.HOME}
                   className="rounded-[32px] px-5 py-3 text-xs tracking-[0.06px] hover:text-white lg:max-2xl:px-3 2xl:text-sm 2xl:tracking-[0.07px] pointer-events-none bg-black bg-opacity-[0.24] text-white hover:cursor-default"
                 >
-                  Home
+                  {t("nav.home")}
                 </Link>
 
-                <NavbarTitle text="Courses">
+                <NavbarTitle text={t("nav.courses")}>
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
-                        <NavbarLink text="IELTS" href="/#learning-path" />
+                        <NavbarLink text={t("nav.ielts")} href="/#learning-path" />
                       </div>
                     </div>
                   </div>
                 </NavbarTitle>
 {/* 
-                <NavbarTitle text="Test Practice">
+                <NavbarTitle text={t("nav.testPractice")}>
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
                         <NavbarLink
-                          text="Practice IELTS"
+                          text={t("nav.practiceIELTS")}
                           href="/practice/ielts"
                         />
                       </div>
@@ -197,13 +199,13 @@ const LandingNavbar = () => {
                   </div>
                 </NavbarTitle> */}
 
-                {/* <NavbarTitle text="Placement Test">
+                {/* <NavbarTitle text={t("nav.placementTest")}>
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                     <div className="h-3 w-full"></div>
                     <div className="min-w-[150px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                       <div className="flex flex-col">
                         <NavbarLink
-                          text="IELTS Placement"
+                          text={t("nav.ielts")}
                           href="/placement/ielts"
                         />
                       </div>
@@ -211,7 +213,7 @@ const LandingNavbar = () => {
                   </div>
                 </NavbarTitle> */}
 
-                <NavbarLink text="Blog" href="/blogs" />
+                <NavbarLink text={t("nav.blog")} href="/blogs" />
               </div>
             </div>
 
@@ -220,27 +222,27 @@ const LandingNavbar = () => {
               {!isAuthenticated ? (
                 <>
                   {/* Login Dropdown */}
-                  <NavbarTitle text="Login">
+                  <NavbarTitle text={t("nav.login")}>
                     <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                       <div className="h-3 w-full"></div>
                       <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                         <div className="flex flex-col">
-                          <NavbarLink text="Login" href={ROUTES.LOGIN} />
+                          <NavbarLink text={t("nav.login")} href={ROUTES.LOGIN} />
                           <div className="border-t border-white/20 my-1"></div>
-                          <NavbarLink text="Admin Portal" href={ROUTES.ADMIN} />
+                          <NavbarLink text={t("nav.adminPortal")} href={ROUTES.ADMIN} />
                         </div>
                       </div>
                     </div>
                   </NavbarTitle>
 
                   {/* Register Dropdown */}
-                  <NavbarTitle text="Register">
+                  <NavbarTitle text={t("nav.register")}>
                     <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                       <div className="h-3 w-full"></div>
                       <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                         <div className="flex flex-col">
                           <NavbarLink
-                            text="Join as Student"
+                            text={t("nav.joinAsStudent")}
                             href={ROUTES.STUDENT_REGISTER}
                           />
                         </div>
@@ -298,7 +300,7 @@ const LandingNavbar = () => {
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <User className="h-4 w-4" />
-                            <span>My Profile</span>
+                            <span>{t("nav.myProfile")}</span>
                             <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
@@ -310,7 +312,7 @@ const LandingNavbar = () => {
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <BookOpen className="h-4 w-4" />
-                            <span>Student Dashboard</span>
+                            <span>{t("nav.studentDashboard")}</span>
                             <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
@@ -322,7 +324,7 @@ const LandingNavbar = () => {
                             className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <BookOpen className="h-4 w-4" />
-                            <span>Teacher Dashboard</span>
+                            <span>{t("nav.teacherDashboard")}</span>
                             <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
@@ -336,11 +338,28 @@ const LandingNavbar = () => {
                               className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
                             >
                               <ShieldCheck className="h-4 w-4" />
-                              <span>Admin Dashboard</span>
+                              <span>{t("nav.adminDashboard")}</span>
                               <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                             </a>
                           </>
                         )}
+
+                        {/* Settings */}
+                        <div className="border-t border-white/10 my-2"></div>
+                        <a
+                          href={
+                            user?.role === "admin"
+                              ? ROUTES.ADMIN_SETTINGS
+                              : user?.role === "teacher"
+                              ? "/teacher/dashboard/settings"
+                              : "/student/dashboard/settings"
+                          }
+                          className="flex items-center gap-3 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors group"
+                        >
+                          <Settings className="h-4 w-4" />
+                          <span>{t("nav.settings")}</span>
+                          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </a>
 
                         {/* Logout */}
                         <div className="border-t border-white/10 my-2"></div>
@@ -349,7 +368,7 @@ const LandingNavbar = () => {
                           className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-300 hover:text-red-100 hover:bg-red-900/20 rounded-lg transition-colors group"
                         >
                           <LogOut className="h-4 w-4" />
-                          <span>Sign Out</span>
+                          <span>{t("nav.signOut")}</span>
                         </button>
                       </div>
                     </div>
@@ -371,31 +390,31 @@ const LandingNavbar = () => {
         >
           <div className="px-4 py-6 space-y-4">
             <a href="/" className="block py-2 text-white font-medium">
-              Home
+              {t("nav.home")}
             </a>
             <a
               href="/#learning-path"
               className="block py-2 text-white/70 hover:text-white"
             >
-              Courses
+              {t("nav.courses")}
             </a>
             <a
               href="/practice"
               className="block py-2 text-white/70 hover:text-white"
             >
-              <a
-                href="/placement"
-                className="block py-2 text-white/70 hover:text-white"
-              >
-                Placement Test
-              </a>
-              Test Practice
+              {t("nav.testPractice")}
+            </a>
+            <a
+              href="/placement"
+              className="block py-2 text-white/70 hover:text-white"
+            >
+              {t("nav.placementTest")}
             </a>
             <a
               href="/blogs"
               className="block py-2 text-white/70 hover:text-white"
             >
-              Blog
+              {t("nav.blog")}
             </a>
 
             {/* Mobile User Menu */}
@@ -404,32 +423,32 @@ const LandingNavbar = () => {
                 <>
                   <div className="space-y-2">
                     <div className="text-white/50 text-sm font-medium">
-                      Login
+                      {t("nav.login")}
                     </div>
 
                     <a
                       href={ROUTES.LOGIN}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
-                      Login
+                      {t("nav.login")}
                     </a>
                   </div>
 
                   <div className="space-y-2 mt-4">
                     <div className="text-white/50 text-sm font-medium">
-                      Register
+                      {t("nav.register")}
                     </div>
                     <a
                       href={ROUTES.STUDENT_REGISTER}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
-                      Join as Student
+                      {t("nav.joinAsStudent")}
                     </a>
                     <a
                       href={ROUTES.TEACHER_REGISTER}
                       className="block py-1 pl-4 text-white/70 hover:text-white text-sm"
                     >
-                      Join as Teacher
+                      {t("nav.joinAsTeacher")}
                     </a>
                   </div>
                 </>
@@ -459,7 +478,7 @@ const LandingNavbar = () => {
                       className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                     >
                       <User className="h-4 w-4" />
-                      My Profile
+                      {t("nav.myProfile")}
                     </a>
 
                     {user?.role === "student" && (
@@ -468,7 +487,7 @@ const LandingNavbar = () => {
                         className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                       >
                         <BookOpen className="h-4 w-4" />
-                        Student Dashboard
+                        {t("nav.studentDashboard")}
                       </a>
                     )}
 
@@ -478,7 +497,7 @@ const LandingNavbar = () => {
                         className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                       >
                         <BookOpen className="h-4 w-4" />
-                        My Classes
+                        {t("nav.myClasses")}
                       </a>
                     )}
 
@@ -487,15 +506,7 @@ const LandingNavbar = () => {
                       className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                     >
                       <Award className="h-4 w-4" />
-                      Achievements
-                    </a>
-
-                    <a
-                      href="/settings"
-                      className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
-                    >
-                      <Settings className="h-4 w-4" />
-                      Settings
+                      {t("nav.achievements")}
                     </a>
 
                     {user?.role === "admin" && (
@@ -504,7 +515,31 @@ const LandingNavbar = () => {
                         className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
                       >
                         <ShieldCheck className="h-4 w-4" />
-                        Admin Dashboard
+                        {t("nav.adminDashboard")}
+                      </a>
+                    )}
+
+                    <a
+                      href={
+                        user?.role === "admin"
+                          ? ROUTES.ADMIN_SETTINGS
+                          : user?.role === "teacher"
+                          ? "/teacher/dashboard/settings"
+                          : "/student/dashboard/settings"
+                      }
+                      className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                    >
+                      <Settings className="h-4 w-4" />
+                      {t("nav.settings")}
+                    </a>
+
+                    {user?.role === "admin" && (
+                      <a
+                        href={ROUTES.ADMIN}
+                        className="flex items-center gap-3 py-2 text-white/70 hover:text-white"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        {t("nav.adminDashboard")}
                       </a>
                     )}
 
@@ -514,7 +549,7 @@ const LandingNavbar = () => {
                       className="flex items-center gap-3 w-full py-2 text-red-300 hover:text-red-100"
                     >
                       <LogOut className="h-4 w-4" />
-                      Sign Out
+                      {t("nav.signOut")}
                     </button>
                   </div>
                 </>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import ROUTES from "@/constants/route";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/context/I18nContext";
 import {
   X,
   LayoutDashboard,
@@ -15,6 +16,7 @@ import {
   ChevronRight,
   GraduationCap,
   FileText,
+  Settings,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectUser } from "@/redux/features/user/userSlice";
@@ -32,26 +34,33 @@ const TeacherSidebar = ({
   isCollapsed,
   onCollapse,
 }: TeacherSidebarProps) => {
+  const { t } = useI18n();
   const pathName = usePathname();
   const user = useSelector(selectUser);
   const routes = [
     {
       href:  ROUTES.TEACHER,
-      label: "Dashboard",
+      label: t("sidebar.dashboard"),
       icon: LayoutDashboard,
       active: pathName === ROUTES.TEACHER,
     },
     {
       href: ROUTES.TEACHER_BLOGS,
-      label: "My Blogs",
+      label: t("sidebar.myBlogs"),
       icon: FolderOpen,
       active: pathName === ROUTES.TEACHER_BLOGS,
     },
     {
       href: ROUTES.TEACHER_WRITING_GRADING,
-      label: "Writing Grading",
+      label: t("sidebar.writingGrading"),
       icon: FileText,
       active: pathName === ROUTES.TEACHER_WRITING_GRADING || pathName?.startsWith(ROUTES.TEACHER_WRITING_GRADING),
+    },
+    {
+      href: "/teacher/dashboard/settings",
+      label: t("sidebar.settings"),
+      icon: Settings,
+      active: pathName === "/teacher/dashboard/settings",
     },
   ];
 
