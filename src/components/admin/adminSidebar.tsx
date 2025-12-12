@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import ROUTES from "@/constants/route";
@@ -21,8 +22,13 @@ import {
   Package,
   NotepadText,
   BookCheck,
-  Grid3X3
+  Grid3X3,
 } from "lucide-react";
+import { Logout } from "@/api/auth";
+import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { logout, selectUser } from "@/redux/features/user/userSlice";
+import { toast } from "react-hot-toast";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -39,7 +45,10 @@ const AdminSidebar = ({
 }: AdminSidebarProps) => {
   const { t } = useI18n();
   const pathName = usePathname();
-
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const routes = [
     {
       href: ROUTES.ADMIN,
@@ -114,6 +123,22 @@ const AdminSidebar = ({
       active: pathName === ROUTES.ADMIN_SETTINGS,
     },
   ];
+
+  const handleLogout = async () => {
+    Logout()
+      .then(() => {
+        console.log("Logout successful");
+        toast.success(t("common.loggedOutSuccessfully"));
+        router.push(ROUTES.HOME);
+        dispatch(logout());
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+        toast.error(t("common.logoutFailed"));
+      });
+
+    setMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -230,14 +255,16 @@ const AdminSidebar = ({
             <div className="space-y-3">
               {/* User Info */}
               <div className="flex items-center px-3 py-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                   A
                 </div>
                 <div className="ml-3 min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    Admin
+                    {user?.full_name || "Admin User"}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">admin@ielts.vn</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user?.email || "admin@ielts.vn"}
+                  </p>
                 </div>
               </div>
 
@@ -251,6 +278,7 @@ const AdminSidebar = ({
                   Settings
                 </Button>
                 <Button
+                  onClick={handleLogout}
                   variant="ghost"
                   className="w-full justify-start h-9 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
@@ -266,7 +294,7 @@ const AdminSidebar = ({
                 size="sm"
                 className="w-full h-10 px-0 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               >
-                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                <div className="w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
                   A
                 </div>
               </Button>

@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import ROUTES from "@/constants/route";
@@ -9,7 +10,6 @@ import {
   X,
   LayoutDashboard,
   User,
-  BookOpen,
   FolderOpen,
   LogOut,
   ChevronLeft,
@@ -18,8 +18,11 @@ import {
   FileText,
   Settings,
 } from "lucide-react";
-import { useSelector } from "react-redux";
-import { selectUser } from "@/redux/features/user/userSlice";
+import { Logout } from "@/api/auth";
+import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { logout, selectUser } from "@/redux/features/user/userSlice";
+import { toast } from "react-hot-toast";
 
 interface TeacherSidebarProps {
   isOpen: boolean;
@@ -36,13 +39,16 @@ const TeacherSidebar = ({
 }: TeacherSidebarProps) => {
   const { t } = useI18n();
   const pathName = usePathname();
+  const router = useRouter();
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const routes = [
     {
       href:  ROUTES.TEACHER,
       label: t("sidebar.dashboard"),
       icon: LayoutDashboard,
-      active: pathName === ROUTES.TEACHER,
+      active: pathName === ROUTES.HOME,
     },
     {
       href: ROUTES.TEACHER_BLOGS,
@@ -63,6 +69,22 @@ const TeacherSidebar = ({
       active: pathName === "/teacher/dashboard/settings",
     },
   ];
+
+  const handleLogout = async () => {
+    Logout()
+      .then(() => {
+        console.log("Logout successful");
+        toast.success(t("common.loggedOutSuccessfully"));
+        router.push(ROUTES.HOME);
+        dispatch(logout());
+      })
+      .catch((error) => {
+        console.error("Logout failed:", error);
+        toast.error(t("common.logoutFailed"));
+      });
+
+    setMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -86,7 +108,7 @@ const TeacherSidebar = ({
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           {!isCollapsed && (
             <Link
-              href={ROUTES.TEACHER}
+              href={ROUTES.HOME}
               className="flex items-center group transition-all duration-200 hover:scale-105"
             >
               <div className="relative rounded-lg px-2 py-1.5 transition-all duration-300 hover:bg-green-50/50">
@@ -202,6 +224,7 @@ const TeacherSidebar = ({
                   </Button>
                 </Link>
                 <Button
+                  onClick={handleLogout}
                   variant="ghost"
                   className="w-full justify-start h-9 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
