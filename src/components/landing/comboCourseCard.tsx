@@ -32,12 +32,15 @@ export default function ComboCourseCard({
   const [isHovered, setIsHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  const formatPrice = (price: number) => {
-    return price.toLocaleString('vi-VN') + ' ₫';
+  const formatPrice = (price: number | string) => {
+    const numericPrice = typeof price === 'number' ? price : parseFloat(price) || 0;
+    return numericPrice.toLocaleString('vi-VN') + ' VND';
   };
 
   const calculateSavings = () => {
-    return comboCourse.original_price - comboCourse.combo_price;
+    const original = typeof comboCourse.original_price === 'number' ? comboCourse.original_price : parseFloat(comboCourse.original_price) || 0;
+    const combo = typeof comboCourse.combo_price === 'number' ? comboCourse.combo_price : parseFloat(comboCourse.combo_price) || 0;
+    return original - combo;
   };
 
   const handlePurchase = async () => {

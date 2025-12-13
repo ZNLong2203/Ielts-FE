@@ -309,17 +309,17 @@ export default function CourseSection() {
                       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
                         <div className="lg:col-span-2 text-center lg:text-left">
                           <div className="text-4xl font-bold text-white mb-2 tracking-tight">
-                            {comboPricing.totalComboPrice.toLocaleString('vi-VN')} ₫
+                            {comboPricing.totalComboPrice.toLocaleString('vi-VN')} VND
                           </div>
                           <div className="text-lg text-slate-300 font-medium">{t("course.comboPrice")}</div>
                         </div>
                         <div className="lg:col-span-2 text-center lg:text-right">
                           <div className="text-2xl text-gray-400 line-through mb-1">
-                            {comboPricing.totalOriginalPrice.toLocaleString('vi-VN')} ₫
+                            {comboPricing.totalOriginalPrice.toLocaleString('vi-VN')} VND
                           </div>
                           <div className="text-sm text-gray-300 mb-3">{t("course.originalPrice")}</div>
                           <div className="text-xl text-emerald-500 font-bold">
-                            {t("course.save", { amount: comboCourses.length > 0 ? comboCourses[0].combo_price.toLocaleString('vi-VN') + ' ₫' : '0 ₫' })}
+                             {comboCourses.length > 0 ? Number(comboCourses[0].combo_price).toLocaleString('vi-VN') + " VND" : "0 VND"}
                           </div>
                           <div className="text-sm text-emerald-400">{t("course.totalSavings")}</div>
                         </div>

@@ -136,7 +136,7 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcess
         <div className="bg-gray-50 rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between text-lg">
             <span className="font-medium text-gray-700">Total Amount:</span>
-            <span className="text-2xl font-bold text-gray-900">{totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ₫</span>
+            <span className="text-2xl font-bold text-gray-900">{totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} VND</span>
           </div>
           <div className="text-sm text-gray-600 mt-1">
             You&apos;ll be redirected to {selectedPaymentMethod?.name} to complete payment
@@ -181,7 +181,7 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcess
                 className="flex items-center gap-3"
               >
                 <Lock className="h-5 w-5" />
-                Pay {totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} ₫ with {selectedPaymentMethod?.name}
+                Pay {totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} VND with {selectedPaymentMethod?.name}
                 <ArrowRight className="h-5 w-5" />
               </motion.div>
             )}

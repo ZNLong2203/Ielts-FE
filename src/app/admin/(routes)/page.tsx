@@ -90,7 +90,7 @@ const AdminPage = () => {
         />
         <StatCard
           title="Revenue"
-          value={`$${data.stats.totalRevenue.toLocaleString()}`}
+          value={`${data.stats.totalRevenue.toLocaleString()} VND`}
           change={data.stats.revenueGrowth}
           icon={DollarSign}
           iconColor="text-yellow-600"

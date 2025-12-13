@@ -101,7 +101,7 @@ export default function RecentActivities({
                   <div className="flex items-center space-x-2">
                     {activity.amount && (
                       <span className="text-sm font-medium text-green-600">
-                        ${activity.amount}
+                        {activity.amount.toLocaleString()} VND
                       </span>
                     )}
                     <span className="text-xs text-muted-foreground">

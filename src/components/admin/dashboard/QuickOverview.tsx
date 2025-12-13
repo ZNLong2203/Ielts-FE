@@ -6,7 +6,6 @@ import { DashboardStats } from "@/interface/adminDashboard";
 import {
   BarChart3,
   BookOpen,
-  DollarSign,
   FileText,
   Plus,
   Settings,
@@ -134,12 +133,11 @@ export default function QuickOverview({
 
           <div className="p-3 bg-yellow-50 rounded-lg border">
             <div className="flex items-center space-x-2 mb-1">
-              <DollarSign className="h-4 w-4 text-yellow-600" />
               <span className="text-xs text-muted-foreground">Revenue</span>
             </div>
             <div className="flex items-center justify-between">
               <p className="text-lg font-semibold">
-                ${todayStats.revenue.toLocaleString()}
+                {todayStats.revenue.toLocaleString()} VND
               </p>
               <span
                 className={`text-xs flex items-center ${

@@ -40,7 +40,7 @@ export default function OrderSummary({
 }: OrderSummaryProps) {
   const formatPrice = (price: number) => {
     // Custom Vietnamese number formatting
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫'
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
   }
   return (
     <Card className="shadow-sm border border-gray-200 bg-white">

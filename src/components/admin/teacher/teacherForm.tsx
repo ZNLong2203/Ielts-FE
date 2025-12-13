@@ -575,9 +575,9 @@ const TeacherForm = () => {
                       <TextField
                         control={teacherForm.control}
                         name="hourly_rate"
-                        label="Hourly Rate (USD)"
+                        label="Hourly Rate (VND)"
                         type="number"
-                        placeholder="Enter hourly rate in USD"
+                        placeholder="Enter hourly rate in VND"
                       />
                     </div>
 

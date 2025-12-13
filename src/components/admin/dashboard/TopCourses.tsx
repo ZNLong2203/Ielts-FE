@@ -75,8 +75,7 @@ export default function TopCourses({ courses }: TopCoursesProps) {
                   </div>
 
                   <div className="flex items-center space-x-1 text-green-600 font-medium">
-                    <DollarSign className="h-4 w-4" />
-                    <span>${course.revenue.toLocaleString()}</span>
+                    <span>{course.revenue.toLocaleString()} VND</span>
                   </div>
                 </div>
               </div>

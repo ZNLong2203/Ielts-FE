@@ -169,8 +169,8 @@ export default function CouponSection({
   };
 
   const formatPrice = (price: number) => {
-    if (!price) return "0 ₫";
-    return `${Number(price).toLocaleString("vi-VN")} ₫`;
+    if (!price) return "0 VND";
+    return `${Number(price).toLocaleString("vi-VN")} VND`;
   };
 
   return (

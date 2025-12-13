@@ -128,12 +128,12 @@ const CourseTable = () => {
         <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
       options: [
-        { label: "Free (0₫)", value: "free" },
-        { label: "Under 500,000₫", value: "under_500k" },
-        { label: "500,000₫ - 1,000,000₫", value: "500k_1m" },
-        { label: "1,000,000₫ - 2,000,000₫", value: "1m_2m" },
-        { label: "2,000,000₫ - 5,000,000₫", value: "2m_5m" },
-        { label: "Over 5,000,000₫", value: "over_5m" },
+        { label: "Free (0 VND)", value: "free" },
+        { label: "Under 500,000 VND", value: "under_500k" },
+        { label: "500,000 VND - 1,000,000 VND", value: "500k_1m" },
+        { label: "1,000,000 VND - 2,000,000 VND", value: "1m_2m" },
+        { label: "2,000,000 VND - 5,000,000 VND", value: "2m_5m" },
+        { label: "Over 5,000,000 VND", value: "over_5m" },
       ],
     },
      {
@@ -165,11 +165,7 @@ const CourseTable = () => {
 
   // Format price for display
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-      minimumFractionDigits: 0,
-    }).format(price);
+    return new Intl.NumberFormat('vi-VN').format(price) + ' VND';
   };
 
   if (allLoading) {

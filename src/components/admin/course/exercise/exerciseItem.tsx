@@ -66,19 +66,6 @@ const getExerciseTypeColor = (type: string) => {
   }
 };
 
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty?.toLowerCase()) {
-    case "easy":
-      return "bg-green-100 text-green-800";
-    case "medium":
-      return "bg-yellow-100 text-yellow-800";
-    case "hard":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
 interface ExerciseItemProps {
   exercise: IExercise;
   exerciseIndex: number;
@@ -102,7 +89,6 @@ const ExerciseItem = ({
   isEditing = false,
   onRefresh,
 }: ExerciseItemProps) => {
-  const [showQuestionDetails, setShowQuestionDetails] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const queryClient = useQueryClient();
@@ -193,13 +179,6 @@ const ExerciseItem = ({
                 <h4 className="font-semibold text-gray-900">
                   {exercise.title}
                 </h4>
-                <Badge
-                  className={`text-xs ${getExerciseTypeColor(
-                    exercise.exercise_type
-                  )}`}
-                >
-                  {exercise.exercise_type}
-                </Badge>
              
                 {isEditing && (
                   <Badge className="bg-orange-100 text-orange-800 text-xs">

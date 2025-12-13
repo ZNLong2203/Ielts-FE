@@ -283,7 +283,7 @@ const ExerciseForm = ({
                   label={
                     <div className="flex items-center space-x-1">
                       <Clock className="h-4 w-4" />
-                      <span>Time Limit (seconds)</span>
+                      <span>Time Limit (minutes)</span>
                     </div>
                   }
                   type="number"
@@ -422,7 +422,7 @@ const ExerciseForm = ({
                             <div className="flex items-center space-x-1">
                               <Clock className="h-3 w-3 text-gray-400" />
                               <span className="text-xs text-gray-500">
-                                {formatTime(existingExercise.time_limit || 300)}
+                                {formatTime(existingExercise.time_limit || 30)}
                               </span>
                             </div>
                             {existingExercise.is_active && (
