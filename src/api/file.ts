@@ -92,3 +92,17 @@ export const uploadExerciseImage = async (file: File): Promise<{ url: string; fi
     etag: String(result.etag || ''),
   };
 };
+
+// Get video stream URL (HLS or original) from fileName
+export const getVideoStreamUrl = async (fileName: string): Promise<{
+  fileName: string;
+  hlsUrl: string | null;
+  originalUrl: string | null;
+  preferredUrl: string | null;
+  streamType: 'hls' | 'progressive';
+}> => {
+  const response = await api.get(`${BASE_URL}/media/${encodeURIComponent(fileName)}/stream-url`);
+  const innerData = response.data.data;
+  const result = (innerData?.data && typeof innerData.data === 'object') ? innerData.data : innerData;
+  return result;
+};

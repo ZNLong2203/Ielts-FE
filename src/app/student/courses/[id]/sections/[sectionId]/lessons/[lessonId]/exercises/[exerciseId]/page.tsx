@@ -142,7 +142,7 @@ export default function ExercisePage() {
         let defaultAnswer: string | string[] | null = null
         if (q.question_type === 'fill_blank') {
           defaultAnswer = ''
-        } else if (q.question_type === 'multiple_choice' || q.question_type === 'drop_list') {
+        } else if (q.question_type === 'multiple_choice' || q.question_type === 'droplist' || q.question_type === 'drop_list') {
           defaultAnswer = null
         }
         initialAnswers[q.id] = {
@@ -503,6 +503,22 @@ export default function ExercisePage() {
         )
 
       case 'fill_blank':
+        // Check if question_text contains blank placeholder (support various formats: _____, ____, ___, __, _)
+        const findPlaceholder = (text: string): string | null => {
+          if (!text) return null
+          // Check for common placeholder patterns (longest first to match correctly)
+          const patterns = ['_____', '____', '___', '__', '_']
+          for (const pattern of patterns) {
+            if (text.includes(pattern)) {
+              return pattern
+            }
+          }
+          return null
+        }
+        
+        const placeholder = findPlaceholder(question.question_text || '')
+        const hasBlankPlaceholder = !!placeholder
+        
         return (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
@@ -518,36 +534,67 @@ export default function ExercisePage() {
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-slate-800 mb-4 leading-relaxed">
-                      {question.question_text.split('_____').map((part, index, arr) => (
-                        <span key={index}>
-                          {part}
-                          {index < arr.length - 1 && (
-                            <span className="inline-block mx-2">
-                              <input
-                                type="text"
-                                value={userAnswer?.toString() || ''}
-                                onChange={(e) => !showResults && handleAnswerChange(question.id, e.target.value)}
-                                disabled={showResults}
-                                className={`inline-block px-4 py-2 border-2 rounded-lg font-semibold text-slate-800 min-w-[120px] text-center transition-all ${
-                                  showResults && questionResult !== null
-                                    ? questionResult
-                                      ? 'border-green-500 bg-green-50'
-                                      : 'border-red-500 bg-red-50'
-                                    : 'border-blue-400 bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
-                                } ${showResults ? 'cursor-default' : 'cursor-text'}`}
-                                placeholder="?"
-                              />
-                              {showResults && questionResult === false && (
-                                <span className="ml-2 text-sm text-red-600 font-semibold">
-                                  (Correct answer: {(question as QuestionWithAnswer).correct_answer || 'N/A'})
-                                </span>
-                              )}
-                            </span>
+                    {hasBlankPlaceholder ? (
+                      // If question has blank placeholder, split and render with input inline
+                      <h3 className="text-xl font-bold text-slate-800 mb-4 leading-relaxed">
+                        {question.question_text.split(placeholder!).map((part, partIndex, arr) => (
+                          <span key={partIndex}>
+                            {part}
+                            {partIndex < arr.length - 1 && (
+                              <span className="inline-block mx-2">
+                                <input
+                                  type="text"
+                                  value={userAnswer?.toString() || ''}
+                                  onChange={(e) => !showResults && handleAnswerChange(question.id, e.target.value)}
+                                  disabled={showResults}
+                                  className={`inline-block px-4 py-2 border-2 rounded-lg font-semibold text-slate-800 min-w-[120px] text-center transition-all ${
+                                    showResults && questionResult !== null
+                                      ? questionResult
+                                        ? 'border-green-500 bg-green-50'
+                                        : 'border-red-500 bg-red-50'
+                                      : 'border-blue-400 bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                                  } ${showResults ? 'cursor-default' : 'cursor-text'}`}
+                                  placeholder="?"
+                                />
+                                {showResults && questionResult === false && (
+                                  <span className="ml-2 text-sm text-red-600 font-semibold">
+                                    (Correct answer: {(question as QuestionWithAnswer).correct_answer || 'N/A'})
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                          </span>
+                        ))}
+                      </h3>
+                    ) : (
+                      // If no blank placeholder, always show question text with input below
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-4 leading-relaxed">
+                          {question.question_text || 'Complete the sentence'}
+                        </h3>
+                        <div className="mt-4">
+                          <input
+                            type="text"
+                            value={userAnswer?.toString() || ''}
+                            onChange={(e) => !showResults && handleAnswerChange(question.id, e.target.value)}
+                            disabled={showResults}
+                            className={`w-full px-4 py-3 border-2 rounded-lg font-semibold text-slate-800 transition-all ${
+                              showResults && questionResult !== null
+                                ? questionResult
+                                  ? 'border-green-500 bg-green-50'
+                                  : 'border-red-500 bg-red-50'
+                                : 'border-blue-400 bg-blue-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                            } ${showResults ? 'cursor-default' : 'cursor-text'}`}
+                            placeholder="Enter your answer..."
+                          />
+                          {showResults && questionResult === false && (
+                            <p className="mt-2 text-sm text-red-600 font-semibold">
+                              Correct answer: {(question as QuestionWithAnswer).correct_answer || 'N/A'}
+                            </p>
                           )}
-                        </span>
-                      ))}
-                    </h3>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {showResults && questionResult !== null && (
@@ -643,7 +690,8 @@ export default function ExercisePage() {
           </div>
         )
 
-      case 'drop_list':
+      case 'droplist':
+      case 'drop_list': // Support legacy format
         // Drop list question type - render as custom styled dropdown
         const selectedOption = question.question_options?.find(opt => opt.id === userAnswer?.toString())
         const correctOption = question.question_options?.find(opt => opt.is_correct)
@@ -821,6 +869,25 @@ export default function ExercisePage() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        )
+
+      default:
+        // Fallback for unknown question types
+        return (
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+              <div className="flex items-start gap-4">
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-lg bg-blue-100 text-blue-700 border-2 border-blue-200`}>
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-slate-800 mb-2">{question.question_text || 'Question'}</h3>
+                  <p className="text-sm text-slate-500">Question type: {question.question_type}</p>
+                  <p className="text-sm text-amber-600 mt-2">This question type is not yet supported in the UI.</p>
+                </div>
+              </div>
             </div>
           </div>
         )
@@ -1043,7 +1110,7 @@ export default function ExercisePage() {
                     questions.forEach((q) => {
                       initialAnswers[q.id] = {
                         questionId: q.id,
-                        answer: q.question_type === 'multiple_choice' ? null : q.question_type === 'fill_blank' ? '' : null,
+                        answer: q.question_type === 'multiple_choice' || q.question_type === 'droplist' || q.question_type === 'drop_list' ? null : q.question_type === 'fill_blank' ? '' : null,
                       }
                     })
                     setUserAnswers(initialAnswers)
@@ -1190,7 +1257,7 @@ export default function ExercisePage() {
                         </button>
                       </div>
                       <p className="text-sm text-slate-500 font-medium">
-                        Click "Try Again" to reset and attempt the exercise again.
+                        Click &quot;Try Again&quot; to reset and attempt the exercise again.
                       </p>
                     </>
                   )}

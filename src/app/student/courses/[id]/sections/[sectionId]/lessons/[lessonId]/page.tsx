@@ -6,14 +6,17 @@ import { useSelector } from "react-redux"
 import { ArrowLeft, Clock, PlayCircle, CheckCircle, FileText, Video, Download, BookOpen, PenTool, Save, Edit2 } from "lucide-react"
 import { getAdminCourseDetail } from "@/api/course"
 import { getLessonProgress, markLessonComplete } from "@/api/lesson"
+import { getVideoStreamUrl } from "@/api/file"
+import { getExercisesByLessonId } from "@/api/exercise"
+import HlsVideoPlayer from "@/components/modal/video-player"
 import { ICourse } from "@/interface/course"
 import { ILesson } from "@/interface/lesson"
 import { IExercise } from "@/interface/exercise"
 import { selectUserId } from "@/redux/features/user/userSlice"
 import Link from "next/link"
-import { mockExercises } from "@/data/mockExercises"
 interface ILessonExtended extends ILesson {
-  video_url?: string
+  video_url?: string // URL từ MinIO (backend upload) - ưu tiên
+  video_url_public?: string // URL public từ FE - fallback
   document_url?: string
 }
 
@@ -41,16 +44,16 @@ export default function LessonDetailPage() {
       ordering: number;
     }>;
   } | null>(null)
-  const [currentLesson, setCurrentLesson] = useState<{
-    id: string;
-    title: string;
-    description?: string;
-    lesson_type: string;
-    video_duration?: number;
-    is_preview?: boolean;
-    ordering: number;
-  } | null>(null)
+  const [currentLesson, setCurrentLesson] = useState<ILessonExtended | null>(null)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // Debug: Log videoUrl changes
+  useEffect(() => {
+    console.log("videoUrl state changed:", videoUrl)
+    console.log("currentLesson:", currentLesson)
+    console.log("lesson_type:", currentLesson?.lesson_type)
+  }, [videoUrl, currentLesson])
   const [error, setError] = useState<string | null>(null)
   const [exercises, setExercises] = useState<IExercise[]>([])
   const [lessonProgress, setLessonProgress] = useState(0)
@@ -85,7 +88,97 @@ export default function LessonDetailPage() {
             setError("Lesson not found")
           } else {
             setCurrentLesson(lesson)
-            setExercises(mockExercises)
+            
+            // Fetch exercises for this lesson from API
+            try {
+              const exercisesData = await getExercisesByLessonId(lessonId)
+              setExercises(exercisesData || [])
+            } catch (err) {
+              console.error("Error fetching exercises:", err)
+              setExercises([])
+            }
+            
+            // Determine video URL: prioritize HLS from API, fallback to public URL
+            const videoUrlFromBackend = (lesson as ILessonExtended).video_url
+            const publicUrl = (lesson as ILessonExtended).video_url_public
+            
+            // Check if video_url is a full URL (http/https) or public path (starts with /)
+            const isFullUrl = videoUrlFromBackend && (
+              videoUrlFromBackend.startsWith('http://') || 
+              videoUrlFromBackend.startsWith('https://')
+            )
+            
+            const isPublicPath = videoUrlFromBackend && videoUrlFromBackend.startsWith('/')
+            
+            // Handle video URL based on type
+            if (lesson.lesson_type === "video") {
+              if (isFullUrl) {
+                // Use full URL directly (external URL)
+                setVideoUrl(videoUrlFromBackend)
+              } else if (isPublicPath) {
+                // video_url is a public path (e.g., /test/video.mp4), use it directly or fallback to video_url_public
+                if (publicUrl) {
+                  const normalizedPublicUrl = publicUrl.startsWith('/') ? publicUrl : `/${publicUrl}`
+                  setVideoUrl(normalizedPublicUrl)
+                } else {
+                  // Use video_url as-is if it's a public path
+                  setVideoUrl(videoUrlFromBackend)
+                }
+              } else if (videoUrlFromBackend) {
+                // video_url is a filename (e.g., video-xxx.mp4), try to get HLS URL from API first
+                getVideoStreamUrl(videoUrlFromBackend)
+                  .then(data => {
+                    // Handle nested structure: data might be {success: true, data: {...}} or just {...}
+                    const responseData = data as {
+                      success?: boolean;
+                      data?: {
+                        preferredUrl?: string | null;
+                        hlsUrl?: string | null;
+                        originalUrl?: string | null;
+                      };
+                      preferredUrl?: string | null;
+                      hlsUrl?: string | null;
+                      originalUrl?: string | null;
+                    };
+                    
+                    const videoData = responseData?.data || responseData;
+                    
+                    // Priority: preferredUrl (HLS) > hlsUrl > originalUrl > publicUrl
+                    if (videoData?.preferredUrl) {
+                      setVideoUrl(videoData.preferredUrl)
+                    } else if (videoData?.hlsUrl) {
+                      setVideoUrl(videoData.hlsUrl)
+                    } else if (videoData?.originalUrl) {
+                      setVideoUrl(videoData.originalUrl)
+                    } else if (publicUrl) {
+                      // Fallback to public URL if API doesn't return URL
+                      const normalizedPublicUrl = publicUrl.startsWith('/') ? publicUrl : `/${publicUrl}`
+                      setVideoUrl(normalizedPublicUrl)
+                    } else {
+                      setVideoUrl(null)
+                    }
+                  })
+                  .catch(err => {
+                    console.error("Error fetching video stream URL:", err)
+                    // Fallback to public URL on error
+                    if (publicUrl) {
+                      const normalizedPublicUrl = publicUrl.startsWith('/') ? publicUrl : `/${publicUrl}`
+                      setVideoUrl(normalizedPublicUrl)
+                    } else {
+                      // Last resort: try to use video_url as-is
+                      setVideoUrl(videoUrlFromBackend)
+                    }
+                  })
+              } else if (publicUrl) {
+                // No video_url, but has publicUrl
+                const normalizedPublicUrl = publicUrl.startsWith('/') ? publicUrl : `/${publicUrl}`
+                setVideoUrl(normalizedPublicUrl)
+              } else {
+                setVideoUrl(null)
+              }
+            } else {
+              setVideoUrl(null)
+            }
           }
         }
       } catch (err) {
@@ -362,33 +455,44 @@ export default function LessonDetailPage() {
           <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
             <h2 className="text-2xl font-bold text-slate-800 mb-6">Lesson Content</h2>
             
-            {currentLesson.lesson_type === "video" && (currentLesson as ILessonExtended).video_url ? (
+            {currentLesson.lesson_type === "video" && videoUrl ? (
               <div className="mb-8">
                 <div className="relative w-full rounded-2xl overflow-hidden shadow-2xl bg-black">
-                  <video
-                    className="w-full aspect-video"
-                    controls
-                    controlsList="nodownload"
-                    preload="auto"
-                    playsInline
-                    crossOrigin="anonymous"
-                    onLoadedData={() => {
-                      console.log("Video loaded successfully");
-                    }}
-                    onError={(e) => {
-                      console.error("Video loading error:", e);
-                    }}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      maxHeight: "600px",
-                      objectFit: "contain"
-                    }}
-                  >
-                    <source src={(currentLesson as ILessonExtended).video_url} type="video/mp4" />
-                    <source src={(currentLesson as ILessonExtended).video_url} type="video/webm" />
-                    Your browser does not support the video tag.
-                  </video>
+                  {videoUrl.includes('.m3u8') || videoUrl.includes('playlist.m3u8') ? (
+                    // Use HLS Video Player for HLS streams
+                    <HlsVideoPlayer
+                      hlsUrl={videoUrl}
+                      title={currentLesson.title || "Lesson Video"}
+                      duration={currentLesson.video_duration || undefined}
+                    />
+                  ) : (
+                    // Use native video player for MP4/WebM
+                    <video
+                      key={videoUrl}
+                      className="w-full aspect-video"
+                      controls
+                      controlsList="nodownload"
+                      preload="auto"
+                      playsInline
+                      crossOrigin="anonymous"
+                      onLoadedData={() => {
+                        console.log("Video loaded successfully:", videoUrl);
+                      }}
+                      onError={(e) => {
+                        console.error("Video loading error:", e, "URL:", videoUrl);
+                      }}
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        maxHeight: "600px",
+                        objectFit: "contain"
+                      }}
+                    >
+                      <source src={videoUrl} type="video/mp4" />
+                      <source src={videoUrl} type="video/webm" />
+                      Your browser does not support the video tag.
+                    </video>
+                  )}
                 </div>
               </div>
             ) : null}
