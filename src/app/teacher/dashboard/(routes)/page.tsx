@@ -2,7 +2,7 @@
 
 import StatCard from "@/components/admin/dashboard/StatCard";
 import RecentSubmissions from "@/components/teacher/dashboard/RecentSubmissions";
-import TeacherOverviewSimple from "@/components/teacher/dashboard/TeacherOverviewSimple";
+import TeacherOverview from "@/components/teacher/dashboard/TeacherOverview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Error from "@/components/ui/error";
@@ -89,7 +89,7 @@ const TeacherDashboardPage = () => {
       </div>
 
       {/* Quick Overview Section */}
-      <TeacherOverviewSimple stats={data.stats} />
+      <TeacherOverview stats={data.stats} />
 
       {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-1">
