@@ -23,6 +23,7 @@ import {
   NotepadText,
   BookCheck,
   Grid3X3,
+  MessageSquare,
 } from "lucide-react";
 import { Logout } from "@/api/auth";
 import { useRouter } from "next/navigation";
@@ -115,6 +116,12 @@ const AdminSidebar = ({
       label: t("sidebar.mockTests"),
       icon: BookCheck,
       active: pathName === ROUTES.ADMIN_MOCK_TESTS,
+    },
+    {
+      href: ROUTES.ADMIN_CHATBOT,
+      label: "AI Assistant",
+      icon: MessageSquare,
+      active: pathName === ROUTES.ADMIN_CHATBOT || pathName?.startsWith(ROUTES.ADMIN_CHATBOT),
     },
     {
       href: ROUTES.ADMIN_SETTINGS,

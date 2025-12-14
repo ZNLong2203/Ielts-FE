@@ -17,6 +17,7 @@ import {
   GraduationCap,
   FileText,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 import { Logout } from "@/api/auth";
 import { useRouter } from "next/navigation";
@@ -61,6 +62,12 @@ const TeacherSidebar = ({
       label: t("sidebar.writingGrading"),
       icon: FileText,
       active: pathName === ROUTES.TEACHER_WRITING_GRADING || pathName?.startsWith(ROUTES.TEACHER_WRITING_GRADING),
+    },
+    {
+      href: ROUTES.TEACHER_CHATBOT,
+      label: "AI Assistant",
+      icon: MessageSquare,
+      active: pathName === ROUTES.TEACHER_CHATBOT || pathName?.startsWith(ROUTES.TEACHER_CHATBOT),
     },
     {
       href: "/teacher/dashboard/settings",

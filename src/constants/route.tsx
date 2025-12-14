@@ -22,10 +22,12 @@ const ROUTES = {
   ADMIN_READING: "/reading",
   ADMIN_LISTENING: "/listening",
   ADMIN_SETTINGS: "/admin/settings",
+  ADMIN_CHATBOT: "/admin/chatbot",
   
   TEACHER: "/teacher/dashboard",
   TEACHER_BLOGS: "/teacher/dashboard/blog",
   TEACHER_WRITING_GRADING: "/teacher/dashboard/writing-grading",
+  TEACHER_CHATBOT: "/teacher/dashboard/chatbot",
 };
 
 export default ROUTES;
