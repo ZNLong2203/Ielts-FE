@@ -284,10 +284,8 @@ const MockTestForm = () => {
       console.log("Initializing sections for:", selectedTestType);
       setSections(getInitialSections(selectedTestType));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestType, isEditing, mockTestData]);
 
-  // Update section when test_type changes (for new tests only)
   useEffect(() => {
     if (
       selectedTestType &&
@@ -308,7 +306,6 @@ const MockTestForm = () => {
         mockTestForm.setValue("test_sections", [updatedSection]);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTestType]);
 
   // Load existing data
@@ -332,7 +329,6 @@ const MockTestForm = () => {
         mockTestData.test_sections &&
         Array.isArray(mockTestData.test_sections)
       ) {
-        console.log("Setting sections with ids:", mockTestData.test_sections);
         // Map sections to ensure we keep the id for updates
         const sectionsWithIds = mockTestData.test_sections.map((section) => ({
           section_id: section.id, // Keep the id to avoid creating new sections
@@ -358,7 +354,6 @@ const MockTestForm = () => {
       return;
     }
 
-    console.log("Data:", data);
     try {
       if (isEditing) {
         await updateMockTestMutation.mutateAsync(data as z.infer<typeof MockTestFormUpdateSchema>);
