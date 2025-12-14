@@ -50,6 +50,7 @@ export interface IMockTestExercise {
 }
 
 export interface IMockTestSection {
+  id?: string; // Optional - exists when updating existing section
   section_name: string;
   section_type: string;
   duration: number; // in minutes

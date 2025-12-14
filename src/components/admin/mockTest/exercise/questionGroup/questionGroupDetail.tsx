@@ -6,25 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";
 import Heading from "@/components/ui/heading";
 import {
   ArrowLeft,
-  Edit,
-  Trash2,
-  Plus,
   HelpCircle,
   FileText,
   CheckCircle,

@@ -327,13 +327,22 @@ const MockTestForm = () => {
         test_sections: mockTestData.test_sections || [],
       });
 
-      // Set sections state
+      // Set sections state - keep id from API for update
       if (
         mockTestData.test_sections &&
         Array.isArray(mockTestData.test_sections)
       ) {
-        console.log("Setting sections:", mockTestData.test_sections);
-        setSections(mockTestData.test_sections);
+        console.log("Setting sections with ids:", mockTestData.test_sections);
+        // Map sections to ensure we keep the id for updates
+        const sectionsWithIds = mockTestData.test_sections.map((section) => ({
+          section_id: section.id, // Keep the id to avoid creating new sections
+          section_name: section.section_name,
+          section_type: section.section_type,
+          duration: section.duration,
+          ordering: section.ordering,
+          description: section.description,
+        }));
+        setSections(sectionsWithIds);
       } else {
         // Fallback to default sections if none exist
         const initialSections = getInitialSections(mockTestData.test_type);
@@ -349,6 +358,7 @@ const MockTestForm = () => {
       return;
     }
 
+    console.log("Data:", data);
     try {
       if (isEditing) {
         await updateMockTestMutation.mutateAsync(data as z.infer<typeof MockTestFormUpdateSchema>);

@@ -130,7 +130,7 @@ const ReadingForm = () => {
     onSuccess: () => {
       toast.success("Reading exercise created successfully! ");
       queryClient.invalidateQueries({ queryKey: ["readingExercises"] });
-      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_READING}`);
+      router.push(`${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}${ROUTES.ADMIN_READING}?sectionId=${testSectionId}`);
     },
     onError: (error: any) => {
       toast.error(
