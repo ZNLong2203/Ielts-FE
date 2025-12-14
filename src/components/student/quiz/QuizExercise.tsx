@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Pin, PinOff, Headphones } from "lucide-react";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import PassageWithHighlight from "./PassageWithHighlight";
 import ReadingPassageWithParagraphs from "./ReadingPassageWithParagraphs";
 import QuizQuestionGroup from "./QuizQuestionGroup";
+import { processAudioUrl } from "@/utils/audioUrl";
 
 interface Question {
   id: string;
@@ -96,6 +97,20 @@ export default function QuizExercise({
   const passageId = `exercise-passage-${exercise.id}`;
   const isPassagePinned = pinnedPassageId === passageId;
   const isImagePinned = pinnedImageUrl === exercise.image_url;
+  const [processedAudioUrl, setProcessedAudioUrl] = useState<string | null>(null);
+
+  // Process audio URL on mount
+  useEffect(() => {
+    const loadAudioUrl = async () => {
+      if (exercise.audio_url) {
+        const url = await processAudioUrl(exercise.audio_url);
+        setProcessedAudioUrl(url);
+      } else {
+        setProcessedAudioUrl(null);
+      }
+    };
+    loadAudioUrl();
+  }, [exercise.audio_url]);
 
   // Calculate total questions in this exercise
   const totalQuestionsInExercise = exercise.question_groups.reduce(
@@ -174,15 +189,15 @@ export default function QuizExercise({
       )}
 
       {/* Exercise Audio Player (for Listening) */}
-      {exercise.audio_url && (
+      {processedAudioUrl && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center gap-3 mb-3">
             <Headphones className="h-5 w-5 text-blue-600" />
             <span className="font-medium text-blue-900">Audio Recording</span>
           </div>
           <audio controls className="w-full">
-            <source src={exercise.audio_url} type="audio/mpeg" />
-            <source src={exercise.audio_url} type="audio/mp3" />
+            <source src={processedAudioUrl} type="audio/mpeg" />
+            <source src={processedAudioUrl} type="audio/mp3" />
             Your browser does not support the audio element.
           </audio>
         </div>

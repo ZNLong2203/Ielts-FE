@@ -10,6 +10,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragOverlay,
   useDroppable,
 } from "@dnd-kit/core"
 import {
@@ -43,12 +44,13 @@ function DraggableOptionItem({ option, isDragging }: { option: DraggableOption; 
     setNodeRef,
     transform,
     transition,
+    isDragging: isSortableDragging,
   } = useSortable({ id: option.id })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+  const style: React.CSSProperties = {
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
+    transition: transition || undefined,
+    opacity: isDragging ? 0.4 : 1,
   }
 
   return (
@@ -57,7 +59,9 @@ function DraggableOptionItem({ option, isDragging }: { option: DraggableOption; 
       style={style}
       {...attributes}
       {...listeners}
-      className="flex items-center gap-3 p-3 bg-white border-2 border-slate-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-blue-400 hover:shadow-md transition-all group"
+      className={`flex items-center gap-3 p-3 bg-white border-2 border-slate-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-blue-400 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group ${
+        isSortableDragging ? 'z-50' : ''
+      }`}
     >
       <GripVertical className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors flex-shrink-0" />
       <span className="flex-1 text-slate-700 font-medium text-sm">{option.text}</span>
@@ -98,9 +102,9 @@ function DroppableParagraph({
       </div>
       <div
         ref={setNodeRef}
-        className={`min-h-[60px] p-3 rounded-lg flex items-center justify-center transition-all ${
+        className={`min-h-[60px] p-3 rounded-lg flex items-center justify-center transition-all duration-200 ${
           isOver
-            ? 'bg-blue-50 border-2 border-dashed border-blue-400'
+            ? 'bg-blue-100 border-2 border-dashed border-blue-500 scale-[1.02] shadow-md'
             : 'bg-slate-50 border-2 border-dashed border-slate-300'
         }`}
       >
@@ -165,7 +169,11 @@ export function MatchingHeadingExercise({
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px of movement before drag starts
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -249,6 +257,8 @@ export function MatchingHeadingExercise({
     }
   }
 
+  const activeOption = activeId ? allOptions.find(opt => opt.id === activeId) : null
+
   return (
     <DndContext
       sensors={sensors}
@@ -293,6 +303,16 @@ export function MatchingHeadingExercise({
           </div>
         </div>
       </div>
+
+      {/* Drag Overlay - Shows the item being dragged */}
+      <DragOverlay>
+        {activeOption ? (
+          <div className="flex items-center gap-3 p-3 bg-white border-2 border-blue-500 rounded-lg shadow-2xl rotate-2 scale-105">
+            <GripVertical className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <span className="flex-1 text-slate-700 font-medium text-sm">{activeOption.text}</span>
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
