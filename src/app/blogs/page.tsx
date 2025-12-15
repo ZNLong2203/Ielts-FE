@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Image from "next/image"
 import Link from "next/link"
 
-// API imports
 import { getPublicBlogCategories, getPublicPublishedBlogs } from "@/api/blog"
 import { IBlog, IBlogCategory } from "@/interface/blog"
 
@@ -228,7 +227,6 @@ export default function BlogsPage() {
       )}
 
       <div className="grid lg:grid-cols-4 gap-8">
-        {/* Main Content */}
         <div className="lg:col-span-3">
           {/* Category Filter */}
           <motion.div

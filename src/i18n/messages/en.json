@@ -23,6 +23,7 @@
   },
   "common": {
     "user": "User",
+    "logout": "Logout",
     "loggedOutSuccessfully": "Logged out successfully",
     "logoutFailed": "Logout failed. Please try again.",
     "welcomeBack": "Welcome Back",
@@ -225,6 +226,7 @@
   },
   "sidebar": {
     "dashboard": "Dashboard",
+    "profile": "Profile",
     "myCourses": "My Courses",
     "myQuizzes": "My Quizzes",
     "certificates": "Certificates",

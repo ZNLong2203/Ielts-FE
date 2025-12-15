@@ -43,7 +43,7 @@ const TeacherSidebar = ({
   const router = useRouter();
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const routes = [
     {
       href:  ROUTES.TEACHER,
@@ -69,12 +69,12 @@ const TeacherSidebar = ({
       icon: MessageSquare,
       active: pathName === ROUTES.TEACHER_CHATBOT || pathName?.startsWith(ROUTES.TEACHER_CHATBOT),
     },
-    {
-      href: "/teacher/dashboard/settings",
-      label: t("sidebar.settings"),
-      icon: Settings,
-      active: pathName === "/teacher/dashboard/settings",
-    },
+    // {
+    //   href: ROUTES.TEACHER_SETTINGS,
+    //   label: t("sidebar.settings"),
+    //   icon: Settings,
+    //   active: pathName === ROUTES.TEACHER_SETTINGS || pathName?.startsWith(ROUTES.TEACHER_SETTINGS),
+    // },
   ];
 
   const handleLogout = async () => {
@@ -227,7 +227,16 @@ const TeacherSidebar = ({
                     className="w-full justify-start h-9 px-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   >
                     <User className="h-4 w-4 mr-3" />
-                    Profile
+                    {t("sidebar.profile")}
+                  </Button>
+                </Link>
+                <Link href={ROUTES.TEACHER_SETTINGS} className="w-full">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start h-9 px-3 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  >
+                    <Settings className="h-4 w-4 mr-3" />
+                    {t("sidebar.settings")}
                   </Button>
                 </Link>
                 <Button
@@ -236,7 +245,7 @@ const TeacherSidebar = ({
                   className="w-full justify-start h-9 px-3 text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <LogOut className="h-4 w-4 mr-3" />
-                  Logout
+                  {t("common.logout")}
                 </Button>
               </div>
             </div>
