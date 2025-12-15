@@ -23,6 +23,7 @@
   },
   "common": {
     "user": "Người dùng",
+    "logout": "Đăng xuất",
     "loggedOutSuccessfully": "Đăng xuất thành công",
     "logoutFailed": "Đăng xuất thất bại. Vui lòng thử lại.",
     "welcomeBack": "Chào mừng trở lại",
@@ -225,6 +226,7 @@
   },
   "sidebar": {
     "dashboard": "Bảng điều khiển",
+    "profile": "Hồ sơ",
     "myCourses": "Khóa học của tôi",
     "myQuizzes": "Bài kiểm tra của tôi",
     "certificates": "Chứng chỉ",

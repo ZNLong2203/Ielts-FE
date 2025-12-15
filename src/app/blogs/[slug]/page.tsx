@@ -97,7 +97,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   const handleLikeBlog = () => {
     setIsLiked(!isLiked);
-    // TODO: Call like API for blog
   };
 
   const handleLikeComment = async (commentId: string) => {
@@ -112,7 +111,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
-    // TODO: Call bookmark API
   };
 
   const handleShare = async () => {
@@ -186,7 +184,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
 
   return (
     <>
-      {/* Custom Styles */}
       <style jsx global>{`
         .prose-content {
           max-width: none;

@@ -28,6 +28,7 @@ const ROUTES = {
   TEACHER_BLOGS: "/teacher/dashboard/blog",
   TEACHER_WRITING_GRADING: "/teacher/dashboard/writing-grading",
   TEACHER_CHATBOT: "/teacher/dashboard/chatbot",
+  TEACHER_SETTINGS: "/teacher/dashboard/settings",
 };
 
 export default ROUTES;
