@@ -12,8 +12,9 @@ export const getPublicBlogCategories = async (): Promise<IBlogCategory[]> => {
 export const getPublicPublishedBlogs = async (params?: {
   page?: number;
   limit?: number;
-  category?: string;
+  category_id?: string;
   search?: string;
+  is_featured?: string;
 }): Promise<IBlogs> => {
   const response = await api.get(`${BASE_URL}/blogs`, { params });
   return response.data.data;
@@ -21,6 +22,13 @@ export const getPublicPublishedBlogs = async (params?: {
 
 export const getPublicBlogBySlug = async (id: string): Promise<IBlog> => {
   const response = await api.get(`${BASE_URL}/blogs/detail/${id}`);
+  return response.data.data;
+};
+
+export const getPublicFeaturedBlogs = async (limit?: number): Promise<IBlog[]> => {
+  const response = await api.get(`${BASE_URL}/blogs/featured`, { 
+    params: limit ? { limit } : {} 
+  });
   return response.data.data;
 };
 

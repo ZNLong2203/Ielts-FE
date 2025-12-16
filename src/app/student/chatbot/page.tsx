@@ -22,19 +22,19 @@ export default function ChatbotPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+        <TabsList className="grid w-full grid-cols-1 max-w-2xl">
           <TabsTrigger value="chat" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Chat
           </TabsTrigger>
-          <TabsTrigger value="upload" className="flex items-center gap-2">
+          {/* <TabsTrigger value="upload" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Upload Documents
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             View Documents
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="chat" className="space-y-4">
@@ -44,7 +44,6 @@ export default function ChatbotPage() {
         <TabsContent value="upload" className="space-y-4">
           <PDFUploader
             onUploadSuccess={() => {
-              // Optionally switch to chat tab after successful upload
               setTimeout(() => setActiveTab("chat"), 2000);
             }}
           />

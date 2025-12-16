@@ -60,12 +60,21 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
     retry: 1,
   });
 
-  // Fetch related blogs
-  const { data: relatedBlogs = [], isLoading: isRelatedLoading } = useQuery({
-    queryKey: ["related-blogs"],
-    queryFn: () => getPublicPublishedBlogs({ page: 1, limit: 4 }),
+  // Fetch related blogs - filter by same category, exclude current blog
+  const { data: relatedBlogsData, isLoading: isRelatedLoading } = useQuery({
+    queryKey: ["related-blogs", blogData?.category_id, blogData?.id],
+    queryFn: () => getPublicPublishedBlogs({ 
+      page: 1, 
+      limit: 4,
+      category_id: blogData?.category_id 
+    }),
+    enabled: !!blogData?.category_id, 
     retry: 1,
   });
+
+  const relatedBlogs = Array.isArray(relatedBlogsData?.result) 
+    ? relatedBlogsData.result.filter((blog: any) => blog.id !== blogData?.id).slice(0, 4)
+    : []
 
   // Create comment mutation
   const createCommentMutation = useMutation({
@@ -370,10 +379,6 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                     </div>
                   )}
                   <div className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    <span>{blogData.view_count || 0} views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
                     <MessageCircle className="h-4 w-4" />
                     <span>{comments.length} comments</span>
                   </div>
@@ -409,7 +414,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                     <Heart className={`h-4 w-4 mr-2 ${isLiked ? "fill-current" : ""}`} />
                     {blogData.like_count || 0}
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={handleBookmark}
@@ -417,7 +422,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                   >
                     <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? "fill-current" : ""}`} />
                     Save
-                  </Button>
+                  </Button> */}
                   <Button variant="outline" size="sm" onClick={handleShare}>
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
@@ -728,9 +733,9 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                         </div>
                       ))}
                     </div>
-                  ) : (Array.isArray(relatedBlogs) ? relatedBlogs.length > 0 : relatedBlogs?.result && relatedBlogs.result.length > 0) ? (
+                  ) : relatedBlogs.length > 0 ? (
                     <div className="space-y-4">
-                      {(Array.isArray(relatedBlogs) ? relatedBlogs : relatedBlogs.result || []).slice(0, 4).map((post: any) => (
+                      {relatedBlogs.map((post: any) => (
                         <Link 
                           key={post.id} 
                           href={`/blogs/${post.id}`}
@@ -761,7 +766,7 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-600">No related posts found.</p>
+                    <p className="text-sm text-gray-600">No related posts found</p>
                   )}
                 </CardContent>
               </Card>
