@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
-import { Heart, BookOpen, TrendingUp, Tag, MessageCircle, ArrowRight, Filter, Star } from "lucide-react"
+import { Heart, BookOpen, TrendingUp, Tag, MessageCircle, ArrowRight, Search, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -18,6 +18,8 @@ export default function BlogsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchInput, setSearchInput] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
   const blogsSectionRef = useRef<HTMLDivElement>(null)
 
   // Fetch blog categories
@@ -34,17 +36,28 @@ export default function BlogsPage() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Fetch all blogs both featured and non-featured with pagination
+  // Fetch all blogs both featured and non-featured with pagination + search
   const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useQuery({
-    queryKey: ['published-blogs', currentPage],
-    queryFn: () => getPublicPublishedBlogs({ 
-      page: currentPage, 
-      limit: 6
-    }),
+    queryKey: ['published-blogs', currentPage, selectedCategory, searchTerm],
+    queryFn: () =>
+      getPublicPublishedBlogs({
+        page: currentPage,
+        limit: 6,
+        ...(selectedCategory !== "all" ? { category_id: selectedCategory } : {}),
+        ...(searchTerm.trim() ? { search: searchTerm.trim() } : {}),
+      }),
     staleTime: 1 * 60 * 1000, // 1 minute
   })
 
-  const categories = Array.isArray(categoriesData?.result) ? categoriesData.result : []
+  // categoriesData thực tế trả về dạng { meta, result }, nên cần lấy result
+  type BlogCategoriesResponse = { result: IBlogCategory[] } | IBlogCategory[] | undefined
+  const categoriesDataTyped = categoriesData as BlogCategoriesResponse
+  const categories: IBlogCategory[] =
+    Array.isArray((categoriesDataTyped as { result: IBlogCategory[] } | undefined)?.result)
+      ? (categoriesDataTyped as { result: IBlogCategory[] }).result
+      : Array.isArray(categoriesDataTyped)
+        ? (categoriesDataTyped as IBlogCategory[])
+        : []
   const featuredBlogs = Array.isArray(featuredBlogsData) ? featuredBlogsData : []
   const regularBlogs = Array.isArray(blogsData?.result) ? blogsData.result : []
   const meta = blogsData?.meta
@@ -52,20 +65,17 @@ export default function BlogsPage() {
   // Combine all blogs for category count calculation
   const allBlogs = [...featuredBlogs, ...regularBlogs]
 
-  // Calculate blog counts for each category
+  // Calculate blog counts for each category (trên tập blog hiện tại)
   const categoriesWithCounts = categories.map((category: IBlogCategory) => ({
     ...category,
-    count: regularBlogs.filter((blog: IBlog) => blog.category_id === category.id).length
+    count: allBlogs.filter((blog: IBlog) => blog.category_id === category.id).length,
   }))
 
-  const filteredBlogs = selectedCategory === "all" 
-    ? regularBlogs 
-    : regularBlogs.filter((blog: IBlog) => {
-        return blog.category_id === selectedCategory;
-      })
+  // Backend đã filter theo category + search, nên chỉ cần dùng regularBlogs
+  const filteredBlogs = regularBlogs
 
-  // Loading state
-  if (categoriesLoading || blogsLoading || featuredLoading) {
+  // Loading state - chỉ show full-page loading lần đầu
+  if ((categoriesLoading || featuredLoading) || (!blogsData && blogsLoading)) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -115,6 +125,18 @@ export default function BlogsPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+  }
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(event.target.value)
+  }
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault()
+      setSearchTerm(searchInput.trim())
+      setCurrentPage(1)
+    }
   }
 
   const handleViewAll = () => {
@@ -167,7 +189,9 @@ export default function BlogsPage() {
                       </motion.div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                       <Badge className="absolute top-4 left-4 bg-blue-600 hover:bg-blue-700 text-white font-medium">
-                        {categoriesWithCounts.find(cat => cat.id === blog.category_id)?.name || blog.category || "Uncategorized"}
+                        {categoriesWithCounts.find((cat: IBlogCategory) => cat.id === blog.category_id)?.name ||
+                          (typeof blog.category === "object" ? blog.category?.name : blog.category) ||
+                          "Uncategorized"}
                       </Badge>
                       <div className="absolute bottom-4 left-4 right-4">
                         <div className="flex items-center gap-4 text-white text-sm">
@@ -248,12 +272,19 @@ export default function BlogsPage() {
             transition={{ duration: 0.6 }}
             className="mb-8"
           >
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
               <h3 className="text-2xl font-bold text-gray-900">Browse by Category</h3>
-              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+              <div className="relative w-full md:w-64">
+                <Search className="h-4 w-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search articles..."
+                  className="w-full rounded-full border border-gray-200 bg-white pl-9 pr-3 py-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -322,7 +353,9 @@ export default function BlogsPage() {
                         </motion.div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <Badge className="absolute top-3 left-3 bg-white/90 text-gray-900 hover:bg-white">
-                          {categoriesWithCounts.find(cat => cat.id === blog.category_id)?.name || blog.category || "Uncategorized"}
+                          {categoriesWithCounts.find((cat: IBlogCategory) => cat.id === blog.category_id)?.name ||
+                            (typeof blog.category === "object" ? blog.category?.name : blog.category) ||
+                            "Uncategorized"}
                         </Badge>
                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button size="sm" variant="secondary" className="h-8 w-8 p-0">
@@ -464,7 +497,7 @@ export default function BlogsPage() {
                     <div className="flex items-center gap-3">
                       <div className={`w-3 h-3 rounded-full ${category.color || 'bg-blue-500'}`} />
                       <span className="text-sm text-gray-700 group-hover:text-blue-600 font-medium">
-                        {category.name}
+                        {String(category.name)}
                       </span>
                     </div>
                     <Badge variant="secondary" className="text-xs">

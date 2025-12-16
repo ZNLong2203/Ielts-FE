@@ -6,5 +6,4 @@ export const TeacherFormSchema = z.object({
     specializations: z.array(z.string()).optional(),
     teaching_style: z.string().optional(),
     ielts_band_score: z.coerce.number().optional(),
-    hourly_rate: z.coerce.number().optional(),
 })
