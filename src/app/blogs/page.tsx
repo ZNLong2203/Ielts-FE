@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
-import { Heart, BookOpen, TrendingUp, Tag, Eye, MessageCircle, ArrowRight, Filter, Star } from "lucide-react"
+import { Heart, BookOpen, TrendingUp, Tag, MessageCircle, ArrowRight, Filter, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -11,13 +11,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Image from "next/image"
 import Link from "next/link"
 
-import { getPublicBlogCategories, getPublicPublishedBlogs } from "@/api/blog"
+import { getPublicBlogCategories, getPublicPublishedBlogs, getPublicFeaturedBlogs } from "@/api/blog"
 import { IBlog, IBlogCategory } from "@/interface/blog"
 
 export default function BlogsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const blogsSectionRef = useRef<HTMLDivElement>(null)
 
   // Fetch blog categories
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
@@ -26,28 +27,36 @@ export default function BlogsPage() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Fetch blogs
+  // Fetch featured blogs 
+  const { data: featuredBlogsData, isLoading: featuredLoading } = useQuery({
+    queryKey: ['featured-blogs'],
+    queryFn: () => getPublicFeaturedBlogs(4),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Fetch all blogs both featured and non-featured with pagination
   const { data: blogsData, isLoading: blogsLoading, error: blogsError } = useQuery({
     queryKey: ['published-blogs', currentPage],
     queryFn: () => getPublicPublishedBlogs({ 
       page: currentPage, 
-      limit: 12
+      limit: 6
     }),
     staleTime: 1 * 60 * 1000, // 1 minute
   })
 
   const categories = Array.isArray(categoriesData?.result) ? categoriesData.result : []
-  const blogs = Array.isArray(blogsData?.result) ? blogsData.result : []
+  const featuredBlogs = Array.isArray(featuredBlogsData) ? featuredBlogsData : []
+  const regularBlogs = Array.isArray(blogsData?.result) ? blogsData.result : []
   const meta = blogsData?.meta
+
+  // Combine all blogs for category count calculation
+  const allBlogs = [...featuredBlogs, ...regularBlogs]
 
   // Calculate blog counts for each category
   const categoriesWithCounts = categories.map((category: IBlogCategory) => ({
     ...category,
-    count: blogs.filter((blog: IBlog) => blog.category_id === category.id).length
+    count: regularBlogs.filter((blog: IBlog) => blog.category_id === category.id).length
   }))
-
-  const featuredBlogs = blogs.filter((blog: IBlog) => blog.is_featured) || []
-  const regularBlogs = blogs.filter((blog: IBlog) => !blog.is_featured) || []
 
   const filteredBlogs = selectedCategory === "all" 
     ? regularBlogs 
@@ -56,7 +65,7 @@ export default function BlogsPage() {
       })
 
   // Loading state
-  if (categoriesLoading || blogsLoading) {
+  if (categoriesLoading || blogsLoading || featuredLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -108,6 +117,10 @@ export default function BlogsPage() {
     setCurrentPage(page)
   }
 
+  const handleViewAll = () => {
+    blogsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       {/* Featured Posts Section */}
@@ -121,7 +134,11 @@ export default function BlogsPage() {
                 <p className="text-gray-600">Hand-picked content from our expert team</p>
               </div>
             </div>
-            <Button variant="outline" className="hidden md:flex items-center gap-2 bg-transparent">
+            <Button 
+              variant="outline" 
+              className="hidden md:flex items-center gap-2 bg-transparent"
+              onClick={handleViewAll}
+            >
               View All <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>
@@ -154,10 +171,6 @@ export default function BlogsPage() {
                       </Badge>
                       <div className="absolute bottom-4 left-4 right-4">
                         <div className="flex items-center gap-4 text-white text-sm">
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-4 w-4" />
-                            {blog.view_count || 0}
-                          </div>
                           <div className="flex items-center gap-1">
                             <Heart className="h-4 w-4" />
                             {blog.like_count || 0}
@@ -226,7 +239,7 @@ export default function BlogsPage() {
         </motion.section>
       )}
 
-      <div className="grid lg:grid-cols-4 gap-8">
+      <div className="grid lg:grid-cols-4 gap-8" ref={blogsSectionRef}>
         <div className="lg:col-span-3">
           {/* Category Filter */}
           <motion.div
@@ -252,7 +265,7 @@ export default function BlogsPage() {
                 >
                   All Articles
                   <Badge variant="secondary" className="ml-2">
-                    {blogs.length}
+                    {regularBlogs.length}
                   </Badge>
                 </Button>
               </motion.div>
@@ -353,10 +366,6 @@ export default function BlogsPage() {
                             </div>
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-500">
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {blog.view_count || 0}
-                            </div>
                             <div className="flex items-center gap-1">
                               <Heart className="h-3 w-3" />
                               {blog.like_count || 0}
@@ -475,7 +484,7 @@ export default function BlogsPage() {
                 </h3>
               </CardHeader>
               <CardContent className="space-y-4">
-                {Array.isArray(blogs) && blogs.slice(0, 3).map((blog: IBlog, index: number) => (
+                {Array.isArray(allBlogs) && allBlogs.slice(0, 3).map((blog: IBlog, index: number) => (
                   <motion.div
                     key={blog.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -503,10 +512,6 @@ export default function BlogsPage() {
                           <div className="flex items-center gap-1">
                             <Heart className="h-3 w-3" />
                             {blog.like_count || 0}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {blog.view_count || 0}
                           </div>
                         </div>
                       </div>
