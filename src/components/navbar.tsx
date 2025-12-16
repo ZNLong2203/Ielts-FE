@@ -176,7 +176,7 @@ const LandingNavbar = () => {
                 </Link>
 
                 <NavbarLink text={t("nav.courses")} href="/#learning-path" />
-{/* 
+                {/* 
                 <NavbarTitle text={t("nav.testPractice")}>
                   <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
                     <div className="h-3 w-full"></div>
@@ -219,7 +219,10 @@ const LandingNavbar = () => {
                       <div className="h-3 w-full"></div>
                       <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
                         <div className="flex flex-col">
-                          <NavbarLink text={t("nav.login")} href={ROUTES.LOGIN} />
+                          <NavbarLink
+                            text={t("nav.login")}
+                            href={ROUTES.LOGIN}
+                          />
                         </div>
                       </div>
                     </div>
@@ -245,9 +248,17 @@ const LandingNavbar = () => {
                 <div className="relative group/parent">
                   <div className="flex items-center gap-3 rounded-[32px] px-4 py-2 cursor-pointer hover:bg-white/10 transition-all duration-200">
                     {/* Avatar */}
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                      {getUserInitials()}
-                    </div>
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="User Avatar"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                        {getUserInitials()}
+                      </div>
+                    )}
 
                     {/* User Name & Role */}
                     <div className="flex flex-col items-start">
@@ -264,9 +275,17 @@ const LandingNavbar = () => {
                     <div className="rounded-2xl border-2 border-white/10 bg-black/80 backdrop-blur-[47.5px] p-3 shadow-2xl">
                       {/* User Info Header */}
                       <div className="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {getUserInitials()}
-                        </div>
+                        {user?.avatar ? (
+                          <img
+                            src={user.avatar}
+                            alt="User Avatar"
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {getUserInitials()}
+                          </div>
+                        )}
                         <div className="flex-1">
                           <div className="text-white font-medium text-sm">
                             {getUserDisplayName()}
