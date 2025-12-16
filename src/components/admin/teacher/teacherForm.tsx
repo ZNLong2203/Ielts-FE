@@ -158,7 +158,6 @@ const TeacherForm = () => {
       specializations: [],
       ielts_band_score: 0,
       teaching_style: "",
-      hourly_rate: 0,
     },
   });
 
@@ -219,7 +218,6 @@ const TeacherForm = () => {
         specializations: data?.teachers?.specializations || [],
         ielts_band_score: data?.teachers?.ielts_band_score || 0,
         teaching_style: data?.teachers?.teaching_style || "",
-        hourly_rate: data?.teachers?.hourly_rate || 0,
       });
 
       profileForm.reset({
@@ -571,13 +569,6 @@ const TeacherForm = () => {
                         type="number"
                         inputMode="decimal"
                         placeholder="Enter IELTS band score"
-                      />
-                      <TextField
-                        control={teacherForm.control}
-                        name="hourly_rate"
-                        label="Hourly Rate (VND)"
-                        type="number"
-                        placeholder="Enter hourly rate in VND"
                       />
                     </div>
 

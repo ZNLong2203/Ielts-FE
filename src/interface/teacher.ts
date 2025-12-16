@@ -7,11 +7,9 @@ export interface ITeacher {
   ielts_band_score?: number;
   certificate_urls: string[];
   teaching_style?: string;
-  hourly_rate?: number;
   availability?: {
     [key: string]: string[]; // e.g., { monday: ["9:00-10:00", "10:00-11:00"] }
   };
-  ratings?: number;
   is_verified?: boolean;
   status?: string;
   deleted?: boolean;
@@ -25,5 +23,4 @@ export interface ITeacherUpdate {
   specializations?: string[];
   ielts_band_score?: number;
   teaching_style?: string;
-  hourly_rate?: number;
 }

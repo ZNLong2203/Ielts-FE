@@ -353,11 +353,6 @@ const TeacherDetail = () => {
                       value={data?.teachers?.teaching_style || "Not provided"}
                     />
 
-                    <TextInfoField
-                      label="Hourly Rate"
-                      value={data?.teachers?.hourly_rate || "Not provided"}
-                    />
-
                     <div className="mt-6">
                       <label className="text-sm font-medium text-gray-700">
                         Availability
