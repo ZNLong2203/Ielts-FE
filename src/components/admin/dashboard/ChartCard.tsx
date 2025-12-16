@@ -68,7 +68,6 @@ export default function ChartCard({
   const maxValue = Math.max(...values);
   const average = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
 
-  // --- FIX PHẦN TÍNH GROWTH ---
   const start = values[0];
   const end = values[values.length - 1];
 

@@ -25,7 +25,6 @@ import {
   Tag,
   Gift,
   Clock,
-  Target,
   AlertCircle,
 } from "lucide-react";
 
@@ -38,7 +37,7 @@ import { CouponCreateSchema, CouponUpdateSchema } from "@/validation/coupon";
 import { createCoupon, getCoupon, updateCoupon } from "@/api/coupon";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const CouponForm = () => {
   const router = useRouter();

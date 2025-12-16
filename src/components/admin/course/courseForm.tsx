@@ -77,7 +77,6 @@ const CourseForm = () => {
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
 
-  // Determine if we're editing or creating
   const isEditing = slug !== undefined && slug !== "";
   const isCreating = !isEditing;
 

@@ -64,12 +64,6 @@ const SpeakingDetail = () => {
     );
   };
 
-  // Utility functions
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard!");
-  };
-
   if (isLoading) {
     return <Loading />;
   }
@@ -103,7 +97,6 @@ const SpeakingDetail = () => {
   let questions: Array<{ question_text: string; expected_duration?: number; instructions?: string; audio_url?: string }> = [];
   
   if (questionGroups.length > 0) {
-    // Load from question_groups (new structure)
     // Flatten all questions from all groups
     questions = questionGroups.flatMap((group: QuestionGroup) => {
       if (group.questions && group.questions.length > 0) {
@@ -125,7 +118,6 @@ const SpeakingDetail = () => {
       }
     });
   } else {
-    // Fallback to content JSON (old structure)
     questions = content.questions || speakingExercise.questions || [];
   }
   

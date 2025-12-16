@@ -17,7 +17,6 @@ import {
   Phone,
   Shield,
   Calendar,
-  MapPin,
 } from "lucide-react";
 import Loading from "@/components/ui/loading";
 import Error from "@/components/ui/error";

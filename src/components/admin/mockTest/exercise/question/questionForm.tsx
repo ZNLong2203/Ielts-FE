@@ -65,7 +65,6 @@ const QuestionForm: React.FC<QuestionFormProps> = ({
   embedded = false,
 }) => {
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   // Form state - Sử dụng null thay vì empty string
   const [formData, setFormData] = useState({

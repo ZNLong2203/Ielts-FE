@@ -54,7 +54,6 @@ const CouponDetail = () => {
     );
   }
 
-  // Calculate coupon stats
   const usageLimit = data.usage_limit || 0;
 
   // Check if coupon is expired

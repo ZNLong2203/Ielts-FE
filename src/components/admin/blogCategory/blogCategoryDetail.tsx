@@ -14,7 +14,7 @@ import {
   DateInfoField,
   TextBadgeInfo,
 } from "@/components/ui/info";
-import { ArrowRight, Edit, FileText, Folder, FolderOpen } from "lucide-react";
+import { ArrowRight, Edit, FileText, FolderOpen } from "lucide-react";
 import ROUTES from "@/constants/route";
 
 const BlogCategoryDetail = () => {

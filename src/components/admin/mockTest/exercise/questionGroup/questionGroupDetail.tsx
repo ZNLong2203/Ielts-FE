@@ -18,8 +18,6 @@ import {
   Link2,
   Hash,
   Clock,
-  Eye,
-  Settings,
   Image as ImageIcon,
   MapPin,
 } from "lucide-react";

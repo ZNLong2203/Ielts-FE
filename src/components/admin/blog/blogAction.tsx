@@ -1,5 +1,4 @@
 "use client";
-// filepath: c:\Workspace\Ielts-FE\src\components\admin\blog\blogAction.tsx
 import { Copy, Edit, Eye, MoreHorizontal, Trash } from "lucide-react";
 import {
   DropdownMenu,
@@ -9,7 +8,6 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-// ✅ Import AlertDialog components
 import {
   AlertDialog,
   AlertDialogAction,

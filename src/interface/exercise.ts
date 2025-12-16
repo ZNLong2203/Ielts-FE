@@ -1,4 +1,5 @@
 import { ICourseQuestion } from "./courseQuestion";
+import { ILesson } from "./lesson";
 
 export interface IQuestionGroup {
   id: string;
@@ -20,6 +21,7 @@ export interface IQuestionGroup {
 export interface IExercise {
   id: string;
   lesson_id: string;
+  section_id?: string;
   title: string;
   instruction: string;
   content: {
@@ -37,6 +39,7 @@ export interface IExercise {
   skill_type?: string;
   question_groups?: IQuestionGroup[];
   questions: ICourseQuestion[];
+  lesson?: ILesson
 }
 
 export interface IExerciseCreate {

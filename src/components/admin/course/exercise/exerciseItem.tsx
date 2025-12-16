@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,19 +16,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Clock,
-  Trophy,
   Edit,
   Trash2,
-  CheckCircle,
-  XCircle,
   Target,
-  HelpCircle,
-  Eye,
-  EyeOff,
-  Plus,
-  FileText,
-  Users,
-  BarChart3,
   ArrowRight,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -49,21 +38,6 @@ const formatDuration = (minutes: number) => {
   }
 
   return `${remainingMinutes}m`;
-};
-
-const getExerciseTypeColor = (type: string) => {
-  switch (type?.toLowerCase()) {
-    case "reading":
-      return "bg-blue-100 text-blue-800";
-    case "listening":
-      return "bg-orange-100 text-orange-800";
-    case "writing":
-      return "bg-purple-100 text-purple-800";
-    case "speaking":
-      return "bg-pink-100 text-pink-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
 };
 
 interface ExerciseItemProps {
@@ -119,7 +93,7 @@ const ExerciseItem = ({
       queryClient.invalidateQueries({ queryKey: ["exercises", lessonId] });
       
       // Also invalidate lesson and section data
-      const sectionId = exercise.section_id || exercise.lesson?.section_id;
+      const sectionId = exercise.section_id;
       if (sectionId) {
         queryClient.invalidateQueries({ queryKey: ["lessons", sectionId] });
         queryClient.invalidateQueries({ queryKey: ["lesson", sectionId, lessonId] });
@@ -130,7 +104,7 @@ const ExerciseItem = ({
       onRefresh?.();
     },
     onError: (error: Error) => {
-      console.error("❌ Delete exercise error:", error);
+      console.error("Delete exercise error:", error);
       toast.error(error.message || "Failed to delete exercise");
       setDeleteDialogOpen(false);
     },

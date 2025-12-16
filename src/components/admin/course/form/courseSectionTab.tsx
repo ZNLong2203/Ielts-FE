@@ -367,12 +367,6 @@ const SectionTab: React.FC<SectionTabProps> = ({
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         loading={deleteSectionMutation.isPending}
-        title="Delete Section"
-        description={
-          sectionToDelete
-            ? `Are you sure you want to delete "${sectionToDelete.title}"? This action cannot be undone and will also delete all lessons and exercises in this section.`
-            : "Are you sure you want to delete this section?"
-        }
       />
     </div>
   );

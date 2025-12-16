@@ -59,7 +59,6 @@ const mapDifficultyLevel = (level: string | undefined): "beginner" | "intermedia
     "expert": "advanced",
   };
   
-  // If it's a formatted string like "Level 4 (Expert)", extract and map
   const match = level.match(/Level \d+ \((.+?)\)/);
   if (match) {
     const label = match[1].toLowerCase();
@@ -197,7 +196,6 @@ const MockTestForm = () => {
   };
 
   const removeSection = (index: number) => {
-    // Always allow removing, even if it's the last one
     const newSections = sections.filter((_, i) => i !== index);
     const updatedSections = newSections.map((section, i) => ({
       ...section,
@@ -324,14 +322,12 @@ const MockTestForm = () => {
         test_sections: mockTestData.test_sections || [],
       });
 
-      // Set sections state - keep id from API for update
       if (
         mockTestData.test_sections &&
         Array.isArray(mockTestData.test_sections)
       ) {
-        // Map sections to ensure we keep the id for updates
         const sectionsWithIds = mockTestData.test_sections.map((section) => ({
-          section_id: section.id, // Keep the id to avoid creating new sections
+          section_id: section.id, 
           section_name: section.section_name,
           section_type: section.section_type,
           duration: section.duration,
@@ -596,7 +592,6 @@ const MockTestForm = () => {
                                       <select
                                         value={section.section_type}
                                         onChange={(e) => {
-                                          // Ensure section_type matches test_type
                                           const newSectionType = e.target.value;
                                           if (newSectionType !== selectedTestType) {
                                             toast.error(`Section type must match test type (${selectedTestType})`);

@@ -86,7 +86,7 @@ const ReadingList = () => {
     enabled: !!sectionId,
   });
 
-  // ✅ Prepare data for useFilter hook
+  // Prepare data for useFilter hook
   const exercisesData = useMemo(() => {
     if (!readingExercises?.exercises || !Array.isArray(readingExercises.exercises)) {
       return [];
@@ -102,7 +102,7 @@ const ReadingList = () => {
     }));
   }, [readingExercises]);
 
-  // ✅ Use useFilter hook
+  // Use useFilter hook
   const {
     filters,
     isFilterVisible,
@@ -374,7 +374,7 @@ const ReadingList = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  {/* ✅ Advanced Filter Toggle */}
+                  {/* Advanced Filter Toggle */}
                   <Button
                     variant={isFilterVisible ? "default" : "outline"}
                     onClick={() => setIsFilterVisible(!isFilterVisible)}
@@ -393,7 +393,7 @@ const ReadingList = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ Advanced Filter Panel */}
+          {/* Advanced Filter Panel */}
           <AdminFilter
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -445,7 +445,7 @@ const ReadingList = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ Filtered Results Stats */}
+          {/* Filtered Results Stats */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -626,7 +626,7 @@ const ReadingList = () => {
           )}
         </div>
 
-        {/* ✅ Enhanced Results Summary */}
+        {/* Enhanced Results Summary */}
         {finalFilteredExercises.length > 0 && (
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">

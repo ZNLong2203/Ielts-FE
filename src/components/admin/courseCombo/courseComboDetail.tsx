@@ -16,9 +16,7 @@ import {
   Package,
   DollarSign,
   BookOpen,
-  Users,
   TrendingUp,
-  ShoppingCart,
   Tag,
   AlertCircle,
   ArrowRight,
@@ -29,7 +27,6 @@ import { useState } from "react";
 const CourseComboDetail = () => {
   const router = useRouter();
   const params = useParams();
-  const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;

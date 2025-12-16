@@ -1,10 +1,8 @@
 "use client";
-import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   PlayCircle,
   FileText,
@@ -12,11 +10,8 @@ import {
   Edit,
   Trash2,
   ArrowRight,
-  Eye,
   GripVertical,
   Clock,
-  Target,
-  Plus,
 } from "lucide-react";
 import { ILesson } from "@/interface/lesson";
 import { cn } from "@/lib/utils";

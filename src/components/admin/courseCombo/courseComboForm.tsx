@@ -24,7 +24,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  Filter,
   Loader2,
 } from "lucide-react";
 

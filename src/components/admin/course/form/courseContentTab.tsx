@@ -5,12 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  BookOpen,
   FolderOpen,
   PlayCircle,
   FileText,
   HelpCircle,
-  Plus,
   List,
 } from "lucide-react";
 import SectionTab from "@/components/admin/course/form/courseSectionTab";
@@ -73,12 +71,6 @@ const CourseContentTabs: React.FC<CourseContentTabsProps> = ({
   const handleExerciseSelect = (exerciseId: string) => {
     setSelectedExerciseId(exerciseId);
     setActiveTab("questions");
-  };
-
-  const handleQuestionView = (exercise: any) => {
-    // Pass both exercise and lesson data
-    setCurrentView("questions");
-    setSelectedExercise(exercise);
   };
 
   const getTotalCounts = () => {
@@ -234,18 +226,6 @@ const CourseContentTabs: React.FC<CourseContentTabsProps> = ({
               onRefresh={onRefresh}
             />
           </TabsContent>
-          / When rendering QuestionTab
-          {currentView === "questions" && selectedExercise && (
-            <QuestionTab
-              exercise={selectedExercise}
-              lesson={selectedLesson} // Make sure to pass lesson data
-              onBack={() => {
-                setCurrentView("exercises");
-                setSelectedExercise(null);
-              }}
-              onRefresh={handleRefresh}
-            />
-          )}
         </Tabs>
       </CardContent>
     </Card>

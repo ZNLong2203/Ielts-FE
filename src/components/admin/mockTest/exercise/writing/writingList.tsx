@@ -71,7 +71,7 @@ const WritingList = () => {
     enabled: !!sectionId,
   });
 
-  // ✅ Prepare data for useFilter hook
+  // Prepare data for useFilter hook
   const exercisesData = useMemo(() => {
     if (!writingExercises?.exercises || !Array.isArray(writingExercises.exercises)) {
       return [];
@@ -87,7 +87,7 @@ const WritingList = () => {
     }));
   }, [writingExercises]);
 
-  // ✅ Use useFilter hook
+  // Use useFilter hook
   const {
     filters,
     isFilterVisible,
@@ -98,7 +98,7 @@ const WritingList = () => {
     setIsFilterVisible,
   } = useFilter(exercisesData, ["title", "task_type", "question_type", "created_at"]);
 
-  // ✅ Filter field configurations for AdminFilter
+  // Filter field configurations for AdminFilter
   const filterFieldConfigs = [
     {
       key: "title",
@@ -209,7 +209,7 @@ const WritingList = () => {
     }
   };
 
-  // ✅ Apply additional search and sorting to filtered data
+  // Apply additional search and sorting to filtered data
   const finalFilteredExercises = useMemo(() => {
     let result = [...filteredData];
 
@@ -359,7 +359,7 @@ const WritingList = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ✅ Search and Filter Controls */}
+        {/* Search and Filter Controls */}
         <div className="mb-8 space-y-4">
           {/* Quick Search and Controls */}
           <Card>
@@ -399,7 +399,7 @@ const WritingList = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ Advanced Filter Panel */}
+          {/* Advanced Filter Panel */}
           <AdminFilter
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -451,7 +451,7 @@ const WritingList = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ Filtered Results Stats */}
+          {/* Filtered Results Stats */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -624,7 +624,7 @@ const WritingList = () => {
           )}
         </div>
 
-        {/* ✅ Enhanced Results Summary */}
+        {/* Enhanced Results Summary */}
         {finalFilteredExercises.length > 0 && (
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">

@@ -2,28 +2,23 @@
 import toast from "react-hot-toast";
 import {
   Form,
-  FormControl,
-  FormLabel,
-  FormField,
-  FormItem,
-  FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { z } from "zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { studentRegister, teacherRegister } from "@/api/auth";
+import { studentRegister } from "@/api/auth";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StudentRegisterSchema } from "@/validation/auth";
 import ROUTES from "@/constants/route";
 import TextField from "../form/text-field";
+import { FaGoogle } from "react-icons/fa";
 
 const StudentRegisterForm = ({
   className,
@@ -275,8 +270,8 @@ const StudentRegisterForm = ({
                 suppressHydrationWarning={true}
                 className="w-full h-11 rounded-xl border-muted-foreground/20 hover:bg-muted/50 transition-all duration-300"
               >
-                <GithubIcon className="mr-2 h-4 w-4" />
-                Continue with GitHub
+                <FaGoogle className="mr-2 h-4 w-4" />
+                Continue with Google
               </Button>
             </motion.div>
           </div>

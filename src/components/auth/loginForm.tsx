@@ -11,7 +11,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EyeIcon, EyeOffIcon, GithubIcon, ArrowRight } from "lucide-react";
+import { EyeIcon, EyeOffIcon, ArrowRight } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 import { z } from "zod";
@@ -221,8 +222,8 @@ const LoginForm = ({
                 className="w-full h-11 rounded-xl border-muted-foreground/20 hover:bg-muted/50 transition-all duration-300"
                 suppressHydrationWarning={true}
               >
-                <GithubIcon className="mr-2 h-4 w-4" />
-                Continue with GitHub
+                <FaGoogle className="mr-2 h-4 w-4" />
+                Continue with Google
               </Button>
             </motion.div>
           </div>

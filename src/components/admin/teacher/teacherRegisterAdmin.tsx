@@ -2,15 +2,9 @@
 
 import toast from "react-hot-toast";
 import { Form } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  EyeIcon,
-  EyeOffIcon,
-  GithubIcon,
   ArrowRight,
-  GraduationCap,
-  Star,
   FileText,
   Save,
   X,
@@ -20,7 +14,6 @@ import {
 import { motion } from "framer-motion";
 
 import { z } from "zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { teacherRegister } from "@/api/auth";

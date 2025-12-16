@@ -21,9 +21,6 @@ import {
   Eye,
   EyeOff,
   BookOpen,
-  CheckCircle2,
-  Upload,
-  Loader2,
 } from "lucide-react";
 import TextField from "@/components/form/text-field";
 import SelectField from "@/components/form/select-field";
@@ -66,7 +63,7 @@ const LessonForm = ({
     lesson?.id || null
   );
 
-  // ✅ Add video file state
+  // Add video file state
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>("");
 
@@ -94,7 +91,7 @@ const LessonForm = ({
     refetch,
   } = useQuery({
     queryKey: ["lesson", sectionId, lesson?.id],
-    queryFn: () => getLessonById(sectionId, lesson?.id),
+    queryFn: () => getLessonById(sectionId, lesson?.id || ""),
     enabled: isEditing,
   });
   const form = useForm<LessonFormData>({
@@ -133,29 +130,7 @@ const LessonForm = ({
     queryClient.invalidateQueries({ queryKey: ["sections", courseId] });
   };
 
-  // ✅ Video upload mutation (separate for edit mode immediate upload)
-  const uploadVideoMutation = useMutation({
-    mutationFn: async (params: { lessonId: string; formData: FormData }) => {
-      const { lessonId, formData } = params;
-      return uploadVideo(lessonId, sectionId, formData);
-    },
-    onSuccess: (response) => {
-      toast.success("Video uploaded successfully! 🎬");
-      if (response?.data?.video_url) {
-        setVideoPreviewUrl(response.data.video_url);
-      }
-      setVideoFile(null);
-      invalidateQueries();
-    },
-    onError: (error: unknown) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response
-          ?.data?.message || "Failed to upload video";
-      toast.error(message);
-    },
-  });
-
-  // ✅ Updated: Create lesson with integrated video upload
+  // Updated: Create lesson with integrated video upload
   const createLessonMutation = useMutation({
     mutationFn: async (data: LessonFormData) => {
       const lessonData: ILessonCreate = {
@@ -167,7 +142,6 @@ const LessonForm = ({
         document_url: data.document_url || undefined,
       };
 
-      // ✅ Step 1: Create lesson first
       const lessonResponse = await createLesson(lessonData, sectionId);
       const newLessonId = lessonResponse.data?.id || lessonResponse.id;
 
@@ -175,7 +149,6 @@ const LessonForm = ({
         throw new Error("Failed to create lesson - no ID returned");
       }
 
-      // ✅ Step 2: If video file exists and lesson type is video, upload it immediately
       if (videoFile && data.lesson_type === "video") {
         try {
           const videoResponse = await uploadVideo(
@@ -184,7 +157,6 @@ const LessonForm = ({
             videoFile
           );
 
-          // ✅ Return combined result
           return {
             lesson: lessonResponse,
             video: videoResponse?.data,
@@ -195,7 +167,6 @@ const LessonForm = ({
         } catch (videoError) {
           console.error("Video upload failed:", videoError);
 
-          // ✅ Lesson created but video failed
           return {
             lesson: lessonResponse,
             video: null,
@@ -520,7 +491,7 @@ const LessonForm = ({
               {selectedLessonType === "video" ? (
                 <VideoUploadSection
                   key={`video-${savedLessonId || "new"}`}
-                  lessonId={savedLessonId} 
+                  lessonId={savedLessonId ?? undefined} 
                   sectionId={sectionId}
                   currentHlsUrl={lessonData?.hlsUrl}
                   selectedVideoFile={videoFile} 

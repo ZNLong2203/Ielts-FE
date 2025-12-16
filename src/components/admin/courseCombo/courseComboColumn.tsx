@@ -2,7 +2,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { TextBadgeInfo } from "@/components/ui/info";
 import { ArrowUpDown, Calendar, Shield } from "lucide-react";
 import CellAction from "./courseComboAction";
 import { IComboCourse } from "@/interface/course";

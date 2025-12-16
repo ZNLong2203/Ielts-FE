@@ -113,20 +113,18 @@ const QuestionTab: React.FC<QuestionTabProps> = ({
 
   // Enhanced refresh handler
   const handleRefreshQuestions = async () => {
-    console.log("🔄 Manual refresh triggered...");
     try {
       await refetchQuestions();
       onRefresh?.();
-      console.log("✅ Manual refresh completed");
     } catch (error) {
-      console.error("❌ Manual refresh failed:", error);
+      console.error("Manual refresh failed:", error);
     }
   };
 
   // Force refresh when exercise changes
   useEffect(() => {
     if (exercise?.id && lesson?.id) {
-      console.log("🔄 Exercise changed, refetching questions...");
+      console.log("Exercise changed, refetching questions...");
       refetchQuestions();
     }
   }, [exercise?.id, lesson?.id, refetchQuestions]);

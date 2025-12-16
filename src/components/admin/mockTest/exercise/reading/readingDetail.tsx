@@ -10,7 +10,6 @@ import ROUTES from "@/constants/route";
 import { IReadingExercise } from "@/interface/reading";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Award,
   BarChart3,
   BookMarked,
   BookOpen,

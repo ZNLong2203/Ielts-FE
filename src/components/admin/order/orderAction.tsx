@@ -1,5 +1,5 @@
 "use client"
-import { Copy, Edit, Eye, MoreHorizontal, Trash } from "lucide-react";
+import { Copy, Eye, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import {
   DropdownMenu,

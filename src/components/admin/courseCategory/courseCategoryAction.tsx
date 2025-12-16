@@ -1,5 +1,4 @@
 "use client";
-// filepath: c:\Workspace\Ielts-FE\src\components\admin\courseCategory\courseCategoryAction.tsx
 import { Copy, Edit, Eye, MoreHorizontal, Trash } from "lucide-react";
 import {
   DropdownMenu,

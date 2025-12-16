@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Plus,
   Edit3,
@@ -14,7 +14,6 @@ import {
   Link2,
   Target,
   Search,
-  Volume2,
   Image as ImageIcon,
   Clock,
   ArrowRight,

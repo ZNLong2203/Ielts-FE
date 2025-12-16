@@ -2,7 +2,6 @@
 import { deleteQuestion, getQuestion } from "@/api/question";
 import { getQuestionGroup } from "@/api/questionGroup";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Error from "@/components/ui/error";
 import Loading from "@/components/ui/loading";
@@ -13,14 +12,11 @@ import {
   AlertCircle,
   CheckCircle,
   Circle,
-  Download,
   FileText,
   Hash,
   Info,
   Link2,
-  Play,
   Target,
-  Volume2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -77,7 +73,6 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
 }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Query for question details
   const {

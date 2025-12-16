@@ -108,7 +108,7 @@ const ExerciseForm = ({
       return createExercise(exerciseData, lessonId);
     },
     onSuccess: () => {
-      toast.success("Exercise created successfully! 🎯");
+      toast.success("Exercise created successfully!");
       invalidateQueries();
       onSuccess?.();
       form.reset();
@@ -137,7 +137,7 @@ const ExerciseForm = ({
       return updateExercise(updateData, exercise.id, lessonId);
     },
     onSuccess: () => {
-      toast.success("Exercise updated successfully! ✨");
+      toast.success("Exercise updated successfully!");
       invalidateQueries();
       onSuccess?.();
     },

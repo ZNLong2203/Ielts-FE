@@ -63,7 +63,7 @@ const MockTestDetail = () => {
   const deleteMutation = useMutation({
     mutationFn: () => deleteMockTest(mockTestId),
     onSuccess: () => {
-      toast.success("Mock test deleted successfully! 🗑️");
+      toast.success("Mock test deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["mockTests"] });
       router.push(ROUTES.ADMIN_MOCK_TESTS);
     },

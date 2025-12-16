@@ -86,7 +86,7 @@ const ListeningList = () => {
     enabled: !!sectionId,
   });
 
-  // ✅ Prepare data for useFilter hook
+  // Prepare data for useFilter hook
   const exercisesData = useMemo(() => {
     if (!listeningExercises?.exercises || !Array.isArray(listeningExercises.exercises)) {
       return [];
@@ -94,14 +94,13 @@ const ListeningList = () => {
 
     return listeningExercises.exercises.map((exercise: any) => ({
       ...exercise,
-      // Map nested fields for easier filtering
       difficulty_level: exercise.reading_passage?.difficulty_level || "3",
       passage_title: exercise.reading_passage?.title || "",
       has_audio: exercise.audio_url ? "yes" : "no",
     }));
   }, [listeningExercises]);
 
-  // ✅ Use useFilter hook
+  // Use useFilter hook
   const {
     filters,
     isFilterVisible,

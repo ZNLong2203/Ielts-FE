@@ -14,7 +14,6 @@ import {
   Link2,
   Target,
   Search,
-  Users,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// ✅ Import AlertDialog components
+// Import AlertDialog components
 import {
   AlertDialog,
   AlertDialogAction,
@@ -516,7 +515,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         
-                        {/* ✅ Replace DropdownMenuItem with AlertDialog */}
+                        {/* Replace DropdownMenuItem with AlertDialog */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <DropdownMenuItem

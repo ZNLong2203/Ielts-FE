@@ -2,10 +2,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   DndContext,
   closestCenter,
@@ -413,12 +411,6 @@ const LessonTab: React.FC<LessonTabProps> = ({
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         loading={deleteLessonMutation.isPending}
-        title="Delete Lesson"
-        description={
-          lessonToDelete
-            ? `Are you sure you want to delete "${lessonToDelete.title}"? This action cannot be undone and will also delete all exercises in this lesson.`
-            : "Are you sure you want to delete this lesson?"
-        }
       />
     </div>
   );

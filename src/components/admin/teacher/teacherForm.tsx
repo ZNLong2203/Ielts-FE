@@ -24,7 +24,6 @@ import {
   Shield,
   RefreshCw,
   Loader2,
-  Upload,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";

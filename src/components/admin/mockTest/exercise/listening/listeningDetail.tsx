@@ -20,11 +20,9 @@ import {
   Settings,
   Info,
   Timer,
-  Award,
   Volume2,
   CheckCircle,
   Layers,
-  Users,
 } from "lucide-react";
 import ROUTES from "@/constants/route";
 import toast from "react-hot-toast";

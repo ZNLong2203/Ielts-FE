@@ -21,13 +21,11 @@ import {
   CheckCircle,
   HelpCircle,
   BarChart3,
-  FileText,
   List,
   Image,
   ZoomIn,
   Volume2,
   ExternalLink,
-  X,
 } from "lucide-react";
 import { ICourseQuestion } from "@/interface/courseQuestion";
 import { deleteCourseQuestion } from "@/api/courseQuestion";
@@ -85,7 +83,7 @@ const CourseQuestionItem = ({
       onRefresh?.();
     },
     onError: (error: Error) => {
-      console.error("❌ Delete question error:", error);
+      console.error("Delete question error:", error);
       toast.error(error.message || "Failed to delete question");
       setDeleteDialogOpen(false);
     },

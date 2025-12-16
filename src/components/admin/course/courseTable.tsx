@@ -14,7 +14,6 @@ import {
   BookOpen,
   GraduationCap,
   Star,
-  Target,
   DollarSign,
   Calendar
 } from "lucide-react";

@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Download,
   RefreshCw,
-  Users,
   UserCheck,
   UserX,
   Filter,

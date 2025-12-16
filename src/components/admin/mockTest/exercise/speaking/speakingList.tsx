@@ -70,7 +70,7 @@ const SpeakingList = () => {
     enabled: !!sectionId,
   });
 
-  // ✅ Prepare data for useFilter hook
+  // Prepare data for useFilter hook
   const exercisesData = useMemo(() => {
     if (!speakingExercises?.exercises || !Array.isArray(speakingExercises.exercises)) {
       return [];
@@ -84,7 +84,7 @@ const SpeakingList = () => {
     }));
   }, [speakingExercises]);
 
-  // ✅ Use useFilter hook
+  //  Use useFilter hook
   const {
     filters,
     isFilterVisible,
@@ -95,7 +95,7 @@ const SpeakingList = () => {
     setIsFilterVisible,
   } = useFilter(exercisesData, ["title", "part_type", "question_count", "created_at"]);
 
-  // ✅ Filter field configurations for AdminFilter
+  // Filter field configurations for AdminFilter
   const filterFieldConfigs = [
     {
       key: "part_type",
@@ -186,7 +186,7 @@ const SpeakingList = () => {
     }
   };
 
-  // ✅ Apply additional search and sorting to filtered data
+  // Apply additional search and sorting to filtered data
   const finalFilteredExercises = useMemo(() => {
     let result = [...filteredData];
 
@@ -326,7 +326,7 @@ const SpeakingList = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* ✅ Search and Filter Controls */}
+        {/* Search and Filter Controls */}
         <div className="mb-8 space-y-4">
           {/* Quick Search and Controls */}
           <Card>
@@ -365,7 +365,7 @@ const SpeakingList = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ Advanced Filter Panel */}
+          {/*  Advanced Filter Panel */}
           <AdminFilter
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -417,7 +417,7 @@ const SpeakingList = () => {
             </CardContent>
           </Card>
 
-          {/* ✅ Filtered Results Stats */}
+          {/* Filtered Results Stats */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -587,7 +587,7 @@ const SpeakingList = () => {
           )}
         </div>
 
-        {/* ✅ Enhanced Results Summary */}
+        {/*  Enhanced Results Summary */}
         {finalFilteredExercises.length > 0 && (
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">

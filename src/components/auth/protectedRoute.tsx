@@ -36,7 +36,6 @@ const ProtectedRoute = ({
             return;
         }
 
-        // // Kiểm tra role nếu có yêu cầu
         // if (allowedRoles && allowedRoles.length > 0 && !hasPermission()) {
         //     // Redirect based on user role
         //     if (user?.role === 'STUDENT') {
