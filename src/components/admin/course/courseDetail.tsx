@@ -164,6 +164,29 @@ const CourseDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Course Thumbnail */}
+            {courseData.thumbnail && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    <span>Course Thumbnail</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-200">
+                    <Image
+                      src={courseData.thumbnail}
+                      alt={courseData.title}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Course Information */}
             <Card>
               <CardHeader>

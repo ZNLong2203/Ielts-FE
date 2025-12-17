@@ -16,6 +16,7 @@ export interface ICourse {
   requirements: string[];
   what_you_learn: string[];
   course_outline: CourseOutline;
+  thumbnail?: string;
   sections: ISection[];
   tags: string[];
   teacher: {

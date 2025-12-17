@@ -44,6 +44,7 @@ import {
   createAdminCourse,
   updateAdminCourse,
   getAdminCourseDetail,
+  uploadCourseThumbnail,
 } from "@/api/course";
 import { createSection, getSectionsByCourseId } from "@/api/section";
 import { getCourseCategories } from "@/api/courseCategory";
@@ -58,12 +59,14 @@ import SectionTab from "./form/courseSectionTab";
 import LessonTab from "./form/courseLessonTab";
 import ExerciseTab from "./form/courseExerciseTab";
 import QuestionTab from "./form/courseQuestionTab";
+import FileUploadField from "@/components/form/file-field";
 
 const CourseForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
   const [newSections, setNewSections] = useState<ISectionCreate[]>([]);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   // Tab navigation state
   const [activeTab, setActiveTab] = useState("sections");
@@ -76,6 +79,7 @@ const CourseForm = () => {
   );
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
+  console.log("CourseForm slug:", slug);
 
   const isEditing = slug !== undefined && slug !== "";
   const isCreating = !isEditing;
@@ -146,6 +150,18 @@ const CourseForm = () => {
     onSuccess: async (data) => {
       toast.success(data?.message || "Course created successfully");
 
+      const thumbnailValue = courseForm.getValues("thumbnail");
+      const thumbnailFileToUpload = thumbnailValue instanceof File ? thumbnailValue : null;
+
+      if (thumbnailFileToUpload && data?.data?.id) {
+        try {
+          await uploadCourseThumbnail(data.data.id, thumbnailFileToUpload);
+        } catch (error: any) {
+          toast.error("Failed to upload thumbnail");
+          console.error("Thumbnail upload error:", error);
+        }
+      }
+
       if (newSections.length > 0 && data?.data?.id) {
         try {
           for (const section of newSections) {
@@ -171,6 +187,19 @@ const CourseForm = () => {
     },
     onSuccess: async (data) => {
       toast.success(data?.message || "Course updated successfully");
+
+      // Upload thumbnail if changed
+      const thumbnailValue = courseForm.getValues("thumbnail");
+      const thumbnailFileToUpload = thumbnailValue instanceof File ? thumbnailValue : null;
+
+      if (thumbnailFileToUpload && slug) {
+        try {
+          await uploadCourseThumbnail(slug, thumbnailFileToUpload);
+        } catch (error: any) {
+          toast.error("Failed to upload thumbnail");
+          console.error("Thumbnail upload error:", error);
+        }
+      }
 
       if (newSections.length > 0) {
         try {
@@ -212,6 +241,7 @@ const CourseForm = () => {
       requirements: [],
       what_you_learn: [],
       tags: [],
+      thumbnail: "",
     },
   });
 
@@ -555,6 +585,29 @@ const CourseForm = () => {
 
                 {/* Sidebar */}
                 <div className="space-y-6">
+                  {/* Course Thumbnail */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Settings className="h-5 w-5 text-gray-600" />
+                        <span>Course Thumbnail</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FileUploadField
+                        control={courseForm.control}
+                        name="thumbnail"
+                        label="Thumbnail Image"
+                        accept="image/*"
+                        currentImage={isEditing ? courseData?.thumbnail : ""} 
+                        maxSize={5}
+                        multiple={false}
+                        placeholder="Click to upload course thumbnail"
+                        description="Recommended: 1200x630px, JPG or PNG, max 5MB"
+                      />
+                    </CardContent>
+                  </Card>
+
                   {/* Course Settings */}
                   <Card>
                     <CardHeader>

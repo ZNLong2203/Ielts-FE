@@ -20,6 +20,7 @@ export const CourseCreateSchema = z.object({
     .array(z.string())
     .min(1, "At least one thing you will learn is required"),
   tags: z.array(z.string()).min(1, "At least one tag is required"),
+  thumbnail: z.any().optional(),
 });
 
 export const CourseUpdateSchema = z.object({

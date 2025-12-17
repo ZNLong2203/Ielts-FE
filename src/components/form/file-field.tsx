@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   Upload,
   X,
-  File,
+  File as FileIcon,
   Image as ImageIcon,
   FileText,
   Eye,
@@ -65,12 +65,15 @@ const FileUploadField = ({
   };
 
   const getFileIcon = (fileType: string) => {
+    if (!fileType) {
+      return <FileIcon className="h-8 w-8 text-gray-500" />;
+    }
     if (fileType.startsWith("image/")) {
       return <ImageIcon className="h-8 w-8 text-blue-500" />;
     } else if (fileType.includes("pdf")) {
       return <FileText className="h-8 w-8 text-red-500" />;
     } else {
-      return <File className="h-8 w-8 text-gray-500" />;
+      return <FileIcon className="h-8 w-8 text-gray-500" />;
     }
   };
 
@@ -108,9 +111,9 @@ const FileUploadField = ({
 
     // Store files directly as File objects
     if (multiple) {
-      onChange(validFiles); // Array of File objects
+      onChange(validFiles); 
     } else {
-      onChange(validFiles[0] || null); // Single File object or null
+      onChange(validFiles[0] || null); 
     }
   };
 
@@ -130,7 +133,7 @@ const FileUploadField = ({
   };
 
   const previewFile = (file: File) => {
-    if (file.type.startsWith("image/")) {
+    if (file.type && file.type.startsWith("image/")) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setIsPreviewOpen(true);
@@ -166,9 +169,9 @@ const FileUploadField = ({
             </Badge>
           </div>
           <p className="text-xs text-gray-500">
-            {formatFileSize(file.size)} • {file.type}
+            {formatFileSize(file.size)} • {file.type || 'unknown'}
           </p>
-          {file.type.startsWith("image/") && (
+          {file.type && file.type.startsWith("image/") && (
             <div className="mt-2">
               <img
                 src={URL.createObjectURL(file)}
@@ -217,7 +220,7 @@ const FileUploadField = ({
         const fileArray =
           multiple && Array.isArray(files) ? files : files ? [files] : [];
         const hasFiles = fileArray.length > 0;
-        const hasCurrentImage = currentImage && !hasFiles; // Hiển thị current image khi không có file mới
+        const hasCurrentImage = !!currentImage;
 
         return (
           <FormItem>
@@ -301,7 +304,7 @@ const FileUploadField = ({
                     "relative border-2 border-dashed rounded-xl p-6 transition-all duration-200 cursor-pointer",
                     dragOver
                       ? "border-blue-500 bg-blue-50"
-                      : hasFiles
+                      : hasFiles && !currentImage
                       ? "border-green-500 bg-green-50"
                       : hasCurrentImage
                       ? "border-blue-300 bg-blue-25"
@@ -335,7 +338,7 @@ const FileUploadField = ({
                     <Upload
                       className={cn(
                         "mx-auto h-12 w-12",
-                        hasFiles 
+                        hasFiles && !currentImage
                           ? "text-green-500" 
                           : hasCurrentImage 
                           ? "text-blue-500" 
@@ -344,19 +347,19 @@ const FileUploadField = ({
                     />
                     <div className="mt-4">
                       <p className="text-sm font-medium text-gray-900">
-                        {hasFiles
+                        {hasCurrentImage
+                          ? "Upload new file to replace current"
+                          : hasFiles
                           ? multiple
                             ? `${fileArray.length} file(s) selected`
                             : "New file selected"
-                          : hasCurrentImage
-                          ? "Upload new image to replace current"
                           : placeholder}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {accept.includes("image") && "Images, "}
                         PDF, DOC, DOCX up to {maxSize}MB
                       </p>
-                      {hasFiles && (
+                      {hasFiles && !currentImage && (
                         <p className="text-xs text-green-600 mt-1 font-medium">
                           ✓ Ready to upload
                         </p>
@@ -370,20 +373,20 @@ const FileUploadField = ({
                   </div>
                 </div>
 
-                {/* New File Preview */}
-                {hasFiles && (
+                {/* New File Preview - Only show when files are File objects */}
+                {hasFiles && fileArray.some((f: any) => f instanceof File) && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-medium text-gray-900">
                         New Files:
                       </h4>
                       <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
-                        {fileArray.length} {fileArray.length === 1 ? 'file' : 'files'} to upload
+                        {fileArray.filter((f: any) => f instanceof File).length} {fileArray.filter((f: any) => f instanceof File).length === 1 ? 'file' : 'files'} to upload
                       </Badge>
                     </div>
 
                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {fileArray.map((file: File, index: number) => (
+                      {fileArray.filter((f: any) => f instanceof File).map((file: File, index: number) => (
                         <FilePreviewItem
                           key={`${file.name}-${index}`}
                           file={file}
@@ -395,14 +398,6 @@ const FileUploadField = ({
                         />
                       ))}
                     </div>
-
-                    {hasCurrentImage && (
-                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <p className="text-xs text-yellow-800">
-                          <strong>Note:</strong> Uploading new file(s) will replace the current image.
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
 

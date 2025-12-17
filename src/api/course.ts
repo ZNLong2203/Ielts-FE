@@ -104,3 +104,14 @@ export const getComboCoursesByLevel = async (currentLevel: number, targetLevel: 
     throw error;
   }
 };
+
+export const uploadCourseThumbnail = async (courseId: string, file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await api.post(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}/thumbnail`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return response.data;
+}
