@@ -224,3 +224,45 @@ export const getComboProgress = async (comboId: string) => {
   return response.data.data;
 };
 
+// Reminder Types
+export interface StudyReminder {
+  id: string;
+  user_id: string;
+  schedule_id: string;
+  title: string;
+  message: string;
+  scheduled_time: string;
+  sent_at?: string;
+  status: "pending" | "sent" | "failed";
+  is_read: boolean;
+  read_at?: string;
+  created_at: string;
+  updated_at: string;
+  schedule?: {
+    id: string;
+    course_id: string;
+    scheduled_date: string;
+    start_time: string;
+    study_goal?: string;
+    course?: {
+      id: string;
+      title: string;
+      thumbnail?: string;
+    };
+  };
+}
+
+// Get my reminders
+export const getMyReminders = async (params?: {
+  status?: "pending" | "sent" | "failed";
+  unread_only?: boolean;
+}): Promise<StudyReminder[]> => {
+  const response = await api.get(`${BASE_URL}${API_URL.STUDY_SCHEDULE}/reminders/my-reminders`, { params });
+  return response.data.data;
+};
+
+// Mark reminder as read
+export const markReminderAsRead = async (reminderId: string): Promise<void> => {
+  await api.post(`${BASE_URL}${API_URL.STUDY_SCHEDULE}/reminders/${reminderId}/read`);
+};
+

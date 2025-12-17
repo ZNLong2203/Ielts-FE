@@ -159,6 +159,9 @@ export default function SchedulePage() {
           : schedule.start_time
         : schedule.start_time,
       isCompleted: schedule.status === "completed",
+      reminderEnabled: schedule.reminder_enabled ?? false,
+      reminderSent: schedule.reminder_sent ?? false,
+      reminderMinutesBefore: schedule.reminder_minutes_before ?? undefined,
     }))
     
     // Add pending schedules
@@ -169,6 +172,8 @@ export default function SchedulePage() {
       time: pending.startTime,
       isCompleted: false,
       isPending: true,
+      reminderEnabled: pending.reminderEnabled ?? false,
+      reminderMinutesBefore: pending.reminderMinutesBefore ?? undefined,
     }))
     
     return [...savedItems, ...pendingItems]
@@ -395,12 +400,23 @@ export default function SchedulePage() {
     const item = scheduledItems.find((i) => i.id === itemId)
     if (!item) return
 
+    // Check if this is a pending schedule 
+    const isPending = itemId.startsWith("pending-")
+    if (isPending) {
+      setNotification({ 
+        message: "Please save the schedule first before marking it as completed", 
+        type: "error" 
+      })
+      setTimeout(() => setNotification(null), 3000)
+      return
+    }
+
     if (item.isCompleted) {
       // If already completed, we could update to scheduled status
       // For now, just toggle locally for simplicity
       // You might want to add an update endpoint for this
     } else {
-      // Mark as completed
+      // Mark as completed - only for saved schedules
       await completeSessionMutation.mutateAsync({
         id: itemId,
         data: { completion_percentage: 100 },

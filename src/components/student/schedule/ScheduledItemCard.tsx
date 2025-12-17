@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Trash2 } from "lucide-react"
+import { CheckCircle2, Trash2, Bell, BellOff } from "lucide-react"
 import { ScheduledItem, Course } from "./types"
 
 interface ScheduledItemCardProps {
@@ -76,25 +76,48 @@ export function ScheduledItemCard({
           {isPending && (
             <div className="text-[8px] opacity-75 mt-0.5 italic">Pending</div>
           )}
+          {/* Reminder Indicator */}
+          {!isPending && item.reminderEnabled && (
+            <div className="flex items-center gap-1 mt-1">
+              {item.reminderSent ? (
+                <div className="flex items-center gap-0.5" title={`Reminder sent (${item.reminderMinutesBefore || 30} min before)`}>
+                  <Bell className="w-2.5 h-2.5 opacity-90" />
+                  <span className="text-[8px] opacity-75">Sent</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-0.5" title={`Reminder scheduled (${item.reminderMinutesBefore || 30} min before)`}>
+                  <Bell className="w-2.5 h-2.5 opacity-70" />
+                  <span className="text-[8px] opacity-60">Reminder</span>
+                </div>
+              )}
+            </div>
+          )}
+          {!isPending && item.reminderEnabled === false && (
+            <div className="flex items-center gap-0.5 mt-1 opacity-50" title="Reminder disabled">
+              <BellOff className="w-2.5 h-2.5" />
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onToggleCompletion(item.id)
-            }}
-            className="p-0.5 hover:bg-white/20 rounded"
-            title="Mark as completed"
-          >
-            <CheckCircle2 className="w-3 h-3" />
-          </button>
+          {!isPending && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleCompletion(item.id)
+              }}
+              className="p-0.5 hover:bg-white/20 rounded"
+              title="Mark as completed"
+            >
+              <CheckCircle2 className="w-3 h-3" />
+            </button>
+          )}
           <button
             onClick={(e) => {
               e.stopPropagation()
               onDelete(item.id)
             }}
             className="p-0.5 hover:bg-white/20 rounded"
-            title="Delete"
+            title={isPending ? "Remove pending schedule" : "Delete"}
           >
             <Trash2 className="w-3 h-3" />
           </button>

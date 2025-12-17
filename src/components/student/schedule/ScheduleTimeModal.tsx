@@ -164,10 +164,15 @@ export function ScheduleTimeModal({
             />
           </div>
 
-          <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+          <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg bg-blue-50/50">
             <div className="space-y-0.5">
-              <Label htmlFor="reminder">Enable Reminder</Label>
-              <p className="text-sm text-gray-500">Get notified before the session</p>
+              <Label htmlFor="reminder" className="flex items-center gap-2">
+                Enable Reminder
+                <span className="text-xs text-blue-600 font-medium">(Email)</span>
+              </Label>
+              <p className="text-sm text-gray-600">
+                You&apos;ll receive an email reminder before your study session starts
+              </p>
             </div>
             <Switch
               id="reminder"

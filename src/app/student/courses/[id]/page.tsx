@@ -120,7 +120,7 @@ export default function CourseDetailPage() {
           {/* Course Thumbnail */}
           <div className="lg:w-1/3 relative">
             <Image
-              src="/placeholder.svg"
+              src={course.thumbnail || "/placeholder.svg"}
               alt={course.title}
               width={400}
               height={300}

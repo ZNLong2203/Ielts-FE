@@ -14,6 +14,9 @@ export interface ScheduledItem {
   date: string
   time?: string | Date
   isCompleted: boolean
+  reminderEnabled?: boolean
+  reminderSent?: boolean
+  reminderMinutesBefore?: number
 }
 
 export interface PendingSchedule {
