@@ -28,6 +28,8 @@ interface OrderSummaryProps {
   totalDiscountPrice: number
   finalPrice: number
   comboCourse?: IComboCourse
+  levelRange?: string
+  isMultiCombo?: boolean
 }
 
 export default function OrderSummary({
@@ -37,6 +39,8 @@ export default function OrderSummary({
   totalDiscountPrice,
   finalPrice,
   comboCourse,
+  levelRange,
+  isMultiCombo,
 }: OrderSummaryProps) {
   const formatPrice = (price: number) => {
     // Custom Vietnamese number formatting
@@ -51,10 +55,18 @@ export default function OrderSummary({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {comboCourse ? comboCourse.name : 'IELTS Learning Path'}
+              {isMultiCombo && levelRange
+                ? `IELTS Path ${levelRange}`
+                : comboCourse
+                ? comboCourse.name
+                : 'IELTS Learning Path'}
             </h3>
             <p className="text-sm text-blue-600">
-              {comboCourse ? 'Combo Course Package' : 'Band 3.0 → 7.5+ Complete Journey'}
+              {isMultiCombo
+                ? 'Multi-combo course package'
+                : comboCourse
+                ? 'Combo Course Package'
+                : 'Band 3.0 → 7.5+ Complete Journey'}
             </p>
           </div>
         </div>

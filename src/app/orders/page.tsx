@@ -144,9 +144,26 @@ export default function OrderPage() {
   }
 
   // Calculate prices from combo course data
-  const comboCourse = comboCourseData?.comboCourse as IComboCourse
-  const totalOriginalPrice = comboCourse ? Number(comboCourse.original_price) || 0 : 0
-  const totalComboPrice = comboCourse ? Number(comboCourse.combo_price) || 0 : 0
+  const comboCourses: IComboCourse[] =
+    comboCourseData?.comboCourses ||
+    (comboCourseData?.comboCourse ? [comboCourseData.comboCourse] : []);
+  const comboCourse = comboCourses[0] as IComboCourse | undefined;
+
+  const totalOriginalPrice =
+    typeof comboCourseData?.totalOriginalPrice === "number"
+      ? comboCourseData.totalOriginalPrice
+      : comboCourses.reduce(
+          (sum, c) => sum + (Number(c.original_price) || 0),
+          0
+        );
+
+  const totalComboPrice =
+    typeof comboCourseData?.totalComboPrice === "number"
+      ? comboCourseData.totalComboPrice
+      : comboCourses.reduce(
+          (sum, c) => sum + (Number(c.combo_price) || 0),
+          0
+        );
   const comboDiscount =
     totalOriginalPrice > 0
       ? Math.round(((totalOriginalPrice - totalComboPrice) / totalOriginalPrice) * 100)
@@ -156,19 +173,24 @@ export default function OrderPage() {
     finalPrice = Math.max(0, Math.round((totalComboPrice - appliedCoupon.discountAmount) * 100) / 100)
   }
 
-  // Convert combo course to display format for OrderSummary component
-  const displayCourses = comboCourse?.courses?.map((course) => ({
-    id: course.id,
-    title: course.title,
-    image: "/placeholder.svg?height=80&width=120",
-    originalPrice: Number(course.price) || 0,
-    discountPrice: Number(course.price) || 0,
-    duration: `${course.estimated_duration || 0}h`,
-    lessons: course.estimated_duration || 0,
-    level: course.difficulty_level || 'All Levels',
-    instructor: "IELTS Expert",
-    bandScore: `${comboCourseData?.selectedLevel || 0} → ${comboCourseData?.selectedTarget || 0}`,
-  })) || []
+  // Convert combo courses to display format for OrderSummary component
+  const displayCourses =
+    comboCourses.flatMap((combo) =>
+      (combo.courses || []).map((course) => ({
+        id: course.id,
+        title: course.title,
+        image: "/placeholder.svg?height=80&width=120",
+        originalPrice: Number(course.price) || 0,
+        discountPrice: Number(course.price) || 0,
+        duration: `${course.estimated_duration || 0}h`,
+        lessons: course.estimated_duration || 0,
+        level: course.difficulty_level || "All Levels",
+        instructor: "IELTS Expert",
+        bandScore: `${comboCourseData?.selectedLevel || 0} → ${
+          comboCourseData?.selectedTarget || 0
+        }`,
+      }))
+    ) || []
 
   const handlePaymentSubmit = async (method: string) => {
     if (!isAuthenticated) {
@@ -176,7 +198,10 @@ export default function OrderPage() {
       return
     }
 
-    if (!comboCourseData?.comboCourseId) {
+    if (
+      !comboCourseData?.comboCourseId &&
+      !Array.isArray(comboCourseData?.comboCourseIds)
+    ) {
       toast.error("No combo course selected")
       return
     }
@@ -186,13 +211,19 @@ export default function OrderPage() {
     
     try {
       // Validate combo course data
-      if (!comboCourseData?.comboCourseId) {
+      const comboIds: string[] =
+        comboCourseData.comboCourseIds ||
+        (comboCourseData.comboCourseId
+          ? [comboCourseData.comboCourseId]
+          : []);
+
+      if (!comboIds.length) {
         toast.error("Invalid combo course data. Please try again.", { id: "payment-processing" })
         return
       }
 
       const orderData: IOrderCreate = {
-        comboId: comboCourseData.comboCourseId,
+        comboIds,
         couponId: appliedCoupon?.id || undefined,
         paymentMethod: method.toLowerCase(),
         notes: `Combo course purchase: ${comboCourseData.comboCourseName}`
@@ -289,10 +320,10 @@ export default function OrderPage() {
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-4">
-            <Link href="/courses">
+            <Link href="/">
               <Button variant="ghost" className="pl-0 hover:bg-blue-50">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Courses
+                Back to Home
               </Button>
             </Link>
             <div>
@@ -301,7 +332,7 @@ export default function OrderPage() {
                 Complete Your IELTS Journey
               </h1>
               <p className="text-gray-600">
-                Secure checkout for your combo course: {comboCourse?.name}
+                Secure checkout for your combo package
               </p>
               {comboCourseData?.levelRange && (
                 <p className="text-sm text-blue-600 font-medium mt-1">
@@ -347,10 +378,17 @@ export default function OrderPage() {
               totalDiscountPrice={totalComboPrice}
               finalPrice={finalPrice}
               comboCourse={comboCourse}
+              levelRange={comboCourseData?.levelRange}
+              isMultiCombo={comboCourses.length > 1}
             />
 
             <CouponSection 
-              comboId={comboCourseData?.comboCourseId}
+              comboIds={
+                comboCourseData?.comboCourseIds ||
+                (comboCourseData?.comboCourseId
+                  ? [comboCourseData.comboCourseId]
+                  : [])
+              }
               comboPrice={totalComboPrice}
               onApply={handleCouponApply} 
               appliedCoupon={appliedCoupon}

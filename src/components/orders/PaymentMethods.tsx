@@ -3,7 +3,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CreditCard, QrCode, Shield, Lock, ExternalLink, ArrowRight } from 'lucide-react'
+import { CreditCard, Shield, Lock, ExternalLink, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -25,22 +25,11 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcess
     {
       id: "STRIPE",
       name: "Credit/Debit Card",
-      description: "Visa, Mastercard, American Express",
+      description: "Pay securely with Visa, Mastercard, or Amex",
       icon: CreditCard,
       color: "blue",
       popular: true,
-      features: ["Instant processing", "Secure encryption", "Worldwide accepted"],
-      redirectUrl: "https://checkout.stripe.com/pay/...",
-    },
-    {
-      id: "ZALOPAY",
-      name: "ZaloPay",
-      description: "Mobile banking & e-wallets",
-      icon: QrCode,
-      color: "emerald",
-      popular: false,
-      features: ["Mobile friendly", "No card needed", "Bank direct transfer"],
-      redirectUrl: "https://payment.zalopay.com/...",
+      features: ["Instant confirmation", "Bank‑level security", "Global support"],
     },
   ]
 
@@ -135,11 +124,11 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcess
         {/* Payment Summary */}
         <div className="bg-gray-50 rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between text-lg">
-            <span className="font-medium text-gray-700">Total Amount:</span>
+            <span className="font-medium text-gray-700">Total amount</span>
             <span className="text-2xl font-bold text-gray-900">{totalAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')} VND</span>
           </div>
           <div className="text-sm text-gray-600 mt-1">
-            You&apos;ll be redirected to {selectedPaymentMethod?.name} to complete payment
+            You will be redirected to a secure {selectedPaymentMethod?.name} checkout page to complete your payment.
           </div>
         </div>
 
@@ -170,7 +159,7 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcess
                 className="flex items-center gap-3"
               >
                 <Lock className="h-5 w-5" />
-                Please log in to continue
+                Please sign in to continue
               </motion.div>
             ) : (
               <motion.div
@@ -188,30 +177,14 @@ export default function PaymentMethods({ totalAmount, onPaymentSubmit, isProcess
           </AnimatePresence>
         </Button>
 
-        {/* Security Info */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-          <div className="text-sm text-blue-800">
-            <div className="font-semibold mb-1">🔒 Secure Payment Process</div>
+        {/* Security note */}
+        <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-start gap-3">
+          <Shield className="h-5 w-5 text-emerald-600 mt-0.5" />
+          <div className="text-xs text-gray-700">
+            <div className="font-semibold mb-1">Secure card payments</div>
             <div>
-              Your payment is processed through industry-leading security protocols. 
-              We never store your payment information.
+              Payments are processed by our PCI‑compliant provider. Your full card details are never stored on our servers.
             </div>
-          </div>
-        </div>
-
-        {/* Trust Indicators */}
-        <div className="mt-6 grid grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <Shield className="h-6 w-6 text-emerald-600 mx-auto mb-2" />
-            <div className="text-xs font-medium text-gray-700">256-bit SSL</div>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <Lock className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-            <div className="text-xs font-medium text-gray-700">PCI Compliant</div>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-xl">
-            <ExternalLink className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-            <div className="text-xs font-medium text-gray-700">Verified Secure</div>
           </div>
         </div>
       </CardContent>

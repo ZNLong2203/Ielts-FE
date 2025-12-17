@@ -84,7 +84,7 @@ export default function ComboCourseCard({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 h-full flex flex-col">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 h-full min-h-[520px] flex flex-col">
           {/* Header with Badge */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-2">
@@ -232,34 +232,32 @@ export default function ComboCourseCard({
 
       {/* Modal Popup */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4 py-6">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-2xl shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] overflow-y-auto"
           >
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-t-2xl p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <Sparkles className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white">
-                      {comboCourse.name}
-                    </h2>
-                    <p className="text-blue-100 text-sm">
+            <div className="border-b border-gray-200 rounded-t-2xl px-8 py-5 bg-white sticky top-0 z-10">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-blue-600 font-semibold mb-1">
+                    Combo course · Level range {selectedLevel} – {selectedTarget}
+                  </p>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    {comboCourse.name}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
                     {t("comboCourse.levelRange", { from: selectedLevel, to: selectedTarget })}
-                    </p>
-                  </div>
+                  </p>
                 </div>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => setShowModal(false)}
-                  className="text-white hover:bg-white/20"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                 >
                   <X className="h-5 w-5" />
                 </Button>
@@ -267,7 +265,7 @@ export default function ComboCourseCard({
             </div>
 
             {/* Modal Content */}
-            <div className="p-6 space-y-6">
+            <div className="p-8 space-y-8">
               {/* Description */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">{t("comboCourse.description")}</h3>
@@ -281,10 +279,10 @@ export default function ComboCourseCard({
                     <BookOpen className="h-5 w-5 mr-2 text-blue-600" />
                     {t("comboCourse.includedCourses", { count: comboCourse.courses.length })}
                   </h3>
-                  <div className="grid gap-4">
+                  <div className="space-y-4">
                     {comboCourse.courses.map((course, index) => (
                       <div key={course.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-2">
                               <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
@@ -292,9 +290,9 @@ export default function ComboCourseCard({
                               </span>
                               <span className="text-sm text-gray-500">• {course.difficulty_level || t("comboCourse.allLevels")}</span>
                             </div>
-                            <h4 className="font-semibold text-gray-900 mb-2">{course.title}</h4>
+                            <h4 className="font-semibold text-gray-900 mb-1">{course.title}</h4>
                             <p className="text-gray-600 text-sm mb-3 line-clamp-2">{course.description}</p>
-                            <div className="flex items-center space-x-6 text-sm text-gray-500">
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-3">
                               <span className="flex items-center">
                                 <Clock className="h-4 w-4 mr-1" />
                                 {course.estimated_duration || 0}h
@@ -303,17 +301,15 @@ export default function ComboCourseCard({
                                 <BookOpen className="h-4 w-4 mr-1" />
                                 {course.estimated_duration || 0} lessons
                               </span>
-                              <span className="flex items-center">
-                                <Users className="h-4 w-4 mr-1" />
-                                0 students
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                              <span className="text-xs text-gray-500">
+                                {t("comboCourse.individualPrice")}
+                              </span>
+                              <span className="text-lg font-semibold text-gray-900">
+                                {formatPrice(course.price || 0)}
                               </span>
                             </div>
-                          </div>
-                          <div className="text-right ml-4">
-                            <div className="text-lg font-bold text-gray-900">
-                              {formatPrice(course.price || 0)}
-                            </div>
-                            <div className="text-sm text-gray-500">{t("comboCourse.individualPrice")}</div>
                           </div>
                         </div>
                       </div>
@@ -323,7 +319,7 @@ export default function ComboCourseCard({
               )}
 
               {/* Stats Summary */}
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+              <div className="rounded-lg p-6 bg-gray-50 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("comboCourse.packageSummary")}</h3>
                 <div className="grid grid-cols-3 gap-6">
                   <div className="text-center">
@@ -348,7 +344,7 @@ export default function ComboCourseCard({
               </div>
 
               {/* Pricing */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+              <div className="rounded-lg p-6 bg-emerald-50/60 border border-emerald-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("comboCourse.pricingSummary")}</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -390,7 +386,7 @@ export default function ComboCourseCard({
               )}
 
               {/* Benefits */}
-              <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <CheckCircle className="h-5 w-5 mr-2 text-yellow-600" />
                   {t("comboCourse.packageBenefits")}

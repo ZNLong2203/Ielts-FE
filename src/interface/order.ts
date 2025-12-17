@@ -73,7 +73,8 @@ export interface IOrders {
 }
 
 export interface IOrderCreate {
-  comboId: string;
+  comboId?: string;
+  comboIds?: string[];
   couponId?: string;
   paymentMethod: string;
   notes?: string;

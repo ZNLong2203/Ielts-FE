@@ -17,7 +17,8 @@ export interface AppliedCoupon {
 }
 
 interface CouponSectionProps {
-  comboId?: string;
+  comboId?: string; // legacy
+  comboIds?: string[];
   comboPrice: number;
   onApply: (coupon: AppliedCoupon | null) => void;
   appliedCoupon: AppliedCoupon | null;
@@ -26,6 +27,7 @@ interface CouponSectionProps {
 
 export default function CouponSection({
   comboId,
+  comboIds,
   comboPrice,
   onApply,
   appliedCoupon,
@@ -46,7 +48,10 @@ export default function CouponSection({
   }, [appliedCoupon]);
 
   useEffect(() => {
-    if (!isAuthenticated || !comboId) {
+    const effectiveIds =
+      comboIds && comboIds.length > 0 ? comboIds : comboId ? [comboId] : [];
+
+    if (!isAuthenticated || effectiveIds.length === 0) {
       setAvailableCoupons([]);
       setIsFetchingCoupons(false);
       return;
@@ -55,9 +60,12 @@ export default function CouponSection({
     let mounted = true;
     setIsFetchingCoupons(true);
 
-    console.log("[CouponSection] Fetching available coupons for comboId:", comboId);
+    console.log(
+      "[CouponSection] Fetching available coupons for comboIds:",
+      effectiveIds
+    );
 
-    getAvailableCoupons([comboId])
+    getAvailableCoupons(effectiveIds)
       .then((data) => {
         if (!mounted) return;
         console.log("[CouponSection] Received available coupons:", data);
@@ -86,7 +94,7 @@ export default function CouponSection({
     return () => {
       mounted = false;
     };
-  }, [comboId, isAuthenticated]);
+  }, [comboId, comboIds, isAuthenticated]);
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +103,10 @@ export default function CouponSection({
       setError("Please log in to apply coupons.");
       return;
     }
-    if (!comboId) {
+    const effectiveIds =
+      comboIds && comboIds.length > 0 ? comboIds : comboId ? [comboId] : [];
+
+    if (effectiveIds.length === 0) {
       setError("No combo selected. Please pick a combo package first.");
       return;
     }
@@ -107,13 +118,13 @@ export default function CouponSection({
     try {
       console.log("[CouponSection] Validating coupon:", {
         code: couponCode.trim().toUpperCase(),
-        comboId,
+        comboIds: effectiveIds,
         comboPrice,
       });
 
       const validation = await validateCouponCode({
         code: couponCode.trim().toUpperCase(),
-        combo_ids: [comboId],
+        combo_ids: effectiveIds,
         total_amount: comboPrice,
       });
 
@@ -172,6 +183,10 @@ export default function CouponSection({
     if (!price) return "0 VND";
     return `${Number(price).toLocaleString("vi-VN")} VND`;
   };
+
+  // Effective combo ids (support both legacy comboId and new comboIds)
+  const effectiveComboIds =
+    comboIds && comboIds.length > 0 ? comboIds : comboId ? [comboId] : [];
 
   return (
     <motion.div
@@ -248,7 +263,12 @@ export default function CouponSection({
             </div>
             <Button
               type="submit"
-              disabled={!couponCode.trim() || isLoading || !comboId || !isAuthenticated}
+              disabled={
+                !couponCode.trim() ||
+                isLoading ||
+                effectiveComboIds.length === 0 ||
+                !isAuthenticated
+              }
               className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (

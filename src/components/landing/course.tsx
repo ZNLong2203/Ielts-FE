@@ -342,21 +342,19 @@ export default function CourseSection() {
 
                       <Button 
                         onClick={() => {
-                          if (comboCourses.length > 0) {
-                            // Navigate to orders page with the first combo course
-                            const firstComboCourse = comboCourses[0];
+                          if (comboCourses.length > 0 && comboPricing) {
+                            // Navigate to orders page with ALL combo courses in the path
                             const orderData = {
-                              comboCourseId: firstComboCourse.id,
-                              comboCourseName: firstComboCourse.name,
-                              comboPrice: firstComboCourse.combo_price,
-                              originalPrice: firstComboCourse.original_price,
-                              courseIds: firstComboCourse.course_ids,
-                              levelRange: `${selectedLevel} - ${selectedTarget}`,
+                              comboCourseIds: comboCourses.map((c) => c.id),
+                              comboCourses,
+                              totalComboPrice: comboPricing.totalComboPrice,
+                              totalOriginalPrice: comboPricing.totalOriginalPrice,
+                              levelRange: comboPricing.levelRange,
+                              includedLevels: comboPricing.includedLevels,
                               selectedLevel: Number(selectedLevel),
                               selectedTarget: Number(selectedTarget),
                               currentLevel: Number(selectedLevel),
                               targetLevel: Number(selectedTarget),
-                              comboCourse: firstComboCourse
                             };
                             
                             sessionStorage.setItem('selectedComboCourse', JSON.stringify(orderData));
