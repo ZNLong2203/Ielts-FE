@@ -64,7 +64,7 @@ export const getTeacherBlogs = async (teacherId: string, params?: {
 
 export const getTeacherBlogDetail = async (id: string): Promise<IBlog> => {
   const response = await api.get(`${BASE_URL}/blogs/teacher/detail/${id}`);
-  console.log("Get teacher blog detail response:", response);
+  console.log("Get teacher blog detail response:", response.data.data);
   return response.data.data;
 };
 

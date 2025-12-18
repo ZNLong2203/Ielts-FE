@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createTeacherBlog, updateTeacherBlog } from "@/api/blog";
+import { createTeacherBlog, getTeacherBlogDetail, updateTeacherBlog } from "@/api/blog";
 import { BlogCreateSchema, BlogUpdateSchema } from "@/validation/blog";
 import { useEffect, useState } from "react";
 import {
@@ -108,7 +108,7 @@ const TeacherBlogForm = () => {
   // Get blog detail
   const { data: blogData, isPending: isBlogPending } = useQuery({
     queryKey: ["blog", slug],
-    queryFn: () => getBlog(slug),
+    queryFn: () => getTeacherBlogDetail(slug),
     enabled: slug !== undefined && slug !== "",
   });
 
