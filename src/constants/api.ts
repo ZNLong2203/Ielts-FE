@@ -3,6 +3,7 @@ export const API_URL = {
   TEACHER_REGISTER: "/auth/register-teacher",
   TEACHER_RESET_PASSWORD: "/auth/reset-teacher-password",
   LOGIN: "/auth/login",
+  GOOGLE_LOGIN: "/auth/google",
   LOGOUT: "/auth/logout",
   REFRESH_TOKEN: "/auth/refresh",
 

@@ -1,32 +1,33 @@
 "use client";
-import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormLabel,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EyeIcon, EyeOffIcon, ArrowRight } from "lucide-react";
-import { FaGoogle } from "react-icons/fa";
+import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { ArrowRight, EyeIcon, EyeOffIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import { FaGoogle } from "react-icons/fa";
 
-import { z } from "zod";
+import { Login } from "@/api/auth";
+import { LoginSchema } from "@/validation/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import { Login } from "@/api/auth";
-import { useMutation } from "@tanstack/react-query";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/validation/auth";
+import { z } from "zod";
 
-import { useDispatch } from "react-redux";
-import { loginSuccess } from "@/redux/features/user/userSlice";
+import { API_URL } from "@/constants/api";
 import ROUTES from "@/constants/route";
+import { loginSuccess } from "@/redux/features/user/userSlice";
+import { useDispatch } from "react-redux";
 
 const LoginForm = ({
   className,
@@ -64,6 +65,11 @@ const LoginForm = ({
 
   const onSubmit = (data: z.infer<typeof LoginSchema>) => {
     loginHandler(data);
+  };
+
+  const handleGoogleLogin = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    window.location.href = `${baseUrl}${API_URL.GOOGLE_LOGIN}`;
   };
 
   return (
@@ -218,6 +224,8 @@ const LoginForm = ({
               transition={{ delay: 0.7 }}
             >
               <Button
+                type="button"
+                onClick={handleGoogleLogin}
                 variant="outline"
                 className="w-full h-11 rounded-xl border-muted-foreground/20 hover:bg-muted/50 transition-all duration-300"
                 suppressHydrationWarning={true}

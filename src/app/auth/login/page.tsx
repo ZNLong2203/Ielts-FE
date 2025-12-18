@@ -1,12 +1,14 @@
 "use client";
 
+import GoogleAuthHandler from "@/components/auth/GoogleAuthHandler";
+import LoginForm from "@/components/auth/loginForm";
 import { motion } from "framer-motion";
 import { GalleryVerticalEnd } from "lucide-react";
-import LoginForm from "@/components/auth/loginForm";
 
 const LoginStudentPage = () => {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
+      <GoogleAuthHandler />
       <div className="flex flex-col gap-4 p-6 md:p-10 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -23,7 +25,7 @@ const LoginStudentPage = () => {
         </motion.div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-md">
-            <LoginForm/>
+            <LoginForm />
           </div>
         </div>
       </div>
