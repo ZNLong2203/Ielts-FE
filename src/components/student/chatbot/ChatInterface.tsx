@@ -30,14 +30,93 @@ const formatMarkdown = (text: string) => {
   // Split by lines to process block-level elements
   const lines = text.split('\n');
   const formatted: (JSX.Element | string)[] = [];
+  let i = 0;
   
-  lines.forEach((line, lineIndex) => {
-    const key = `line-${lineIndex}`;
+  // Parse markdown table
+  const parseTable = (startIndex: number): { table: JSX.Element; endIndex: number } | null => {
+    if (startIndex >= lines.length) return null;
+    
+    // Check if this line looks like a table row (contains |)
+    const firstLine = lines[startIndex].trim();
+    if (!firstLine.includes('|') || firstLine.length < 3) return null;
+    
+    // Parse header row
+    const headerCells = firstLine.split('|').map(c => c.trim()).filter(c => c);
+    if (headerCells.length === 0) return null;
+    
+    // Check if next line is a separator (e.g., |------|--------|)
+    if (startIndex + 1 >= lines.length) return null;
+    const separatorLine = lines[startIndex + 1].trim();
+    if (!separatorLine.includes('|') || !separatorLine.match(/^\|[\s\-:]+\|/)) return null;
+    
+    // Parse data rows
+    const dataRows: string[][] = [];
+    let currentIndex = startIndex + 2;
+    
+    while (currentIndex < lines.length) {
+      const line = lines[currentIndex].trim();
+      // Stop if line doesn't look like a table row
+      if (!line.includes('|') || line.length < 3) break;
+      
+      const cells = line.split('|').map(c => c.trim()).filter(c => c);
+      if (cells.length === 0) break;
+      
+      dataRows.push(cells);
+      currentIndex++;
+    }
+    
+    // Build table element
+    const table = (
+      <div key={`table-${startIndex}`} className="my-4 overflow-x-auto">
+        <table className="min-w-full border border-gray-300 rounded-lg">
+          <thead className="bg-gray-100">
+            <tr>
+              {headerCells.map((cell, idx) => (
+                <th key={`header-${idx}`} className="border border-gray-300 px-4 py-2 text-left font-semibold">
+                  {formatInlineMarkdown(cell, `table-header-${startIndex}-${idx}`)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataRows.map((row, rowIdx) => (
+              <tr key={`row-${rowIdx}`} className={rowIdx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                {row.map((cell, cellIdx) => (
+                  <td key={`cell-${rowIdx}-${cellIdx}`} className="border border-gray-300 px-4 py-2">
+                    {formatInlineMarkdown(cell, `table-cell-${startIndex}-${rowIdx}-${cellIdx}`)}
+                  </td>
+                ))}
+                {/* Fill empty cells if row has fewer cells than header */}
+                {Array.from({ length: Math.max(0, headerCells.length - row.length) }).map((_, emptyIdx) => (
+                  <td key={`empty-${rowIdx}-${emptyIdx}`} className="border border-gray-300 px-4 py-2"></td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+    
+    return { table, endIndex: currentIndex };
+  };
+  
+  while (i < lines.length) {
+    const line = lines[i];
+    const key = `line-${i}`;
+    
+    // Check for table
+    const tableResult = parseTable(i);
+    if (tableResult) {
+      formatted.push(tableResult.table);
+      i = tableResult.endIndex;
+      continue;
+    }
     
     // Horizontal rule
     if (line.trim() === '---' || line.trim() === '***') {
       formatted.push(<hr key={key} className="my-4 border-gray-300" />);
-      return;
+      i++;
+      continue;
     }
     
     // Headings
@@ -47,7 +126,8 @@ const formatMarkdown = (text: string) => {
           {formatInlineMarkdown(line.substring(4), `${key}-inline`)}
         </h3>
       );
-      return;
+      i++;
+      continue;
     }
     if (line.startsWith('## ')) {
       formatted.push(
@@ -55,7 +135,8 @@ const formatMarkdown = (text: string) => {
           {formatInlineMarkdown(line.substring(3), `${key}-inline`)}
         </h2>
       );
-      return;
+      i++;
+      continue;
     }
     if (line.startsWith('# ')) {
       formatted.push(
@@ -63,7 +144,8 @@ const formatMarkdown = (text: string) => {
           {formatInlineMarkdown(line.substring(2), `${key}-inline`)}
         </h1>
       );
-      return;
+      i++;
+      continue;
     }
     
     // Regular paragraph with inline markdown
@@ -76,7 +158,9 @@ const formatMarkdown = (text: string) => {
     } else {
       formatted.push(<br key={key} />);
     }
-  });
+    
+    i++;
+  }
   
   return <>{formatted}</>;
 };
