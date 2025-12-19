@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { CheckCircle, Download, Play, BookOpen, Award, ArrowRight, Home, Mail } from 'lucide-react'
+import { CheckCircle, Play, BookOpen, Award, ArrowRight, Home, Mail } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -61,7 +61,7 @@ export default function PaymentSuccessPage() {
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 flex items-center justify-center">
         <Card className="p-8">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Order Not Found</h2>
-          <p className="text-gray-600 mb-6">We couldn't find your order. Please contact support.</p>
+          <p className="text-gray-600 mb-6">We couldn&apos;t find your order. Please contact support.</p>
           <Link href="/">
             <Button>Back to Home</Button>
           </Link>
@@ -229,21 +229,18 @@ export default function PaymentSuccessPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="grid md:grid-cols-3 gap-4 mb-8"
+          className="grid md:grid-cols-2 gap-4 mb-8"
         >
-          <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all">
-            <Play className="h-5 w-5 mr-2" />
-            Start Learning Now
-            <ArrowRight className="h-5 w-5 ml-2" />
-          </Button>
+          <Link href="/student/dashboard/my-courses" className="w-full">
+            <Button className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-6 text-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center justify-center">
+              <Play className="h-5 w-5 mr-2" />
+              Start Learning Now
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+          </Link>
           
-          <Button variant="outline" className="py-6 text-lg font-semibold border-2 hover:bg-gray-50">
-            <Download className="h-5 w-5 mr-2" />
-            Download Receipt
-          </Button>
-          
-          <Link href="/">
-            <Button variant="outline" className="w-full py-6 text-lg font-semibold border-2 hover:bg-gray-50">
+          <Link href="/" className="w-full">
+            <Button variant="outline" className="w-full py-6 text-lg font-semibold border-2 hover:bg-gray-50 flex items-center justify-center">
               <Home className="h-5 w-5 mr-2" />
               Back to Home
             </Button>
