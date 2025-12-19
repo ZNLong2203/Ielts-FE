@@ -18,7 +18,6 @@ import { ITeacher, ITeacherUpdate } from "@/interface/teacher";
 import {
   Award,
   Briefcase,
-  DollarSign,
   Download,
   Edit,
   Eye,
@@ -59,7 +58,6 @@ const ProfessionalInformationCard = ({
     specializations: [],
     ielts_band_score: 0,
     teaching_style: "",
-    hourly_rate: 0,
   });
 
   const [showCertModal, setShowCertModal] = useState(false);
@@ -81,7 +79,6 @@ const ProfessionalInformationCard = ({
         specializations: validSpecializations,
         ielts_band_score: teacher.ielts_band_score || 0,
         teaching_style: teacher.teaching_style || "",
-        hourly_rate: teacher.hourly_rate || 0,
       });
     }
   }, [teacher]);
@@ -202,15 +199,15 @@ const ProfessionalInformationCard = ({
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="px-6 py-5 border-b bg-white">
+    <Card className="overflow-hidden border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div className="px-6 py-5 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-gray-600" />
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-slate-700" />
               Professional Information
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-1.5">
               Your teaching credentials
             </p>
           </div>
@@ -236,9 +233,9 @@ const ProfessionalInformationCard = ({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-6 bg-white">
         {!isEditing ? (
-          <div>
+          <div className="space-y-1">
             <InfoRow
               icon={Award}
               label="Qualification"
@@ -255,34 +252,19 @@ const ProfessionalInformationCard = ({
               value={form.ielts_band_score?.toString() || "Not set"}
             />
             <InfoRow
-              icon={DollarSign}
-              label="Hourly Rate"
-              value={`${(form.hourly_rate || 0).toLocaleString()} VND`}
-            />
-            <InfoRow
-              icon={Star}
-              label="Rating"
-              value={
-                teacher.ratings
-                  ? `${teacher.ratings.toFixed(1)} / 5.0`
-                  : "Not rated yet"
-              }
-              isReadonly
-            />
-            <InfoRow
               icon={Award}
               label="Email Verified Status"
               value={teacher.is_verified ? "Verified" : "Not Verified"}
               isReadonly
             />
-            <div className="py-3 border-b">
-              <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+            <div className="py-4 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
                 Specializations
               </p>
               <div className="flex flex-wrap gap-2">
                 {form.specializations && form.specializations.length > 0 ? (
                   form.specializations.map((spec) => (
-                    <Badge key={spec} variant="secondary">
+                    <Badge key={spec} variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200">
                       {spec}
                     </Badge>
                   ))
@@ -292,8 +274,8 @@ const ProfessionalInformationCard = ({
               </div>
             </div>
             {form.teaching_style && (
-              <div className="py-3 border-b">
-                <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+              <div className="py-4 border-b border-gray-100">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
                   Teaching Style
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">
@@ -459,28 +441,6 @@ const ProfessionalInformationCard = ({
               </div>
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="hourly_rate"
-                className="text-sm font-medium text-gray-700"
-              >
-                Hourly Rate (VND)
-              </Label>
-              <Input
-                id="hourly_rate"
-                type="number"
-                min="0"
-                value={form.hourly_rate}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    hourly_rate: parseInt(e.target.value) || 0,
-                  })
-                }
-                required
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">
                 Specializations
               </Label>
@@ -580,40 +540,40 @@ const InfoRow = ({
   value,
   isReadonly = false,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   isReadonly?: boolean;
 }) => {
   return (
     <div
-      className={`flex items-start gap-3 py-3 border-b last:border-b-0 ${
-        isReadonly ? "bg-gray-50" : ""
+      className={`flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 ${
+        isReadonly ? "bg-gray-50/50 -mx-6 px-6" : ""
       }`}
     >
       <div
-        className={`p-2 rounded-lg ${
-          isReadonly ? "bg-gray-100" : "bg-gray-50"
+        className={`p-2.5 rounded-lg flex-shrink-0 ${
+          isReadonly ? "bg-gray-100" : "bg-slate-100"
         }`}
       >
         <Icon
           className={`w-4 h-4 ${
-            isReadonly ? "text-gray-400" : "text-gray-600"
+            isReadonly ? "text-gray-500" : "text-slate-700"
           }`}
         />
       </div>
-      <div className="flex-1">
-        <p className="text-xs font-medium text-gray-500 uppercase flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2 mb-1">
           {label}
           {isReadonly && (
-            <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-medium">
               READ ONLY
             </span>
           )}
         </p>
         <p
-          className={`text-sm font-medium mt-1 ${
-            isReadonly ? "text-gray-500" : "text-gray-900"
+          className={`text-base font-medium ${
+            isReadonly ? "text-gray-600" : "text-gray-900"
           }`}
         >
           {value}

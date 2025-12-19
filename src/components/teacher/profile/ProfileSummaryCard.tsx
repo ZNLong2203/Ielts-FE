@@ -3,7 +3,8 @@
 import { Card } from "@/components/ui/card";
 import { useUpdateAvatarMutation } from "@/hooks/useTeacherProfile";
 import { IUser } from "@/interface/user";
-import { Camera, CheckCircle, Mail, Star, User } from "lucide-react";
+import { Camera, CheckCircle, Mail, User } from "lucide-react";
+import Image from "next/image";
 import { useRef } from "react";
 
 interface ProfileSummaryCardProps {
@@ -38,12 +39,9 @@ const ProfileSummaryCard = ({ profile }: ProfileSummaryCardProps) => {
   };
 
   return (
-    <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300">
-      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8">
-        {/* Decorative background pattern */}
-        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
-
-        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
+    <Card className="overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div className="relative bg-slate-800 p-8">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Avatar */}
           <div className="relative group">
             <input
@@ -54,49 +52,51 @@ const ProfileSummaryCard = ({ profile }: ProfileSummaryCardProps) => {
               className="hidden"
             />
             <div
-              className="w-28 h-28 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ring-4 ring-white/30 group-hover:ring-white/50 transition-all duration-300 cursor-pointer relative overflow-hidden"
+              className="w-28 h-28 rounded-full bg-white flex items-center justify-center ring-4 ring-white/20 group-hover:ring-white/40 transition-all duration-300 cursor-pointer relative overflow-hidden shadow-lg"
               onClick={handleAvatarClick}
             >
               {profile.avatar ? (
-                <img
+                <Image
                   src={profile.avatar}
                   alt={profile.full_name || "User"}
                   className="w-full h-full rounded-full object-cover"
+                  width={100}
+                  height={100}
                 />
               ) : (
-                <User className="w-14 h-14 text-white" />
+                <User className="w-14 h-14 text-slate-600" />
               )}
 
               {/* Overlay on hover */}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <Camera className="w-8 h-8 text-white" />
               </div>
 
               {/* Loading overlay */}
               {updateAvatarMutation.isPending && (
-                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
                   <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-600 rounded-full border-4 border-slate-800 flex items-center justify-center shadow-lg">
               <CheckCircle className="w-5 h-5 text-white" />
             </div>
           </div>
 
           {/* User Info */}
           <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-2 text-white drop-shadow-md">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 text-white">
               {profile.full_name}
             </h2>
-            <div className="flex flex-col sm:flex-row items-center gap-3 text-white/90">
-              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5">
-                <Mail className="w-4 h-4" />
-                <span className="text-sm font-medium">{profile.email}</span>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2 border border-white/20">
+                <Mail className="w-4 h-4 text-white/90" />
+                <span className="text-sm font-medium text-white">{profile.email}</span>
               </div>
               {profile.email_verified && (
-                <div className="flex items-center gap-1.5 bg-green-500/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                  <CheckCircle className="w-4 h-4 text-green-200" />
+                <div className="flex items-center gap-1.5 bg-green-600/20 rounded-lg px-3 py-2 border border-green-500/30">
+                  <CheckCircle className="w-4 h-4 text-green-300" />
                   <span className="text-sm font-medium text-green-100">
                     Verified
                   </span>
@@ -104,23 +104,6 @@ const ProfileSummaryCard = ({ profile }: ProfileSummaryCardProps) => {
               )}
             </div>
           </div>
-
-          {/* IELTS Score Badge */}
-          {profile.teachers && (
-            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-2">
-                  <Star className="w-6 h-6 text-yellow-300 fill-yellow-300 drop-shadow-md" />
-                  <span className="text-4xl font-bold text-white drop-shadow-md">
-                    {profile.teachers.ielts_band_score || "N/A"}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-white/90">
-                  IELTS Band Score
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </Card>

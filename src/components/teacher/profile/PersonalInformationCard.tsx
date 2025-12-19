@@ -76,15 +76,15 @@ const PersonalInformationCard = ({
   };
 
   return (
-    <Card className="overflow-hidden">
-      <div className="px-6 py-5 border-b bg-white">
+    <Card className="overflow-hidden border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div className="px-6 py-5 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <User className="w-5 h-5 text-gray-600" />
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <User className="w-5 h-5 text-slate-700" />
               Personal Information
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-1.5">
               Your basic profile details
             </p>
           </div>
@@ -110,9 +110,9 @@ const PersonalInformationCard = ({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-6 bg-white">
         {!isEditing ? (
-          <div>
+          <div className="space-y-1">
             <InfoRow
               icon={Mail}
               label="Email"
@@ -282,33 +282,33 @@ const InfoRow = ({
 }) => {
   return (
     <div
-      className={`flex items-start gap-3 py-3 border-b last:border-b-0 ${
-        isReadonly ? "bg-gray-50" : ""
+      className={`flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 ${
+        isReadonly ? "bg-gray-50/50 -mx-6 px-6" : ""
       }`}
     >
       <div
-        className={`p-2 rounded-lg ${
-          isReadonly ? "bg-gray-100" : "bg-gray-50"
+        className={`p-2.5 rounded-lg flex-shrink-0 ${
+          isReadonly ? "bg-gray-100" : "bg-slate-100"
         }`}
       >
         <Icon
           className={`w-4 h-4 ${
-            isReadonly ? "text-gray-400" : "text-gray-600"
+            isReadonly ? "text-gray-500" : "text-slate-700"
           }`}
         />
       </div>
-      <div className="flex-1">
-        <p className="text-xs font-medium text-gray-500 uppercase flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2 mb-1">
           {label}
           {isReadonly && (
-            <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-medium">
               READ ONLY
             </span>
           )}
         </p>
         <p
-          className={`text-sm font-medium mt-1 ${
-            isReadonly ? "text-gray-500" : "text-gray-900"
+          className={`text-base font-medium ${
+            isReadonly ? "text-gray-600" : "text-gray-900"
           }`}
         >
           {value}

@@ -19,7 +19,7 @@ const TeacherDashboardPage = () => {
   if (!data) return <Error title="No data available" />;
 
   return (
-    <div className="space-y-8 p-8 bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <div className="space-y-8 p-8 bg-gray-50 min-h-screen">
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">

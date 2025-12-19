@@ -37,7 +37,7 @@ const TeacherProfilePage = () => {
   if (!profile) return <Error title="No profile data available" />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -51,9 +51,9 @@ const TeacherProfilePage = () => {
             variant="outline"
             className={`${
               profile.teachers?.status === "approved"
-                ? "bg-green-50 text-green-700 border-green-200 shadow-sm"
-                : "bg-yellow-50 text-yellow-700 border-yellow-200 shadow-sm"
-            } px-4 py-2 text-sm font-medium w-fit`}
+                ? "bg-green-100 text-green-800 border-green-300 shadow-sm"
+                : "bg-yellow-100 text-yellow-800 border-yellow-300 shadow-sm"
+            } px-4 py-2 text-sm font-semibold w-fit uppercase tracking-wide`}
           >
             {profile.teachers?.status || "Pending"}
           </Badge>

@@ -188,10 +188,6 @@ export default function OrderSummary({
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-emerald-600" />
-              <span>1-on-1 Speaking Practice Sessions</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-emerald-600" />
               <span>Lifetime Access to All Materials</span>
             </div>
             <div className="flex items-center gap-2">

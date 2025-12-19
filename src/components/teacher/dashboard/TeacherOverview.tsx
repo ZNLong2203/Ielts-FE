@@ -17,7 +17,7 @@ interface TeacherOverviewProps {
 
 const TeacherOverview = ({ stats }: TeacherOverviewProps) => {
   return (
-    <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-100">
+    <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow bg-gray-50 border-2 border-blue-100">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

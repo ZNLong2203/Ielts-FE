@@ -80,18 +80,18 @@ const ChangePasswordCard = () => {
   };
 
   return (
-    <Card className="overflow-hidden">
-      <div className="px-6 py-5 border-b bg-white">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-          <Lock className="w-5 h-5 text-gray-600" />
+    <Card className="overflow-hidden border border-gray-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div className="px-6 py-5 border-b border-gray-200 bg-white">
+        <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <Lock className="w-5 h-5 text-slate-700" />
           Change Password
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-gray-600 mt-1.5">
           Update your password to keep your account secure
         </p>
       </div>
 
-      <div className="p-6">
+      <div className="p-6 bg-white">
         <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
           {/* Fake inputs to prevent autofill */}
           <input

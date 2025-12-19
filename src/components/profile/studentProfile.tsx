@@ -43,6 +43,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { getUserTestHistory } from "@/api/mockTest"
+import { getStudentDashboard } from "@/api/student"
+import { IComboEnrollment, IEnrolledCourse } from "@/interface/student"
 
 const StudentProfile = () => {
   const user = useSelector(selectUser)
@@ -69,21 +72,80 @@ const StudentProfile = () => {
     retryDelay: 1000, // Wait 1 second between retries
   })
 
+  // Get student dashboard data for lessons calculation
+  const { data: dashboardData } = useQuery({
+    queryKey: ["student-dashboard", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null
+      return await getStudentDashboard(user.id)
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Get latest test results for skill scores
+  const { data: testResultsData } = useQuery({
+    queryKey: ["test-results-history", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null
+      const response = await getUserTestHistory({ page: 1, limit: 1 })
+      return response
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  })
+
   const studentData = profileData?.students || user?.students
 
-  // Mock data for IELTS-specific information
+  // Calculate lessons from dashboard data
+  const calculateLessons = () => {
+    if (!dashboardData?.comboEnrollments) {
+      return { completedLessons: 0, totalLessons: 0 }
+    }
+
+    let totalLessons = 0
+    let completedLessons = 0
+
+    dashboardData.comboEnrollments.forEach((enrollment: IComboEnrollment) => {
+      enrollment.courses?.forEach((course: IEnrolledCourse) => {
+        totalLessons += course.total_lessons || 0
+        completedLessons += course.completed_lessons || 0
+      })
+    })
+
+    return { completedLessons, totalLessons }
+  }
+
+  const { completedLessons, totalLessons } = calculateLessons()
+
+  // Get latest skill scores from test results
+  const getLatestSkillScores = () => {
+    const latestResult = testResultsData?.test_results?.[0]
+    if (!latestResult) {
+      return {
+        listening: 0,
+        reading: 0,
+        writing: 0,
+        speaking: 0,
+      }
+    }
+
+    return {
+      listening: Number(latestResult.listening_score) || 0,
+      reading: Number(latestResult.reading_score) || 0,
+      writing: Number(latestResult.writing_score) || 0,
+      speaking: Number(latestResult.speaking_score) || 0,
+    }
+  }
+
+  // IELTS data from API, default to 0 if no data
   const ieltsData = {
-    targetScore: studentData?.target_ielts_score || 7.5,
-    currentScore: studentData?.current_level || 6.5,
-    completedLessons: 45,
-    totalLessons: 100,
-    studyStreak: 12,
-    skillScores: {
-      listening: 7.0,
-      reading: 6.5,
-      writing: 6.0,
-      speaking: 6.5,
-    },
+    targetScore: studentData?.target_ielts_score || 0,
+    currentScore: studentData?.current_level || 0,
+    completedLessons,
+    totalLessons,
+    studyStreak: 0, // Not available in API yet, default to 0
+    skillScores: getLatestSkillScores(),
   }
 
   // Form setup
@@ -285,9 +347,9 @@ const StudentProfile = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                    <Badge className={`${getBandColor(ieltsData.currentScore)} border-2 border-white/50 font-bold px-4 py-1.5 shadow-lg text-base`}>
+                    <Badge className={`${getBandColor(ieltsData.currentScore || 0)} border-2 border-white/50 font-bold px-4 py-1.5 shadow-lg text-base`}>
                       <Trophy className="w-4 h-4 mr-1" />
-                      Band {ieltsData.currentScore}
+                      Band {ieltsData.currentScore || 0}
                     </Badge>
                   </div>
                 </div>
@@ -295,35 +357,15 @@ const StudentProfile = () => {
                 <h1 className="text-3xl font-bold mb-2 drop-shadow-lg">{user?.full_name || "IELTS Student"}</h1>
                 <p className="text-blue-100 text-lg mb-6 font-medium">IELTS Preparation Student</p>
 
-                <div className="flex flex-wrap gap-2 justify-center mb-6">
+                <div className="flex flex-wrap gap-2 justify-center">
                   <Badge className={`${getStatusColor(user?.status || "active")} border shadow-md`}>
                     <Star className="w-3 h-3 mr-1" />
                     {user?.status || "Active"}
                   </Badge>
                   <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 shadow-md">
                     <Target className="w-3 h-3 mr-1" />
-                    Target: {ieltsData.targetScore}
+                    Target: {ieltsData.targetScore || 0}
                   </Badge>
-                </div>
-
-                {/* Quick Stats in Profile Card */}
-                <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-blue-400/30">
-                  <div className="text-center group cursor-pointer">
-                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">
-                      {ieltsData.completedLessons}
-                    </div>
-                    <div className="text-xs text-blue-200 mt-1">Lessons</div>
-                  </div>
-                  <div className="text-center group cursor-pointer">
-                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">{ieltsData.studyStreak}</div>
-                    <div className="text-xs text-blue-200 mt-1">Day Streak</div>
-                  </div>
-                  <div className="text-center group cursor-pointer">
-                    <div className="text-3xl font-bold group-hover:scale-110 transition-transform">
-                      {ieltsData.totalLessons}
-                    </div>
-                    <div className="text-xs text-blue-200 mt-1">Total Lessons</div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -401,11 +443,15 @@ const StudentProfile = () => {
                       Overall Course Progress
                     </span>
                     <span className="text-lg text-blue-600 font-bold bg-white px-4 py-2 rounded-full shadow-sm border border-blue-200">
-                      {Math.round((ieltsData.completedLessons / ieltsData.totalLessons) * 100)}%
+                      {ieltsData.totalLessons > 0 
+                        ? Math.round((ieltsData.completedLessons / ieltsData.totalLessons) * 100)
+                        : 0}%
                     </span>
                   </div>
                   <Progress
-                    value={(ieltsData.completedLessons / ieltsData.totalLessons) * 100}
+                    value={ieltsData.totalLessons > 0 
+                      ? (ieltsData.completedLessons / ieltsData.totalLessons) * 100
+                      : 0}
                     className="h-4 bg-white shadow-inner border border-blue-200"
                   />
                   <div className="text-sm text-gray-600 mt-3 flex items-center gap-2">
@@ -428,25 +474,25 @@ const StudentProfile = () => {
                       >
                         <div className="flex justify-between items-center mb-3">
                           <div className="text-sm font-semibold text-gray-700 capitalize flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${getBandColor(score)}`}></div>
+                            <div className={`w-2 h-2 rounded-full ${getBandColor(score || 0)}`}></div>
                             {skill}
                           </div>
-                          <div className={`text-2xl font-bold ${getBandColor(score)} px-3 py-1 rounded-lg`}>
-                            {score}
+                          <div className={`text-2xl font-bold ${getBandColor(score || 0)} px-3 py-1 rounded-lg`}>
+                            {score || 0}
                           </div>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                           <div
                             className={`h-3 rounded-full transition-all duration-500 group-hover:scale-105 ${
-                              score >= 8 ? 'bg-purple-500' :
-                              score >= 7 ? 'bg-blue-500' :
-                              score >= 6 ? 'bg-green-500' :
-                              score >= 5 ? 'bg-yellow-500' : 'bg-orange-500'
+                              (score || 0) >= 8 ? 'bg-purple-500' :
+                              (score || 0) >= 7 ? 'bg-blue-500' :
+                              (score || 0) >= 6 ? 'bg-green-500' :
+                              (score || 0) >= 5 ? 'bg-yellow-500' : 'bg-orange-500'
                             }`}
-                            style={{ width: `${(score / 9) * 100}%` }}
+                            style={{ width: `${((score || 0) / 9) * 100}%` }}
                           ></div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-2 font-medium">Band {score} / 9.0</div>
+                        <div className="text-xs text-gray-500 mt-2 font-medium">Band {score || 0} / 9.0</div>
                       </div>
                     ))}
                   </div>
@@ -572,15 +618,17 @@ const StudentProfile = () => {
                         <Target className="w-4 h-4 text-blue-600" />
                         Target Band Score
                       </span>
-                      <span className="text-2xl font-bold text-blue-600">{ieltsData.targetScore}</span>
+                      <span className="text-2xl font-bold text-blue-600">{ieltsData.targetScore || 0}</span>
                     </div>
                     <Progress 
-                      value={(ieltsData.currentScore / ieltsData.targetScore) * 100} 
+                      value={ieltsData.targetScore > 0 
+                        ? (ieltsData.currentScore / ieltsData.targetScore) * 100
+                        : 0} 
                       className="h-3 bg-white shadow-inner border border-blue-200"
                     />
                     <div className="text-sm text-gray-600 mt-2 flex items-center gap-2">
                       <Clock3 className="w-4 h-4" />
-                      Current: {ieltsData.currentScore} / Target: {ieltsData.targetScore}
+                      Current: {ieltsData.currentScore || 0} / Target: {ieltsData.targetScore || 0}
                     </div>
                   </div>
                   
