@@ -35,7 +35,17 @@ export const createExercise = async (
         `${BASE_URL}${API_URL.LESSONS}/${lessonId}${API_URL.EXERCISES}`,
         data
     )
-    return response.data.data
+    // Response structure: { statusCode, message, data: { success: true, data: exercise } }
+    // Return the actual exercise object
+    if (response.data?.data?.data) {
+        return response.data.data.data;
+    }
+    // Fallback: if response.data.data is directly the exercise
+    if (response.data?.data?.id) {
+        return response.data.data;
+    }
+    // Last fallback
+    return response.data.data;
 }
 
 // Update an exercise

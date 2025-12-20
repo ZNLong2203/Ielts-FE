@@ -1,0 +1,78 @@
+{
+  "title": "Reading Comprehension Exercise",
+  "instruction": "Read the passage and answer the questions below",
+  "description": "Basic reading comprehension exercise",
+  "content": "This is the main passage content. You can put reading passage text here.",
+  "media_url": "",
+  "time_limit": 30,
+  "max_attempts": 3,
+  "passing_score": 70,
+  "ordering": 1,
+  "is_active": true,
+  "skill_type": "reading",
+  "questions": [
+    {
+      "question_text": "What is the main idea of the passage?",
+      "question_type": "multiple_choice",
+      "ordering": 1,
+      "points": 1,
+      "explanation": "The main idea is explained in the first paragraph",
+      "options": [
+        {
+          "option_text": "Option A",
+          "is_correct": false,
+          "ordering": 0
+        },
+        {
+          "option_text": "Option B (Correct Answer)",
+          "is_correct": true,
+          "ordering": 1
+        },
+        {
+          "option_text": "Option C",
+          "is_correct": false,
+          "ordering": 2
+        },
+        {
+          "option_text": "Option D",
+          "is_correct": false,
+          "ordering": 3
+        }
+      ]
+    },
+    {
+      "question_text": "Choose the best answer from the dropdown",
+      "question_type": "drop_list",
+      "ordering": 2,
+      "points": 1,
+      "explanation": "This question uses a dropdown list",
+      "options": [
+        {
+          "option_text": "Answer 1",
+          "is_correct": false,
+          "ordering": 0
+        },
+        {
+          "option_text": "Answer 2 (Correct)",
+          "is_correct": true,
+          "ordering": 1
+        },
+        {
+          "option_text": "Answer 3",
+          "is_correct": false,
+          "ordering": 2
+        }
+      ]
+    },
+    {
+      "question_text": "Fill in the blank: The capital of France is _____",
+      "question_type": "fill_blank",
+      "ordering": 3,
+      "points": 1,
+      "correct_answer": "Paris",
+      "alternative_answers": ["paris", "PARIS"],
+      "explanation": "Paris is the capital city of France"
+    }
+  ]
+}
+

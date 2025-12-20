@@ -23,10 +23,12 @@ import {
   Lightbulb,
   Image,
   BookOpen,
+  Upload,
 } from "lucide-react";
 
 // Import reusable components
 import TextField from "@/components/form/text-field";
+import ExerciseImportButton from "./ExerciseImportButton";
 
 import {
   IExercise,
@@ -200,6 +202,40 @@ const ExerciseForm = ({
 
       <CardContent>
         <Form {...form}>
+          {!isEditing && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Upload className="h-5 w-5 text-blue-600" />
+                    <h3 className="font-semibold text-blue-900">Quick Import from JSON</h3>
+                  </div>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Import an exercise with all questions from a JSON file. This will create the exercise and all questions automatically.
+                  </p>
+                  <ExerciseImportButton
+                    lessonId={lessonId}
+                    sectionId={sectionId}
+                    onSuccess={() => {
+                      invalidateQueries();
+                      onSuccess?.();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-4 border-b pb-4">
+            <p className="text-sm text-gray-600">
+              {!isEditing ? (
+                <>Or fill in the form below to create an exercise manually. You can add questions later.</>
+              ) : (
+                <>Update exercise information below.</>
+              )}
+            </p>
+          </div>
+
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
