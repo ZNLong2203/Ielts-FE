@@ -17,7 +17,7 @@ import {
   Clock,
   Target
 } from "lucide-react";
-import { ITestResult, ISectionResult, IQuestionReview, IMockTestQuestion, IMockTestExercise } from "@/interface/mockTest";
+import { ITestResult, ISectionResult, IQuestionReview, IMockTestQuestion, IMockTestExercise, IMockTestQuestionOption } from "@/interface/mockTest";
 import { cn } from "@/lib/utils";
 
 interface TestResultReviewProps {
@@ -112,7 +112,7 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
     }
   };
 
-  const formatAnswer = (answer: string | string[] | null, question?: IQuestionReview['question']): string => {
+  const formatAnswer = (answer: string | string[] | null, question?: IQuestionReview['question'], matchingOptions?: Array<{ id: string; option_text: string }>): string => {
     if (!answer) return "No answer";
     
     // For multiple choice, convert option IDs to option text
@@ -127,22 +127,93 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
     
     // For matching, convert matching option ID to option text
     // Note: matching_options are typically in the question_group, not the question itself
+    // If answer is already text (extracted from explanation), return it directly
     if (question?.question_type === "matching") {
-      const answerId = Array.isArray(answer) ? answer[0] : answer;
-      // Try to find matching option from question_group if available
-      const questionWithGroup = question as IMockTestQuestion & { question_group?: { matching_options?: Array<{ id: string; option_text: string }> } };
-      const matchingOptions = questionWithGroup.question_group?.matching_options;
-      if (matchingOptions) {
+      const answerValue = Array.isArray(answer) ? answer[0] : answer;
+      
+      // If answer is already text (not a UUID format), return it directly
+      // UUIDs are typically 36 characters with dashes (e.g., "123e4567-e89b-12d3-a456-426614174000")
+      const isLikelyUUID = typeof answerValue === 'string' && 
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(answerValue);
+      
+      // If it's not a UUID format, assume it's already text and return it
+      if (!isLikelyUUID && answerValue && typeof answerValue === 'string') {
+        // Check if it's a placeholder text
+        if (answerValue.toLowerCase().includes('see correct matches')) {
+          return answerValue; // Return placeholder as-is, will be replaced by explanation extraction
+        }
+        return answerValue; // Return text directly
+      }
+      
+      // If it's a UUID, try to find matching option from passed matchingOptions first
+      const answerId = answerValue;
+      if (matchingOptions && matchingOptions.length > 0) {
         const matchingOption = matchingOptions.find((opt: { id: string; option_text: string }) => opt.id === answerId);
-        return matchingOption ? matchingOption.option_text : (answerId || "No answer");
+        if (matchingOption) {
+          return matchingOption.option_text;
+        }
+      }
+      // Fallback: Try to find matching option from question_group if available
+      const questionWithGroup = question as IMockTestQuestion & { question_group?: { matching_options?: Array<{ id: string; option_text: string }> } };
+      const groupMatchingOptions = questionWithGroup.question_group?.matching_options;
+      if (groupMatchingOptions) {
+        const matchingOption = groupMatchingOptions.find((opt: { id: string; option_text: string }) => opt.id === answerId);
+        if (matchingOption) {
+          return matchingOption.option_text;
+        }
       }
       return answerId || "No answer";
     }
     
+    // For true/false/not given questions, normalize case
+    if (question?.question_type === "true_false" || question?.question_type === "true_false_not_given") {
+      const answerStr = Array.isArray(answer) ? answer[0] : String(answer);
+      if (!answerStr) return "No answer";
+      
+      const normalized = answerStr.toLowerCase().trim();
+      
+      // Map common variations to proper format (matching backend normalization logic)
+      // Backend normalizes to: TRUE, FALSE, NOT_GIVEN 
+      // Frontend displays as: True, False, Not Given
+      if (normalized === "true" || normalized === "t" || normalized === "yes" || normalized === "y") {
+        return "True";
+      }
+      if (normalized === "false" || normalized === "f" || normalized === "no" || normalized === "n") {
+        return "False";
+      }
+      if (normalized === "not given" || normalized === "ng" || normalized === "notgiven" || normalized === "not_given" || normalized === "not mentioned" || normalized === "unknown") {
+        return "Not Given";
+      }
+      
+      // Handle cases where answer might already be in display format
+      // (e.g., "True", "False", "Not Given" with proper casing)
+      const firstChar = answerStr.charAt(0).toUpperCase();
+      const rest = answerStr.slice(1).toLowerCase();
+      const titleCase = firstChar + rest;
+      
+      // Check if it's already in one of our target formats
+      if (titleCase === "True" || titleCase === "False" || titleCase === "Not Given") {
+        return titleCase;
+      }
+      
+      // Fallback: return as-is if we can't normalize
+      return answerStr;
+    }
+    
+    // For fill_blank, handle both string and array formats
+    if (question?.question_type === "fill_blank") {
+      if (Array.isArray(answer)) {
+        // If array, join all correct answers (usually just one, but handle multiple)
+        return answer.filter(Boolean).join(", ");
+      }
+      return String(answer);
+    }
+    
+    // Default: handle array by joining
     if (Array.isArray(answer)) {
       return answer.join(", ");
     }
-    return answer;
+    return String(answer);
   };
   
   const parseExplanation = (explanation: string | object | null | undefined): string => {
@@ -165,10 +236,104 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
     return String(explanation);
   };
 
-  const renderQuestionReview = (review: IQuestionReview, index: number) => {
-    const { question, is_correct, user_answer, correct_answer, explanation, points_earned, max_points } = review;
+  const renderQuestionReview = (review: IQuestionReview, index: number, matchingOptions?: Array<{ id: string; option_text: string }>) => {
+    const { question, is_correct, user_answer, correct_answer: initialCorrectAnswer, explanation, points_earned, max_points } = review;
     
     if (!question) return null;
+
+    // Priority order for correct_answer:
+    // 1. Use correct_answer from backend if it's a valid string (highest priority)
+    // 2. Use correct_answer from backend if it's a valid array (second priority)
+    // 3. Extract from explanation only if correct_answer is null/undefined/empty/placeholder (last resort)
+    
+    let correct_answer = initialCorrectAnswer;
+    
+    // Check if correct_answer is truly empty/null/undefined
+    const isCorrectAnswerEmpty = 
+      initialCorrectAnswer === null || 
+      initialCorrectAnswer === undefined ||
+      (typeof initialCorrectAnswer === 'string' && initialCorrectAnswer.trim() === '') ||
+      (Array.isArray(initialCorrectAnswer) && initialCorrectAnswer.length === 0);
+    
+    // Check if it's a placeholder text that should be replaced (for matching questions)
+    const isPlaceholderText = 
+      typeof initialCorrectAnswer === 'string' && 
+      (initialCorrectAnswer.toLowerCase().includes('see correct matches') ||
+       initialCorrectAnswer.toLowerCase().includes('see correct'));
+    
+    // For matching questions, if we have a placeholder, try to get from question_options
+    if ((isCorrectAnswerEmpty || isPlaceholderText) && question?.question_type === 'matching' && question?.question_options) {
+      const correctOptions = question.question_options.filter(opt => {
+        const optionWithCorrect = opt as IMockTestQuestionOption & { is_correct?: boolean };
+        return optionWithCorrect.is_correct === true;
+      });
+      if (correctOptions.length > 0) {
+        correct_answer = correctOptions.map(opt => opt.option_text);
+      }
+    }
+    
+    // Priority 1 & 2: If backend provided a valid correct_answer (string or array), use it
+    // Priority 3: Only extract from explanation if correct_answer is still empty/null/placeholder
+    if ((isCorrectAnswerEmpty || isPlaceholderText) && !correct_answer && explanation) {
+      if (typeof explanation === 'string') {
+        try {
+          const parsed = JSON.parse(explanation);
+          if (parsed && typeof parsed === 'object') {
+            // Check for correct_answer in parsed object
+            if ('correct_answer' in parsed) {
+              correct_answer = parsed.correct_answer;
+            }
+          }
+        } catch {
+          // If not JSON, try to extract from "Correct answer: X" pattern
+          const patterns = [
+            /Correct answer:\s*(.+?)(?:\n|$)/i,
+            /Answer:\s*(.+?)(?:\n|$)/i,
+            /Correct:\s*(.+?)(?:\n|$)/i,
+          ];
+          
+          for (const pattern of patterns) {
+            const match = explanation.match(pattern);
+            if (match && match[1]) {
+              const extracted = match[1].trim();
+              // For matching questions, if we have matchingOptions, try to find the text
+              // Otherwise, use the extracted text directly
+              correct_answer = extracted;
+              break;
+            }
+          }
+        }
+      } else if (typeof explanation === 'object' && explanation !== null) {
+        // If explanation is already an object, check for correct_answer
+        if ('correct_answer' in explanation) {
+          correct_answer = (explanation as { correct_answer: string | string[] }).correct_answer;
+        }
+      }
+    }
+    
+    // For true/false/not given questions, normalize correct_answer to ensure consistent format
+    // Use the same normalization logic as formatAnswer to ensure consistency with user_answer display
+    if (question?.question_type === "true_false" || question?.question_type === "true_false_not_given") {
+      if (correct_answer) {
+        // Normalize using the same logic as formatAnswer function
+        const correctAnswerStr = Array.isArray(correct_answer) ? correct_answer[0] : String(correct_answer);
+        if (correctAnswerStr) {
+          const normalized = correctAnswerStr.toLowerCase().trim();
+          if (normalized === "true" || normalized === "t" || normalized === "yes" || normalized === "y") {
+            correct_answer = "True";
+          } else if (normalized === "false" || normalized === "f" || normalized === "no" || normalized === "n") {
+            correct_answer = "False";
+          } else if (normalized === "not given" || normalized === "ng" || normalized === "notgiven" || normalized === "not_given" || normalized === "not mentioned" || normalized === "unknown") {
+            correct_answer = "Not Given";
+          } else {
+            // Try to preserve title case if already formatted
+            const firstChar = correctAnswerStr.charAt(0).toUpperCase();
+            const rest = correctAnswerStr.slice(1).toLowerCase();
+            correct_answer = firstChar + rest;
+          }
+        }
+      }
+    }
 
     const isExpanded = expandedQuestions.has(question.id);
     const isCorrect = is_correct === true;
@@ -178,8 +343,8 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
     return (
       <Card key={question.id} className={cn(
         "mb-4 transition-all",
-        isCorrect && "border-green-300 bg-green-50/30",
-        isIncorrect && "border-red-300 bg-red-50/30",
+        isCorrect && "border-green-600 bg-green-50/50",
+        isIncorrect && "border-red-600 bg-red-50/50",
         isUnanswered && "border-gray-300 bg-gray-50/30"
       )}>
         <CardHeader className="pb-3">
@@ -187,8 +352,8 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
             <div className="flex items-start space-x-3 flex-1">
               <div className={cn(
                 "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                isCorrect && "bg-green-500 text-white",
-                isIncorrect && "bg-red-500 text-white",
+                isCorrect && "bg-green-600 text-white",
+                isIncorrect && "bg-red-600 text-white",
                 isUnanswered && "bg-gray-400 text-white"
               )}>
                 {isCorrect ? <CheckCircle2 className="h-5 w-5" /> : 
@@ -218,20 +383,20 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
             <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Your Answer</div>
             <div className={cn(
               "text-sm font-medium",
-              isCorrect && "text-green-700",
-              isIncorrect && "text-red-700",
+              isCorrect && "text-green-900 font-semibold",
+              isIncorrect && "text-red-900 font-semibold",
               isUnanswered && "text-gray-500 italic"
             )}>
-              {formatAnswer(user_answer, question)}
+              {formatAnswer(user_answer, question, matchingOptions)}
             </div>
           </div>
 
           {/* Correct Answer */}
           {(isIncorrect || isUnanswered) && (
-            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-              <div className="text-xs font-semibold text-green-700 uppercase mb-1">Correct Answer</div>
-              <div className="text-sm font-medium text-green-800">
-                {formatAnswer(correct_answer, question)}
+            <div className="p-3 rounded-lg bg-green-50 border border-green-300">
+              <div className="text-xs font-semibold text-green-800 uppercase mb-1">Correct Answer</div>
+              <div className="text-sm font-semibold text-green-900">
+                {formatAnswer(correct_answer, question, matchingOptions)}
               </div>
             </div>
           )}
@@ -418,7 +583,7 @@ const TestResultReview = ({ testResult, onBack }: TestResultReviewProps) => {
                   {groupQuestions.map((review) => {
                     // Find the index within the entire exercise
                     const exerciseQuestionIndex = exerciseQuestions.findIndex(r => r.question?.id === review.question?.id);
-                    return renderQuestionReview(review, exerciseQuestionIndex);
+                    return renderQuestionReview(review, exerciseQuestionIndex, group.matching_options);
                   })}
                 </div>
               </div>

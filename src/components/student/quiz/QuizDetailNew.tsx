@@ -149,6 +149,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const [speakingRecording, setSpeakingRecording] = useState<{ [key: string]: boolean }>({});
   const mediaRecorderRefs = React.useRef<{ [key: string]: MediaRecorder | null }>({});
   const audioChunksRefs = React.useRef<{ [key: string]: Blob[] }>({});
+  const streamRefs = React.useRef<{ [key: string]: MediaStream | null }>({});
   const fileInputRefs = React.useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const startTestMutation = useMutation({
@@ -190,7 +191,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         });
         setShowReview(false);
       } else {
-        // AI grading - show results immediately
+        // AI grading - navigate to results page
         setIsPendingTeacherGrading(false);
         setIsCompleted(true);
         setIsStarted(false);
@@ -198,6 +199,16 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           duration: 5000,
         });
         setShowReview(false);
+        
+        // Save section result to sessionStorage for fallback
+        if (resultData) {
+          sessionStorage.setItem(`quiz-section-result-${testResultId}`, JSON.stringify(resultData));
+        }
+        
+        // Navigate to results page
+        if (testResultId && quizId) {
+          router.push(`/student/dashboard/my-quizzes/${quizId}/results?resultId=${testResultId}`);
+        }
       }
     },
     onError: (error: unknown) => {
@@ -232,11 +243,15 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           URL.revokeObjectURL(audio.url);
         }
       });
-      // Stop any active recordings
+      // Stop any active recordings and streams
       Object.keys(mediaRecorderRefs.current).forEach(questionId => {
         const recorder = mediaRecorderRefs.current[questionId];
         if (recorder && recorder.state !== 'inactive') {
           recorder.stop();
+        }
+        const stream = streamRefs.current[questionId];
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
         }
       });
     };
@@ -787,15 +802,20 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     });
     setSpeakingAudios({});
     setSpeakingRecording({});
-    // Stop any active recordings
+    // Stop any active recordings and streams
     Object.keys(mediaRecorderRefs.current).forEach(questionId => {
       const recorder = mediaRecorderRefs.current[questionId];
       if (recorder && recorder.state !== 'inactive') {
         recorder.stop();
       }
+      const stream = streamRefs.current[questionId];
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
     });
     mediaRecorderRefs.current = {};
     audioChunksRefs.current = {};
+    streamRefs.current = {};
     
     if (quiz) {
       setTimeRemaining(quiz.duration * 60);
@@ -824,27 +844,104 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   // Speaking question handlers
   const startSpeakingRecording = async (questionId: string) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      // Check if MediaRecorder is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error('Your browser does not support audio recording. Please use a modern browser.');
+        return;
+      }
+
+      // Check if MediaRecorder is available
+      if (typeof MediaRecorder === 'undefined') {
+        toast.error('MediaRecorder is not supported in your browser.');
+        return;
+      }
+
+      // Stop any existing recording for this question
+      const existingRecorder = mediaRecorderRefs.current[questionId];
+      const existingStream = streamRefs.current[questionId];
+      if (existingRecorder && existingRecorder.state !== 'inactive') {
+        existingRecorder.stop();
+      }
+      if (existingStream) {
+        existingStream.getTracks().forEach(track => track.stop());
+        streamRefs.current[questionId] = null;
+      }
+
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      // Store stream reference
+      streamRefs.current[questionId] = stream;
+      
+      // Check if MediaRecorder supports the stream's codec
+      let mimeType = 'audio/webm';
+      if (!MediaRecorder.isTypeSupported('audio/webm')) {
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+          mimeType = 'audio/ogg';
+        } else {
+          // Use default
+          mimeType = '';
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRefs.current[questionId] = mediaRecorder;
       audioChunksRefs.current[questionId] = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        audioChunksRefs.current[questionId].push(event.data);
+        if (event.data && event.data.size > 0) {
+          audioChunksRefs.current[questionId].push(event.data);
+        }
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        toast.error('Recording error occurred. Please try again.');
+        setSpeakingRecording(prev => ({ ...prev, [questionId]: false }));
+        if (streamRefs.current[questionId]) {
+          streamRefs.current[questionId]?.getTracks().forEach(track => track.stop());
+          streamRefs.current[questionId] = null;
+        }
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRefs.current[questionId], { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        setSpeakingAudios(prev => ({ ...prev, [questionId]: { blob, url } }));
-        stream.getTracks().forEach(track => track.stop());
+        const chunks = audioChunksRefs.current[questionId];
+        if (chunks && chunks.length > 0) {
+          const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+          const url = URL.createObjectURL(blob);
+          setSpeakingAudios(prev => ({ ...prev, [questionId]: { blob, url } }));
+        }
+        if (streamRefs.current[questionId]) {
+          streamRefs.current[questionId]?.getTracks().forEach(track => track.stop());
+          streamRefs.current[questionId] = null;
+        }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Collect data every second
       setSpeakingRecording(prev => ({ ...prev, [questionId]: true }));
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error starting recording:', err);
-      toast.error('Failed to access microphone. Please check permissions.');
+      
+      // Handle specific error types
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        toast.error('Microphone permission denied. Please allow microphone access in your browser settings.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        toast.error('No microphone found. Please connect a microphone and try again.');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        toast.error('Microphone is already in use by another application. Please close it and try again.');
+      } else if (err.name === 'OverconstrainedError' || err.name === 'ConstraintNotSatisfiedError') {
+        toast.error('Microphone does not meet the required constraints. Please try a different microphone.');
+      } else {
+        toast.error(`Failed to start recording: ${err.message || 'Unknown error'}`);
+      }
     }
   };
 
@@ -971,58 +1068,16 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     );
   }
 
+  // Note: Results are now shown in a separate results page
+  // This check is kept for pending teacher grading or when navigation hasn't happened yet
   if (isCompleted && sectionResult && quiz && currentSection && !isPendingTeacherGrading) {
-    // Show summary results first, then allow user to view detailed review
+    // Show loading state while navigating
     return (
-      <div className="min-h-screen bg-gray-50">
-        <QuizResults
-          quiz={quiz}
-          sectionResult={sectionResult}
-          currentSection={currentSection}
-          onBack={() => {
-            if (onBack) {
-              onBack();
-            } else {
-              router.push("/student/dashboard/my-quizzes");
-            }
-          }}
-          onReset={handleResetQuiz}
-        />
-        {testResultId && (
-          <div className="max-w-6xl mx-auto px-4 py-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Review Your Answers
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      View detailed explanations for each question, see correct answers, and understand your mistakes.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={() => setShowReview(true)}
-                    disabled={isLoadingReview}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isLoadingReview ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        <BookOpen className="h-4 w-4 mr-2" />
-                        View Detailed Review
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading results...</p>
+        </div>
       </div>
     );
   }

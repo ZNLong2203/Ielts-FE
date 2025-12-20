@@ -66,19 +66,86 @@ export default function QuizResults({
   // Extract detailed feedback data for speaking section
   // Handle both direct detailed_answers and nested structure
   const detailedAnswers = sectionResult.detailed_answers as any;
-  const strengths = Array.isArray(detailedAnswers?.strengths) 
-    ? detailedAnswers.strengths 
-    : (Array.isArray(detailedAnswers) ? [] : []);
-  const weaknesses = Array.isArray(detailedAnswers?.weaknesses) 
-    ? detailedAnswers.weaknesses 
-    : (Array.isArray(detailedAnswers) ? [] : []);
-  const suggestions = Array.isArray(detailedAnswers?.suggestions) 
-    ? detailedAnswers.suggestions 
-    : (Array.isArray(detailedAnswers) ? [] : []);
-  const overallFeedback = detailedAnswers?.overall_feedback || detailedAnswers?.feedback || "";
-  const criteriaScores = detailedAnswers?.overall_criteria_scores || detailedAnswers?.criteria_scores || {};
   const isSpeaking = currentSection?.type === "speaking";
   const isWriting = currentSection?.type === "writing";
+  
+  // For speaking, detailed_answers is an array of question results
+  // Each item has grading object with strengths, weaknesses, suggestions, detailedFeedback
+  let strengths: string[] = [];
+  let weaknesses: string[] = [];
+  let suggestions: string[] = [];
+  let overallFeedback = "";
+  let criteriaScores: Record<string, number> = {};
+  
+  if (isSpeaking && detailedAnswers) {
+    if (Array.isArray(detailedAnswers) && detailedAnswers.length > 0) {
+      // If it's an array, aggregate data from all items
+      const allStrengths: string[] = [];
+      const allWeaknesses: string[] = [];
+      const allSuggestions: string[] = [];
+      const allFeedbacks: string[] = [];
+      
+      detailedAnswers.forEach((item: any) => {
+        if (item?.grading) {
+          if (Array.isArray(item.grading.strengths)) {
+            allStrengths.push(...item.grading.strengths);
+          }
+          if (Array.isArray(item.grading.weaknesses)) {
+            allWeaknesses.push(...item.grading.weaknesses);
+          }
+          if (Array.isArray(item.grading.suggestions)) {
+            allSuggestions.push(...item.grading.suggestions);
+          }
+          if (item.grading.detailedFeedback) {
+            allFeedbacks.push(item.grading.detailedFeedback);
+          }
+          
+          // Extract criteria scores from grading object (use first item's scores)
+          if (Object.keys(criteriaScores).length === 0) {
+            if (item.grading.overallScore !== undefined) {
+              criteriaScores.overall = item.grading.overallScore;
+            }
+            if (item.grading.fluencyCoherence !== undefined) {
+              criteriaScores.fluencyCoherence = item.grading.fluencyCoherence;
+            }
+            if (item.grading.lexicalResource !== undefined) {
+              criteriaScores.lexicalResource = item.grading.lexicalResource;
+            }
+            if (item.grading.grammaticalRangeAccuracy !== undefined) {
+              criteriaScores.grammaticalRangeAccuracy = item.grading.grammaticalRangeAccuracy;
+            }
+            if (item.grading.pronunciation !== undefined) {
+              criteriaScores.pronunciation = item.grading.pronunciation;
+            }
+          }
+        }
+      });
+      
+      strengths = allStrengths;
+      weaknesses = allWeaknesses;
+      suggestions = allSuggestions;
+      overallFeedback = allFeedbacks.join("\n\n");
+    } else if (detailedAnswers?.grading) {
+      // If it's a single object with grading
+      strengths = Array.isArray(detailedAnswers.grading.strengths) ? detailedAnswers.grading.strengths : [];
+      weaknesses = Array.isArray(detailedAnswers.grading.weaknesses) ? detailedAnswers.grading.weaknesses : [];
+      suggestions = Array.isArray(detailedAnswers.grading.suggestions) ? detailedAnswers.grading.suggestions : [];
+      overallFeedback = detailedAnswers.grading.detailedFeedback || detailedAnswers.grading.feedback || "";
+      
+      if (detailedAnswers.grading.overallScore !== undefined) criteriaScores.overall = detailedAnswers.grading.overallScore;
+      if (detailedAnswers.grading.fluencyCoherence !== undefined) criteriaScores.fluencyCoherence = detailedAnswers.grading.fluencyCoherence;
+      if (detailedAnswers.grading.lexicalResource !== undefined) criteriaScores.lexicalResource = detailedAnswers.grading.lexicalResource;
+      if (detailedAnswers.grading.grammaticalRangeAccuracy !== undefined) criteriaScores.grammaticalRangeAccuracy = detailedAnswers.grading.grammaticalRangeAccuracy;
+      if (detailedAnswers.grading.pronunciation !== undefined) criteriaScores.pronunciation = detailedAnswers.grading.pronunciation;
+    } else {
+      // Fallback: try direct properties
+      strengths = Array.isArray(detailedAnswers.strengths) ? detailedAnswers.strengths : [];
+      weaknesses = Array.isArray(detailedAnswers.weaknesses) ? detailedAnswers.weaknesses : [];
+      suggestions = Array.isArray(detailedAnswers.suggestions) ? detailedAnswers.suggestions : [];
+      overallFeedback = detailedAnswers.overall_feedback || detailedAnswers.feedback || detailedAnswers.detailedFeedback || "";
+      criteriaScores = detailedAnswers.overall_criteria_scores || detailedAnswers.criteria_scores || {};
+    }
+  }
   
   // Extract writing results
   const writingTask1 = detailedAnswers?.task1 || null;
