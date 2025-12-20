@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TopCourse } from "@/interface/adminDashboard";
-import { BookOpen, DollarSign, Star, Users } from "lucide-react";
+import { BookOpen, Users } from "lucide-react";
 import Image from "next/image";
 
 interface TopCoursesProps {
@@ -67,11 +67,6 @@ export default function TopCourses({ courses }: TopCoursesProps) {
                   <div className="flex items-center space-x-1">
                     <Users className="h-4 w-4" />
                     <span>{course.enrollments.toLocaleString()}</span>
-                  </div>
-
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                    <span>{course.rating}</span>
                   </div>
 
                   <div className="flex items-center space-x-1 text-green-600 font-medium">

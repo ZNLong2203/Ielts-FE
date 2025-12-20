@@ -26,12 +26,12 @@ const SectionTab: React.FC<SectionTabProps> = ({
 }) => {
   const formatDuration = (duration: number) => {
     if (!duration) return "~30 min";
-    const hours = Math.floor(duration / 60);
-    const minutes = duration % 60;
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    if (minutes > 0) {
+      return `${minutes}m`;
     }
-    return `${minutes}m`;
+    return `${seconds}s`;
   };
 
   const getSectionDuration = (section: any) => {

@@ -170,11 +170,6 @@ const CourseCategoryTable = () => {
             Refresh
           </Button>
 
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() =>
