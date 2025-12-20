@@ -60,13 +60,13 @@ import LessonTab from "./form/courseLessonTab";
 import ExerciseTab from "./form/courseExerciseTab";
 import QuestionTab from "./form/courseQuestionTab";
 import FileUploadField from "@/components/form/file-field";
+import { getTeachers } from "@/api/teacher";
 
 const CourseForm = () => {
   const router = useRouter();
   const param = useParams();
   const queryClient = useQueryClient();
   const [newSections, setNewSections] = useState<ISectionCreate[]>([]);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   // Tab navigation state
   const [activeTab, setActiveTab] = useState("sections");
@@ -79,7 +79,6 @@ const CourseForm = () => {
   );
 
   const slug = Array.isArray(param.slug) ? param.slug[0] : param.slug;
-  console.log("CourseForm slug:", slug);
 
   const isEditing = slug !== undefined && slug !== "";
   const isCreating = !isEditing;
@@ -106,11 +105,16 @@ const CourseForm = () => {
     enabled: isEditing,
   });
 
-  const { data: sectionsData } = useQuery({
-    queryKey: ["section", slug],
-    queryFn: () => getSectionsByCourseId(slug),
-    enabled: isEditing,
+  const {
+    data: teachersData,
+    isLoading: isLoadingActive,
+    refetch: refetchActive,
+    isError: isErrorActive,
+  } = useQuery({
+    queryKey: ["teachers"],
+    queryFn: () => getTeachers(),
   });
+
 
   const { data: categoryData } = useQuery({
     queryKey: ["categories"],
@@ -151,7 +155,8 @@ const CourseForm = () => {
       toast.success(data?.message || "Course created successfully");
 
       const thumbnailValue = courseForm.getValues("thumbnail");
-      const thumbnailFileToUpload = thumbnailValue instanceof File ? thumbnailValue : null;
+      const thumbnailFileToUpload =
+        thumbnailValue instanceof File ? thumbnailValue : null;
 
       if (thumbnailFileToUpload && data?.data?.id) {
         try {
@@ -190,7 +195,8 @@ const CourseForm = () => {
 
       // Upload thumbnail if changed
       const thumbnailValue = courseForm.getValues("thumbnail");
-      const thumbnailFileToUpload = thumbnailValue instanceof File ? thumbnailValue : null;
+      const thumbnailFileToUpload =
+        thumbnailValue instanceof File ? thumbnailValue : null;
 
       if (thumbnailFileToUpload && slug) {
         try {
@@ -232,6 +238,7 @@ const CourseForm = () => {
       title: "",
       description: "",
       category_id: "",
+      teacher_id: "",
       skill_focus: "speaking",
       difficulty_level: "beginner",
       estimated_duration: 0,
@@ -252,13 +259,22 @@ const CourseForm = () => {
   const categoryOptions =
     categoryData?.result.map((category) => ({
       label: category.name,
-      value: category.id,
+      value: String(category.id),
     })) || [];
+
+  const teacherOptions =
+    teachersData?.result
+      ?.filter((teacher) => !!teacher?.teachers?.id)
+      .map((teacher) => ({
+        label: teacher.full_name || teacher.email,
+        value: String(teacher.teachers!.id),
+      })) || [];
 
   useEffect(() => {
     if (courseData && isEditing) {
       courseForm.reset(courseData);
-      courseForm.setValue("category_id", detailCategory?.id || "");
+      courseForm.setValue("category_id", detailCategory?.id ? String(detailCategory.id) : "");
+      courseForm.setValue("teacher_id", courseData?.teacher?.id ? String(courseData.teacher.id) : "");
     }
   }, [courseData, courseForm, detailCategory?.id, isEditing]);
 
@@ -331,39 +347,47 @@ const CourseForm = () => {
     title?: string;
     questions?: any[];
   };
-  
+
   // Get selected exercise from exerciseData instead of lesson.exercises
   const getSelectedExercise = () => {
     if (!selectedExerciseId || !exerciseData) return null;
-  
+
     const exercises = exerciseData as Exercise | Exercise[];
-  
+
     if (Array.isArray(exercises)) {
-      return exercises.find((exercise: Exercise) => exercise.id === selectedExerciseId) || null;
+      return (
+        exercises.find(
+          (exercise: Exercise) => exercise.id === selectedExerciseId
+        ) || null
+      );
     }
-  
+
     // If it's a single exercise object
     if (exercises && typeof exercises === "object" && "id" in exercises) {
-      return (exercises as Exercise).id === selectedExerciseId ? (exercises as Exercise) : null;
+      return (exercises as Exercise).id === selectedExerciseId
+        ? (exercises as Exercise)
+        : null;
     }
-  
+
     return null;
   };
-  
+
   // Helper functions to get counts
   const getTotalSections = () => courseData?.sections?.length || 0;
-  
+
   const getTotalLessons = () => {
     if (!selectedSectionId) return 0;
     const section = getSelectedSection();
     return section?.lessons?.length || 0;
   };
-  
+
   const getTotalExercises = () => {
     if (!exerciseData) return 0;
     const exercises = exerciseData as Exercise | Exercise[];
     if (Array.isArray(exercises)) return exercises.length;
-    return exercises && typeof exercises === "object" && "id" in exercises ? 1 : 0;
+    return exercises && typeof exercises === "object" && "id" in exercises
+      ? 1
+      : 0;
   };
 
   const getTotalQuestions = () => {
@@ -377,7 +401,9 @@ const CourseForm = () => {
     queryClient.invalidateQueries({ queryKey: ["course", slug] });
     queryClient.invalidateQueries({ queryKey: ["sections", slug] });
     if (selectedLessonId) {
-      queryClient.invalidateQueries({ queryKey: ["exercises", selectedLessonId] });
+      queryClient.invalidateQueries({
+        queryKey: ["exercises", selectedLessonId],
+      });
     }
     refetch();
     if (selectedLessonId) {
@@ -474,6 +500,14 @@ const CourseForm = () => {
                           label="Category"
                           placeholder="Select category"
                           options={categoryOptions}
+                        />
+
+                        <SelectField
+                          control={courseForm.control}
+                          name="teacher_id"
+                          label="Teacher"
+                          placeholder="Select teacher"
+                          options={teacherOptions}
                         />
 
                         <SelectField
@@ -599,7 +633,7 @@ const CourseForm = () => {
                         name="thumbnail"
                         label="Thumbnail Image"
                         accept="image/*"
-                        currentImage={isEditing ? courseData?.thumbnail : ""} 
+                        currentImage={isEditing ? courseData?.thumbnail : ""}
                         maxSize={5}
                         multiple={false}
                         placeholder="Click to upload course thumbnail"

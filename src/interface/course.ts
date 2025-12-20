@@ -61,6 +61,7 @@ export interface CourseCategory {
 export interface ICourseCreate {
   title: string;
   description: string;
+  teacher_id: string;
   category_id: string;
   skill_focus: string;
   difficulty_level: string;
@@ -77,6 +78,7 @@ export interface ICourseCreate {
 export interface ICourseUpdate {
   title?: string;
   description?: string;
+  teacher_id?: string;
   category_id?: string;
   skill_focus?: string;
   difficulty_level?: string;

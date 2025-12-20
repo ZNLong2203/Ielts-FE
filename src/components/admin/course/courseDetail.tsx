@@ -323,6 +323,134 @@ const CourseDetail = () => {
               </CardContent>
             </Card>
 
+                {/* Teacher Information */}
+            {courseData.teacher && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <User className="h-5 w-5 text-green-600" />
+                    <span>Teacher Information</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start space-x-6">
+                    <div className="flex-shrink-0">
+                      {courseData.teacher.avatar ? (
+                        <div className="relative">
+                          <Image
+                            src={courseData.teacher.avatar}
+                            alt={courseData.teacher.name}
+                            width={100}
+                            height={100}
+                            className="w-20 h-20 rounded-full object-cover border-3 border-green-200 shadow-lg"
+                          />
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <Award className="h-3 w-3 text-white" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center border-3 border-green-300 shadow-lg">
+                            <User className="h-10 w-10 text-green-600" />
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <Award className="h-3 w-3 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 space-y-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-xl font-bold text-gray-900">
+                            {courseData.teacher.name || "Unknown Teacher"}
+                          </h4>
+                          <Badge className="bg-green-100 text-green-700 border-green-200">
+                            Instructor
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-green-600 font-medium flex items-center space-x-1">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>Course Instructor & IELTS Expert</span>
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {courseData.teacher.qualification ? (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                              <div className="flex-shrink-0 p-2 bg-blue-500 rounded-lg">
+                                <GraduationCap className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-blue-800 uppercase tracking-wider mb-1">
+                                  Qualification
+                                </p>
+                                <p className="text-sm text-blue-900 font-medium leading-tight">
+                                  {courseData.teacher.qualification}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                              <div className="flex-shrink-0 p-2 bg-gray-400 rounded-lg">
+                                <GraduationCap className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+                                  Qualification
+                                </p>
+                                <p className="text-sm text-gray-500 font-medium leading-tight">
+                                  Not specified
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {courseData.teacher.experience_years ? (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                              <div className="flex-shrink-0 p-2 bg-purple-500 rounded-lg">
+                                <Award className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-purple-800 uppercase tracking-wider mb-1">
+                                  Experience
+                                </p>
+                                <p className="text-sm text-purple-900 font-medium leading-tight">
+                                  {courseData.teacher.experience_years} years
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="group hover:shadow-md transition-shadow duration-200">
+                            <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                              <div className="flex-shrink-0 p-2 bg-gray-400 rounded-lg">
+                                <Award className="h-4 w-4 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+                                  Experience
+                                </p>
+                                <p className="text-sm text-gray-500 font-medium leading-tight">
+                                  Not specified
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* ✅ Use the new CourseContentTabs component */}
             <CourseContentTabs courseData={courseData} />
 
