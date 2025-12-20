@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useFilter } from "@/hook/useFilter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getTeacherBlogs } from "@/api/blog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +25,6 @@ import {
   MoreVertical,
   CheckCircle,
   Edit,
-  Trash2,
   Eye,
   Calendar,
   FileText,
@@ -85,11 +84,12 @@ const TeacherBlogList = () => {
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
 
-  const fieldConfigs = [
+  const fieldConfigs: { key: string; label: string; placeholder: string; type: "input" | "select" | "multiselect"; icon: JSX.Element }[] = [
     {
       key: "title",
       label: "Title",
-      placeholder: "Search by title",
+      placeholder: "Search by title",   
+      type: "input",
       icon: (
         <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
       ),
@@ -98,6 +98,7 @@ const TeacherBlogList = () => {
       key: "status",
       label: "Status",
       placeholder: "Search by status",
+      type: "input",
       icon: (
         <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
       ),

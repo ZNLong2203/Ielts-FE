@@ -53,9 +53,15 @@ const TeacherSidebar = ({
     },
     {
       href: ROUTES.TEACHER_BLOGS,
-      label: t("sidebar.myBlogs"),
+      label: t("sidebar.blogs"),
       icon: FolderOpen,
       active: pathName === ROUTES.TEACHER_BLOGS,
+    },
+     {
+      href: ROUTES.TEACHER_COURSES,
+      label: t("sidebar.courses"),
+      icon: GraduationCap,
+      active: pathName === ROUTES.TEACHER_COURSES || pathName?.startsWith(ROUTES.TEACHER_COURSES),
     },
     {
       href: ROUTES.TEACHER_WRITING_GRADING,

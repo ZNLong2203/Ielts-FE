@@ -36,6 +36,17 @@ export const getAdminNewestCourses = async (): Promise<ICourse[]> => {
   return response.data.data;
 };
 
+export const getTeacherCourses = async (teacherId: string, params?: {
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  search?: string;
+}): Promise<ICourses> => {
+  const response = await api.get(`${BASE_URL}${API_URL.COURSES}/teacher/${teacherId}`, { params });
+  return response.data.data;
+}
+
 export const getAdminCourseDetail = async (id: string): Promise<ICourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/${id}`);
   console.log("Course detail response:", response);
