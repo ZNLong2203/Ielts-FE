@@ -207,13 +207,13 @@ export default function QuizResultsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <QuizResults
-        quiz={quiz}
-        sectionResult={sectionResult}
-        currentSection={section}
-        onBack={() => router.push("/student/dashboard/my-quizzes")}
-        onReset={() => router.push(`/student/dashboard/my-quizzes/${quizId}`)}
-      />
+    <QuizResults
+      quiz={quiz}
+      sectionResult={sectionResult}
+      currentSection={section}
+      onBack={() => router.push("/student/dashboard/my-quizzes")}
+      onReset={() => router.push(`/student/dashboard/my-quizzes/${quizId}`)}
+    />
       {resultId && section && section.type !== "speaking" && section.type !== "writing" && (
         <div className="max-w-6xl mx-auto px-4 py-6">
           <Card>

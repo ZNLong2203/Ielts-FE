@@ -105,17 +105,25 @@ export default function ReadingPassageWithParagraphs({
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-blue-900">
-          {passageTitle || "Reading Passage"}
-        </h3>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-lg font-semibold text-blue-900">
+            {passageTitle || "Reading Passage"}
+          </h3>
+          {isPinned && (
+            <span className="inline-flex items-center text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 w-fit">
+              <Pin className="h-3 w-3 mr-1" />
+              Pinned to side panel
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 justify-end">
           {totalHighlights > 0 && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleClearAllHighlights}
-              className="text-xs"
+              className="text-xs border-blue-200 text-blue-800 bg-white hover:bg-blue-50"
             >
               Clear Highlights ({totalHighlights})
             </Button>
@@ -125,8 +133,10 @@ export default function ReadingPassageWithParagraphs({
             size="sm"
             onClick={onPin}
             className={cn(
-              "text-xs",
-              isPinned ? "bg-blue-600 text-white hover:bg-blue-700" : ""
+              "text-xs rounded-full border-blue-600 px-3",
+              isPinned
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "text-blue-700 bg-white hover:bg-blue-50"
             )}
           >
             {isPinned ? (
@@ -158,7 +168,7 @@ export default function ReadingPassageWithParagraphs({
                   <div className="flex items-start gap-4">
                     {/* Paragraph Label */}
                     <div className="flex-shrink-0">
-                      <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
+                      <div className="w-10 h-10 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold shadow-lg">
                         {paragraph.label}
                       </div>
                     </div>

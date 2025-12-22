@@ -25,7 +25,7 @@ import {
   User,
   Award,
   ArrowRight,
-  Banknote
+  Banknote,
 } from "lucide-react";
 
 import { getAdminCourseDetail } from "@/api/course";
@@ -130,6 +130,17 @@ const CourseDetail = () => {
               >
                 <Edit className="h-4 w-4" />
                 <span>Update Course</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  router.push(`${ROUTES.ADMIN_COURSES}/${slug}/students`)
+                }
+                className="flex items-center space-x-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>View learner progress</span>
               </Button>
               <Button
                 variant="outline"

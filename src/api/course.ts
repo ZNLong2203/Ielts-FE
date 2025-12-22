@@ -10,6 +10,7 @@ import {
   IComboCourseUpdate,
   IComboCourseLevelRangeResponse,
 } from "@/interface/course";
+import { ICourseStudentProgressResponse } from "@/interface/courseProgress";
 import { API_URL } from "@/constants/api";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
@@ -51,6 +52,17 @@ export const getAdminCourseDetail = async (id: string): Promise<ICourse> => {
   const response = await api.get(`${BASE_URL}${API_URL.COURSES}/${id}`);
   console.log("Course detail response:", response);
   return response.data.data;
+};
+
+export const getCourseStudentsProgress = async (
+  courseId: string,
+  params?: { page?: number; limit?: number }
+): Promise<ICourseStudentProgressResponse> => {
+  const response = await api.get(
+    `${BASE_URL}${API_URL.COURSES}/${courseId}/students-progress`,
+    { params }
+  );
+  return response.data;
 };
 
 export const createAdminCourse = async (data: ICourseCreate) => {

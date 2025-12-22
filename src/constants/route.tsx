@@ -30,6 +30,7 @@ const ROUTES = {
   TEACHER_CHATBOT: "/teacher/dashboard/chatbot",
   TEACHER_SETTINGS: "/teacher/dashboard/settings",
   TEACHER_COURSES: "/teacher/dashboard/course",
+  TEACHER_COURSE_STUDENTS: "/teacher/dashboard/course/[slug]/students",
 };
 
 export default ROUTES;

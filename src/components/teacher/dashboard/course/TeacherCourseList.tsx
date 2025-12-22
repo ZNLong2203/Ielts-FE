@@ -1,15 +1,15 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ICourse } from "@/interface/course";
 import {
   BookOpen,
-  Star,
   Award,
   Calendar,
   Tag,
+  Eye,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,7 +52,7 @@ const TeacherCourseList = ({ courses }: TeacherCourseListProps) => {
               No courses yet
             </h3>
             <p className="text-sm text-gray-600">
-              You haven't been assigned to any courses yet.
+              You haven&apos;t been assigned to any courses yet.
             </p>
           </div>
         </div>
@@ -61,111 +61,164 @@ const TeacherCourseList = ({ courses }: TeacherCourseListProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {courses.map((course) => (
-        <Card
-          key={course.id}
-          className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-300"
-        >
-          <div className="relative h-48 bg-gradient-to-br from-blue-50 to-blue-100">
-            {course.thumbnail ? (
-              <Image
-                src={course.thumbnail}
-                alt={course.title}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <BookOpen className="h-16 w-16 text-blue-300" />
-              </div>
-            )}
-            {course.is_featured && (
-              <div className="absolute top-3 right-3">
-                <Badge className="bg-yellow-500 text-white border-yellow-600">
-                  <Star className="h-3 w-3 mr-1" />
-                  Featured
-                </Badge>
-              </div>
-            )}
-            <div className="absolute top-3 left-3">
-              <Badge
-                variant="outline"
-                className={getDifficultyColor(course.difficulty_level)}
+    <Card className="overflow-hidden border border-gray-200">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Course
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Skill
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Level
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Price
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Created
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {courses.map((course) => (
+              <tr
+                key={course.id}
+                className="hover:bg-gray-50 transition-colors duration-150"
               >
-                <Award className="h-3 w-3 mr-1" />
-                {course.difficulty_level}
-              </Badge>
-            </div>
-          </div>
+                {/* Course Info */}
+                <td className="px-6 py-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0 h-16 w-24 relative rounded-md overflow-hidden bg-gray-100">
+                      {course.thumbnail ? (
+                        <Image
+                          src={course.thumbnail}
+                          alt={course.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <BookOpen className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">
+                          {course.title}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-gray-600 line-clamp-1">
+                        {course.description || "No description"}
+                      </p>
+                      {course.tags && course.tags.length > 0 && (
+                        <div className="flex items-center gap-1 mt-2">
+                          {course.tags.slice(0, 2).map((tag, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs bg-gray-50 text-gray-600 border-gray-200 px-1.5 py-0"
+                            >
+                              <Tag className="h-2.5 w-2.5 mr-0.5" />
+                              {tag}
+                            </Badge>
+                          ))}
+                          {course.tags.length > 2 && (
+                            <span className="text-xs text-gray-500">
+                              +{course.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </td>
 
-          <CardContent className="p-6 space-y-4">
-            {/* Title */}
-            <div>
-              <h3 className="font-bold text-lg text-gray-900 line-clamp-2 mb-2">
-                {course.title}
-              </h3>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {course.description}
-              </p>
-            </div>
+                {/* Skill Focus */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {course.skill_focus ? (
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 font-medium">
+                      {course.skill_focus}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-gray-400">N/A</span>
+                  )}
+                </td>
 
-            {/* Tags */}
-            {course.tags && course.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {course.tags.slice(0, 3).map((tag, index) => (
-                  <Badge
-                    key={index}
-                    variant="outline"
-                    className="text-xs bg-blue-50 text-blue-700 border-blue-200"
-                  >
-                    <Tag className="h-3 w-3 mr-1" />
-                    {tag}
-                  </Badge>
-                ))}
-                {course.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{course.tags.length - 3}
-                  </Badge>
-                )}
-              </div>
-            )}
+                {/* Difficulty Level */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {course.difficulty_level ? (
+                    <Badge
+                      variant="outline"
+                      className={getDifficultyColor(course.difficulty_level)}
+                    >
+                      <Award className="h-3 w-3 mr-1" />
+                      {course.difficulty_level.charAt(0).toUpperCase() +
+                        course.difficulty_level.slice(1)}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-gray-400">N/A</span>
+                  )}
+                </td>
 
-            {/* Price & Date */}
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div>
-                {course.discount_price ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-green-600">
-                      {formatPrice(course.discount_price)}
-                    </span>
-                    <span className="text-sm text-gray-400 line-through">
+                {/* Price */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {course.discount_price ? (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-green-600">
+                        {formatPrice(course.discount_price)}
+                      </span>
+                      <span className="text-xs text-gray-400 line-through">
+                        {formatPrice(course.price)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-semibold text-blue-600">
                       {formatPrice(course.price)}
                     </span>
-                  </div>
-                ) : (
-                  <span className="text-lg font-bold text-blue-600">
-                    {formatPrice(course.price)}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <Calendar className="h-3 w-3" />
-                {new Date(course.created_at).toLocaleDateString("vi-VN")}
-              </div>
-            </div>
+                  )}
+                </td>
 
-            {/* Action Button */}
-            <Link href={`/teacher/dashboard/course/${course.id}`}>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 mt-4">
-                <BookOpen className="h-4 w-4 mr-2" />
-                View Details
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+                {/* Created Date */}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center space-x-1 text-sm text-gray-600">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      {new Date(course.created_at).toLocaleDateString("vi-VN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </td>
+
+                {/* Actions */}
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <Link href={`/teacher/dashboard/course/${course.id}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 };
 

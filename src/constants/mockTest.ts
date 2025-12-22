@@ -1,4 +1,4 @@
-import { BookOpen, Mic, PenTool, Target, Volume2 } from "lucide-react";
+import { BookOpen, Mic, PenTool, Volume2 } from "lucide-react";
 
 // Test type options
 export const TEST_TYPE_OPTIONS = [

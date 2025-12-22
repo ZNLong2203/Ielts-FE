@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { getTeacherCourses } from "@/api/course";
+import { ICourse } from "@/interface/course";
 import TeacherCourseList from "@/components/teacher/dashboard/course/TeacherCourseList";
 import Heading from "@/components/ui/heading";
 import Loading from "@/components/ui/loading";
@@ -18,6 +19,8 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Star,
+  GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
 import ROUTES from "@/constants/route";
@@ -140,6 +143,49 @@ const TeacherCoursePage = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600">
+                    {hasActiveFilters ? "Filtered Courses" : "Total Courses"}
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {hasActiveFilters ? filteredCount : totalCourses}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {hasActiveFilters
+                      ? `of ${totalCourses} total`
+                      : `${pageSize} per page`}
+                  </p>
+                </div>
+                <BookOpen className="h-6 w-6 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Students
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {displayData.reduce((sum: number, c: ICourse) => sum + ((c as ICourse & { enrollment_count?: number }).enrollment_count || 0), 0)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Total enrollments
+                  </p>
+                </div>
+                <GraduationCap className="h-6 w-6 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Filter Section (AdminFilter) */}
         {isFilterVisible && (
           <AdminFilter

@@ -23,6 +23,7 @@ import {
   List,
   GraduationCap,
   ArrowRight,
+  Users,
 } from "lucide-react";
 import { getQueryClient } from "@/utils/getQueryClient";
 import { getAdminCourseDetail, deleteAdminCourse } from "@/api/course";
@@ -108,6 +109,16 @@ const TeacherCourseDetail = () => {
               </div>
 
               <div className="flex items-center space-x-3">
+                <Button
+                  variant="default"
+                  onClick={() =>
+                    router.push(`${ROUTES.TEACHER_COURSES}/${slug}/students`)
+                  }
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Users className="h-4 w-4" />
+                  <span>View learner progress</span>
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() =>
@@ -336,14 +347,8 @@ const TeacherCourseDetail = () => {
                         </p>
                         <div className="flex items-center space-x-4 mt-1">
                           <span className="text-xs text-gray-500">
-                            {course.teacher.experience_years} years exp.
+                            {course.teacher.experience_years} years exp
                           </span>
-                          <div className="flex items-center space-x-1">
-                            <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                            <span className="text-xs text-gray-700">
-                              {course.teacher.rating}
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </div>

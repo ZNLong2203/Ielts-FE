@@ -246,6 +246,11 @@ export const deleteBlogByAdmin = async (id: string) => {
   return response.data;
 };
 
+export const likeBlog = async (id: string) => {
+  const response = await api.post(`${BASE_URL}/blogs/${id}/like`);
+  return response.data.data;
+};
+
 export const createBlog = createBlogByAdmin;
 export const getBlogs = getAllBlogsForAdmin;
 export const getBlog = getBlogDetailForAdmin;
