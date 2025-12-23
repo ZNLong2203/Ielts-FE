@@ -208,10 +208,10 @@ const ExerciseForm = ({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Upload className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-semibold text-blue-900">Quick Import from JSON</h3>
+                    <h3 className="font-semibold text-blue-900">Quick Import from CSV</h3>
                   </div>
                   <p className="text-sm text-blue-700 mb-3">
-                    Import an exercise with all questions from a JSON file. This will create the exercise and all questions automatically.
+                    Import an exercise with all questions from a CSV file. This will create the exercise and all questions automatically.
                   </p>
                   <ExerciseImportButton
                     lessonId={lessonId}

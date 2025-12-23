@@ -6,9 +6,9 @@ import { Upload, Download } from "lucide-react";
 import toast from "react-hot-toast";
 import {
   importExerciseFromJson,
-  parseJsonFile,
+  parseCsvFile,
   validateJsonExercise,
-  EXAMPLE_JSON,
+  EXAMPLE_CSV,
 } from "@/utils/exerciseImport";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -34,18 +34,18 @@ export default function ExerciseImportButton({
     if (!file) return;
 
     // Validate file type
-    if (!file.name.endsWith(".json")) {
-      toast.error("Please select a JSON file");
+    if (!file.name.endsWith(".csv")) {
+      toast.error("Please select a CSV file");
       return;
     }
 
     setIsImporting(true);
     try {
       const fileContent = await file.text();
-      const jsonData = parseJsonFile(fileContent);
+      const jsonData = await parseCsvFile(fileContent);
 
       if (!jsonData) {
-        toast.error("Failed to parse JSON file. Please check the file format.");
+        toast.error("Failed to parse CSV file. Please check the file format.");
         setIsImporting(false);
         return;
       }
@@ -54,7 +54,7 @@ export default function ExerciseImportButton({
       const validation = validateJsonExercise(jsonData);
       if (!validation.valid) {
         toast.error(
-          `Invalid JSON format:\n${validation.errors.slice(0, 3).join("\n")}${
+          `Invalid CSV format:\n${validation.errors.slice(0, 3).join("\n")}${
             validation.errors.length > 3 ? `\n...and ${validation.errors.length - 3} more errors` : ""
           }`,
           { duration: 6000 }
@@ -109,17 +109,16 @@ export default function ExerciseImportButton({
   };
 
   const handleDownloadExample = () => {
-    const jsonString = JSON.stringify(EXAMPLE_JSON, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
+    const blob = new Blob([EXAMPLE_CSV], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "exercise-import-example.json";
+    link.download = "exercise-import-example.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("Example JSON file downloaded!");
+    toast.success("Example CSV file downloaded!");
   };
 
   return (
@@ -127,7 +126,7 @@ export default function ExerciseImportButton({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".json"
+        accept=".csv"
         onChange={handleFileSelect}
         className="hidden"
         disabled={isImporting}
@@ -142,7 +141,7 @@ export default function ExerciseImportButton({
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Upload className="h-4 w-4" />
-          {isImporting ? "Importing..." : "Import from JSON"}
+          {isImporting ? "Importing..." : "Import from CSV"}
         </Button>
 
         {isImporting && (
@@ -157,10 +156,10 @@ export default function ExerciseImportButton({
         type="button"
         onClick={handleDownloadExample}
         className="text-sm text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1.5 self-start"
-        title="Download example JSON template"
+        title="Download example CSV template"
       >
         <Download className="h-3.5 w-3.5" />
-        <span>Download JSON template</span>
+        <span>Download CSV template</span>
       </button>
     </div>
   );
