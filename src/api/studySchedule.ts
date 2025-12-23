@@ -33,8 +33,6 @@ export interface UpdateScheduleDto {
 
 export interface CompleteScheduleDto {
   completion_percentage: number;
-  productivity_rating?: number;
-  session_notes?: string;
 }
 
 export interface TimeSlotDto {
@@ -66,12 +64,7 @@ export interface StudyScheduleDetails {
   study_goal?: string;
   notes?: string;
   status: ScheduleStatusType;
-  actual_start_time?: string;
-  actual_end_time?: string;
-  actual_duration?: number;
   completion_percentage: number;
-  productivity_rating?: number;
-  session_notes?: string;
   reminder_enabled: boolean;
   reminder_minutes_before?: number;
   reminder_sent: boolean;
@@ -123,7 +116,6 @@ export interface StudyAnalytics {
   cancelled_sessions: number;
   total_study_hours: string;
   avg_completion_percentage: string;
-  avg_productivity_rating?: string;
   most_studied_skill?: string;
   combo_progress?: Array<{
     combo_id: string;
@@ -232,10 +224,8 @@ export interface StudyReminder {
   title: string;
   message: string;
   scheduled_time: string;
-  sent_at?: string;
   status: "pending" | "sent" | "failed";
   is_read: boolean;
-  read_at?: string;
   created_at: string;
   updated_at: string;
   schedule?: {
