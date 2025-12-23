@@ -422,6 +422,8 @@ function parseQuizizzCsvFormat(lines: string[]): JsonExercise {
     let questionType: JsonQuestion['question_type'] = 'multiple_choice';
     if (questionTypeRaw.includes('fill') || questionTypeRaw.includes('blank')) {
       questionType = 'fill_blank';
+    } else if (questionTypeRaw.includes('drop') || questionTypeRaw.includes('dropdown')) {
+      questionType = 'droplist';
     } else if (questionTypeRaw.includes('checkbox')) {
       questionType = 'multiple_choice';
     }
@@ -454,7 +456,16 @@ function parseQuizizzCsvFormat(lines: string[]): JsonExercise {
         cells[colIndices.option5],
       ].filter(opt => opt);
       
-      const correctAnswerIndex = parseInt(cells[colIndices.correctAnswer]) - 1;
+      if (options.length === 0) continue; // Skip if no options
+      
+      const correctAnswerStr = cells[colIndices.correctAnswer] || '';
+      const correctAnswerIndex = parseInt(correctAnswerStr) - 1;
+      
+      // Validate correct answer index
+      if (isNaN(correctAnswerIndex) || correctAnswerIndex < 0 || correctAnswerIndex >= options.length) {
+        console.warn(`Invalid correct answer index "${correctAnswerStr}" for question: ${questionText}. Skipping question.`);
+        continue; // Skip this question
+      }
       
       question.options = options.map((optText, idx) => ({
         option_text: optText,
@@ -468,7 +479,7 @@ function parseQuizizzCsvFormat(lines: string[]): JsonExercise {
     // Validate question
     if (questionType === 'fill_blank' && question.correct_answer) {
       exercise.questions.push(question);
-    } else if (questionType === 'multiple_choice' && question.options && question.options.length > 0) {
+    } else if ((questionType === 'multiple_choice' || questionType === 'droplist') && question.options && question.options.length > 0) {
       const hasCorrect = question.options.some(opt => opt.is_correct);
       if (hasCorrect) {
         exercise.questions.push(question);
@@ -493,10 +504,24 @@ function parseQuizizzCsvFormat(lines: string[]): JsonExercise {
       else if (field === 'description') exercise.description = value;
       else if (field === 'content') exercise.content = value;
       else if (field === 'media_url' || field === 'media url') exercise.media_url = value;
-      else if (field === 'time_limit' || field === 'time limit') exercise.time_limit = parseInt(value) || 1800;
-      else if (field === 'max_attempts' || field === 'max attempts') exercise.max_attempts = parseInt(value) || 3;
-      else if (field === 'passing_score' || field === 'passing score') exercise.passing_score = parseInt(value) || 70;
-      else if (field === 'ordering') exercise.ordering = parseInt(value) || 1;
+      else if (field === 'time_limit' || field === 'time limit') {
+        const timeLimit = parseInt(value);
+        if (!isNaN(timeLimit) && timeLimit > 0) exercise.time_limit = timeLimit;
+      }
+      else if (field === 'max_attempts' || field === 'max attempts') {
+        const maxAttempts = parseInt(value);
+        if (!isNaN(maxAttempts) && maxAttempts > 0) exercise.max_attempts = maxAttempts;
+      }
+      else if (field === 'passing_score' || field === 'passing score') {
+        const passingScore = parseInt(value);
+        if (!isNaN(passingScore) && passingScore >= 0 && passingScore <= 100) {
+          exercise.passing_score = passingScore;
+        }
+      }
+      else if (field === 'ordering') {
+        const ordering = parseInt(value);
+        if (!isNaN(ordering) && ordering >= 0) exercise.ordering = ordering;
+      }
       else if (field === 'is_active' || field === 'is active') exercise.is_active = value.toLowerCase() === 'true';
     }
   }
@@ -776,11 +801,15 @@ One benefit of technology mentioned is ____.,Multiple Choice,global connectivity
 Fill in the blank: Technology has transformed the way people _____ and work.,Fill-in-the-Blank,communicate,Communicate,COMMUNICATE,,,1,20,The passage states technology has transformed communication.
 Which concern is raised about technology?,Multiple Choice,Increased efficiency,Reduced face-to-face interaction,Better education,Faster learning,,2,20,
 Fill in the blank: Some people worry about dependence on digital _____.,Fill-in-the-Blank,devices,Devices,DEVICES,,,1,20,The passage mentions dependence on digital devices.
+According to the passage technology has changed how people _____,Droplist,learn,work,communicate,All of the above,None of the above,4,25,The passage states technology has transformed communication work and learn.
+What does the passage suggest about face-to-face interaction?,Droplist,It has increased,It has decreased,It remains unchanged,It is not mentioned,,2,25,The passage mentions reduced face-to-face interaction as a concern.
+Which statement best describes the author's view on technology?,Droplist,Completely positive,Completely negative,Balanced with both pros and cons,Neutral with no opinion,,3,30,The passage presents both benefits and concerns about technology.
+What is mentioned as a potential negative effect of technology?,Droplist,Better education,Social isolation,Increased productivity,Improved communication,,2,25,The passage mentions social isolation as a concern.
 
 Exercise Metadata (Optional - add these fields if needed):
 Title: IELTS Reading Practice Test - Extended
 Instruction: Read the passage and answer the questions below
-Description: IELTS Reading with Multiple Choice, Fill in the Blank
+Description: IELTS Reading with Multiple Choice, Fill in the Blank, and Droplist
 Content: Technology has transformed the way people communicate, work, and learn. While it offers many benefits such as efficiency and global connectivity, it also raises concerns about reduced face-to-face interaction and dependence on digital devices.
 Time Limit: 1800
 Max Attempts: 1

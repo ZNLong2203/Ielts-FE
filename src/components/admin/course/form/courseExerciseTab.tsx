@@ -212,14 +212,14 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
             <h3 className="text-lg font-semibold">
               {lesson.title} - Exercises
             </h3>
-            <p className="text-sm text-gray-600">
-              Manage exercises for this lesson
+            <div className="text-sm text-gray-600 flex items-center">
+              <span>Manage exercises for this lesson</span>
               {exercises.length > 0 && (
                 <Badge variant="outline" className="ml-2">
                   {exercises.length} exercises
                 </Badge>
               )}
-            </p>
+            </div>
           </div>
         </div>
         <Button

@@ -279,50 +279,84 @@ const CourseQuestionItem = ({
           </div>
         )}
 
-        {/* Question Options Preview */}
-        {question.question_options && question.question_options.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <List className="h-4 w-4 text-black" />
-                <span className="text-sm font-medium text-black">Answer Options</span>
+        {/* Question Options Preview (for multiple_choice / droplist) */}
+        {question.question_options &&
+          question.question_options.length > 0 &&
+          (question.question_type === "multiple_choice" ||
+            question.question_type === "droplist" ||
+            question.question_type === "drop_list") && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <List className="h-4 w-4 text-black" />
+                  <span className="text-sm font-medium text-black">
+                    Answer Options
+                  </span>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {question.question_options.length} options
+                </Badge>
               </div>
-              <Badge variant="outline" className="text-xs">
-                {question.question_options.length} options
-              </Badge>
-            </div>
-            
-            <div className="space-y-1 max-h-28 overflow-y-auto">
-              {question.question_options.map((option: any, index: number) => (
-                <div
-                  key={option.id || index}
-                  className={`flex items-center space-x-2 p-2 rounded text-xs transition-colors ${
-                    option.is_correct 
-                      ? 'bg-green-50 border border-green-200' 
-                      : 'bg-gray-50 border border-gray-200'
-                  }`}
-                >
-                  <Badge 
-                    variant="outline" 
-                    className={`w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs ${
-                      option.is_correct 
-                        ? 'bg-green-100 text-green-700 border-green-300' 
-                        : 'bg-gray-100 text-gray-600'
+
+              <div className="space-y-1 max-h-28 overflow-y-auto">
+                {question.question_options.map((option: any, index: number) => (
+                  <div
+                    key={option.id || index}
+                    className={`flex items-center space-x-2 p-2 rounded text-xs transition-colors ${
+                      option.is_correct
+                        ? "bg-green-50 border border-green-200"
+                        : "bg-gray-50 border border-gray-200"
                     }`}
                   >
-                    {String.fromCharCode(65 + index)}
-                  </Badge>
-                  <span className={`flex-1 ${
-                    option.is_correct ? 'text-green-800 font-medium' : 'text-gray-700'
-                  }`}>
-                    {option.option_text || `Option ${index + 1}`}
-                  </span>
-                  {option.is_correct && (
-                    <CheckCircle className="h-3 w-3 text-green-600" />
+                    <Badge
+                      variant="outline"
+                      className={`w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs ${
+                        option.is_correct
+                          ? "bg-green-100 text-green-700 border-green-300"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {String.fromCharCode(65 + index)}
+                    </Badge>
+                    <span
+                      className={`flex-1 ${
+                        option.is_correct
+                          ? "text-green-800 font-medium"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {option.option_text || `Option ${index + 1}`}
+                    </span>
+                    {option.is_correct && (
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        {/* Fill in the Blank - Correct Answer Preview */}
+        {question.question_type === "fill_blank" && question.correct_answer && (
+          <div className="mb-3">
+            <div className="flex items-center space-x-2 mb-1">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-700">
+                Correct Answer
+              </span>
+            </div>
+            <div className="px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
+              {question.correct_answer}
+            </div>
+            {Array.isArray((question as any).alternative_answers) &&
+              (question as any).alternative_answers.length > 0 && (
+                <div className="mt-2 text-xs text-gray-600">
+                  <span className="font-medium">Alternative answers: </span>
+                  {((question as any).alternative_answers as string[]).join(
+                    ", "
                   )}
                 </div>
-              ))}
-            </div>
+              )}
           </div>
         )}
 
@@ -366,7 +400,7 @@ const CourseQuestionItem = ({
               Are you sure you want to delete this question? This action cannot be undone.
               {question.question_text && (
                 <div className="mt-2 p-2 bg-gray-50 rounded text-sm font-medium">
-                  "{question.question_text.substring(0, 100)}..."
+                  &quot;{question.question_text.substring(0, 100)}...&quot;
                 </div>
               )}
             </AlertDialogDescription>
