@@ -4,10 +4,11 @@ import { IMockTests, IMockTestCreate, IMockTest, IMockTestUpdate } from "@/inter
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-export const getMockTests = async ({page}: {page: number}): Promise<IMockTests> => {
+export const getMockTests = async ({page, status}: {page: number, status?: string}): Promise<IMockTests> => {
     const response = await api.get(`${BASE_URL}${API_URL.MOCK_TESTS}`, {
         params: {
-            page
+            page,
+            ...(status && { status })
         }
     });
     return response.data.data;

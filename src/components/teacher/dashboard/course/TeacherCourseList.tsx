@@ -191,7 +191,7 @@ const TeacherCourseList = ({ courses }: TeacherCourseListProps) => {
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {new Date(course.created_at).toLocaleDateString("vi-VN", {
+                      {new Date(course.created_at).toLocaleDateString("en-US", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",

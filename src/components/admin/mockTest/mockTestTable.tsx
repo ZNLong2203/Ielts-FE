@@ -51,7 +51,7 @@ const MockTestTable = () => {
     "test_type",
     "test_level",
     "difficulty_level",
-    "is_active",
+    "status",
     "created_at",
   ];
 
@@ -165,7 +165,7 @@ const MockTestTable = () => {
       ],
     },
     {
-      key: "is_active",
+      key: "status",
       label: "Status",
       placeholder: "Filter by status",
       type: "select" as const,
@@ -173,8 +173,8 @@ const MockTestTable = () => {
         <CheckCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
       ),
       options: [
-        { label: "Active", value: "true" },
-        { label: "Inactive", value: "false" },
+        { label: "Public", value: "public" },
+        { label: "Private", value: "private" },
       ],
     },
     {

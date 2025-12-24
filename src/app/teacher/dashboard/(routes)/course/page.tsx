@@ -19,7 +19,6 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
-  Star,
   GraduationCap,
 } from "lucide-react";
 import Link from "next/link";
@@ -43,14 +42,19 @@ const TeacherCoursePage = () => {
 
   console.log("Fetching courses for teacher ID:", teacherId);
 
+  const courseQueryParams = {
+    page: page,
+    is_featured: true
+  };
+  
   const {
     data: courses,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["teacher-courses", teacherId, page],
-    queryFn: () => getTeacherCourses(teacherId, { page }),
+    queryKey: ["teacher-courses", teacherId, courseQueryParams],
+    queryFn: () => getTeacherCourses(teacherId, courseQueryParams),
     enabled: !!teacherId,
   });
 

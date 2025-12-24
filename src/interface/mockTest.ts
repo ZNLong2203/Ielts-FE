@@ -74,7 +74,6 @@ export interface IMockTestCreate {
   test_type: string;
   instructions: string;
   duration: number; // in minutes
-  deleted: boolean;
   difficulty_level: string;
   description: string;
   test_sections: IMockTestSection[];
@@ -84,8 +83,8 @@ export interface IMockTestUpdate {
   title?: string;
   test_type?: string;
   instructions?: string;
+  status?: string;
   duration?: number; // in minutes
-  deleted?: boolean;
   difficulty_level?: string;
   description?: string;
   test_sections?: IMockTestSection[];
@@ -98,6 +97,7 @@ export interface IMockTest {
   instructions: string;
   duration: number; // in minutes
   deleted: boolean;
+  status: string;
   difficulty_level: string;
   target_band_score?: string | null;
   description: string;

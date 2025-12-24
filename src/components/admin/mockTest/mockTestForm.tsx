@@ -108,7 +108,7 @@ const MockTestForm = () => {
       test_type: "reading",
       instructions: "",
       duration: 60,
-      deleted: false,
+      status: "private",
       difficulty_level: "intermediate",
       description: "",
       test_sections: [],
@@ -125,7 +125,6 @@ const MockTestForm = () => {
         test_sections: sections,
         duration: totalDuration,
         instructions: formData.instructions || "",
-        deleted: formData.deleted || false,
         difficulty_level: formData.difficulty_level || "1",
         description: formData.description || "",
       };
@@ -152,7 +151,7 @@ const MockTestForm = () => {
         test_sections: sections,
         duration: totalDuration,
         instructions: formData.instructions || "",
-        deleted: formData.deleted || false,
+        status: formData.status || "public",
         difficulty_level: formData.difficulty_level || "1",
         description: formData.description || "",
       };
@@ -318,7 +317,7 @@ const MockTestForm = () => {
         duration: mockTestData.duration || 180,
         difficulty_level: mapDifficultyLevel(mockTestData.difficulty_level?.toString() || "intermediate"),
         description: mockTestData.description || "",
-        deleted: mockTestData.deleted || false,
+        status: (mockTestData.status || "public") as "private" | "public",
         test_sections: mockTestData.test_sections || [],
       });
 
@@ -743,15 +742,15 @@ const MockTestForm = () => {
                       <div className="flex justify-between text-lg font-bold">
                         <span>Status:</span>
                         <div className="flex items-center space-x-2">
-                          {!mockTestForm.watch("deleted") ? (
+                          {mockTestForm.watch("status") === "public" ? (
                             <>
                               <CheckCircle className="h-4 w-4 text-green-600" />
-                              <span className="text-green-600">Active</span>
+                              <span className="text-green-600">Public</span>
                             </>
                           ) : (
                             <>
-                              <XCircle className="h-4 w-4 text-red-600" />
-                              <span className="text-red-600">Inactive</span>
+                              <XCircle className="h-4 w-4 text-gray-600" />
+                              <span className="text-gray-600">Private</span>
                             </>
                           )}
                         </div>
@@ -760,36 +759,29 @@ const MockTestForm = () => {
                   </CardContent>
                 </Card>
 
-                {/* Test Settings */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Settings className="h-5 w-5 text-purple-600" />
-                      <span>Test Settings</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center space-x-2">
-                          <Award className="h-4 w-4 text-green-600" />
-                          <label className="text-sm font-medium">
-                            Active Test
-                          </label>
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          Test is visible to students
-                        </div>
-                      </div>
-                      <Switch
-                        checked={!mockTestForm.watch("deleted")}
-                        onCheckedChange={(checked) =>
-                          mockTestForm.setValue("deleted", !checked)
-                        }
+                {/* Test Settings - Only show when editing */}
+                {isEditing && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Settings className="h-5 w-5 text-purple-600" />
+                        <span>Test Settings</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <SelectField
+                        control={mockTestForm.control}
+                        name="status"
+                        label="Test Status"
+                        placeholder="Select test status"
+                        options={[
+                          { value: "public", label: "Public - Visible to all students" },
+                          { value: "private", label: "Private - Hidden from students" },
+                        ]}
                       />
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Action Buttons */}
                 <Card>

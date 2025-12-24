@@ -6,7 +6,7 @@ export const MockTestFormSchema = z.object({
   test_type: z.string().min(1, "Please select a test type"),
   instructions: z.string(),
   duration: z.number().min(1, "Duration must be at least 1 minute"),
-  deleted: z.boolean().optional(),
+  status: z.enum(["private", "public"]),
   difficulty_level: z.enum(["beginner", "intermediate", "hard", "advanced", "master"]).optional(),
   test_sections: z.array(
     z.object({
@@ -23,7 +23,7 @@ export const MockTestFormUpdateSchema = z.object({
   description: z.string().optional(),
   test_type: z.string().min(1, "Please select a test type").optional(),
   instructions: z.string().optional(),
-  deleted: z.boolean().optional(),
+  status: z.enum(["private", "public"]).optional(),
   duration: z.number().min(1, "Duration must be at least 1 minute").optional(),
   difficulty_level: z.enum(["beginner", "intermediate", "hard", "advanced", "master"]).optional(),
   test_sections: z.array(

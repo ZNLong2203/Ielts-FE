@@ -19,7 +19,6 @@ import { useRouter } from "next/navigation";
 import QuizStatistics from "./QuizStatistics";
 import QuizCard from "./QuizCard";
 import QuizSearchFilter from "./QuizSearchFilter";
-import QuizInstructions from "./QuizInstructions";
 
 const QuizPage = () => {
   const router = useRouter();
@@ -27,12 +26,14 @@ const QuizPage = () => {
   const [selectedSection, setSelectedSection] = useState<string>("all");
   const [currentPage] = useState(1);
 
-  // Fetch mock tests from API
+  // Fetch mock tests from API (only public tests for students)
   const { data: mockTestsData, isLoading, isError } = useQuery({
     queryKey: ["mockTests", currentPage],
-    queryFn: () => getMockTests({ page: currentPage }),
+    queryFn: () => getMockTests({ page: currentPage, status: "public" }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  console.log("Fetched Mock Tests:", mockTestsData);
 
   // Convert to array and filter out full_test
   const quizList: IMockTest[] = useMemo(() => {
@@ -239,8 +240,6 @@ const QuizPage = () => {
         </Card>
       )}
 
-      {/* Instructions Card */}
-      <QuizInstructions />
     </div>
   );
 };

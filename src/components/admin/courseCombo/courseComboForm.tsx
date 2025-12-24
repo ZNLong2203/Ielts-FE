@@ -80,6 +80,7 @@ const CourseComboForm = () => {
   // Get all courses for selection with API pagination
   const courseQueryParams = {
     page: currentCoursePage,
+    is_featured: true
   };
 
   const { 

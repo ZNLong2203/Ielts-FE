@@ -38,7 +38,7 @@ import {
   Package,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { getMockTest, deleteMockTest, updateMockTest } from "@/api/mockTest";
+import { getMockTest, deleteMockTest } from "@/api/mockTest";
 import ROUTES from "@/constants/route";
 import { format } from "date-fns";
 
@@ -58,6 +58,8 @@ const MockTestDetail = () => {
     queryFn: () => getMockTest(mockTestId),
     enabled: !!mockTestId,
   });
+
+  console.log("Mock Test Data:", mockTest);
 
   // Mutations
   const deleteMutation = useMutation({
@@ -222,27 +224,27 @@ const MockTestDetail = () => {
                   </label>
                   <div className="flex items-center space-x-2">
                     <Badge
-                      variant={mockTest.deleted ? "destructive" : "default"}
+                      variant={mockTest.status === "private" ? "destructive" : "default"}
                       className={`${
-                        mockTest.deleted
-                          ? "bg-red-100 text-red-800 hover:bg-red-100 border-red-200"
+                        mockTest.status === "private"
+                          ? "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200"
                           : "bg-green-100 text-green-800 hover:bg-green-100 border-green-200"
                       } px-3 py-1`}
                     >
-                      {mockTest.deleted ? (
+                      {mockTest.status === "private" ? (
                         <>
                           <XCircle className="h-3 w-3 mr-1" />
-                          Inactive
+                          Private
                         </>
                       ) : (
                         <>
                           <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Active
+                          Public
                         </>
                       )}
                     </Badge>
                     <span className="text-sm text-gray-500">
-                      {mockTest.deleted
+                      {mockTest.status === "private"
                         ? "Hidden from students"
                         : "Visible to students"}
                     </span>
@@ -533,10 +535,10 @@ const MockTestDetail = () => {
                     <span>Status:</span>
                     <span
                       className={
-                        mockTest.deleted ? "text-red-600" : "text-green-600"
+                        mockTest.status === "private" ? "text-gray-600" : "text-green-600"
                       }
                     >
-                      {mockTest.deleted ? "Inactive" : "Active"}
+                      {mockTest.status === "private" ? "Private" : "Public"}
                     </span>
                   </div>
                 </div>
