@@ -207,48 +207,50 @@ export default function QuizResultsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-    <QuizResults
-      quiz={quiz}
-      sectionResult={sectionResult}
-      currentSection={section}
-      onBack={() => router.push("/student/dashboard/my-quizzes")}
-      onReset={() => router.push(`/student/dashboard/my-quizzes/${quizId}`)}
-    />
-      {resultId && section && section.type !== "speaking" && section.type !== "writing" && (
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Review Your Answers
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    View detailed explanations for each question, see correct answers, and understand your mistakes.
-                  </p>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <QuizResults
+          quiz={quiz}
+          sectionResult={sectionResult}
+          currentSection={section}
+          onBack={() => router.push("/student/dashboard/my-quizzes")}
+          onReset={() => router.push(`/student/dashboard/my-quizzes/${quizId}`)}
+        />
+        {resultId && section && section.type !== "speaking" && section.type !== "writing" && (
+          <div className="px-6 pb-6">
+            <Card className="shadow-lg border-l-4 border-l-blue-500">
+              <CardContent className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      Review Your Answers
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      View detailed explanations for each question, see correct answers, and understand your mistakes.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setShowReview(true)}
+                    disabled={isLoadingReview}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-6 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                  >
+                    {isLoadingReview ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        View Detailed Review
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  onClick={() => setShowReview(true)}
-                  disabled={isLoadingReview}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {isLoadingReview ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      View Detailed Review
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -38,7 +38,7 @@ export default function MyCoursesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterSkill, setFilterSkill] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
 
   const handleCourseClick = (courseId: string) => {
     router.push(`/student/courses/${courseId}`)
@@ -241,16 +241,16 @@ export default function MyCoursesPage() {
 
             <div className="flex items-center border border-gray-300 rounded-lg">
               <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-2 ${viewMode === "list" ? "bg-blue-50 text-blue-600" : "text-gray-400"}`}
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
                 onClick={() => setViewMode("grid")}
                 className={`p-2 ${viewMode === "grid" ? "bg-blue-50 text-blue-600" : "text-gray-400"}`}
               >
                 <Grid3X3 className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list" ? "bg-blue-50 text-blue-600" : "text-gray-400"}`}
-              >
-                <List className="w-5 h-5" />
               </button>
             </div>
           </div>

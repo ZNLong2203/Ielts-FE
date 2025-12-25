@@ -96,7 +96,7 @@ export const getTestResultReview = async (resultId: string) => {
     return result;
 }
 
-export const getUserTestHistory = async (params?: { page?: number; limit?: number }) => {
+export const getUserTestHistory = async (params?: { page?: number; limit?: number; mock_test_id?: string }) => {
     const response = await api.get(`${BASE_URL}${API_URL.MOCK_TESTS}/results/history`, {
         params
     });

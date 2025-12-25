@@ -120,7 +120,8 @@ const StudentProfile = () => {
 
   // Get latest skill scores from test results
   const getLatestSkillScores = () => {
-    const latestResult = testResultsData?.test_results?.[0]
+    // Backend paginate returns { meta: {...}, result: [...] }
+    const latestResult = testResultsData?.result?.[0]
     if (!latestResult) {
       return {
         listening: 0,

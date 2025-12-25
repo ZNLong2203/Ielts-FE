@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -203,12 +204,12 @@ export default function QuizResults({
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
           onClick={onBack}
-          className="text-gray-600"
+          className="text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Tests
@@ -216,66 +217,63 @@ export default function QuizResults({
         <Button
           variant="outline"
           onClick={onReset}
-          className="text-blue-600 border-blue-600"
+          className="text-blue-600 border-blue-600 hover:bg-blue-50"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
           Retake Test
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Results */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="text-center">
+      <div className="space-y-6">
+        {/* Main Results - Full Width */}
+        <Card className="border-l-4 border-l-green-500 shadow-lg">
+            <CardHeader className="text-center pb-4">
               <div className="flex justify-center mb-4">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center shadow-md">
                   <CheckCircle2 className="h-10 w-10 text-green-600" />
                 </div>
               </div>
-              <CardTitle className="text-2xl text-green-900">
+              <CardTitle className="text-3xl font-bold text-green-900">
                 Test Completed!
               </CardTitle>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-base mt-2">
                 Here are your results for {quiz?.title || "this test"}
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="text-center p-6 bg-blue-50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                <div className="text-center p-8 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 shadow-sm">
+                  <h3 className="text-xl font-bold text-blue-900 mb-3">
                     Band Score
                   </h3>
-                  <p className="text-4xl font-bold text-blue-600">
+                  <p className="text-5xl font-bold text-blue-600 mb-2">
                     {bandScore.toFixed(1)}
                   </p>
-                  <p className="text-sm text-blue-700 mt-2">IELTS Band</p>
+                  <p className="text-sm font-semibold text-blue-700">IELTS Band</p>
                 </div>
-                <div className="text-center p-6 bg-green-50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-green-900 mb-2">
+                <div className="text-center p-8 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200 shadow-sm">
+                  <h3 className="text-xl font-bold text-green-900 mb-3">
                     Correct Answers
                   </h3>
-                  <p className="text-4xl font-bold text-green-600">
+                  <p className="text-5xl font-bold text-green-600 mb-2">
                     {correctAnswers}/{totalQuestionsResult}
                   </p>
-                  <p className="text-sm text-green-700 mt-2">Questions</p>
+                  <p className="text-sm font-semibold text-green-700">Questions</p>
                 </div>
               </div>
 
               {/* Detailed Feedback for Speaking */}
               {hasDetailedFeedback && overallFeedback && (
-                <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <Card className="border-l-4 border-l-blue-500 shadow-lg">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-blue-700">
+                    <CardTitle className="flex items-center gap-2 text-blue-700 text-xl">
                       <MessageSquare className="h-5 w-5" />
                       Detailed Feedback
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-white rounded-lg p-6 border border-gray-100 shadow-sm">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                        {overallFeedback}
-                      </p>
+                    <div className="bg-white rounded-lg p-6 border border-gray-100">
+                      <DetailedFeedbackDisplay feedback={overallFeedback} />
                     </div>
                   </CardContent>
                 </Card>
@@ -293,12 +291,12 @@ export default function QuizResults({
               )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Detailed Scores for Speaking */}
-          {isSpeaking && Object.keys(criteriaScores).length > 0 && (
+        {/* Sidebar - Moved below main card */}
+        {(isSpeaking && (Object.keys(criteriaScores).length > 0 || strengths.length > 0 || weaknesses.length > 0 || suggestions.length > 0)) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            {/* Detailed Scores for Speaking */}
+            {isSpeaking && Object.keys(criteriaScores).length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -425,23 +423,174 @@ export default function QuizResults({
               </CardContent>
             </Card>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 pt-4">
-            <Button onClick={onReset} variant="outline" className="w-full">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Retake Test
-            </Button>
-            <Button
-              onClick={onBack}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tests
-            </Button>
           </div>
-        </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+function DetailedFeedbackDisplay({ feedback }: { feedback: string }) {
+  const parseMarkdown = (text: string): React.ReactNode[] => {
+    const lines = text.split('\n');
+    const elements: React.ReactNode[] = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      
+      // Empty line - preserve as spacing
+      if (trimmed.length === 0) {
+        if (i < lines.length - 1) {
+          elements.push(<br key={i} />);
+        }
+        continue;
+      }
+      
+      // Markdown headings
+      if (trimmed.startsWith('### ')) {
+        const content = trimmed.substring(4);
+        elements.push(
+          <h3 key={i} className="text-lg font-bold text-gray-900 mt-6 mb-3 first:mt-0">
+            {parseInlineMarkdown(content)}
+          </h3>
+        );
+        continue;
+      }
+      
+      if (trimmed.startsWith('## ')) {
+        const content = trimmed.substring(3);
+        elements.push(
+          <h2 key={i} className="text-xl font-bold text-gray-900 mt-6 mb-3 first:mt-0">
+            {parseInlineMarkdown(content)}
+          </h2>
+        );
+        continue;
+      }
+      
+      if (trimmed.startsWith('# ')) {
+        const content = trimmed.substring(2);
+        elements.push(
+          <h1 key={i} className="text-2xl font-bold text-gray-900 mt-6 mb-4 first:mt-0">
+            {parseInlineMarkdown(content)}
+          </h1>
+        );
+        continue;
+      }
+      
+      // Bold text at start of line (likely a heading)
+      if (trimmed.startsWith('**') && trimmed.endsWith(':**')) {
+        const content = trimmed.replace(/^\*\*|\*\*:$/g, '');
+        elements.push(
+          <h4 key={i} className="text-base font-bold text-gray-900 mt-4 mb-2 first:mt-0">
+            {content}
+          </h4>
+        );
+        continue;
+      }
+      
+      // Regular paragraph with inline markdown
+      elements.push(
+        <p key={i} className="mb-3 last:mb-0 leading-relaxed">
+          {parseInlineMarkdown(trimmed)}
+        </p>
+      );
+    }
+    
+    return elements;
+  };
+  
+  // Parse inline markdown (bold, italic, etc.)
+  const parseInlineMarkdown = (text: string): React.ReactNode => {
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    
+    // Pattern for **bold**
+    const boldPattern = /\*\*([^*]+)\*\*/g;
+    let match;
+    const matches: Array<{ start: number; end: number; content: string }> = [];
+    
+    while ((match = boldPattern.exec(text)) !== null) {
+      matches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        content: match[1],
+      });
+    }
+    
+    // Pattern for *italic*
+    const italicPattern = /\*([^*]+)\*/g;
+    const italicMatches: Array<{ start: number; end: number; content: string }> = [];
+    
+    while ((match = italicPattern.exec(text)) !== null) {
+      // Skip if it's part of a bold pattern
+      const isPartOfBold = matches.some(
+        (b) => match.index >= b.start && match.index < b.end
+      );
+      if (!isPartOfBold) {
+        italicMatches.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          content: match[1],
+        });
+      }
+    }
+    
+    // Combine and sort all matches
+    const allMatches = [
+      ...matches.map((m) => ({ ...m, type: 'bold' as const })),
+      ...italicMatches.map((m) => ({ ...m, type: 'italic' as const })),
+    ].sort((a, b) => a.start - b.start);
+    
+    // Build React elements
+    let currentIndex = 0;
+    
+    for (const match of allMatches) {
+      // Add text before match
+      if (match.start > currentIndex) {
+        const beforeText = text.substring(currentIndex, match.start);
+        if (beforeText) {
+          parts.push(beforeText);
+        }
+      }
+      
+      // Add matched content with appropriate styling
+      if (match.type === 'bold') {
+        parts.push(
+          <strong key={`bold-${match.start}`} className="font-bold text-gray-900">
+            {match.content}
+          </strong>
+        );
+      } else if (match.type === 'italic') {
+        parts.push(
+          <em key={`italic-${match.start}`} className="italic">
+            {match.content}
+          </em>
+        );
+      }
+      
+      currentIndex = match.end;
+    }
+    
+    // Add remaining text
+    if (currentIndex < text.length) {
+      const remainingText = text.substring(currentIndex);
+      if (remainingText) {
+        parts.push(remainingText);
+      }
+    }
+    
+    // If no matches, return text as is
+    if (parts.length === 0) {
+      return text;
+    }
+    
+    return <>{parts}</>;
+  };
+  
+  return (
+    <div className="text-gray-700 leading-relaxed text-sm">
+      {parseMarkdown(feedback)}
     </div>
   );
 }

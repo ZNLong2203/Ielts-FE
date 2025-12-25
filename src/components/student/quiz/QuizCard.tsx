@@ -1,11 +1,12 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlayCircle, Headphones, FileText, BookOpen, Mic } from "lucide-react";
+import { PlayCircle, Headphones, FileText, BookOpen, Mic, History, Clock } from "lucide-react";
 import { IMockTest } from "@/interface/mockTest";
 import { cn } from "@/lib/utils";
+import QuizHistory from "./QuizHistory";
 
 interface QuizCardProps {
   quiz: IMockTest;
@@ -26,30 +27,32 @@ const QuizCard = ({
   getSectionIcon,
   onStart,
 }: QuizCardProps) => {
+  const [showHistory, setShowHistory] = useState(false);
+
   return (
-    <Card
-      className={cn(
-        "group hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4",
-        borderColor,
-        "bg-white border border-gray-200"
-      )}
-      onClick={() => onStart(quiz.id)}
-    >
-      <CardHeader className="pb-3">
+    <>
+      <Card
+        className={cn(
+          "group hover:shadow-lg transition-all duration-200 border-l-4",
+          borderColor,
+          "bg-white border border-gray-200"
+        )}
+      >
+      <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3 flex-1">
             <div className={cn(
-              "p-2.5 rounded-lg border",
+              "p-3 rounded-xl border-2 shadow-sm",
               sectionColor,
-              "bg-white"
+              "bg-white flex-shrink-0"
             )}>
               {getSectionIcon(section)}
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2 mb-1">
+              <CardTitle className="text-lg font-bold text-gray-900 line-clamp-2 mb-1.5 leading-tight">
                 {quiz.title}
               </CardTitle>
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-xs text-gray-500 capitalize font-medium">
                 {`${section || "Test"} Practice`}
               </p>
             </div>
@@ -57,81 +60,102 @@ const QuizCard = ({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        <p className="text-sm text-gray-600 line-clamp-1">
+      <CardContent className="space-y-4">
+        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed truncate">
           {quiz.description || "Comprehensive IELTS practice test"}
         </p>
 
         {/* Badges and Info */}
         <div className="flex flex-wrap gap-2 items-center">
           <Badge variant="outline" className={cn(
-            "text-xs font-medium px-2.5 py-1",
+            "text-xs font-semibold px-3 py-1.5 border-2",
             sectionColor
           )}>
             {(section || "TEST").toUpperCase()}
           </Badge>
-          <Badge variant="outline" className="text-xs font-medium border-gray-300 text-gray-600 bg-white">
+          <Badge variant="outline" className="text-xs font-semibold border-2 border-gray-300 text-gray-700 bg-gray-50 px-3 py-1.5">
             {difficulty}
           </Badge>
         </div>
 
         {/* Section info and duration */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
           <div className="flex items-center space-x-4 text-xs text-gray-600">
             {section === "listening" && (
               <div className="flex items-center space-x-1.5">
-                <Headphones className="h-3.5 w-3.5" />
-                <span>4 Sections</span>
+                <Headphones className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">4 Sections</span>
               </div>
             )}
             {section === "writing" && (
               <div className="flex items-center space-x-1.5">
-                <FileText className="h-3.5 w-3.5" />
-                <span>Task 1 & 2</span>
+                <FileText className="h-4 w-4 text-purple-600" />
+                <span className="font-medium">Task 1 & 2</span>
               </div>
             )}
             {section === "speaking" && (
               <div className="flex items-center space-x-1.5">
-                <Mic className="h-3.5 w-3.5" />
-                <span>3 Parts</span>
+                <Mic className="h-4 w-4 text-orange-600" />
+                <span className="font-medium">3 Parts</span>
               </div>
             )}
             {section === "reading" && (
               <div className="flex items-center space-x-1.5">
-                <BookOpen className="h-3.5 w-3.5" />
-                <span>3 Passages</span>
+                <BookOpen className="h-4 w-4 text-green-600" />
+                <span className="font-medium">3 Passages</span>
               </div>
             )}
           </div>
           {quiz.duration && (
-            <div className="flex items-center space-x-1.5 text-xs font-medium text-gray-700">
-              <div className="w-3 h-3 rounded-full bg-gray-400" />
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-md">
+              <Clock className="h-3.5 w-3.5" />
               <span>{quiz.duration} min</span>
             </div>
           )}
         </div>
 
-        {/* Action Button */}
-        <div className="pt-2">
-          <Button 
-            className={cn(
-              "w-full text-white hover:opacity-90 transition-opacity font-medium text-sm py-5",
-              section === "listening" && "bg-blue-600 hover:bg-blue-700",
-              section === "reading" && "bg-green-600 hover:bg-green-700",
-              section === "writing" && "bg-purple-600 hover:bg-purple-700",
-              section === "speaking" && "bg-orange-600 hover:bg-orange-700"
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              onStart(quiz.id);
-            }}
-          >
-            <PlayCircle className="h-4 w-4 mr-2" />
-            Start Test
-          </Button>
+        {/* Action Buttons */}
+        <div className="pt-3 border-t border-gray-100">
+          <div className="flex flex-col gap-2.5">
+            <Button 
+              className={cn(
+                "w-full text-white hover:opacity-90 transition-all duration-200 font-semibold text-sm py-6 shadow-sm hover:shadow-md",
+                section === "listening" && "bg-blue-600 hover:bg-blue-700",
+                section === "reading" && "bg-green-600 hover:bg-green-700",
+                section === "writing" && "bg-purple-600 hover:bg-purple-700",
+                section === "speaking" && "bg-orange-600 hover:bg-orange-700"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStart(quiz.id);
+              }}
+            >
+              <PlayCircle className="h-4 w-4 mr-2" />
+              Start Test
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium text-sm py-6 transition-all duration-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowHistory(true);
+              }}
+            >
+              <History className="h-4 w-4 mr-2" />
+              View History
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
+
+    <QuizHistory
+      mockTestId={quiz.id}
+      mockTestTitle={quiz.title}
+      isOpen={showHistory}
+      onClose={() => setShowHistory(false)}
+    />
+    </>
   );
 };
 
