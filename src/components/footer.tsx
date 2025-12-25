@@ -25,7 +25,7 @@ const Footer = () => {
   return (
     <footer className="bg-gradient-to-b from-blue-50/50 to-white border-t border-gray-200">
       {/* Newsletter Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 py-12">
+      <div className="bg-gradient-to-br from-[#011657] via-[#022571] to-[#033899] py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-white max-w-xl">
@@ -41,7 +41,7 @@ const Footer = () => {
                   placeholder={t("common.enterYourEmail")}
                   className="px-4 py-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 min-w-[250px]"
                 />
-                <Button className="bg-white hover:bg-gray-100 text-blue-600 font-medium px-6 py-6 rounded-lg transition-all">
+                <Button className="bg-white hover:bg-blue-50 text-blue-700 font-semibold px-6 py-6 rounded-lg transition-all shadow-sm hover:shadow-md">
                   {t("common.subscribe")}
                 </Button>
               </div>
@@ -57,7 +57,7 @@ const Footer = () => {
             <div className="space-y-8">
               {/* Logo */}
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#011657] via-[#022571] to-[#033899] rounded-lg flex items-center justify-center shadow-sm">
                   <span className="text-white font-bold text-lg">P</span>
                 </div>
                 <span className="text-2xl font-bold text-gray-900">Ielts</span>
@@ -106,38 +106,38 @@ const Footer = () => {
                 <div className="flex items-center space-x-3">
                   <Link
                     href="#"
-                    className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
+                    className="w-10 h-10 bg-blue-100/80 rounded-full flex items-center justify-center hover:bg-blue-200/80 transition-all hover:scale-105"
                     aria-label="Email us"
                   >
-                    <Mail className="w-5 h-5 text-blue-600" />
+                    <Mail className="w-5 h-5 text-blue-700" />
                   </Link>
                   <Link
                     href="#"
-                    className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
+                    className="w-10 h-10 bg-blue-100/80 rounded-full flex items-center justify-center hover:bg-blue-200/80 transition-all hover:scale-105"
                     aria-label="Facebook"
                   >
-                    <Facebook className="w-5 h-5 text-blue-600" />
+                    <Facebook className="w-5 h-5 text-blue-700" />
                   </Link>
                   <Link
                     href="#"
-                    className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
+                    className="w-10 h-10 bg-blue-100/80 rounded-full flex items-center justify-center hover:bg-blue-200/80 transition-all hover:scale-105"
                     aria-label="Twitter"
                   >
-                    <Twitter className="w-5 h-5 text-blue-600" />
+                    <Twitter className="w-5 h-5 text-blue-700" />
                   </Link>
                   <Link
                     href="#"
-                    className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
+                    className="w-10 h-10 bg-blue-100/80 rounded-full flex items-center justify-center hover:bg-blue-200/80 transition-all hover:scale-105"
                     aria-label="Instagram"
                   >
-                    <Instagram className="w-5 h-5 text-blue-600" />
+                    <Instagram className="w-5 h-5 text-blue-700" />
                   </Link>
                   <Link
                     href="#"
-                    className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center hover:bg-blue-100 transition-colors"
+                    className="w-10 h-10 bg-blue-100/80 rounded-full flex items-center justify-center hover:bg-blue-200/80 transition-all hover:scale-105"
                     aria-label="LinkedIn"
                   >
-                    <Linkedin className="w-5 h-5 text-blue-600" />
+                    <Linkedin className="w-5 h-5 text-blue-700" />
                   </Link>
                 </div>
               </div>
@@ -161,9 +161,9 @@ const Footer = () => {
                   <li key={item}>
                     <Link
                       href="#"
-                      className="text-gray-600 hover:text-blue-600 text-sm flex items-center transition-colors"
+                      className="text-gray-600 hover:text-blue-700 text-sm flex items-center transition-colors group"
                     >
-                      <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-2 opacity-75"></span>
+                      <span className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full mr-2 group-hover:scale-125 transition-transform"></span>
                       {item}
                     </Link>
                   </li>
@@ -189,9 +189,9 @@ const Footer = () => {
                   <li key={item}>
                     <Link
                       href="#"
-                      className="text-gray-600 hover:text-blue-600 text-sm flex items-center transition-colors"
+                      className="text-gray-600 hover:text-blue-700 text-sm flex items-center transition-colors group"
                     >
-                      <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-2 opacity-75"></span>
+                      <span className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full mr-2 group-hover:scale-125 transition-transform"></span>
                       {item}
                     </Link>
                   </li>
@@ -218,9 +218,9 @@ const Footer = () => {
                   <li key={item}>
                     <Link
                       href="#"
-                      className="text-gray-600 hover:text-blue-600 text-sm flex items-center transition-colors"
+                      className="text-gray-600 hover:text-blue-700 text-sm flex items-center transition-colors group"
                     >
-                      <span className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-2 opacity-75"></span>
+                      <span className="w-1.5 h-1.5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full mr-2 group-hover:scale-125 transition-transform"></span>
                       {item}
                     </Link>
                   </li>
@@ -233,7 +233,7 @@ const Footer = () => {
           <div className="mt-12 pt-8 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="flex items-start space-x-4">
               <div className="mt-1">
-                <MapPin className="w-5 h-5 text-blue-600" />
+                <MapPin className="w-5 h-5 text-blue-700" />
               </div>
               <div>
                 <h4 className="font-medium text-gray-800 mb-1">{t("footer.mainCampus")}</h4>
@@ -245,7 +245,7 @@ const Footer = () => {
             
             <div className="flex items-start space-x-4">
               <div className="mt-1">
-                <Phone className="w-5 h-5 text-blue-600" />
+                <Phone className="w-5 h-5 text-blue-700" />
               </div>
               <div>
                 <h4 className="font-medium text-gray-800 mb-1">{t("footer.contact")}</h4>
@@ -258,7 +258,7 @@ const Footer = () => {
             
             <div className="flex items-start space-x-4">
               <div className="mt-1">
-                <Shield className="w-5 h-5 text-blue-600" />
+                <Shield className="w-5 h-5 text-blue-700" />
               </div>
               <div>
                 <h4 className="font-medium text-gray-800 mb-1">{t("footer.certifications")}</h4>

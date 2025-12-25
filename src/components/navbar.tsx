@@ -205,6 +205,7 @@ const LandingNavbar = () => {
                   </div>
                 </NavbarTitle> */}
 
+                <NavbarLink text="FAQ" href="/faq" />
                 <NavbarLink text={t("nav.blog")} href="/blogs" />
               </div>
             </div>
@@ -418,6 +419,12 @@ const LandingNavbar = () => {
               className="block py-2 text-white/70 hover:text-white"
             >
               {t("nav.placementTest")}
+            </a>
+            <a
+              href="/faq"
+              className="block py-2 text-white/70 hover:text-white"
+            >
+              FAQ
             </a>
             <a
               href="/blogs"

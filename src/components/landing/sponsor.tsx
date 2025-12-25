@@ -314,7 +314,7 @@ const Sponsor = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          className="bg-gradient-to-r from-blue-600 to-blue-400 rounded-2xl p-8 text-white shadow-lg max-w-7xl mx-auto"
+          className="bg-gradient-to-br from-[#011657] via-[#022571] to-[#033899] rounded-2xl p-8 text-white shadow-lg max-w-7xl mx-auto"
         >
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-2/3 mb-6 md:mb-0 md:pr-8">
