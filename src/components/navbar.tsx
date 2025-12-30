@@ -167,10 +167,10 @@ const LandingNavbar = () => {
               </a>
 
               {/* Navigation Menu */}
-              <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
+              <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0 lg:ml-4 2xl:ml-6">
                 <Link
                   href={ROUTES.HOME}
-                  className="rounded-[32px] px-5 py-3 text-xs tracking-[0.06px] hover:text-white lg:max-2xl:px-3 2xl:text-sm 2xl:tracking-[0.07px] pointer-events-none bg-black bg-opacity-[0.24] text-white hover:cursor-default"
+                  className="font-svn-poppins flex items-center justify-center rounded-2xl px-7 py-3 text-xs tracking-[0.06px] text-white transition-all bg-black bg-opacity-[0.24] hover:bg-opacity-[0.3] lg:max-2xl:px-6 2xl:text-sm 2xl:tracking-[0.07px] w-[100px] lg:max-2xl:w-[95px]"
                 >
                   {t("nav.home")}
                 </Link>
@@ -205,8 +205,8 @@ const LandingNavbar = () => {
                   </div>
                 </NavbarTitle> */}
 
-                <NavbarLink text="FAQ" href="/faq" />
                 <NavbarLink text={t("nav.blog")} href="/blogs" />
+                <NavbarLink text="FAQ" href="/faq" />
               </div>
             </div>
 
@@ -421,16 +421,16 @@ const LandingNavbar = () => {
               {t("nav.placementTest")}
             </a>
             <a
-              href="/faq"
-              className="block py-2 text-white/70 hover:text-white"
-            >
-              FAQ
-            </a>
-            <a
               href="/blogs"
               className="block py-2 text-white/70 hover:text-white"
             >
               {t("nav.blog")}
+            </a>
+            <a
+              href="/faq"
+              className="block py-2 text-white/70 hover:text-white"
+            >
+              FAQ
             </a>
 
             {/* Mobile User Menu */}
