@@ -605,7 +605,7 @@ const QuestionGroupList: React.FC<QuestionGroupListProps> = ({
                       <div className="flex items-center space-x-1">
                         <Target className="h-4 w-4" />
                         <span>
-                          {group.correct_answer_count} correct answers
+                          {group.questions_count} questions
                         </span>
                       </div>
                     </div>
