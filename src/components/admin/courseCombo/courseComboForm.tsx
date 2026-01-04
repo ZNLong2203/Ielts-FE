@@ -165,6 +165,7 @@ const CourseComboForm = () => {
       title: course.title,
       price: course.price,
       level: course.difficulty_level || "Unknown",
+      discount_price: course.discount_price,
     }));
 
   
@@ -236,7 +237,7 @@ const CourseComboForm = () => {
     );
     
     const totalOriginalPrice = selectedCoursesInfo.reduce(
-      (sum, course) => sum + Number(course.price || 0),
+      (sum, course) => sum + Number(course.discount_price || 0),
       0
     );
     
@@ -290,7 +291,7 @@ const CourseComboForm = () => {
   );
 
   const totalOriginalPrice = selectedCoursesInfo.reduce(
-    (sum, course) => sum + Number(course.price || 0),
+    (sum, course) => sum + Number(course.discount_price || 0),
     0
   );
 
@@ -493,7 +494,7 @@ const CourseComboForm = () => {
                                       {course.level}
                                     </Badge>
                                     <span className="text-sm font-medium text-green-600">
-                                      {Number(course.price).toLocaleString()} VND
+                                      {Number(course.discount_price).toLocaleString()} VND
                                     </span>
                                   </div>
                                 </div>
@@ -627,7 +628,7 @@ const CourseComboForm = () => {
                                     {course.title}
                                   </span>
                                   <span className="font-medium text-blue-900">
-                                    {Number(course.price).toLocaleString()} VND
+                                    {Number(course.discount_price).toLocaleString()} VND
                                   </span>
                                 </div>
                               ))}
