@@ -172,7 +172,7 @@ export default function LearningPathDetailPage() {
                       <Clock className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
-                      <div className="text-sm text-gray-500 font-medium">Duration</div>
+                      <div className="text-sm text-gray-500 font-medium">Estimated Duration</div>
                       <div className="text-2xl font-bold">
                         {courses?.reduce((acc, c) => acc + (c.estimated_duration || 0), 0)}h
                       </div>

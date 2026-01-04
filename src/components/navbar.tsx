@@ -9,7 +9,6 @@ import {
   selectUser,
   logout,
 } from "@/redux/features/user/userSlice";
-import NavbarTitle from "@/components/navbarTitle";
 import NavbarLink from "@/components/navbarLink";
 import ROUTES from "@/constants/route";
 import {
@@ -214,35 +213,21 @@ const LandingNavbar = () => {
             <div className="font-svn-poppins hidden items-center gap-x-2.5 rounded-[32px] bg-black bg-opacity-[0.17] font-semibold text-white text-opacity-60 lg:flex lg:max-2xl:py-0.5 2xl:gap-x-0">
               {!isAuthenticated ? (
                 <>
-                  {/* Login Dropdown */}
-                  <NavbarTitle text={t("nav.login")}>
-                    <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
-                      <div className="h-3 w-full"></div>
-                      <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
-                        <div className="flex flex-col">
-                          <NavbarLink
-                            text={t("nav.login")}
-                            href={ROUTES.LOGIN}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </NavbarTitle>
+                  {/* Login Link */}
+                  <Link
+                    href={ROUTES.LOGIN}
+                    className="font-svn-poppins flex items-center justify-center rounded-2xl px-7 py-3 text-xs tracking-[0.06px] text-white text-opacity-60 transition-all hover:bg-[rgba(0,0,0,0.24)] hover:font-semibold hover:text-opacity-100 2xl:text-sm 2xl:tracking-[0.07px] w-[100px] lg:max-2xl:px-6 lg:max-2xl:w-[95px]"
+                  >
+                    {t("nav.login")}
+                  </Link>
 
-                  {/* Register Dropdown */}
-                  <NavbarTitle text={t("nav.register")}>
-                    <div className="absolute inset-x-0 left-1/2 top-[calc(100%-4px)] z-[1050] hidden min-w-max -translate-x-1/2 cursor-auto group-hover/parent:block">
-                      <div className="h-3 w-full"></div>
-                      <div className="min-w-[180px] rounded-2xl border-2 border-white border-opacity-10 bg-black bg-opacity-50 p-2 backdrop-blur-[47.5px]">
-                        <div className="flex flex-col">
-                          <NavbarLink
-                            text={t("nav.joinAsStudent")}
-                            href={ROUTES.STUDENT_REGISTER}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </NavbarTitle>
+                  {/* Register Link */}
+                  <Link
+                    href={ROUTES.STUDENT_REGISTER}
+                    className="font-svn-poppins flex items-center justify-center rounded-2xl px-7 py-3 text-xs tracking-[0.06px] text-white text-opacity-60 transition-all hover:bg-[rgba(0,0,0,0.24)] hover:font-semibold hover:text-opacity-100 2xl:text-sm 2xl:tracking-[0.07px] w-[100px] lg:max-2xl:px-6 lg:max-2xl:w-[95px]"
+                  >
+                    {t("nav.register")}
+                  </Link>
                 </>
               ) : (
                 /* User Menu khi đã đăng nhập - REDESIGNED */
@@ -250,9 +235,11 @@ const LandingNavbar = () => {
                   <div className="flex items-center gap-3 rounded-[32px] px-4 py-2 cursor-pointer hover:bg-white/10 transition-all duration-200">
                     {/* Avatar */}
                     {user?.avatar ? (
-                      <img
+                      <Image
                         src={user.avatar}
                         alt="User Avatar"
+                        width={32}
+                        height={32}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
@@ -277,9 +264,11 @@ const LandingNavbar = () => {
                       {/* User Info Header */}
                       <div className="flex items-center gap-3 p-3 border-b border-white/10 mb-2">
                         {user?.avatar ? (
-                          <img
+                          <Image
                             src={user.avatar}
                             alt="User Avatar"
+                            width={32}
+                            height={32}
                             className="w-8 h-8 rounded-full object-cover"
                           />
                         ) : (

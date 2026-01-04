@@ -207,7 +207,7 @@ export default function SectionDetailPage() {
             )}
 
             {/* Section Stats - Enhanced */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="bg-white rounded-xl p-4 shadow-md">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -216,19 +216,6 @@ export default function SectionDetailPage() {
                   <div>
                     <div className="text-sm text-gray-500">Lessons</div>
                     <div className="text-xl font-bold text-gray-900">{currentSection.lessons?.length || 0}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Clock className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Duration</div>
-                    <div className="text-xl font-bold text-gray-900">
-                      ~{Math.ceil((currentSection.lessons?.length || 0) * 0.5)}h
-                    </div>
                   </div>
                 </div>
               </div>

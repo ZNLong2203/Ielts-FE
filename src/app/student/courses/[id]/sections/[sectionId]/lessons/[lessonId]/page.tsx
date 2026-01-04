@@ -384,7 +384,7 @@ export default function LessonDetailPage() {
                     <Clock className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Duration</div>
+                    <div className="text-sm text-gray-500">Estimated Duration</div>
                     <div className="text-lg font-bold text-gray-900">{formatDuration(currentLesson.video_duration || null)}</div>
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export default function LessonDetailPage() {
                 </span>
               </div>
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-                <span className="text-slate-600 font-medium">Duration</span>
+                <span className="text-slate-600 font-medium">Estimated Duration</span>
                 <span className="font-bold text-slate-800">
                   {formatDuration(currentLesson.video_duration || null)}
                 </span>
