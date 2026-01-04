@@ -242,12 +242,6 @@ export default function CourseDetailPage() {
                             </div>
                             <span className="font-medium">{section.lessons?.length || 0} lessons</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="p-1 bg-purple-100 rounded">
-                              <Clock className="w-4 h-4 text-purple-600" />
-                            </div>
-                            <span className="font-medium">~{Math.ceil((section.lessons?.length || 0) * 0.5)}h</span>
-                          </div>
                         </div>
                       </div>
                     </div>

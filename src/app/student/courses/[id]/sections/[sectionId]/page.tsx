@@ -186,42 +186,23 @@ export default function SectionDetailPage() {
 
       {/* Section Header - Modern Design */}
       <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl font-black text-slate-800 mb-2">
-                  {currentSection.title}
-                </h1>
-                <p className="text-slate-600 font-medium">Section Overview</p>
-              </div>
-            </div>
-            
-            {currentSection.description && (
-              <p className="text-lg text-slate-600 mb-8 leading-relaxed font-medium max-w-3xl">
-                {currentSection.description}
-              </p>
-            )}
-
-            {/* Section Stats - Enhanced */}
-            <div className="grid grid-cols-1 gap-6">
-              <div className="bg-white rounded-xl p-4 shadow-md">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <PlayCircle className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500">Lessons</div>
-                    <div className="text-xl font-bold text-gray-900">{currentSection.lessons?.length || 0}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <BookOpen className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-slate-800">
+              {currentSection.title}
+            </h1>
+            <p className="text-slate-600 font-medium">Section Overview</p>
           </div>
         </div>
+        
+        {currentSection.description && (
+          <p className="text-lg text-slate-600 leading-relaxed font-medium max-w-3xl">
+            {currentSection.description}
+          </p>
+        )}
       </div>
 
       {/* Lessons List - Enhanced Design */}
