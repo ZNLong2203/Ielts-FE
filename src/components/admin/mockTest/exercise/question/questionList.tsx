@@ -53,6 +53,7 @@ import Error from "@/components/ui/error";
 import toast from "react-hot-toast";
 import ROUTES from "@/constants/route";
 import { getQuestions, deleteQuestion, getQuestion } from "@/api/question";
+import { getQuestionGroups } from "@/api/questionGroup";
 import QuestionForm from "./questionForm";
 import QuestionDetail from "./questionDetail";
 
@@ -103,7 +104,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
   const queryClient = useQueryClient();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [selectedQuestionGroupFilter, setSelectedQuestionGroupFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedQuestionId, setSelectedQuestionId] = useState<
     string | undefined
@@ -119,6 +120,13 @@ const QuestionList: React.FC<QuestionListProps> = ({
     queryKey: ["questions", exerciseId],
     queryFn: () => getQuestions(exerciseId!),
     enabled: !!exerciseId,
+  });
+
+  // Query for question groups
+  const { data: questionGroupsData } = useQuery({
+    queryKey: ["questionGroups", exerciseId],
+    queryFn: () => getQuestionGroups(exerciseId!),
+    enabled: !!exerciseId && !questionGroupId, // Only fetch if not filtered by prop
   });
 
   // Delete mutation
@@ -148,7 +156,7 @@ const QuestionList: React.FC<QuestionListProps> = ({
     ? allQuestions.filter((q: any) => q.question_group_id === questionGroupId)
     : allQuestions;
 
-  // Apply search and difficulty filters
+  // Apply search and question group filters
   const filteredQuestions = filteredByGroup.filter((question: any) => {
     const matchesSearch =
       question.question_text
@@ -157,11 +165,12 @@ const QuestionList: React.FC<QuestionListProps> = ({
       question.question_number?.toString().includes(searchTerm) ||
       question.correct_answer?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesDifficulty =
-      selectedDifficulty === "all" ||
-      question.difficulty === selectedDifficulty;
+    const matchesQuestionGroup =
+      questionGroupId || // If questionGroupId prop is set, already filtered above
+      selectedQuestionGroupFilter === "all" ||
+      question.question_group_id === selectedQuestionGroupFilter;
 
-    return matchesSearch && matchesDifficulty;
+    return matchesSearch && matchesQuestionGroup;
   });
 
   // Navigation handlers
@@ -191,34 +200,12 @@ const QuestionList: React.FC<QuestionListProps> = ({
     refetch(); // Refresh the list
   };
 
-  // ✅ Updated delete handler using AlertDialog
+  // Updated delete handler using AlertDialog
   const handleDelete = async (questionId: string) => {
     try {
       await deleteQuestionMutation.mutateAsync(questionId);
     } catch (error) {
       console.error("Delete error:", error);
-    }
-  };
-
-  // Detail view handlers
-  const handleDetailEdit = () => {
-    setViewMode("edit");
-  };
-
-  const handleDetailDelete = () => {
-    setViewMode("list");
-    setSelectedQuestionId(undefined);
-  };
-
-  const handleBack = () => {
-    if (questionGroupId) {
-      router.push(
-        `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/exercises/${exerciseId}/question-groups?sectionId=${sectionId}`
-      );
-    } else {
-      router.push(
-        `${ROUTES.ADMIN_MOCK_TESTS}/${mockTestId}/exercises/${exerciseId}?sectionId=${sectionId}`
-      );
     }
   };
 
@@ -435,34 +422,26 @@ const QuestionList: React.FC<QuestionListProps> = ({
                 />
               </div>
             </div>
-            <div className="sm:w-48">
-              <Select
-                value={selectedDifficulty}
-                onValueChange={setSelectedDifficulty}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="All Difficulties" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Difficulties</SelectItem>
-                  <SelectItem value="easy">
-                    <div className="flex items-center space-x-2">
-                      <span>Easy</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="medium">
-                    <div className="flex items-center space-x-2">
-                      <span>Medium</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="hard">
-                    <div className="flex items-center space-x-2">
-                      <span>Hard</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {!questionGroupId && questionGroupsData && questionGroupsData.groups.length > 0 && (
+              <div className="sm:w-56">
+                <Select
+                  value={selectedQuestionGroupFilter}
+                  onValueChange={setSelectedQuestionGroupFilter}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="All Question Groups" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Question Groups</SelectItem>
+                    {questionGroupsData.groups.map((group: any) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.group_title || `Group ${group.group_number}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -476,18 +455,18 @@ const QuestionList: React.FC<QuestionListProps> = ({
                 <FileText className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm || selectedDifficulty !== "all"
+                {searchTerm || selectedQuestionGroupFilter !== "all"
                   ? "No questions found"
                   : "No questions yet"}
               </h3>
               <p className="text-gray-500 mb-6 max-w-sm mx-auto">
-                {searchTerm || selectedDifficulty !== "all"
+                {searchTerm || selectedQuestionGroupFilter !== "all"
                   ? "Try adjusting your search or filter criteria"
                   : questionsData
                   ? `Create your first question for "${questionsData.exercise_info.title}"`
                   : "Create your first question for this exercise"}
               </p>
-              {!searchTerm && selectedDifficulty === "all" && (
+              {!searchTerm && selectedQuestionGroupFilter === "all" && (
                 <Button
                   onClick={handleCreate}
                   className="bg-blue-600 hover:bg-blue-700"
@@ -520,6 +499,9 @@ const QuestionList: React.FC<QuestionListProps> = ({
                   question.difficulty as keyof typeof difficultyConfig
                 ] || difficultyConfig.medium;
 
+              const questionTypeInfo = getQuestionTypeConfig(question.question_type);
+              const QuestionTypeIcon = questionTypeInfo?.icon || FileText;
+
               return (
                 <Card
                   key={question.id}
@@ -545,9 +527,12 @@ const QuestionList: React.FC<QuestionListProps> = ({
                             >
                               Q{question.question_number || "?"}
                             </Badge>
-                            <Badge className={`${difficulty.color} text-xs`}>
-                              {difficulty.label}
-                            </Badge>
+                            {questionTypeInfo && (
+                              <Badge className={`${questionTypeInfo.color} text-xs`}>
+                                <QuestionTypeIcon className="h-3 w-3 mr-1" />
+                                {questionTypeInfo.label}
+                              </Badge>
+                            )}
                             {question.image_url && (
                               <Badge variant="outline" className="text-xs">
                                 <ImageIcon className="h-3 w-3 mr-1" />

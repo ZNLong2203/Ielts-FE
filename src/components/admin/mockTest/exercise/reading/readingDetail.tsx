@@ -157,11 +157,6 @@ const ReadingDetail = () => {
     ] || DIFFICULTY_LABELS["3"];
   const wordCount = readingExercise.reading_passage?.word_count || 0;
   const paragraphs = readingExercise.reading_passage?.paragraphs || [];
-  
-  // Debug logging
-  console.log("Reading exercise:", readingExercise);
-  console.log("Reading passage:", readingExercise.reading_passage);
-  console.log("Paragraphs:", paragraphs);
 
   return (
     <div className="min-h-screen bg-gray-50">
