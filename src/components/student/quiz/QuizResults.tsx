@@ -148,9 +148,32 @@ export default function QuizResults({
     }
   }
   
-  // Extract writing results
-  const writingTask1 = detailedAnswers?.task1 || null;
-  const writingTask2 = detailedAnswers?.task2 || null;
+  // Helper function to normalize writing task data from backend format to frontend format
+  const normalizeWritingTask = (task: any) => {
+    if (!task) return null;
+    
+    return {
+      score: task.score || task.overall_score || 0,
+      taskAchievement: task.taskAchievement || task.task_achievement_score || task.task_achievement || 0,
+      coherenceCohesion: task.coherenceCohesion || task.coherence_cohesion_score || task.coherence_cohesion || 0,
+      lexicalResource: task.lexicalResource || task.lexical_resource_score || task.lexical_resource || 0,
+      grammaticalRangeAccuracy: task.grammaticalRangeAccuracy || task.grammatical_range_accuracy_score || task.grammatical_range_accuracy || 0,
+      detailedFeedback: task.detailedFeedback || task.detailed_feedback || '',
+      suggestions: task.suggestions || [],
+      strengths: task.strengths || [],
+      weaknesses: task.weaknesses || [],
+      detailedMetrics: task.detailedMetrics || task.detailed_metrics,
+      upgradedEssay: task.upgradedEssay || task.upgraded_essay,
+      sampleAnswer: task.sampleAnswer || task.sample_answer,
+    };
+  };
+
+  // Extract writing results and normalize data format
+  const rawTask1 = detailedAnswers?.task1 || detailedAnswers?.tasks?.find((t: any) => t.task_type === 'task_1');
+  const rawTask2 = detailedAnswers?.task2 || detailedAnswers?.tasks?.find((t: any) => t.task_type === 'task_2');
+  
+  const writingTask1 = normalizeWritingTask(rawTask1);
+  const writingTask2 = normalizeWritingTask(rawTask2);
   const writingOverallScore = detailedAnswers?.overallScore || bandScore;
   
   // Check if we have any detailed feedback to show

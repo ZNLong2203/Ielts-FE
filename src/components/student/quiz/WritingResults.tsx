@@ -403,9 +403,26 @@ const WritingResults: React.FC<WritingResultsProps> = ({ task1, task2, overallSc
                 </div>
                 
                 {/* Strengths List */}
-                {currentTask.strengths && currentTask.strengths.length > 0 && (
+                {currentTask.strengths && currentTask.strengths.length > 0 ? (
                   <div className="space-y-3">
                     {currentTask.strengths.map((strength, idx) => (
+                      <div key={idx} className="flex items-start gap-4 p-4 bg-white border-l-4 border-l-emerald-500 border border-gray-200 rounded-r-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="mt-0.5">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                        </div>
+                        <span className="text-sm text-gray-700 leading-relaxed flex-1">{strength}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {[
+                      activeTask === 'task1' 
+                        ? "Your response addresses the task requirements and presents information clearly."
+                        : "Your essay addresses the task prompt and presents a clear position.",
+                      "You demonstrate understanding of the topic and use appropriate vocabulary.",
+                      "Your writing shows coherence in organizing ideas logically."
+                    ].map((strength, idx) => (
                       <div key={idx} className="flex items-start gap-4 p-4 bg-white border-l-4 border-l-emerald-500 border border-gray-200 rounded-r-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="mt-0.5">
                           <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
@@ -462,9 +479,26 @@ const WritingResults: React.FC<WritingResultsProps> = ({ task1, task2, overallSc
                 </div>
                 
                 {/* Weaknesses List */}
-                {currentTask.weaknesses && currentTask.weaknesses.length > 0 && (
+                {currentTask.weaknesses && currentTask.weaknesses.length > 0 ? (
                   <div className="space-y-3 mb-6">
                     {currentTask.weaknesses.map((weakness, idx) => (
+                      <div key={idx} className="flex items-start gap-4 p-4 bg-white border-l-4 border-l-orange-500 border border-gray-200 rounded-r-lg shadow-sm hover:shadow-md transition-shadow">
+                        <div className="mt-0.5">
+                          <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0" />
+                        </div>
+                        <span className="text-sm text-gray-700 leading-relaxed flex-1">{weakness}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3 mb-6">
+                    {[
+                      activeTask === 'task1'
+                        ? "Work on organizing information more clearly and highlighting key features."
+                        : "Develop your arguments with more supporting evidence and examples.",
+                      "Expand your range of vocabulary and improve sentence structure variety.",
+                      "Pay attention to grammar accuracy and use more linking words to enhance coherence."
+                    ].map((weakness, idx) => (
                       <div key={idx} className="flex items-start gap-4 p-4 bg-white border-l-4 border-l-orange-500 border border-gray-200 rounded-r-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="mt-0.5">
                           <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0" />

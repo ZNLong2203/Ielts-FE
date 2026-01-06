@@ -242,10 +242,20 @@ export default function BlogDetailPage({ params }: BlogDetailPageProps) {
         .prose-content ol {
           margin: 1.5rem 0;
           padding-left: 1.5rem;
+          list-style-position: outside;
+        }
+        
+        .prose-content ul {
+          list-style-type: disc;
+        }
+        
+        .prose-content ol {
+          list-style-type: decimal;
         }
         
         .prose-content li {
           margin-bottom: 0.5rem;
+          display: list-item;
         }
         
         .prose-content blockquote {

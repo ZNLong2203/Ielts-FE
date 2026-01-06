@@ -179,13 +179,13 @@ export default function OrderPage() {
       (combo.courses || []).map((course) => ({
         id: course.id,
         title: course.title,
-        image: "/placeholder.svg?height=80&width=120",
+        image: course.thumbnail || "/placeholder.svg",
         originalPrice: Number(course.price) || 0,
         discountPrice: Number(course.price) || 0,
         duration: `${course.estimated_duration || 0}h`,
         lessons: course.estimated_duration || 0,
         level: course.difficulty_level || "All Levels",
-        instructor: "IELTS Expert",
+        instructor: course.teacher?.name || "IELTS Expert",
         bandScore: `${comboCourseData?.selectedLevel || 0} → ${
           comboCourseData?.selectedTarget || 0
         }`,

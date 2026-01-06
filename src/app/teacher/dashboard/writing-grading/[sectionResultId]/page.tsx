@@ -194,14 +194,21 @@ const WritingGradingDetailPage = () => {
   interface Question {
     id: string;
     question_text?: string;
+    image_url?: string;
   }
 
   interface QuestionGroup {
     questions?: Question[];
+    image_url?: string;
   }
 
   interface Exercise {
     question_groups?: QuestionGroup[];
+    content?: string | {
+      questionImage?: string;
+      chart_url?: string;
+      image_url?: string;
+    };
   }
 
   const exercises = (submissionData.test_sections?.exercises || []) as Exercise[];
@@ -216,6 +223,63 @@ const WritingGradingDetailPage = () => {
   const task2Question = task2
     ? allQuestions.find((q) => q.id === task2.question_id)
     : null;
+
+  const getTask1ImageUrl = (): string | undefined => {
+    if (!task1Question) {
+      return undefined;
+    }
+
+    let questionGroup: QuestionGroup | undefined;
+    let exercise: Exercise | undefined;
+
+    for (const ex of exercises) {
+      for (const qg of ex.question_groups || []) {
+        if (qg.questions?.some((q) => q.id === task1Question.id)) {
+          questionGroup = qg;
+          exercise = ex;
+          break;
+        }
+      }
+      if (questionGroup) break;
+    }
+
+    if (questionGroup?.image_url) {
+      return questionGroup.image_url;
+    }
+
+    if (exercise?.content) {
+      try {
+        const exerciseContent =
+          typeof exercise.content === 'string'
+            ? JSON.parse(exercise.content)
+            : exercise.content;
+        
+        if (exerciseContent.questionImage) {
+          return exerciseContent.questionImage;
+        }
+        if (exerciseContent.chart_url) {
+          return exerciseContent.chart_url;
+        }
+        if (exerciseContent.image_url) {
+          return exerciseContent.image_url;
+        }
+      } catch (e) {
+        console.warn("Failed to parse exercise content for imageUrl:", e);
+      }
+    }
+
+    if (task1Question.image_url) {
+      return task1Question.image_url;
+    }
+
+    if (task1?.image_url) {
+      return task1.image_url;
+    }
+
+    return undefined;
+  };
+
+  const task1ImageUrl = getTask1ImageUrl();
 
   console.log("[WritingGradingDetailPage] Detailed answers parsed:", detailedAnswers);
   console.log("[WritingGradingDetailPage] Tasks:", tasks);
@@ -308,10 +372,10 @@ const WritingGradingDetailPage = () => {
                       <p className="text-gray-800 whitespace-pre-wrap">
                         {task1Question?.question_text || task1.question_text || "No question text available"}
                       </p>
-                      {task1.image_url && (
+                      {task1ImageUrl && (
                         <div className="mt-4">
                           <img
-                            src={task1.image_url}
+                            src={task1ImageUrl}
                             alt="Task 1 Image"
                             className="max-w-full h-auto rounded-lg border"
                           />
