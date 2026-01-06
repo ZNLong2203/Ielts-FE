@@ -186,7 +186,9 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         setIsPendingTeacherGrading(true);
         setIsCompleted(true);
         setIsStarted(false);
-        toast.success(resultData.message || 'Your writing has been submitted for teacher grading. You will receive an email notification when grading is complete.', {
+        const sectionType = currentSection?.type === 'speaking' ? 'speaking' : 'writing';
+        const defaultMessage = `Your ${sectionType} has been submitted for teacher grading. You will receive an email notification when grading is complete.`;
+        toast.success(resultData.message || defaultMessage, {
           duration: 6000,
         });
         setShowReview(false);
@@ -235,10 +237,42 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     }
   }, [quizId, startTestMutation]);
 
-  // Cleanup audio URLs on unmount to prevent memory leaks
+  // Save speaking audios to localStorage for persistence
+  useEffect(() => {
+    if (testResultId && Object.keys(speakingAudios).length > 0) {
+      try {
+        // Convert blobs to base64 for storage (or store URLs only and keep blobs in memory)
+        const audioKeys = Object.keys(speakingAudios);
+        localStorage.setItem(`speaking-audios-${testResultId}`, JSON.stringify(audioKeys));
+      } catch (error) {
+        console.warn('Failed to save speaking audios to localStorage:', error);
+      }
+    }
+  }, [speakingAudios, testResultId]);
+
+  // Load speaking audios from localStorage on mount (if any)
+  useEffect(() => {
+    if (testResultId) {
+      try {
+        const savedKeys = localStorage.getItem(`speaking-audios-${testResultId}`);
+        if (savedKeys) {
+          console.log('Found saved speaking audio keys:', savedKeys);
+        }
+      } catch (error) {
+        console.warn('Failed to load speaking audios from localStorage:', error);
+      }
+    }
+  }, [testResultId]);
+
+  // Use ref to track speakingAudios for cleanup
+  const speakingAudiosRef = React.useRef(speakingAudios);
+  useEffect(() => {
+    speakingAudiosRef.current = speakingAudios;
+  }, [speakingAudios]);
+
   useEffect(() => {
     return () => {
-      Object.values(speakingAudios).forEach(audio => {
+      Object.values(speakingAudiosRef.current).forEach(audio => {
         if (audio?.url) {
           URL.revokeObjectURL(audio.url);
         }
@@ -255,7 +289,8 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         }
       });
     };
-  }, [speakingAudios]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const transformedQuiz: TransformedQuiz | null = useMemo(() => {
     if (!startTestMutation.data) return null;
@@ -375,6 +410,14 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               paragraphs?: Array<{ id: string; label: string; content: string }>;
             } | undefined;
 
+            // Get image URL with priority: question_group.image_url > exerciseContent.questionImage > chart_url > image_url
+            const exerciseImageUrl = 
+              questionGroups[0]?.image_url || // From question_group (backend saves from admin form)
+              (exerciseContent.questionImage as string) || // From exercise.content.questionImage (backend saves from admin form)
+              (exerciseContent.chart_url as string) || // From data.sql (legacy)
+              (exerciseContent.image_url as string) || // From data.sql (legacy)
+              undefined;
+
             exercises.push({
               id: exercise.id,
               title: exercise.title,
@@ -384,7 +427,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               passage: readingPassage?.content || (exerciseContent.passage as string) || undefined,
               passageTitle: readingPassage?.title || undefined,
               paragraphs: readingPassage?.paragraphs || undefined,
-              image_url: (exerciseContent.chart_url as string) || (exerciseContent.image_url as string) || undefined,
+              image_url: exerciseImageUrl,
               question_groups: questionGroups,
               total_questions: exerciseTotalQuestions,
             });
@@ -514,7 +557,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         test_section_id: currentSection.id,
         time_taken: timeTaken,
         answers: answerSubmissions,
-        grading_method: currentSection.type === "writing" ? gradingMethod : undefined,
+        grading_method: (currentSection.type === "writing" || currentSection.type === "speaking") ? gradingMethod : undefined,
       };
 
       // For speaking section, upload audio files first, then submit
@@ -611,8 +654,8 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
       return;
     }
     
-    // For writing section, always show grading method selection dialog (reset selected method for each submission)
-    if (currentSection.type === "writing" && !skipConfirm) {
+    // For writing and speaking sections, always show grading method selection dialog (reset selected method for each submission)
+    if ((currentSection.type === "writing" || currentSection.type === "speaking") && !skipConfirm) {
       setSelectedGradingMethod(null); // Reset to force showing dialog
       setShowGradingMethodDialog(true);
       return;
@@ -917,12 +960,20 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         if (chunks && chunks.length > 0) {
           const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
           const url = URL.createObjectURL(blob);
+          // Save blob to state - this is important to persist the recording
           setSpeakingAudios(prev => ({ ...prev, [questionId]: { blob, url } }));
+          // Clear chunks after saving to prevent memory issues
+          audioChunksRefs.current[questionId] = [];
+          console.log(`[Speaking] Saved audio for question ${questionId}, size: ${blob.size} bytes`);
+        } else {
+          console.warn(`[Speaking] No chunks found for question ${questionId} when stopping recording`);
         }
+        // Stop stream tracks AFTER blob is saved
         if (streamRefs.current[questionId]) {
           streamRefs.current[questionId]?.getTracks().forEach(track => track.stop());
           streamRefs.current[questionId] = null;
         }
+        setSpeakingRecording(prev => ({ ...prev, [questionId]: false }));
       };
 
       mediaRecorder.start(1000); // Collect data every second
@@ -948,8 +999,11 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
   const stopSpeakingRecording = (questionId: string) => {
     const mediaRecorder = mediaRecorderRefs.current[questionId];
     if (mediaRecorder && speakingRecording[questionId]) {
+      // Request all remaining data before stopping
+      if (mediaRecorder.state === 'recording') {
+        mediaRecorder.requestData();
+      }
       mediaRecorder.stop();
-      setSpeakingRecording(prev => ({ ...prev, [questionId]: false }));
     }
   };
 
@@ -1068,7 +1122,6 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
     );
   }
 
-  // Note: Results are now shown in a separate results page
   // This check is kept for pending teacher grading or when navigation hasn't happened yet
   if (isCompleted && sectionResult && quiz && currentSection && !isPendingTeacherGrading) {
     // Show loading state while navigating
@@ -1273,16 +1326,38 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
               isNavigationExpanded={isNavigationExpanded}
               isQuestionAnswered={isQuestionAnswered}
               onSectionChange={(index) => {
-                setCurrentSectionIndex(index);
-                setCurrentExerciseIndex(0); // Reset to first exercise when changing section
-                setPinnedPassageId(null);
-                setPinnedImageUrl(null);
+                // Stop any active recordings when changing section
+                Object.keys(mediaRecorderRefs.current).forEach(questionId => {
+                  const recorder = mediaRecorderRefs.current[questionId];
+                  if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
+                    // Stop recording and ensure blob is saved
+                    recorder.stop();
+                  }
+                });
+                // Wait a bit for recordings to complete saving
+                setTimeout(() => {
+                  setCurrentSectionIndex(index);
+                  setCurrentExerciseIndex(0); // Reset to first exercise when changing section
+                  setPinnedPassageId(null);
+                  setPinnedImageUrl(null);
+                }, 100);
               }}
               onExerciseChange={(sectionIndex, exerciseIndex) => {
-                setCurrentSectionIndex(sectionIndex);
-                setCurrentExerciseIndex(exerciseIndex);
-                setPinnedPassageId(null);
-                setPinnedImageUrl(null);
+                // Stop any active recordings when changing exercise
+                Object.keys(mediaRecorderRefs.current).forEach(questionId => {
+                  const recorder = mediaRecorderRefs.current[questionId];
+                  if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
+                    // Stop recording and ensure blob is saved
+                    recorder.stop();
+                  }
+                });
+                // Wait a bit for recordings to complete saving
+                setTimeout(() => {
+                  setCurrentSectionIndex(sectionIndex);
+                  setCurrentExerciseIndex(exerciseIndex);
+                  setPinnedPassageId(null);
+                  setPinnedImageUrl(null);
+                }, 100);
               }}
               onQuestionClick={(questionId, sectionIndex) => {
                 setCurrentSectionIndex(sectionIndex);
@@ -1307,7 +1382,6 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           </div>
         </div>
       ) : (
-        // Layout khi không có pinned item - Giữ nguyên layout cũ
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row min-h-[calc(100vh-100px)]">
           {/* Section Content - IELTS Style */}
           <div className="flex-1 p-6">
@@ -1409,16 +1483,36 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             isNavigationExpanded={isNavigationExpanded}
             isQuestionAnswered={isQuestionAnswered}
             onSectionChange={(index) => {
-              setCurrentSectionIndex(index);
-              setCurrentExerciseIndex(0); // Reset to first exercise when changing section
-              setPinnedPassageId(null);
-              setPinnedImageUrl(null);
+              // Stop any active recordings when changing section
+              Object.keys(mediaRecorderRefs.current).forEach(questionId => {
+                const recorder = mediaRecorderRefs.current[questionId];
+                if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
+                  // Stop recording and ensure blob is saved
+                  recorder.stop();
+                }
+              });
+              // Wait a bit for recordings to complete saving
+              setTimeout(() => {
+                setCurrentSectionIndex(index);
+                setCurrentExerciseIndex(0); // Reset to first exercise when changing section
+                setPinnedPassageId(null);
+                setPinnedImageUrl(null);
+              }, 100);
             }}
             onExerciseChange={(sectionIndex, exerciseIndex) => {
-              setCurrentSectionIndex(sectionIndex);
-              setCurrentExerciseIndex(exerciseIndex);
-              setPinnedPassageId(null);
-              setPinnedImageUrl(null);
+              // Stop any active recordings when changing exercise
+              Object.keys(mediaRecorderRefs.current).forEach(questionId => {
+                const recorder = mediaRecorderRefs.current[questionId];
+                if (recorder && (recorder.state === 'recording' || recorder.state === 'paused')) {
+                  recorder.stop();
+                }
+              });
+              setTimeout(() => {
+                setCurrentSectionIndex(sectionIndex);
+                setCurrentExerciseIndex(exerciseIndex);
+                setPinnedPassageId(null);
+                setPinnedImageUrl(null);
+              }, 100);
             }}
             onQuestionClick={(questionId, sectionIndex) => {
               setCurrentSectionIndex(sectionIndex);
@@ -1476,7 +1570,12 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
             <AlertDialogAction
               onClick={() => {
                 setShowSubmitConfirm(false);
-                handleSubmitQuiz(true);
+                if (currentSection?.type === "writing" || currentSection?.type === "speaking") {
+                  setSelectedGradingMethod(null); // Reset to force showing dialog
+                  setShowGradingMethodDialog(true);
+                } else {
+                  handleSubmitQuiz(true);
+                }
               }}
               className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700"
             >
@@ -1486,7 +1585,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Grading Method Selection Dialog for Writing */}
+      {/* Grading Method Selection Dialog for Writing and Speaking */}
       <GradingMethodDialog
         open={showGradingMethodDialog}
         onOpenChange={(open) => {
@@ -1499,6 +1598,7 @@ const QuizDetailNew = ({ quizId, onBack }: QuizDetailProps) => {
           setSelectedGradingMethod(method);
           proceedWithSubmission(method);
         }}
+        sectionType={currentSection?.type === 'speaking' ? 'speaking' : 'writing'}
       />
 
       {/* Exit Confirmation Modal */}

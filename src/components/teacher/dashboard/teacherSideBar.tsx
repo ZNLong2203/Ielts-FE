@@ -18,6 +18,7 @@ import {
   FileText,
   Settings,
   MessageSquare,
+  Mic,
 } from "lucide-react";
 import { Logout } from "@/api/auth";
 import { useRouter } from "next/navigation";
@@ -68,6 +69,12 @@ const TeacherSidebar = ({
       label: t("sidebar.writingGrading"),
       icon: FileText,
       active: pathName === ROUTES.TEACHER_WRITING_GRADING || pathName?.startsWith(ROUTES.TEACHER_WRITING_GRADING),
+    },
+    {
+      href: ROUTES.TEACHER_SPEAKING_GRADING,
+      label: "Speaking Grading",
+      icon: Mic,
+      active: pathName === ROUTES.TEACHER_SPEAKING_GRADING || pathName?.startsWith(ROUTES.TEACHER_SPEAKING_GRADING),
     },
     {
       href: ROUTES.TEACHER_CHATBOT,

@@ -13,13 +13,18 @@ interface GradingMethodDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (method: 'ai' | 'teacher') => void;
+  sectionType?: 'writing' | 'speaking';
 }
 
 export default function GradingMethodDialog({
   open,
   onOpenChange,
   onSelect,
+  sectionType = 'writing',
 }: GradingMethodDialogProps) {
+  const sectionName = sectionType === 'speaking' ? 'speaking' : 'writing';
+  const sectionNameCapitalized = sectionType === 'speaking' ? 'Speaking' : 'Writing';
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-2xl">
@@ -30,7 +35,7 @@ export default function GradingMethodDialog({
         </AlertDialogHeader>
         <div className="space-y-4 py-4">
           <p className="text-gray-600 text-base">
-            Please select how you would like your writing to be graded:
+            Please select how you would like your {sectionName} to be graded:
           </p>
           
           <div className="grid grid-cols-1 gap-4">

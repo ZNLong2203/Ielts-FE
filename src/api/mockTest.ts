@@ -241,3 +241,130 @@ export const submitWritingGrading = async (sectionResultId: string, gradingDto: 
     const response = await api.post(`${BASE_URL}${API_URL.MOCK_TESTS}/writing/${sectionResultId}/grade`, gradingDto);
     return response.data.data;
 }
+
+// Speaking grading interfaces and APIs
+export interface PendingSpeakingSubmission {
+    id: string;
+    test_result_id: string;
+    test_section_id: string;
+    created_at: string;
+    test_results: {
+        id: string;
+        users: {
+            id: string;
+            full_name: string;
+            email: string;
+        };
+        mock_tests: {
+            id: string;
+            title: string;
+            test_type: string;
+        };
+    };
+    test_sections: {
+        id: string;
+        section_name: string;
+        section_type: string;
+        duration: number;
+    };
+}
+
+export interface GradedSpeakingSubmission extends PendingSpeakingSubmission {
+    band_score: number | null;
+    teacher_score: number | null;
+    graded_at: string;
+    graded_by: string | null;
+    users?: {
+        id: string;
+        full_name: string;
+        email: string;
+    };
+}
+
+export interface SpeakingSubmissionDetail extends PendingSpeakingSubmission {
+    band_score?: number | null;
+    teacher_score?: number | null;
+    teacher_feedback?: string | null;
+    graded_at?: string | null;
+    graded_by?: string | null;
+    detailed_answers: {
+        all_questions: Array<{
+            question_id: string;
+            question_text: string;
+            audio_url: string;
+            part_type: 'part_1' | 'part_2' | 'part_3';
+        }>;
+        overall_score?: number;
+        fluency_coherence?: number;
+        lexical_resource?: number;
+        grammatical_range_accuracy?: number;
+        pronunciation?: number;
+        teacher_feedback?: string;
+    };
+    test_sections: {
+        exercises: Array<{
+            id: string;
+            title: string;
+            instruction?: string;
+            question_groups: Array<{
+                id: string;
+                group_title?: string;
+                group_instruction?: string;
+                questions: Array<{
+                    id: string;
+                    question_text: string;
+                }>;
+            }>;
+        }>;
+    };
+}
+
+export interface SubmitSpeakingGradingDto {
+    overall_score: number;
+    fluency_coherence?: number;
+    lexical_resource?: number;
+    grammatical_range_accuracy?: number;
+    pronunciation?: number;
+    feedback?: string;
+}
+
+export const getPendingSpeakingSubmissions = async (params?: { page?: number; limit?: number }) => {
+    const response = await api.get(`${BASE_URL}${API_URL.MOCK_TESTS}/speaking/pending`, {
+        params
+    });
+    console.log("[API] getPendingSpeakingSubmissions raw response:", response.data);
+
+    const innerData = response.data.data;
+    if (innerData?.success && innerData?.data) {
+        return innerData.data;
+    }
+    return innerData;
+}
+
+export const getGradedSpeakingSubmissions = async (params?: { page?: number; limit?: number }) => {
+    const response = await api.get(`${BASE_URL}${API_URL.MOCK_TESTS}/speaking/graded`, {
+        params
+    });
+    console.log("[API] getGradedSpeakingSubmissions raw response:", response.data);
+
+    const innerData = response.data.data;
+    if (innerData?.success && innerData?.data) {
+        return innerData.data;
+    }
+    return innerData;
+}
+
+export const getSpeakingSubmissionForGrading = async (sectionResultId: string) => {
+    const response = await api.get(`${BASE_URL}${API_URL.MOCK_TESTS}/speaking/${sectionResultId}`);
+    console.log("[API] getSpeakingSubmissionForGrading raw response:", response.data);
+    const innerData = response.data.data;
+    if (innerData?.success && innerData?.data) {
+        return innerData.data;
+    }
+    return innerData;
+}
+
+export const submitSpeakingGrading = async (sectionResultId: string, gradingDto: SubmitSpeakingGradingDto) => {
+    const response = await api.post(`${BASE_URL}${API_URL.MOCK_TESTS}/speaking/${sectionResultId}/grade`, gradingDto);
+    return response.data.data;
+}
